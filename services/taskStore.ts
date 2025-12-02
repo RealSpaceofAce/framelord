@@ -237,3 +237,110 @@ export const getOpenTasksGroupedByContact = (): Map<string, Task[]> => {
   return grouped;
 };
 
+// =============================================================================
+// CALENDAR/DATE HELPERS
+// =============================================================================
+
+/**
+ * Extract the date portion from a dueAt string.
+ * Accepts ISO strings like "YYYY-MM-DD" or "YYYY-MM-DDTHH:mm:ss".
+ */
+const extractDatePortion = (dueAt: string): string => {
+  return dueAt.split('T')[0];
+};
+
+/**
+ * Check if a dueAt string has a time component.
+ */
+export const hasTimeComponent = (dueAt: string | null | undefined): boolean => {
+  if (!dueAt) return false;
+  return dueAt.includes('T');
+};
+
+/**
+ * Format the time portion of a dueAt string for display.
+ * Returns empty string if no time component.
+ */
+export const formatDueTime = (dueAt: string | null | undefined): string => {
+  if (!dueAt || !hasTimeComponent(dueAt)) return '';
+  
+  const date = new Date(dueAt);
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
+/**
+ * Get all tasks that have a dueAt date.
+ */
+export const getTasksWithDueDate = (): Task[] => {
+  return getAllTasks().filter(t => t.dueAt != null);
+};
+
+/**
+ * Get tasks for a specific date.
+ * @param date - Date string in "YYYY-MM-DD" format
+ */
+export const getTasksByDate = (date: string): Task[] => {
+  return MOCK_TASKS
+    .filter(t => {
+      if (!t.dueAt) return false;
+      const taskDate = extractDatePortion(t.dueAt);
+      return taskDate === date;
+    })
+    .sort((a, b) => {
+      // Sort by time if both have time, otherwise by title
+      if (a.dueAt && b.dueAt) {
+        return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
+      }
+      return 0;
+    });
+};
+
+/**
+ * Get tasks within a date range (inclusive).
+ * @param startDate - Start date in "YYYY-MM-DD" format
+ * @param endDate - End date in "YYYY-MM-DD" format
+ */
+export const getTasksByDateRange = (startDate: string, endDate: string): Task[] => {
+  return MOCK_TASKS
+    .filter(t => {
+      if (!t.dueAt) return false;
+      const taskDate = extractDatePortion(t.dueAt);
+      return taskDate >= startDate && taskDate <= endDate;
+    })
+    .sort((a, b) => {
+      if (a.dueAt && b.dueAt) {
+        return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
+      }
+      return 0;
+    });
+};
+
+/**
+ * Get the count of tasks for a specific date.
+ * @param date - Date string in "YYYY-MM-DD" format
+ */
+export const getTaskCountByDate = (date: string): number => {
+  return getTasksByDate(date).length;
+};
+
+/**
+ * Get open tasks for a specific date.
+ * @param date - Date string in "YYYY-MM-DD" format
+ */
+export const getOpenTasksByDate = (date: string): Task[] => {
+  return getTasksByDate(date).filter(t => t.status === 'open');
+};
+
+/**
+ * Get open tasks within a date range (inclusive).
+ * @param startDate - Start date in "YYYY-MM-DD" format
+ * @param endDate - End date in "YYYY-MM-DD" format
+ */
+export const getOpenTasksByDateRange = (startDate: string, endDate: string): Task[] => {
+  return getTasksByDateRange(startDate, endDate).filter(t => t.status === 'open');
+};
+

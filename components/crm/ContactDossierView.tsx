@@ -25,7 +25,11 @@ import {
   getTasksByContactId, 
   createTask, 
   updateTaskStatus,
-  getOpenTasksGroupedByContact 
+  getOpenTasksGroupedByContact,
+  getOpenTasksByDate,
+  getOpenTasksByDateRange,
+  formatDueTime,
+  hasTimeComponent
 } from '../../services/taskStore';
 import { Contact, RelationshipDomain, ContactStatus, Topic, Task } from '../../types';
 
@@ -139,6 +143,52 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
 
   // For Contact Zero: open tasks grouped by contact (what you owe to others)
   const openTasksByContact = isContactZero ? getOpenTasksGroupedByContact() : new Map();
+
+  // For Contact Zero: Today & Upcoming tasks (next 7 days)
+  const getTodayKey = (): string => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  const getDatePlusDays = (days: number): string => {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  const todayKey = getTodayKey();
+  const weekEndKey = getDatePlusDays(7);
+  
+  // Get upcoming tasks grouped by date for Contact Zero
+  const upcomingTasksByDate = isContactZero 
+    ? (() => {
+        const tasks = getOpenTasksByDateRange(todayKey, weekEndKey);
+        const grouped: Record<string, Task[]> = {};
+        tasks.forEach(task => {
+          if (task.dueAt) {
+            const dateKey = task.dueAt.split('T')[0];
+            if (!grouped[dateKey]) grouped[dateKey] = [];
+            grouped[dateKey].push(task);
+          }
+        });
+        return grouped;
+      })()
+    : {};
+
+  const upcomingDates = Object.keys(upcomingTasksByDate).sort();
+
+  const formatUpcomingDateHeader = (dateKey: string): string => {
+    if (dateKey === todayKey) return 'Today';
+    if (dateKey === getDatePlusDays(1)) return 'Tomorrow';
+    const date = new Date(dateKey + 'T00:00:00');
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
 
   // --- HANDLERS ---
 
@@ -766,6 +816,81 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                     <div className="text-xs text-cyan-400">{tasks.length} open task{tasks.length !== 1 ? 's' : ''}</div>
                   </div>
                 </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* CONTACT ZERO ONLY: Today & Upcoming (next 7 days) */}
+      {isContactZero && upcomingDates.length > 0 && (
+        <div className="bg-[#0E0E0E] border border-green-500/30 rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Calendar size={16} className="text-green-500" />
+            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Today & Upcoming (7 Days)
+            </h3>
+            <span className="text-[10px] text-gray-600 ml-auto">
+              {Object.values(upcomingTasksByDate).flat().length} tasks
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            {upcomingDates.map((dateKey) => {
+              const dayTasks = upcomingTasksByDate[dateKey];
+              if (!dayTasks || dayTasks.length === 0) return null;
+
+              return (
+                <div key={dateKey}>
+                  {/* Date Header */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`text-xs font-bold ${dateKey === todayKey ? 'text-green-400' : 'text-gray-400'}`}>
+                      {formatUpcomingDateHeader(dateKey)}
+                    </div>
+                    <div className="flex-1 h-px bg-[#2A2A2A]" />
+                    <span className="text-[10px] text-gray-600">{dayTasks.length}</span>
+                  </div>
+
+                  {/* Tasks for this day */}
+                  <div className="space-y-2 pl-2">
+                    {dayTasks.map((task) => {
+                      const taskContact = getContactById(task.contactId);
+                      if (!taskContact) return null;
+                      const timeStr = formatDueTime(task.dueAt);
+
+                      return (
+                        <div
+                          key={task.id}
+                          className="flex items-start gap-3 p-2 bg-[#1A1A1D] rounded border border-[#333]"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              {timeStr && (
+                                <span className="text-[10px] text-green-400 flex items-center gap-1">
+                                  <Clock size={10} />
+                                  {timeStr}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-white truncate">{task.title}</p>
+                            <button
+                              onClick={() => handleNavigateToContact(taskContact.id)}
+                              className="flex items-center gap-1 mt-1 text-xs text-[#4433FF] hover:text-white transition-colors"
+                            >
+                              <img
+                                src={taskContact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${taskContact.id}`}
+                                alt={taskContact.fullName}
+                                className="w-4 h-4 rounded-full border border-[#333]"
+                              />
+                              {taskContact.fullName}
+                              <ArrowRight size={10} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </div>
