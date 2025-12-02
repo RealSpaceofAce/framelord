@@ -1,20 +1,21 @@
 // =============================================================================
-// CONTACT DOSSIER VIEW — Detailed profile for any contact
+// CONTACT DOSSIER VIEW — Detailed profile for any contact with in-place editing
 // =============================================================================
 // This component works for ANY contact, not just Contact Zero.
 // It receives selectedContactId as a prop and renders that contact's details.
+// Supports in-place editing of contact fields.
 // =============================================================================
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Target, TrendingUp, TrendingDown, Minus,
   Activity, Zap, Calendar, FileText, Mail, Phone,
-  Tag, Clock
+  Tag, Clock, Edit2, Save, X
 } from 'lucide-react';
-import { getContactById, CONTACT_ZERO } from '../../services/contactStore';
+import { getContactById, CONTACT_ZERO, updateContact } from '../../services/contactStore';
 import { getNotesByContactId } from '../../services/noteStore';
-import { Contact } from '../../types';
+import { Contact, RelationshipDomain, ContactStatus } from '../../types';
 
 const MotionDiv = motion.div as any;
 
@@ -24,13 +25,60 @@ interface ContactDossierViewProps {
   selectedContactId: string;
 }
 
+// --- EDIT FORM STATE TYPE ---
+
+interface EditFormState {
+  fullName: string;
+  email: string;
+  phone: string;
+  relationshipDomain: RelationshipDomain;
+  relationshipRole: string;
+  status: ContactStatus;
+  tags: string; // comma-separated
+}
+
 // --- COMPONENT ---
 
 export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selectedContactId }) => {
-  // Get contact from store
+  // Edit mode state
+  const [isEditing, setIsEditing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Get contact from store (re-fetch on refreshKey change)
   const contact = getContactById(selectedContactId);
   
-  // Fallback if contact not found (shouldn't happen)
+  // Form state for editing
+  const [formState, setFormState] = useState<EditFormState>({
+    fullName: '',
+    email: '',
+    phone: '',
+    relationshipDomain: 'business',
+    relationshipRole: '',
+    status: 'active',
+    tags: '',
+  });
+
+  // Initialize form state when entering edit mode or when contact changes
+  useEffect(() => {
+    if (contact) {
+      setFormState({
+        fullName: contact.fullName,
+        email: contact.email || '',
+        phone: contact.phone || '',
+        relationshipDomain: contact.relationshipDomain,
+        relationshipRole: contact.relationshipRole,
+        status: contact.status,
+        tags: contact.tags.join(', '),
+      });
+    }
+  }, [contact, isEditing]);
+
+  // Reset edit mode when contact changes
+  useEffect(() => {
+    setIsEditing(false);
+  }, [selectedContactId]);
+  
+  // Fallback if contact not found
   if (!contact) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -41,6 +89,65 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selected
 
   const isContactZero = contact.id === CONTACT_ZERO.id;
   const notes = getNotesByContactId(contact.id);
+
+  // --- HANDLERS ---
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    // Reset form state to original contact values
+    setFormState({
+      fullName: contact.fullName,
+      email: contact.email || '',
+      phone: contact.phone || '',
+      relationshipDomain: contact.relationshipDomain,
+      relationshipRole: contact.relationshipRole,
+      status: contact.status,
+      tags: contact.tags.join(', '),
+    });
+    setIsEditing(false);
+  };
+
+  const handleSave = () => {
+    // Validate: fullName is required
+    if (!formState.fullName.trim()) {
+      alert('Full name is required');
+      return;
+    }
+
+    // Parse tags from comma-separated string
+    const parsedTags = formState.tags
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag.length > 0);
+
+    // Construct updated contact object (no partial edits)
+    const updatedContact: Contact = {
+      ...contact,
+      fullName: formState.fullName.trim(),
+      email: formState.email.trim() || undefined,
+      phone: formState.phone.trim() || undefined,
+      relationshipDomain: formState.relationshipDomain,
+      relationshipRole: formState.relationshipRole.trim(),
+      status: formState.status,
+      tags: parsedTags,
+    };
+
+    // Update in store
+    updateContact(updatedContact);
+
+    // Exit edit mode and refresh
+    setIsEditing(false);
+    setRefreshKey(k => k + 1);
+  };
+
+  const handleInputChange = (field: keyof EditFormState, value: string) => {
+    setFormState(prev => ({ ...prev, [field]: value }));
+  };
+
+  // --- HELPER COMPONENTS ---
 
   const TrendIcon: React.FC<{ trend: 'up' | 'down' | 'flat' }> = ({ trend }) => {
     if (trend === 'up') return <TrendingUp size={16} className="text-green-500" />;
@@ -73,6 +180,11 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selected
     return colors[domain];
   };
 
+  // --- INPUT STYLES ---
+  const inputClass = "w-full bg-[#1A1A1D] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none";
+  const selectClass = "w-full bg-[#1A1A1D] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none cursor-pointer";
+  const labelClass = "text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block";
+
   return (
     <div className="space-y-8 pb-20">
       {/* HEADER */}
@@ -86,6 +198,38 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selected
             <span className="text-[10px] bg-[#4433FF]/20 text-[#4433FF] px-2 py-0.5 rounded border border-[#4433FF]/30 font-bold uppercase">
               Identity Prime
             </span>
+          )}
+          {isEditing && (
+            <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded border border-orange-500/30 font-bold uppercase animate-pulse">
+              Editing…
+            </span>
+          )}
+        </div>
+
+        {/* Edit / Save / Cancel Buttons */}
+        <div className="flex gap-2">
+          {!isEditing ? (
+            <button
+              onClick={handleEdit}
+              className="flex items-center gap-2 px-4 py-2 bg-[#1A1A1D] border border-[#333] hover:border-[#4433FF] text-white text-xs font-bold rounded transition-colors"
+            >
+              <Edit2 size={14} /> Edit
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleCancel}
+                className="flex items-center gap-2 px-4 py-2 bg-[#1A1A1D] border border-[#333] hover:border-red-500 text-white text-xs font-bold rounded transition-colors"
+              >
+                <X size={14} /> Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="flex items-center gap-2 px-4 py-2 bg-[#4433FF] hover:bg-[#5544FF] text-white text-xs font-bold rounded transition-colors"
+              >
+                <Save size={14} /> Save
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -106,43 +250,129 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selected
                   isContactZero ? 'border-[#4433FF]' : 'border-[#333]'
                 }`}
               />
-              {contact.status === 'active' && (
+              {contact.status === 'active' && !isEditing && (
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-[#0E0E0E] flex items-center justify-center">
                   <Zap size={12} className="text-white" />
                 </div>
               )}
             </div>
             
-            <h2 className="text-2xl font-display font-bold text-white">{contact.fullName}</h2>
+            {/* Full Name */}
+            {isEditing ? (
+              <div className="w-full mb-4">
+                <label className={labelClass}>Full Name *</label>
+                <input
+                  type="text"
+                  value={formState.fullName}
+                  onChange={(e) => handleInputChange('fullName', e.target.value)}
+                  className={`${inputClass} text-center font-display font-bold text-xl`}
+                  placeholder="Full Name"
+                />
+              </div>
+            ) : (
+              <h2 className="text-2xl font-display font-bold text-white">{contact.fullName}</h2>
+            )}
             
-            <p className="text-xs text-gray-500 mt-1 font-mono uppercase tracking-wider">
-              {contact.relationshipRole}
-            </p>
+            {/* Role */}
+            {isEditing ? (
+              <div className="w-full mb-4">
+                <label className={labelClass}>Role</label>
+                <input
+                  type="text"
+                  value={formState.relationshipRole}
+                  onChange={(e) => handleInputChange('relationshipRole', e.target.value)}
+                  className={`${inputClass} text-center`}
+                  placeholder="e.g., prospect, client, friend"
+                />
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1 font-mono uppercase tracking-wider">
+                {contact.relationshipRole}
+              </p>
+            )}
 
-            {/* Domain & Status Badges */}
-            <div className="flex gap-2 mt-3">
-              <span className={`text-[10px] px-2 py-1 rounded uppercase font-bold ${domainColor(contact.relationshipDomain)}`}>
-                {contact.relationshipDomain}
-              </span>
-              <span className={`text-[10px] px-2 py-1 rounded border uppercase font-bold ${statusColor(contact.status)}`}>
-                {contact.status}
-              </span>
-            </div>
+            {/* Domain & Status */}
+            {isEditing ? (
+              <div className="w-full space-y-4 mt-2">
+                <div>
+                  <label className={labelClass}>Domain</label>
+                  <select
+                    value={formState.relationshipDomain}
+                    onChange={(e) => handleInputChange('relationshipDomain', e.target.value as RelationshipDomain)}
+                    className={selectClass}
+                  >
+                    <option value="business">Business</option>
+                    <option value="personal">Personal</option>
+                    <option value="hybrid">Hybrid</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Status</label>
+                  <select
+                    value={formState.status}
+                    onChange={(e) => handleInputChange('status', e.target.value as ContactStatus)}
+                    className={selectClass}
+                  >
+                    <option value="active">Active</option>
+                    <option value="dormant">Dormant</option>
+                    <option value="blocked">Blocked</option>
+                    <option value="testing">Testing</option>
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2 mt-3">
+                <span className={`text-[10px] px-2 py-1 rounded uppercase font-bold ${domainColor(contact.relationshipDomain)}`}>
+                  {contact.relationshipDomain}
+                </span>
+                <span className={`text-[10px] px-2 py-1 rounded border uppercase font-bold ${statusColor(contact.status)}`}>
+                  {contact.status}
+                </span>
+              </div>
+            )}
           </div>
 
+          {/* Contact Info */}
           <div className="space-y-3 border-t border-[#2A2A2A] pt-4">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-500 flex items-center gap-2">
-                <Mail size={12} /> Email
-              </span>
-              <span className="text-white font-mono text-xs">{contact.email || '—'}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-500 flex items-center gap-2">
-                <Phone size={12} /> Phone
-              </span>
-              <span className="text-white font-mono text-xs">{contact.phone || '—'}</span>
-            </div>
+            {isEditing ? (
+              <>
+                <div>
+                  <label className={labelClass}>Email</label>
+                  <input
+                    type="email"
+                    value={formState.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className={inputClass}
+                    placeholder="email@example.com"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Phone</label>
+                  <input
+                    type="tel"
+                    value={formState.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    className={inputClass}
+                    placeholder="+1 555 000 0000"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 flex items-center gap-2">
+                    <Mail size={12} /> Email
+                  </span>
+                  <span className="text-white font-mono text-xs">{contact.email || '—'}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 flex items-center gap-2">
+                    <Phone size={12} /> Phone
+                  </span>
+                  <span className="text-white font-mono text-xs">{contact.phone || '—'}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -234,7 +464,18 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selected
               <Tag size={16} className="text-orange-500" />
               <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tags</h3>
             </div>
-            {contact.tags.length > 0 ? (
+            {isEditing ? (
+              <div>
+                <input
+                  type="text"
+                  value={formState.tags}
+                  onChange={(e) => handleInputChange('tags', e.target.value)}
+                  className={inputClass}
+                  placeholder="tag1, tag2, tag3"
+                />
+                <p className="text-[10px] text-gray-600 mt-2">Separate tags with commas</p>
+              </div>
+            ) : contact.tags.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {contact.tags.map((tag) => (
                   <span 
@@ -334,4 +575,3 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selected
     </div>
   );
 };
-

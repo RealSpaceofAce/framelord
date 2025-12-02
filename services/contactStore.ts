@@ -223,3 +223,25 @@ export const getActiveContacts = (): Contact[] => {
   return MOCK_CONTACTS.filter(c => c.status === 'active');
 };
 
+/**
+ * Update a contact in the store.
+ * Replaces the contact with matching id in MOCK_CONTACTS.
+ * If the contact is Contact Zero, updates CONTACT_ZERO as well.
+ */
+export const updateContact = (updatedContact: Contact): void => {
+  const index = MOCK_CONTACTS.findIndex(c => c.id === updatedContact.id);
+  
+  if (index === -1) {
+    console.warn(`Contact with id ${updatedContact.id} not found`);
+    return;
+  }
+
+  // Update in MOCK_CONTACTS array
+  MOCK_CONTACTS[index] = updatedContact;
+
+  // If this is Contact Zero, also update the CONTACT_ZERO reference
+  if (updatedContact.id === CONTACT_ZERO.id) {
+    Object.assign(CONTACT_ZERO, updatedContact);
+  }
+};
+
