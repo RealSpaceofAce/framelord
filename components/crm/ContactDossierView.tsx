@@ -5,8 +5,8 @@
 // It receives selectedContactId as a prop and renders that contact's details.
 // Supports in-place editing of contact fields.
 // Includes Notes section with add form.
-// For Contact Zero: includes Activity feed showing actions taken about others.
-// Includes Topic chips for Obsidian-style [[Topic]] links.
+// Includes Tasks section with add form.
+// For Contact Zero: includes Activity feed, Topics, and Open Tasks summary.
 // =============================================================================
 
 import React, { useState, useEffect } from 'react';
@@ -14,12 +14,20 @@ import { motion } from 'framer-motion';
 import { 
   Target, TrendingUp, TrendingDown, Minus,
   Activity, Zap, Calendar, FileText, Mail, Phone,
-  Tag, Clock, Edit2, Save, X, Send, ArrowRight, User, Hash
+  Tag, Clock, Edit2, Save, X, Send, ArrowRight, User, Hash,
+  CheckSquare, Square, Plus, AlertCircle
 } from 'lucide-react';
 import { getContactById, CONTACT_ZERO, updateContact } from '../../services/contactStore';
 import { getNotesByContactId, getNotesByAuthorId, createNote } from '../../services/noteStore';
 import { getTopicsForContact, getTopicsForAuthor } from '../../services/topicStore';
-import { Contact, RelationshipDomain, ContactStatus, Topic } from '../../types';
+import { 
+  getOpenTasksByContactId, 
+  getTasksByContactId, 
+  createTask, 
+  updateTaskStatus,
+  getOpenTasksGroupedByContact 
+} from '../../services/taskStore';
+import { Contact, RelationshipDomain, ContactStatus, Topic, Task } from '../../types';
 
 const MotionDiv = motion.div as any;
 
@@ -59,6 +67,10 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   // New note input state
   const [newNoteContent, setNewNoteContent] = useState('');
   
+  // New task input state
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDueDate, setNewTaskDueDate] = useState('');
+  
   // Get contact from store (re-fetch on refreshKey change)
   const contact = getContactById(selectedContactId);
   
@@ -88,10 +100,12 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     }
   }, [contact, isEditing]);
 
-  // Reset edit mode when contact changes
+  // Reset state when contact changes
   useEffect(() => {
     setIsEditing(false);
     setNewNoteContent('');
+    setNewTaskTitle('');
+    setNewTaskDueDate('');
   }, [selectedContactId]);
   
   // Fallback if contact not found
@@ -108,6 +122,10 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   // Notes ABOUT this contact
   const notesAboutContact = getNotesByContactId(contact.id);
   
+  // Tasks for this contact
+  const openTasks = getOpenTasksByContactId(selectedContactId);
+  const allTasks = getTasksByContactId(selectedContactId);
+  
   // For Contact Zero: notes written BY Contact Zero about OTHER contacts
   const activityNotes = isContactZero 
     ? getNotesByAuthorId(CONTACT_ZERO.id).filter(n => n.contactId !== CONTACT_ZERO.id)
@@ -119,6 +137,9 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   // For Contact Zero: all topics from notes written by them
   const topicsForAuthor = isContactZero ? getTopicsForAuthor(CONTACT_ZERO.id) : [];
 
+  // For Contact Zero: open tasks grouped by contact (what you owe to others)
+  const openTasksByContact = isContactZero ? getOpenTasksGroupedByContact() : new Map();
+
   // --- HANDLERS ---
 
   const handleEdit = () => {
@@ -126,7 +147,6 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   };
 
   const handleCancel = () => {
-    // Reset form state to original contact values
     setFormState({
       fullName: contact.fullName,
       email: contact.email || '',
@@ -140,19 +160,16 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   };
 
   const handleSave = () => {
-    // Validate: fullName is required
     if (!formState.fullName.trim()) {
       alert('Full name is required');
       return;
     }
 
-    // Parse tags from comma-separated string
     const parsedTags = formState.tags
       .split(',')
       .map(tag => tag.trim())
       .filter(tag => tag.length > 0);
 
-    // Construct updated contact object (no partial edits)
     const updatedContact: Contact = {
       ...contact,
       fullName: formState.fullName.trim(),
@@ -164,10 +181,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
       tags: parsedTags,
     };
 
-    // Update in store
     updateContact(updatedContact);
-
-    // Exit edit mode and refresh
     setIsEditing(false);
     setRefreshKey(k => k + 1);
   };
@@ -197,7 +211,28 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     }
   };
 
-  // Navigate to a contact's dossier (for Activity feed)
+  // Handle adding a new task
+  const handleAddTask = () => {
+    if (!newTaskTitle.trim()) return;
+
+    createTask({
+      contactId: selectedContactId,
+      title: newTaskTitle.trim(),
+      dueAt: newTaskDueDate ? new Date(newTaskDueDate).toISOString() : null,
+    });
+
+    setNewTaskTitle('');
+    setNewTaskDueDate('');
+    setRefreshKey(k => k + 1);
+  };
+
+  // Handle marking task as done
+  const handleMarkTaskDone = (taskId: string) => {
+    updateTaskStatus(taskId, 'done');
+    setRefreshKey(k => k + 1);
+  };
+
+  // Navigate to a contact's dossier
   const handleNavigateToContact = (contactId: string) => {
     if (setSelectedContactId) {
       setSelectedContactId(contactId);
@@ -257,14 +292,20 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     return colors[domain];
   };
 
-  // Truncate content for snippets
   const truncate = (text: string, maxLength: number): string => {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength).trim() + '…';
   };
 
-  // Format date
   const formatDate = (dateStr: string): string => {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const formatDueDate = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -297,7 +338,6 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           )}
         </div>
 
-        {/* Edit / Save / Cancel Buttons */}
         <div className="flex gap-2">
           {!isEditing ? (
             <button
@@ -348,7 +388,6 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               )}
             </div>
             
-            {/* Full Name */}
             {isEditing ? (
               <div className="w-full mb-4">
                 <label className={labelClass}>Full Name *</label>
@@ -364,7 +403,6 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               <h2 className="text-2xl font-display font-bold text-white">{contact.fullName}</h2>
             )}
             
-            {/* Role */}
             {isEditing ? (
               <div className="w-full mb-4">
                 <label className={labelClass}>Role</label>
@@ -382,7 +420,6 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               </p>
             )}
 
-            {/* Domain & Status */}
             {isEditing ? (
               <div className="w-full space-y-4 mt-2">
                 <div>
@@ -423,7 +460,6 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             )}
           </div>
 
-          {/* Contact Info */}
           <div className="space-y-3 border-t border-[#2A2A2A] pt-4">
             {isEditing ? (
               <>
@@ -467,7 +503,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           </div>
         </div>
 
-        {/* CENTER: Frame Metrics + Topics */}
+        {/* CENTER: Frame Metrics + Topics + Timeline */}
         <div className="space-y-6">
           {/* Frame Score */}
           <MotionDiv 
@@ -497,7 +533,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             </div>
           </MotionDiv>
 
-          {/* Topics with this contact */}
+          {/* Topics */}
           <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
             <div className="flex items-center gap-2 mb-4">
               <Hash size={16} className="text-purple-500" />
@@ -514,9 +550,6 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             ) : (
               <p className="text-gray-600 text-sm italic">No topics linked yet</p>
             )}
-            <p className="text-[10px] text-gray-600 mt-3">
-              Use [[Topic]] syntax in notes to create links
-            </p>
           </div>
 
           {/* Timeline */}
@@ -529,49 +562,95 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Last Contact</span>
                 <span className="text-sm text-white font-mono">
-                  {contact.lastContactAt 
-                    ? new Date(contact.lastContactAt).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        year: 'numeric'
-                      })
-                    : '—'
-                  }
+                  {contact.lastContactAt ? formatDate(contact.lastContactAt) : '—'}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Next Action</span>
                 <span className={`text-sm font-mono ${contact.nextActionAt ? 'text-[#4433FF]' : 'text-gray-600'}`}>
-                  {contact.nextActionAt 
-                    ? new Date(contact.nextActionAt).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        year: 'numeric'
-                      })
-                    : '—'
-                  }
+                  {contact.nextActionAt ? formatDate(contact.nextActionAt) : '—'}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Last Scan</span>
                 <span className="text-sm text-white font-mono">
-                  {contact.frame.lastScanAt 
-                    ? new Date(contact.frame.lastScanAt).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        year: 'numeric'
-                      })
-                    : 'Never'
-                  }
+                  {contact.frame.lastScanAt ? formatDate(contact.frame.lastScanAt) : 'Never'}
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT: Notes Section + Tags */}
+        {/* RIGHT: Notes + Tasks + Tags */}
         <div className="space-y-6">
-          {/* Notes ABOUT this contact */}
+          {/* Tasks Section */}
+          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <CheckSquare size={16} className="text-cyan-500" />
+              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                Tasks {!isContactZero && 'For'}
+              </h3>
+              <span className="text-[10px] text-gray-600 ml-auto">{openTasks.length} open</span>
+            </div>
+
+            {/* Add Task Form */}
+            <div className="mb-4 space-y-2">
+              <input
+                type="text"
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                placeholder="New task..."
+                className="w-full bg-[#1A1A1D] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none"
+              />
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={newTaskDueDate}
+                  onChange={(e) => setNewTaskDueDate(e.target.value)}
+                  className="flex-1 bg-[#1A1A1D] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none"
+                />
+                <button
+                  onClick={handleAddTask}
+                  disabled={!newTaskTitle.trim()}
+                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:bg-[#333] disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors flex items-center gap-1"
+                >
+                  <Plus size={12} /> Add
+                </button>
+              </div>
+            </div>
+
+            {/* Open Tasks List */}
+            {openTasks.length > 0 ? (
+              <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                {openTasks.map((task) => (
+                  <div 
+                    key={task.id}
+                    className="flex items-start gap-3 p-2 bg-[#1A1A1D] rounded border border-[#333] hover:border-cyan-500/30 transition-colors"
+                  >
+                    <button
+                      onClick={() => handleMarkTaskDone(task.id)}
+                      className="mt-0.5 text-gray-500 hover:text-cyan-500 transition-colors"
+                      title="Mark as done"
+                    >
+                      <Square size={16} />
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white">{task.title}</p>
+                      {task.dueAt && (
+                        <p className="text-[10px] text-cyan-400 mt-1">
+                          Due: {formatDueDate(task.dueAt)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600 text-sm italic">No open tasks</p>
+            )}
+          </div>
+
+          {/* Notes Section */}
           <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
             <div className="flex items-center gap-2 mb-4">
               <FileText size={16} className="text-[#4433FF]" />
@@ -581,13 +660,12 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               <span className="text-[10px] text-gray-600 ml-auto">{notesAboutContact.length} total</span>
             </div>
 
-            {/* Add Note Form */}
             <div className="mb-4">
               <textarea
                 value={newNoteContent}
                 onChange={(e) => setNewNoteContent(e.target.value)}
                 onKeyDown={handleNoteKeyDown}
-                placeholder={`Add a note ${isContactZero ? '(use [[Topic]] for links)' : `about ${contact.fullName}`}...`}
+                placeholder={`Add a note...`}
                 className="w-full bg-[#1A1A1D] border border-[#333] rounded-lg p-3 text-white text-sm resize-none focus:border-[#4433FF] outline-none"
                 rows={2}
               />
@@ -600,27 +678,19 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               </button>
             </div>
 
-            {/* Recent Notes */}
             {notesAboutContact.length > 0 ? (
-              <div className="space-y-3 max-h-[250px] overflow-y-auto">
-                {notesAboutContact.slice(0, 5).map((note) => (
-                  <div 
-                    key={note.id}
-                    className="border-l-2 border-[#4433FF]/30 pl-3 py-1"
-                  >
+              <div className="space-y-3 max-h-[150px] overflow-y-auto">
+                {notesAboutContact.slice(0, 3).map((note) => (
+                  <div key={note.id} className="border-l-2 border-[#4433FF]/30 pl-3 py-1">
                     <div className="flex items-center gap-2 mb-1">
                       <Clock size={10} className="text-gray-600" />
-                      <span className="text-[10px] text-gray-500">
-                        {formatDate(note.createdAt)}
-                      </span>
+                      <span className="text-[10px] text-gray-500">{formatDate(note.createdAt)}</span>
                     </div>
-                    <p className="text-sm text-gray-400">
-                      {truncate(note.content, 100)}
-                    </p>
+                    <p className="text-sm text-gray-400">{truncate(note.content, 80)}</p>
                   </div>
                 ))}
-                {notesAboutContact.length > 5 && (
-                  <p className="text-xs text-gray-600 pl-3">+{notesAboutContact.length - 5} more notes</p>
+                {notesAboutContact.length > 3 && (
+                  <p className="text-xs text-gray-600 pl-3">+{notesAboutContact.length - 3} more</p>
                 )}
               </div>
             ) : (
@@ -643,15 +713,11 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                   className={inputClass}
                   placeholder="tag1, tag2, tag3"
                 />
-                <p className="text-[10px] text-gray-600 mt-2">Separate tags with commas</p>
               </div>
             ) : contact.tags.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {contact.tags.map((tag) => (
-                  <span 
-                    key={tag}
-                    className="text-xs px-3 py-1 rounded-full bg-[#4433FF]/20 text-[#737AFF] border border-[#4433FF]/30"
-                  >
+                  <span key={tag} className="text-xs px-3 py-1 rounded-full bg-[#4433FF]/20 text-[#737AFF] border border-[#4433FF]/30">
                     {tag}
                   </span>
                 ))}
@@ -663,7 +729,50 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
         </div>
       </div>
 
-      {/* CONTACT ZERO ONLY: Your Topics (all topics from your notes) */}
+      {/* CONTACT ZERO ONLY: Your Open Tasks (what you owe to others) */}
+      {isContactZero && openTasksByContact.size > 0 && (
+        <div className="bg-[#0E0E0E] border border-cyan-500/30 rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <AlertCircle size={16} className="text-cyan-500" />
+            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Your Open Tasks (Owed to Others)
+            </h3>
+            <span className="text-[10px] text-gray-600 ml-auto">
+              {Array.from(openTasksByContact.values()).flat().length} tasks
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from(openTasksByContact.entries()).map(([contactId, tasks]) => {
+              const targetContact = getContactById(contactId);
+              if (!targetContact) return null;
+
+              return (
+                <button
+                  key={contactId}
+                  onClick={() => handleNavigateToContact(contactId)}
+                  className="flex items-center gap-3 p-4 bg-[#1A1A1D] border border-[#333] rounded-lg hover:border-cyan-500/50 transition-colors text-left"
+                >
+                  <img 
+                    src={targetContact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${targetContact.id}`}
+                    alt={targetContact.fullName}
+                    className="w-10 h-10 rounded-full border border-[#333]"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold text-white flex items-center gap-1">
+                      {targetContact.fullName}
+                      <ArrowRight size={12} className="text-cyan-500" />
+                    </div>
+                    <div className="text-xs text-cyan-400">{tasks.length} open task{tasks.length !== 1 ? 's' : ''}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* CONTACT ZERO ONLY: Your Topics */}
       {isContactZero && topicsForAuthor.length > 0 && (
         <div className="bg-[#0E0E0E] border border-purple-500/30 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
@@ -673,7 +782,6 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             </h3>
             <span className="text-[10px] text-gray-600 ml-auto">{topicsForAuthor.length} topics</span>
           </div>
-
           <div className="flex flex-wrap gap-2">
             {topicsForAuthor.map((topic) => (
               <TopicChip key={topic.id} topic={topic} />
@@ -682,7 +790,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
         </div>
       )}
 
-      {/* CONTACT ZERO ONLY: Activity Feed (what you did about others) */}
+      {/* CONTACT ZERO ONLY: Activity Feed */}
       {isContactZero && activityNotes.length > 0 && (
         <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
@@ -699,10 +807,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               if (!targetContact) return null;
 
               return (
-                <div 
-                  key={note.id}
-                  className="bg-[#1A1A1D] border border-[#333] rounded-lg p-4 hover:border-[#4433FF]/50 transition-colors"
-                >
+                <div key={note.id} className="bg-[#1A1A1D] border border-[#333] rounded-lg p-4 hover:border-[#4433FF]/50 transition-colors">
                   <div className="flex items-center gap-3 mb-3">
                     <img 
                       src={targetContact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${targetContact.id}`}
@@ -720,60 +825,62 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                       <div className="text-[10px] text-gray-500">{formatDate(note.createdAt)}</div>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-400 leading-relaxed">
-                    {truncate(note.content, 80)}
-                  </p>
+                  <p className="text-xs text-gray-400 leading-relaxed">{truncate(note.content, 80)}</p>
                 </div>
               );
             })}
           </div>
-
           {activityNotes.length > 6 && (
-            <p className="text-xs text-gray-600 mt-4 text-center">
-              +{activityNotes.length - 6} more activity entries
-            </p>
+            <p className="text-xs text-gray-600 mt-4 text-center">+{activityNotes.length - 6} more</p>
           )}
         </div>
       )}
 
       {/* BOTTOM: Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <FileText size={14} className="text-gray-600" />
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Notes</span>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <CheckSquare size={12} className="text-gray-600" />
+            <span className="text-[9px] font-bold text-gray-500 uppercase">Tasks</span>
           </div>
-          <div className="text-3xl font-display font-bold text-white">{notesAboutContact.length}</div>
-          <div className="text-xs text-gray-600">entries</div>
+          <div className="text-2xl font-display font-bold text-cyan-400">{openTasks.length}</div>
+          <div className="text-[10px] text-gray-600">open</div>
         </div>
 
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <Hash size={14} className="text-gray-600" />
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Topics</span>
+        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <FileText size={12} className="text-gray-600" />
+            <span className="text-[9px] font-bold text-gray-500 uppercase">Notes</span>
           </div>
-          <div className="text-3xl font-display font-bold text-purple-400">{topicsForContact.length}</div>
-          <div className="text-xs text-gray-600">linked</div>
+          <div className="text-2xl font-display font-bold text-white">{notesAboutContact.length}</div>
+          <div className="text-[10px] text-gray-600">entries</div>
         </div>
 
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <Activity size={14} className="text-gray-600" />
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Frame</span>
+        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Hash size={12} className="text-gray-600" />
+            <span className="text-[9px] font-bold text-gray-500 uppercase">Topics</span>
           </div>
-          <div className={`text-3xl font-display font-bold ${scoreColor}`}>
-            {contact.frame.currentScore}
-          </div>
-          <div className="text-xs text-gray-600">score</div>
+          <div className="text-2xl font-display font-bold text-purple-400">{topicsForContact.length}</div>
+          <div className="text-[10px] text-gray-600">linked</div>
         </div>
 
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <Tag size={14} className="text-gray-600" />
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tags</span>
+        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Activity size={12} className="text-gray-600" />
+            <span className="text-[9px] font-bold text-gray-500 uppercase">Frame</span>
           </div>
-          <div className="text-3xl font-display font-bold text-white">{contact.tags.length}</div>
-          <div className="text-xs text-gray-600">labels</div>
+          <div className={`text-2xl font-display font-bold ${scoreColor}`}>{contact.frame.currentScore}</div>
+          <div className="text-[10px] text-gray-600">score</div>
+        </div>
+
+        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Tag size={12} className="text-gray-600" />
+            <span className="text-[9px] font-bold text-gray-500 uppercase">Tags</span>
+          </div>
+          <div className="text-2xl font-display font-bold text-white">{contact.tags.length}</div>
+          <div className="text-[10px] text-gray-600">labels</div>
         </div>
       </div>
     </div>

@@ -22,6 +22,7 @@ import { NotesView } from './crm/NotesView';
 import { ThreeParticles } from './ThreeParticles';
 import { ContactDossierView } from './crm/ContactDossierView';
 import { TopicView } from './crm/TopicView';
+import { TasksView } from './crm/TasksView';
 import { getContactZero, CONTACT_ZERO, getContactById } from '../services/contactStore';
 import { getTopicById } from '../services/topicStore';
 
@@ -446,7 +447,7 @@ const DashboardOverview: React.FC = () => {
     );
 }
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'GROUPS' | 'PROJECTS' | 'TOPIC';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'GROUPS' | 'PROJECTS' | 'TOPIC' | 'TASKS';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -542,6 +543,7 @@ export const Dashboard: React.FC = () => {
             <NavItem active={currentView === 'NOTES'} onClick={() => handleNav('NOTES')} icon={<Notebook size={16} />} label="NOTES / LOG" />
             <NavItem active={currentView === 'SCAN'} onClick={() => handleNav('SCAN')} icon={<Scan size={16} />} label="SCAN" />
             <NavItem active={currentView === 'CASES'} onClick={() => handleNav('CASES')} icon={<Briefcase size={16} />} label="CASES / WORKLOAD" />
+            <NavItem active={currentView === 'TASKS'} onClick={() => handleNav('TASKS')} icon={<CheckCircle size={16} />} label="TASKS" />
             <NavItem active={currentView === 'PIPELINES'} onClick={() => handleNav('PIPELINES')} icon={<GitCommit size={16} />} label="PIPELINES" />
             
             <div className="h-6" />
@@ -658,6 +660,13 @@ export const Dashboard: React.FC = () => {
                />
              )}
              {currentView === 'CASES' && <CasesView />}
+             {currentView === 'TASKS' && (
+               <TasksView
+                 selectedContactId={selectedContactId}
+                 setSelectedContactId={setSelectedContactId}
+                 onNavigateToDossier={() => setCurrentView('DOSSIER')}
+               />
+             )}
              {currentView === 'PIPELINES' && <PipelinesView />}
              {(currentView === 'GROUPS' || currentView === 'PROJECTS') && <GroupsProjectsView />}
          </div>

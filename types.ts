@@ -79,10 +79,11 @@ export type TaskStatus = 'open' | 'done' | 'blocked';
 
 export interface Task {
   id: string;
-  contactId: string;              // REQUIRED — links to Contact.id
+  contactId: string;              // REQUIRED — who the task is ABOUT
   title: string;
   dueAt?: string | null;          // ISO timestamp
   status: TaskStatus;
+  createdAt: string;              // ISO timestamp
 }
 
 // =============================================================================
