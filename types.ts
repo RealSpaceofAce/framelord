@@ -63,11 +63,12 @@ export interface NoteTopic {
 
 // --- INTERACTION ---
 
-export type InteractionType = 'call' | 'meeting' | 'message' | 'other';
+export type InteractionType = 'call' | 'meeting' | 'message' | 'email' | 'dm' | 'other';
 
 export interface Interaction {
   id: string;
-  contactId: string;              // REQUIRED — links to Contact.id
+  contactId: string;              // REQUIRED — who the interaction was WITH
+  authorContactId: string;        // REQUIRED — who performed/logged it (typically CONTACT_ZERO)
   type: InteractionType;
   occurredAt: string;             // ISO timestamp
   summary: string;

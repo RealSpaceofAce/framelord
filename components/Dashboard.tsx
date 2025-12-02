@@ -24,6 +24,7 @@ import { ContactDossierView } from './crm/ContactDossierView';
 import { TopicView } from './crm/TopicView';
 import { TasksView } from './crm/TasksView';
 import { CalendarView } from './crm/CalendarView';
+import { ActivityView } from './crm/ActivityView';
 import { getContactZero, CONTACT_ZERO, getContactById } from '../services/contactStore';
 import { getTopicById } from '../services/topicStore';
 
@@ -448,7 +449,7 @@ const DashboardOverview: React.FC = () => {
     );
 }
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'GROUPS' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'GROUPS' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -546,6 +547,7 @@ export const Dashboard: React.FC = () => {
             <NavItem active={currentView === 'CASES'} onClick={() => handleNav('CASES')} icon={<Briefcase size={16} />} label="CASES / WORKLOAD" />
             <NavItem active={currentView === 'TASKS'} onClick={() => handleNav('TASKS')} icon={<CheckCircle size={16} />} label="TASKS" />
             <NavItem active={currentView === 'CALENDAR'} onClick={() => handleNav('CALENDAR')} icon={<Calendar size={16} />} label="CALENDAR" />
+            <NavItem active={currentView === 'ACTIVITY'} onClick={() => handleNav('ACTIVITY')} icon={<ClockIcon size={16} />} label="ACTIVITY" />
             <NavItem active={currentView === 'PIPELINES'} onClick={() => handleNav('PIPELINES')} icon={<GitCommit size={16} />} label="PIPELINES" />
             
             <div className="h-6" />
@@ -671,6 +673,13 @@ export const Dashboard: React.FC = () => {
              )}
              {currentView === 'CALENDAR' && (
                <CalendarView
+                 selectedContactId={selectedContactId}
+                 setSelectedContactId={setSelectedContactId}
+                 onNavigateToDossier={() => setCurrentView('DOSSIER')}
+               />
+             )}
+             {currentView === 'ACTIVITY' && (
+               <ActivityView
                  selectedContactId={selectedContactId}
                  setSelectedContactId={setSelectedContactId}
                  onNavigateToDossier={() => setCurrentView('DOSSIER')}

@@ -15,11 +15,12 @@ import {
   Target, TrendingUp, TrendingDown, Minus,
   Activity, Zap, Calendar, FileText, Mail, Phone,
   Tag, Clock, Edit2, Save, X, Send, ArrowRight, User, Hash,
-  CheckSquare, Square, Plus, AlertCircle
+  CheckSquare, Square, Plus, AlertCircle, PhoneCall, Users, MessageSquare, AtSign
 } from 'lucide-react';
 import { getContactById, CONTACT_ZERO, updateContact } from '../../services/contactStore';
 import { getNotesByContactId, getNotesByAuthorId, createNote } from '../../services/noteStore';
 import { getTopicsForContact, getTopicsForAuthor } from '../../services/topicStore';
+import { getInteractionsByContactId, getInteractionsByAuthorId, createInteraction } from '../../services/interactionStore';
 import { 
   getOpenTasksByContactId, 
   getTasksByContactId, 
@@ -31,7 +32,7 @@ import {
   formatDueTime,
   hasTimeComponent
 } from '../../services/taskStore';
-import { Contact, RelationshipDomain, ContactStatus, Topic, Task } from '../../types';
+import { Contact, RelationshipDomain, ContactStatus, Topic, Task, Interaction, InteractionType } from '../../types';
 
 const MotionDiv = motion.div as any;
 
@@ -75,6 +76,11 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDueDate, setNewTaskDueDate] = useState('');
   
+  // New interaction input state
+  const [newInteractionType, setNewInteractionType] = useState<InteractionType>('call');
+  const [newInteractionSummary, setNewInteractionSummary] = useState('');
+  const [newInteractionOccurredAt, setNewInteractionOccurredAt] = useState('');
+  
   // Get contact from store (re-fetch on refreshKey change)
   const contact = getContactById(selectedContactId);
   
@@ -110,6 +116,9 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     setNewNoteContent('');
     setNewTaskTitle('');
     setNewTaskDueDate('');
+    setNewInteractionType('call');
+    setNewInteractionSummary('');
+    setNewInteractionOccurredAt('');
   }, [selectedContactId]);
   
   // Fallback if contact not found
@@ -189,6 +198,45 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     const date = new Date(dateKey + 'T00:00:00');
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
+
+  // Timeline: Merge Interactions and Notes for this contact
+  type TimelineItem = {
+    type: 'interaction' | 'note';
+    interactionType?: InteractionType;
+    occurredAt: string;
+    summary: string;
+    id: string;
+  };
+
+  const timelineItems: TimelineItem[] = (() => {
+    const interactions = getInteractionsByContactId(selectedContactId);
+    const notes = getNotesByContactId(selectedContactId);
+
+    const items: TimelineItem[] = [
+      ...interactions.map(i => ({
+        type: 'interaction' as const,
+        interactionType: i.type,
+        occurredAt: i.occurredAt,
+        summary: i.summary,
+        id: i.id,
+      })),
+      ...notes.map(n => ({
+        type: 'note' as const,
+        occurredAt: n.createdAt,
+        summary: n.content.length > 120 ? n.content.slice(0, 120) + '…' : n.content,
+        id: n.id,
+      })),
+    ];
+
+    return items.sort((a, b) => {
+      return new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime();
+    });
+  })();
+
+  // For Contact Zero: Last interactions authored by Contact Zero
+  const lastInteractions = isContactZero 
+    ? getInteractionsByAuthorId(CONTACT_ZERO.id).slice(0, 10)
+    : [];
 
   // --- HANDLERS ---
 
@@ -282,6 +330,24 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     setRefreshKey(k => k + 1);
   };
 
+  // Handle adding a new interaction
+  const handleAddInteraction = () => {
+    if (!newInteractionSummary.trim()) return;
+
+    createInteraction({
+      contactId: selectedContactId,
+      authorContactId: CONTACT_ZERO.id,
+      type: newInteractionType,
+      summary: newInteractionSummary.trim(),
+      occurredAt: newInteractionOccurredAt || undefined,
+    });
+
+    setNewInteractionType('call');
+    setNewInteractionSummary('');
+    setNewInteractionOccurredAt('');
+    setRefreshKey(k => k + 1);
+  };
+
   // Navigate to a contact's dossier
   const handleNavigateToContact = (contactId: string) => {
     if (setSelectedContactId) {
@@ -360,6 +426,47 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  const formatDateTime = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  };
+
+  const getInteractionTypeLabel = (type: InteractionType): string => {
+    const labels: Record<InteractionType, string> = {
+      call: 'Call',
+      meeting: 'Meeting',
+      message: 'Message',
+      email: 'Email',
+      dm: 'DM',
+      other: 'Other',
+    };
+    return labels[type];
+  };
+
+  const getInteractionTypeIcon = (type: InteractionType) => {
+    const iconClass = "text-gray-400";
+    switch (type) {
+      case 'call':
+        return <PhoneCall size={14} className={iconClass} />;
+      case 'meeting':
+        return <Users size={14} className={iconClass} />;
+      case 'message':
+        return <MessageSquare size={14} className={iconClass} />;
+      case 'email':
+        return <Mail size={14} className={iconClass} />;
+      case 'dm':
+        return <AtSign size={14} className={iconClass} />;
+      default:
+        return <Activity size={14} className={iconClass} />;
+    }
   };
 
   // --- INPUT STYLES ---
@@ -602,11 +709,90 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             )}
           </div>
 
-          {/* Timeline */}
+          {/* Timeline (Interactions + Notes) */}
+          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Clock size={16} className="text-green-500" />
+              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Timeline</h3>
+              <span className="text-[10px] text-gray-600 ml-auto">{timelineItems.length} entries</span>
+            </div>
+
+            {/* Add Interaction Form */}
+            <div className="mb-4 space-y-2 p-3 bg-[#1A1A1D] rounded border border-[#333]">
+              <div className="flex gap-2">
+                <select
+                  value={newInteractionType}
+                  onChange={(e) => setNewInteractionType(e.target.value as InteractionType)}
+                  className="flex-1 bg-[#0E0E0E] border border-[#333] rounded px-2 py-1.5 text-white text-xs focus:border-[#4433FF] outline-none"
+                >
+                  <option value="call">Call</option>
+                  <option value="meeting">Meeting</option>
+                  <option value="message">Message</option>
+                  <option value="email">Email</option>
+                  <option value="dm">DM</option>
+                  <option value="other">Other</option>
+                </select>
+                <input
+                  type="datetime-local"
+                  value={newInteractionOccurredAt}
+                  onChange={(e) => setNewInteractionOccurredAt(e.target.value)}
+                  className="bg-[#0E0E0E] border border-[#333] rounded px-2 py-1.5 text-white text-xs focus:border-[#4433FF] outline-none"
+                />
+              </div>
+              <textarea
+                value={newInteractionSummary}
+                onChange={(e) => setNewInteractionSummary(e.target.value)}
+                placeholder="Summary..."
+                className="w-full bg-[#0E0E0E] border border-[#333] rounded px-2 py-1.5 text-white text-xs resize-none focus:border-[#4433FF] outline-none"
+                rows={2}
+              />
+              <button
+                onClick={handleAddInteraction}
+                disabled={!newInteractionSummary.trim()}
+                className="w-full px-3 py-1.5 bg-green-600 hover:bg-green-500 disabled:bg-[#333] disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors"
+              >
+                Log Interaction
+              </button>
+            </div>
+
+            {/* Timeline Items */}
+            {timelineItems.length > 0 ? (
+              <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                {timelineItems.map((item) => (
+                  <div key={item.id} className="border-l-2 border-[#4433FF]/30 pl-3 py-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      {item.type === 'interaction' && item.interactionType && (
+                        <div className="flex items-center gap-1">
+                          {getInteractionTypeIcon(item.interactionType)}
+                          <span className="text-[10px] text-gray-500 uppercase font-bold">
+                            {getInteractionTypeLabel(item.interactionType)}
+                          </span>
+                        </div>
+                      )}
+                      {item.type === 'note' && (
+                        <div className="flex items-center gap-1">
+                          <FileText size={12} className="text-gray-400" />
+                          <span className="text-[10px] text-gray-500 uppercase font-bold">Note</span>
+                        </div>
+                      )}
+                      <span className="text-[10px] text-gray-600">
+                        {formatDateTime(item.occurredAt)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-300 leading-relaxed">{item.summary}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600 text-sm italic">No timeline entries yet</p>
+            )}
+          </div>
+
+          {/* Timeline Stats (Last Contact, Next Action, Last Scan) */}
           <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
             <div className="flex items-center gap-2 mb-4">
               <Calendar size={16} className="text-green-500" />
-              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Timeline</h3>
+              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Key Dates</h3>
             </div>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
@@ -911,6 +1097,57 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             {topicsForAuthor.map((topic) => (
               <TopicChip key={topic.id} topic={topic} />
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* CONTACT ZERO ONLY: Your Last Interactions */}
+      {isContactZero && lastInteractions.length > 0 && (
+        <div className="bg-[#0E0E0E] border border-blue-500/30 rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <PhoneCall size={16} className="text-blue-500" />
+            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Your Last Interactions
+            </h3>
+            <span className="text-[10px] text-gray-600 ml-auto">{lastInteractions.length} entries</span>
+          </div>
+
+          <div className="space-y-3">
+            {lastInteractions.map((interaction) => {
+              const targetContact = getContactById(interaction.contactId);
+              if (!targetContact) return null;
+
+              return (
+                <div
+                  key={interaction.id}
+                  className="flex items-start gap-3 p-3 bg-[#1A1A1D] border border-[#333] rounded-lg hover:border-blue-500/50 transition-colors"
+                >
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {getInteractionTypeIcon(interaction.type)}
+                    <span className="text-[10px] text-gray-500 uppercase font-bold">
+                      {getInteractionTypeLabel(interaction.type)}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <button
+                        onClick={() => handleNavigateToContact(targetContact.id)}
+                        className="text-sm font-bold text-blue-400 hover:text-white transition-colors flex items-center gap-1"
+                      >
+                        {targetContact.fullName}
+                        <ArrowRight size={10} />
+                      </button>
+                      <span className="text-[10px] text-gray-600">
+                        {formatDateTime(interaction.occurredAt)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      {truncate(interaction.summary, 100)}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
