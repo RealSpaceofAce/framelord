@@ -1,21 +1,38 @@
 // =============================================================================
 // CONTACTS VIEW — Directory of all contacts in the spine
 // =============================================================================
+// Accepts selectedContactId and setSelectedContactId as props from Dashboard.
+// Highlights the currently selected contact row.
+// Clicking a row calls setSelectedContactId to update the centralized state.
+// =============================================================================
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Contact, RelationshipDomain } from '../../types';
 import { MOCK_CONTACTS, CONTACT_ZERO } from '../../services/contactStore';
 import { getNoteCountByContactId } from '../../services/noteStore';
 import { 
-  User, TrendingUp, TrendingDown, Minus, 
-  Calendar, Target, Filter, FileText
+  TrendingUp, TrendingDown, Minus, 
+  Calendar, Target, Filter, FileText, ExternalLink
 } from 'lucide-react';
+
+// --- PROPS ---
+
+interface ContactsViewProps {
+  selectedContactId: string;
+  setSelectedContactId: (id: string) => void;
+  onViewDossier?: () => void;  // Optional callback to navigate to dossier view
+}
 
 type DomainFilter = 'all' | RelationshipDomain;
 
-export const ContactsView: React.FC = () => {
-  const [domainFilter, setDomainFilter] = useState<DomainFilter>('all');
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+// --- COMPONENT ---
+
+export const ContactsView: React.FC<ContactsViewProps> = ({ 
+  selectedContactId, 
+  setSelectedContactId,
+  onViewDossier 
+}) => {
+  const [domainFilter, setDomainFilter] = React.useState<DomainFilter>('all');
 
   // Filter contacts by domain
   const filteredContacts = useMemo(() => {
@@ -70,14 +87,18 @@ export const ContactsView: React.FC = () => {
     return styles[domain];
   };
 
-  if (selectedContact) {
-    return (
-      <ContactDetail 
-        contact={selectedContact} 
-        onBack={() => setSelectedContact(null)} 
-      />
-    );
-  }
+  // Handle row click — update centralized selectedContactId
+  const handleRowClick = (contactId: string) => {
+    setSelectedContactId(contactId);
+  };
+
+  // Handle double-click — navigate to dossier
+  const handleRowDoubleClick = (contactId: string) => {
+    setSelectedContactId(contactId);
+    if (onViewDossier) {
+      onViewDossier();
+    }
+  };
 
   return (
     <div className="space-y-6 pb-20">
@@ -87,6 +108,9 @@ export const ContactsView: React.FC = () => {
           <h1 className="text-2xl font-display font-bold text-white">CONTACTS DIRECTORY</h1>
           <p className="text-xs text-gray-500 mt-1">
             {sortedContacts.length} contacts • {filteredContacts.filter(c => c.status === 'active').length} active
+            {selectedContactId && (
+              <span className="ml-2 text-[#4433FF]">• 1 selected</span>
+            )}
           </p>
         </div>
 
@@ -124,34 +148,52 @@ export const ContactsView: React.FC = () => {
                 <th className="text-center p-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Frame</th>
                 <th className="text-left p-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Last Contact</th>
                 <th className="text-left p-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Next Action</th>
+                <th className="text-center p-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest"></th>
               </tr>
             </thead>
             <tbody>
               {sortedContacts.map((contact) => {
                 const isContactZero = contact.id === CONTACT_ZERO.id;
+                const isSelected = contact.id === selectedContactId;
                 const noteCount = getNoteCountByContactId(contact.id);
                 
                 return (
                   <tr 
                     key={contact.id}
-                    onClick={() => setSelectedContact(contact)}
-                    className={`border-b border-[#2A2A2A] cursor-pointer transition-colors ${
-                      isContactZero 
-                        ? 'bg-[#4433FF]/5 hover:bg-[#4433FF]/10' 
-                        : 'hover:bg-[#1A1A1D]'
+                    onClick={() => handleRowClick(contact.id)}
+                    onDoubleClick={() => handleRowDoubleClick(contact.id)}
+                    className={`border-b border-[#2A2A2A] cursor-pointer transition-all ${
+                      isSelected 
+                        ? 'bg-[#4433FF]/20 border-l-4 border-l-[#4433FF]' 
+                        : isContactZero 
+                          ? 'bg-[#4433FF]/5 hover:bg-[#4433FF]/10' 
+                          : 'hover:bg-[#1A1A1D]'
                     }`}
                   >
                     {/* Contact Name + Avatar */}
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
-                          alt={contact.fullName}
-                          className={`w-10 h-10 rounded-full border-2 ${isContactZero ? 'border-[#4433FF]' : 'border-[#333]'}`}
-                        />
+                        <div className="relative">
+                          <img 
+                            src={contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
+                            alt={contact.fullName}
+                            className={`w-10 h-10 rounded-full border-2 ${
+                              isSelected 
+                                ? 'border-[#4433FF]' 
+                                : isContactZero 
+                                  ? 'border-[#4433FF]/50' 
+                                  : 'border-[#333]'
+                            }`}
+                          />
+                          {isSelected && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#4433FF] rounded-full border-2 border-[#0E0E0E]" />
+                          )}
+                        </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-white">{contact.fullName}</span>
+                            <span className={`font-bold ${isSelected ? 'text-white' : 'text-white'}`}>
+                              {contact.fullName}
+                            </span>
                             {isContactZero && (
                               <span className="text-[9px] bg-[#4433FF] text-white px-1.5 py-0.5 rounded font-bold uppercase">
                                 YOU
@@ -212,6 +254,22 @@ export const ContactsView: React.FC = () => {
                         </span>
                       </div>
                     </td>
+
+                    {/* View Dossier Action */}
+                    <td className="p-4">
+                      {isSelected && onViewDossier && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewDossier();
+                          }}
+                          className="p-2 text-[#4433FF] hover:text-white hover:bg-[#4433FF] rounded transition-colors"
+                          title="View Dossier"
+                        >
+                          <ExternalLink size={14} />
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
@@ -219,150 +277,11 @@ export const ContactsView: React.FC = () => {
           </table>
         </div>
       </div>
-    </div>
-  );
-};
 
-// =============================================================================
-// CONTACT DETAIL VIEW
-// =============================================================================
-
-const ContactDetail: React.FC<{ contact: Contact; onBack: () => void }> = ({ contact, onBack }) => {
-  const isContactZero = contact.id === CONTACT_ZERO.id;
-  const noteCount = getNoteCountByContactId(contact.id);
-
-  const scoreColor = (score: number): string => {
-    if (score >= 80) return 'text-green-400';
-    if (score >= 60) return 'text-yellow-400';
-    return 'text-orange-400';
-  };
-
-  return (
-    <div className="space-y-6 pb-20">
-      {/* Back Button */}
-      <button 
-        onClick={onBack}
-        className="text-xs text-gray-500 hover:text-white uppercase tracking-wider flex items-center gap-2"
-      >
-        ← Back to Directory
-      </button>
-
-      {/* Header Card */}
-      <div className={`bg-[#0E0E0E] border rounded-xl p-6 ${isContactZero ? 'border-[#4433FF]/50' : 'border-[#2A2A2A]'}`}>
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-          {/* Identity */}
-          <div className="flex items-center gap-4">
-            <img 
-              src={contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
-              alt={contact.fullName}
-              className={`w-20 h-20 rounded-full border-4 ${isContactZero ? 'border-[#4433FF]' : 'border-[#333]'}`}
-            />
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-display font-bold text-white">{contact.fullName}</h1>
-                {isContactZero && (
-                  <span className="text-[10px] bg-[#4433FF] text-white px-2 py-0.5 rounded font-bold uppercase">
-                    Contact Zero
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-400 capitalize">{contact.relationshipRole}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-[10px] px-2 py-1 rounded bg-[#1A1A1D] text-gray-400 uppercase">
-                  {contact.relationshipDomain}
-                </span>
-                <span className="text-[10px] px-2 py-1 rounded bg-[#1A1A1D] text-gray-400 uppercase">
-                  {contact.status}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Frame Score */}
-          <div className="bg-[#1A1A1D] rounded-xl p-6 text-center min-w-[150px]">
-            <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Frame Score</div>
-            <div className={`text-5xl font-display font-bold ${scoreColor(contact.frame.currentScore)}`}>
-              {contact.frame.currentScore}
-            </div>
-            <div className="text-xs text-gray-500 mt-2 uppercase">
-              Trend: <span className="text-white">{contact.frame.trend}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Details Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Contact Info */}
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Contact Info</h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Email</span>
-              <span className="text-white">{contact.email || '—'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Phone</span>
-              <span className="text-white">{contact.phone || '—'}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Timeline */}
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Timeline</h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Last Contact</span>
-              <span className="text-white">
-                {contact.lastContactAt ? new Date(contact.lastContactAt).toLocaleDateString() : '—'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Next Action</span>
-              <span className="text-white">
-                {contact.nextActionAt ? new Date(contact.nextActionAt).toLocaleDateString() : '—'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Last Scan</span>
-              <span className="text-white">
-                {contact.frame.lastScanAt ? new Date(contact.frame.lastScanAt).toLocaleDateString() : 'Never'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Activity */}
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Activity</h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Notes</span>
-              <span className="text-white font-bold">{noteCount}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Tags</span>
-              <span className="text-white">{contact.tags.length}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tags */}
-      {contact.tags.length > 0 && (
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Tags</h3>
-          <div className="flex flex-wrap gap-2">
-            {contact.tags.map((tag) => (
-              <span 
-                key={tag}
-                className="text-xs px-3 py-1 rounded-full bg-[#4433FF]/20 text-[#737AFF] border border-[#4433FF]/30"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+      {/* Selection Info */}
+      {selectedContactId && (
+        <div className="text-xs text-gray-500 text-center">
+          Click a row to select • Double-click to view dossier
         </div>
       )}
     </div>

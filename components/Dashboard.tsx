@@ -8,7 +8,7 @@ import {
   Menu, ExternalLink, Shield, Lock, 
   Plus, MoreHorizontal, X, Folder, Layers, ChevronDown,
   Upload, Image as ImageIcon, FileText, ArrowRight, AlertTriangle, Lightbulb,
-  CheckCircle, Loader2, Paperclip, Mic, FileCode, Crosshair, Binary, Terminal, Cpu, GitCommit, Briefcase, Camera, Notebook, ArrowLeft, Clock as ClockIcon
+  CheckCircle, Loader2, Paperclip, Mic, FileCode, Crosshair, Binary, Terminal, Cpu, GitCommit, Briefcase, Camera, Notebook, ArrowLeft, Clock as ClockIcon, User
 } from 'lucide-react';
 import { SparkBorder } from './SparkSystem';
 import { analyzeFrame } from '../services/geminiService';
@@ -20,8 +20,8 @@ import { PipelinesView } from './crm/PipelinesView';
 import { GroupsProjectsView } from './crm/GroupsProjectsView';
 import { NotesView } from './crm/NotesView';
 import { ThreeParticles } from './ThreeParticles';
-import { ContactZeroDashboard } from './dashboard/ContactZeroDashboard';
-import { getContactZero } from '../services/contactStore';
+import { ContactDossierView } from './crm/ContactDossierView';
+import { getContactZero, CONTACT_ZERO, getContactById } from '../services/contactStore';
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -260,7 +260,6 @@ const ScanView: React.FC = () => {
                             {result.score}
                         </div>
                     </div>
-                    {/* Simplified for brevity, same logic as before */}
                 </div>
                 </MotionDiv>
             )}
@@ -271,12 +270,10 @@ const ScanView: React.FC = () => {
 
 // --- DASHBOARD OVERVIEW (Rich - Binds to Contact Zero) ---
 const DashboardOverview: React.FC = () => {
-    // CONTACT ZERO (The User) is the source of truth
     const user = getContactZero();
-    // Using static values for now since the new Contact type is simpler
-    const tasksDue = 3;  // Mock value
-    const scansDone = user.frame.lastScanAt ? 5 : 0;  // Mock based on scan existence
-    const leaks = 100 - user.frame.currentScore;  // Derive from frame score 
+    const tasksDue = 3;
+    const scansDone = user.frame.lastScanAt ? 5 : 0;
+    const leaks = 100 - user.frame.currentScore;
 
     return (
         <div className="space-y-6 h-full flex flex-col pb-20">
@@ -355,15 +352,12 @@ const DashboardOverview: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Chart Visualization */}
                     <div className="flex-1 relative w-full h-full flex items-end">
-                        {/* Grid Lines */}
                         <div className="absolute inset-0 flex justify-between pointer-events-none">
                             {[0,1,2,3,4,5,6].map(i => (
                                 <div key={i} className="h-full w-px bg-[#222] border-r border-dashed border-[#333]" />
                             ))}
                         </div>
-                        {/* Area Path */}
                         <svg className="w-full h-full absolute inset-0 z-0 overflow-visible" preserveAspectRatio="none">
                             <defs>
                                 <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
@@ -450,7 +444,7 @@ const DashboardOverview: React.FC = () => {
     );
 }
 
-type ViewMode = 'OVERVIEW' | 'CONTACT_ZERO' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'GROUPS' | 'PROJECTS';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'GROUPS' | 'PROJECTS';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -458,6 +452,14 @@ export const Dashboard: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(true);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
+
+  // ==========================================================================
+  // CENTRALIZED SELECTED CONTACT STATE
+  // ==========================================================================
+  const [selectedContactId, setSelectedContactId] = useState<string>(CONTACT_ZERO.id);
+
+  // Get selected contact for display in header
+  const selectedContact = getContactById(selectedContactId) || getContactZero();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -476,6 +478,21 @@ export const Dashboard: React.FC = () => {
   const handleNav = (view: ViewMode) => {
       setCurrentView(view);
       setIsMobileMenuOpen(false);
+  };
+
+  // Handler for Contact Zero nav item — sets contact and navigates to dossier
+  const handleContactZeroNav = () => {
+      setSelectedContactId(CONTACT_ZERO.id);
+      setCurrentView('DOSSIER');
+      setIsMobileMenuOpen(false);
+  };
+
+  // Get header title based on view
+  const getHeaderTitle = (): string => {
+    if (currentView === 'DOSSIER') {
+      return selectedContact.fullName.toUpperCase();
+    }
+    return currentView;
   };
 
   return (
@@ -497,7 +514,12 @@ export const Dashboard: React.FC = () => {
                 <div className="w-1.5 h-1.5 bg-blue-500 rounded-sm" /> Tools
             </div>
             <NavItem active={currentView === 'OVERVIEW'} onClick={() => handleNav('OVERVIEW')} icon={<LayoutGrid size={16} />} label="OVERVIEW" />
-            <NavItem active={currentView === 'CONTACT_ZERO'} onClick={() => handleNav('CONTACT_ZERO')} icon={<Crosshair size={16} />} label="CONTACT ZERO" />
+            <NavItem 
+              active={currentView === 'DOSSIER' && selectedContactId === CONTACT_ZERO.id} 
+              onClick={handleContactZeroNav} 
+              icon={<Crosshair size={16} />} 
+              label="CONTACT ZERO" 
+            />
             <NavItem active={currentView === 'NOTES'} onClick={() => handleNav('NOTES')} icon={<Notebook size={16} />} label="NOTES / LOG" />
             <NavItem active={currentView === 'SCAN'} onClick={() => handleNav('SCAN')} icon={<Scan size={16} />} label="SCAN" />
             <NavItem active={currentView === 'CASES'} onClick={() => handleNav('CASES')} icon={<Briefcase size={16} />} label="CASES / WORKLOAD" />
@@ -532,15 +554,25 @@ export const Dashboard: React.FC = () => {
                 </AnimatePresence>
             </div>
         </div>
+
+        {/* Selected Contact Indicator in Footer */}
         <div className="p-4 bg-[#18181A] border-t border-[#2A2A2A] flex items-center gap-3">
-             <div className="w-10 h-10 rounded bg-[#4433FF] flex items-center justify-center overflow-hidden">
-                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=Grimson&backgroundColor=4433ff`} alt="User" className="w-full h-full object-cover" />
+             <div className={`w-10 h-10 rounded flex items-center justify-center overflow-hidden ${selectedContactId === CONTACT_ZERO.id ? 'bg-[#4433FF]' : 'bg-[#333]'}`}>
+                <img src={selectedContact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedContact.id}`} alt="User" className="w-full h-full object-cover" />
              </div>
-             <div className="overflow-hidden">
-                 <h4 className="font-display font-bold text-white text-sm">GRIMSON</h4>
-                 <p className="text-[9px] text-gray-500 truncate uppercase">grimson@framelord.ai</p>
+             <div className="overflow-hidden flex-1">
+                 <h4 className="font-display font-bold text-white text-sm">{selectedContact.fullName.toUpperCase()}</h4>
+                 <p className="text-[9px] text-gray-500 truncate uppercase">{selectedContact.relationshipRole}</p>
              </div>
-             <MoreHorizontal size={14} className="ml-auto text-gray-500" />
+             {selectedContactId !== CONTACT_ZERO.id && (
+               <button 
+                 onClick={handleContactZeroNav}
+                 className="text-[9px] text-[#4433FF] hover:text-white"
+                 title="Switch to Contact Zero"
+               >
+                 <User size={14} />
+               </button>
+             )}
         </div>
       </aside>
 
@@ -548,7 +580,12 @@ export const Dashboard: React.FC = () => {
          <div className="hidden lg:flex h-16 border-b border-[#2A2A2A] items-center justify-between px-8 shrink-0 bg-[#0E0E0E]">
              <div className="flex items-center gap-2">
                  <span className="bg-[#4433FF] text-white text-xs px-1.5 py-0.5 rounded-sm font-bold">[ ]</span>
-                 <h2 className="font-display font-bold text-2xl text-white tracking-tight">{currentView}</h2>
+                 <h2 className="font-display font-bold text-2xl text-white tracking-tight">{getHeaderTitle()}</h2>
+                 {currentView === 'DOSSIER' && selectedContactId === CONTACT_ZERO.id && (
+                   <span className="text-[10px] bg-[#4433FF]/20 text-[#4433FF] px-2 py-0.5 rounded border border-[#4433FF]/30 font-bold uppercase ml-2">
+                     You
+                   </span>
+                 )}
              </div>
              <div className="flex items-center gap-6">
                  <span className="text-xs text-gray-600 font-mono">Last updated {formatTime(time)}</span>
@@ -564,10 +601,25 @@ export const Dashboard: React.FC = () => {
 
          <div className="p-4 md:p-6 overflow-y-auto flex-1 custom-scrollbar">
              {currentView === 'OVERVIEW' && <DashboardOverview />}
-             {currentView === 'CONTACT_ZERO' && <ContactZeroDashboard />}
+             {currentView === 'DOSSIER' && (
+               <ContactDossierView 
+                 selectedContactId={selectedContactId}
+               />
+             )}
              {currentView === 'SCAN' && <ScanView />}
-             {currentView === 'NOTES' && <NotesView />}
-             {currentView === 'CONTACTS' && <ContactsView />}
+             {currentView === 'NOTES' && (
+               <NotesView 
+                 selectedContactId={selectedContactId}
+                 setSelectedContactId={setSelectedContactId}
+               />
+             )}
+             {currentView === 'CONTACTS' && (
+               <ContactsView 
+                 selectedContactId={selectedContactId}
+                 setSelectedContactId={setSelectedContactId}
+                 onViewDossier={() => setCurrentView('DOSSIER')}
+               />
+             )}
              {currentView === 'CASES' && <CasesView />}
              {currentView === 'PIPELINES' && <PipelinesView />}
              {(currentView === 'GROUPS' || currentView === 'PROJECTS') && <GroupsProjectsView />}
