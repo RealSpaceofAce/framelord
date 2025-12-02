@@ -2,7 +2,7 @@
 // CONTACT STORE — In-memory data source for Contacts
 // =============================================================================
 
-import { Contact, ContactZero } from '../types';
+import { Contact, ContactZero, RelationshipDomain } from '../types';
 
 // --- CONTACT ZERO (The User) ---
 
@@ -23,11 +23,14 @@ export const CONTACT_ZERO: ContactZero = {
   lastContactAt: null,
   nextActionAt: null,
   tags: ['identity-prime', 'founder'],
+  company: 'FrameLord',
+  title: 'Founder & CEO',
+  location: 'San Francisco, CA',
 };
 
-// --- MOCK CONTACTS ---
+// --- INTERNAL CONTACTS ARRAY ---
 
-export const MOCK_CONTACTS: Contact[] = [
+let CONTACTS: Contact[] = [
   // Include Contact Zero first
   CONTACT_ZERO,
 
@@ -49,6 +52,10 @@ export const MOCK_CONTACTS: Contact[] = [
     lastContactAt: '2025-11-30T14:00:00Z',
     nextActionAt: '2025-12-05T09:00:00Z',
     tags: ['enterprise', 'vp-engineering', 'hot-lead'],
+    company: 'TechCorp',
+    title: 'VP of Engineering',
+    location: 'New York, NY',
+    linkedinUrl: 'https://linkedin.com/in/sarahchen',
   },
   {
     id: 'c_marcus_johnson',
@@ -67,6 +74,9 @@ export const MOCK_CONTACTS: Contact[] = [
     lastContactAt: '2025-11-29T11:30:00Z',
     nextActionAt: '2025-12-10T10:00:00Z',
     tags: ['retainer', 'quarterly-review'],
+    company: 'Acme Corp',
+    title: 'CTO',
+    location: 'Austin, TX',
   },
   {
     id: 'c_elena_rodriguez',
@@ -202,42 +212,123 @@ export const MOCK_CONTACTS: Contact[] = [
 
 // --- HELPER FUNCTIONS ---
 
-export const getContactById = (id: string): Contact | undefined => {
-  return MOCK_CONTACTS.find(c => c.id === id);
+/**
+ * Get all contacts, optionally including archived ones.
+ * @param includeArchived - If true, includes contacts with status "archived". Default false.
+ */
+export const getAllContacts = (includeArchived = false): Contact[] => {
+  if (includeArchived) {
+    return [...CONTACTS];
+  }
+  return CONTACTS.filter(c => c.status !== 'archived');
 };
 
+/**
+ * Get a contact by ID. Works for all contacts including archived.
+ */
+export const getContactById = (id: string): Contact | undefined => {
+  return CONTACTS.find(c => c.id === id);
+};
+
+/**
+ * Get Contact Zero.
+ */
 export const getContactZero = (): ContactZero => {
   return CONTACT_ZERO;
 };
 
-export const getContactsExcludingSelf = (): Contact[] => {
-  return MOCK_CONTACTS.filter(c => c.id !== CONTACT_ZERO.id);
+/**
+ * Get all contacts excluding Contact Zero.
+ * @param includeArchived - If true, includes archived contacts. Default false.
+ */
+export const getContactsExcludingSelf = (includeArchived = false): Contact[] => {
+  const all = includeArchived ? CONTACTS : CONTACTS.filter(c => c.status !== 'archived');
+  return all.filter(c => c.id !== CONTACT_ZERO.id);
 };
 
-export const getContactsByDomain = (domain: 'all' | 'business' | 'personal' | 'hybrid'): Contact[] => {
-  if (domain === 'all') return MOCK_CONTACTS;
-  return MOCK_CONTACTS.filter(c => c.relationshipDomain === domain);
+/**
+ * Get contacts filtered by domain.
+ * @param domain - The relationship domain to filter by.
+ * @param includeArchived - If true, includes archived contacts. Default false.
+ */
+export const getContactsByDomain = (
+  domain: 'all' | 'business' | 'personal' | 'hybrid',
+  includeArchived = false
+): Contact[] => {
+  const all = includeArchived ? CONTACTS : CONTACTS.filter(c => c.status !== 'archived');
+  if (domain === 'all') return all;
+  return all.filter(c => c.relationshipDomain === domain);
 };
 
+/**
+ * Get active contacts only (status === 'active').
+ */
 export const getActiveContacts = (): Contact[] => {
-  return MOCK_CONTACTS.filter(c => c.status === 'active');
+  return CONTACTS.filter(c => c.status === 'active');
+};
+
+/**
+ * Create a new contact.
+ * @param input - Contact creation parameters.
+ * @returns The newly created contact.
+ */
+export const createContact = (input: {
+  fullName: string;
+  email?: string;
+  phone?: string;
+  relationshipDomain: RelationshipDomain;
+  relationshipRole?: string;
+  avatarUrl?: string;
+  tags?: string[];
+  company?: string;
+  title?: string;
+  location?: string;
+  linkedinUrl?: string;
+  xHandle?: string;
+}): Contact => {
+  const newContact: Contact = {
+    id: `contact-${Date.now()}`,
+    fullName: input.fullName.trim(),
+    email: input.email?.trim() || undefined,
+    phone: input.phone?.trim() || undefined,
+    relationshipDomain: input.relationshipDomain,
+    relationshipRole: input.relationshipRole?.trim() || 'contact',
+    status: 'active',
+    avatarUrl: input.avatarUrl?.trim() || undefined,
+    frame: {
+      currentScore: 50,
+      trend: 'flat',
+      lastScanAt: null,
+    },
+    lastContactAt: null,
+    nextActionAt: null,
+    tags: input.tags || [],
+    company: input.company?.trim() || undefined,
+    title: input.title?.trim() || undefined,
+    location: input.location?.trim() || undefined,
+    linkedinUrl: input.linkedinUrl?.trim() || undefined,
+    xHandle: input.xHandle?.trim() || undefined,
+  };
+
+  CONTACTS.push(newContact);
+  return newContact;
 };
 
 /**
  * Update a contact in the store.
- * Replaces the contact with matching id in MOCK_CONTACTS.
+ * Replaces the contact with matching id in CONTACTS.
  * If the contact is Contact Zero, updates CONTACT_ZERO as well.
  */
 export const updateContact = (updatedContact: Contact): void => {
-  const index = MOCK_CONTACTS.findIndex(c => c.id === updatedContact.id);
+  const index = CONTACTS.findIndex(c => c.id === updatedContact.id);
   
   if (index === -1) {
     console.warn(`Contact with id ${updatedContact.id} not found`);
     return;
   }
 
-  // Update in MOCK_CONTACTS array
-  MOCK_CONTACTS[index] = updatedContact;
+  // Update in CONTACTS array
+  CONTACTS[index] = updatedContact;
 
   // If this is Contact Zero, also update the CONTACT_ZERO reference
   if (updatedContact.id === CONTACT_ZERO.id) {
@@ -245,3 +336,32 @@ export const updateContact = (updatedContact: Contact): void => {
   }
 };
 
+/**
+ * Archive a contact (soft delete).
+ * Sets the contact's status to "archived".
+ * Cannot archive Contact Zero.
+ * @param contactId - The ID of the contact to archive.
+ */
+export const archiveContact = (contactId: string): void => {
+  if (contactId === CONTACT_ZERO.id) {
+    console.warn('Cannot archive Contact Zero');
+    return;
+  }
+
+  const contact = getContactById(contactId);
+  if (!contact) {
+    console.warn(`Contact with id ${contactId} not found`);
+    return;
+  }
+
+  const updatedContact: Contact = {
+    ...contact,
+    status: 'archived',
+  };
+
+  updateContact(updatedContact);
+};
+
+// --- LEGACY EXPORT (for backward compatibility) ---
+// Export MOCK_CONTACTS as an alias to CONTACTS for any code that still references it
+export const MOCK_CONTACTS = CONTACTS;

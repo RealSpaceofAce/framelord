@@ -7,7 +7,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Note, Contact } from '../../types';
-import { CONTACT_ZERO, MOCK_CONTACTS, getContactById } from '../../services/contactStore';
+import { CONTACT_ZERO, getAllContacts, getContactById } from '../../services/contactStore';
 import { 
   createNote, 
   getAllNotes 
@@ -56,20 +56,22 @@ export const NotesView: React.FC<NotesViewProps> = ({
   const findContactByName = (name: string): Contact | null => {
     const lowerName = name.toLowerCase();
     
+    const allContacts = getAllContacts();
+    
     // Try exact match first
-    const exactMatch = MOCK_CONTACTS.find(
+    const exactMatch = allContacts.find(
       c => c.fullName.toLowerCase() === lowerName
     );
     if (exactMatch) return exactMatch;
     
     // Try startsWith match
-    const startsWithMatch = MOCK_CONTACTS.find(
+    const startsWithMatch = allContacts.find(
       c => c.fullName.toLowerCase().startsWith(lowerName)
     );
     if (startsWithMatch) return startsWithMatch;
     
     // Try contains match
-    const containsMatch = MOCK_CONTACTS.find(
+    const containsMatch = allContacts.find(
       c => c.fullName.toLowerCase().includes(lowerName)
     );
     return containsMatch || null;

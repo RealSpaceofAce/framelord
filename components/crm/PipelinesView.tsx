@@ -3,7 +3,7 @@
 // =============================================================================
 
 import React from 'react';
-import { MOCK_CONTACTS } from '../../services/contactStore';
+import { getAllContacts } from '../../services/contactStore';
 import { Activity, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 // Pipeline stages (hardcoded for now)
@@ -25,7 +25,7 @@ const roleToStage: Record<string, string> = {
 
 export const PipelinesView: React.FC = () => {
     // Only show business/hybrid contacts in pipeline
-    const pipelineContacts = MOCK_CONTACTS.filter(
+    const pipelineContacts = getAllContacts().filter(
         c => c.relationshipDomain !== 'personal' && c.id !== 'contact_zero'
     );
 

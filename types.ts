@@ -16,11 +16,16 @@ export interface ContactFrameMetrics {
 // --- CONTACT (THE SPINE) ---
 
 export type RelationshipDomain = 'business' | 'personal' | 'hybrid';
-export type ContactStatus = 'active' | 'dormant' | 'blocked' | 'testing';
+export type ContactStatus = 'active' | 'dormant' | 'blocked' | 'testing' | 'archived';
 
 export interface Contact {
   id: string;
   fullName: string;
+  /** 
+   * Avatar URL can be either:
+   * - An external URL (http/https), or
+   * - A Data URL (data:image/...) from file upload
+   */
   avatarUrl?: string;
   email?: string;
   phone?: string;
@@ -31,6 +36,12 @@ export interface Contact {
   lastContactAt?: string | null;  // ISO timestamp
   nextActionAt?: string | null;   // ISO timestamp
   tags: string[];
+  // Richer profile fields
+  company?: string;
+  title?: string;                 // job title or role label
+  location?: string;
+  linkedinUrl?: string;
+  xHandle?: string;               // X / Twitter handle
 }
 
 /** Contact Zero is the user's own record */

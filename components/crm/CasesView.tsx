@@ -3,12 +3,12 @@
 // =============================================================================
 
 import React from 'react';
-import { MOCK_CONTACTS } from '../../services/contactStore';
+import { getAllContacts } from '../../services/contactStore';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 export const CasesView: React.FC = () => {
     // "Cases" are contacts in an active status
-    const activeContacts = MOCK_CONTACTS.filter(c => c.status === 'active' && c.id !== 'contact_zero');
+    const activeContacts = getAllContacts().filter(c => c.status === 'active' && c.id !== 'contact_zero');
 
     const TrendIcon: React.FC<{ trend: 'up' | 'down' | 'flat' }> = ({ trend }) => {
         if (trend === 'up') return <TrendingUp size={14} className="text-green-500" />;

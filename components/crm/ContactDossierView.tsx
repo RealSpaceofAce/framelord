@@ -51,6 +51,12 @@ interface EditFormState {
   fullName: string;
   email: string;
   phone: string;
+  avatarUrl: string;
+  company: string;
+  title: string;
+  location: string;
+  linkedinUrl: string;
+  xHandle: string;
   relationshipDomain: RelationshipDomain;
   relationshipRole: string;
   status: ContactStatus;
@@ -89,6 +95,12 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     fullName: '',
     email: '',
     phone: '',
+    avatarUrl: '',
+    company: '',
+    title: '',
+    location: '',
+    linkedinUrl: '',
+    xHandle: '',
     relationshipDomain: 'business',
     relationshipRole: '',
     status: 'active',
@@ -102,6 +114,12 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
         fullName: contact.fullName,
         email: contact.email || '',
         phone: contact.phone || '',
+        avatarUrl: contact.avatarUrl || '',
+        company: contact.company || '',
+        title: contact.title || '',
+        location: contact.location || '',
+        linkedinUrl: contact.linkedinUrl || '',
+        xHandle: contact.xHandle || '',
         relationshipDomain: contact.relationshipDomain,
         relationshipRole: contact.relationshipRole,
         status: contact.status,
@@ -131,6 +149,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   }
 
   const isContactZero = contact.id === CONTACT_ZERO.id;
+  const isArchived = contact.status === 'archived';
   
   // Notes ABOUT this contact
   const notesAboutContact = getNotesByContactId(contact.id);
@@ -249,6 +268,12 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
       fullName: contact.fullName,
       email: contact.email || '',
       phone: contact.phone || '',
+      avatarUrl: contact.avatarUrl || '',
+      company: contact.company || '',
+      title: contact.title || '',
+      location: contact.location || '',
+      linkedinUrl: contact.linkedinUrl || '',
+      xHandle: contact.xHandle || '',
       relationshipDomain: contact.relationshipDomain,
       relationshipRole: contact.relationshipRole,
       status: contact.status,
@@ -273,6 +298,12 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
       fullName: formState.fullName.trim(),
       email: formState.email.trim() || undefined,
       phone: formState.phone.trim() || undefined,
+      avatarUrl: formState.avatarUrl.trim() || undefined,
+      company: formState.company.trim() || undefined,
+      title: formState.title.trim() || undefined,
+      location: formState.location.trim() || undefined,
+      linkedinUrl: formState.linkedinUrl.trim() || undefined,
+      xHandle: formState.xHandle.trim() || undefined,
       relationshipDomain: formState.relationshipDomain,
       relationshipRole: formState.relationshipRole.trim(),
       status: formState.status,
@@ -286,6 +317,29 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
 
   const handleInputChange = (field: keyof EditFormState, value: string) => {
     setFormState(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Handle avatar file upload
+  const handleAvatarFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Optional: basic file size guard (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      console.warn('Avatar file is larger than 2MB, but accepting it anyway');
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      if (dataUrl) {
+        setFormState(prev => ({ ...prev, avatarUrl: dataUrl }));
+      }
+    };
+    reader.onerror = () => {
+      console.error('Error reading avatar file');
+    };
+    reader.readAsDataURL(file);
   };
 
   // Handle adding a new note
@@ -488,6 +542,11 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               Identity Prime
             </span>
           )}
+          {isArchived && (
+            <span className="text-[10px] bg-gray-500/20 text-gray-400 px-2 py-0.5 rounded border border-gray-500/30 font-bold uppercase">
+              Archived
+            </span>
+          )}
           {isEditing && (
             <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded border border-orange-500/30 font-bold uppercase animate-pulse">
               Editing…
@@ -499,7 +558,8 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           {!isEditing ? (
             <button
               onClick={handleEdit}
-              className="flex items-center gap-2 px-4 py-2 bg-[#1A1A1D] border border-[#333] hover:border-[#4433FF] text-white text-xs font-bold rounded transition-colors"
+              disabled={isArchived}
+              className="flex items-center gap-2 px-4 py-2 bg-[#1A1A1D] border border-[#333] hover:border-[#4433FF] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors"
             >
               <Edit2 size={14} /> Edit
             </button>
@@ -532,7 +592,10 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           <div className="flex flex-col items-center text-center mb-6">
             <div className="relative mb-4">
               <img 
-                src={contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
+                src={isEditing 
+                  ? (formState.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`)
+                  : (contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`)
+                }
                 alt={contact.fullName}
                 className={`w-28 h-28 rounded-full border-4 shadow-[0_0_20px_rgba(68,51,255,0.3)] ${
                   isContactZero ? 'border-[#4433FF]' : 'border-[#333]'
@@ -621,6 +684,29 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             {isEditing ? (
               <>
                 <div>
+                  <label className={labelClass}>Avatar</label>
+                  <div className="flex items-center gap-4">
+                    {/* Preview */}
+                    <div className="flex-shrink-0">
+                      <img
+                        src={formState.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
+                        alt="Avatar preview"
+                        className="w-16 h-16 rounded-full border-2 border-[#333] object-cover"
+                      />
+                    </div>
+                    {/* File Input */}
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarFileChange}
+                        className="w-full bg-[#1A1A1D] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#4433FF] file:text-white hover:file:bg-[#5544FF] file:cursor-pointer cursor-pointer"
+                      />
+                      <p className="text-[10px] text-gray-600 mt-1">Upload an image file (max 2MB recommended)</p>
+                    </div>
+                  </div>
+                </div>
+                <div>
                   <label className={labelClass}>Email</label>
                   <input
                     type="email"
@@ -640,9 +726,91 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                     placeholder="+1 555 000 0000"
                   />
                 </div>
+                <div>
+                  <label className={labelClass}>Company</label>
+                  <input
+                    type="text"
+                    value={formState.company}
+                    onChange={(e) => handleInputChange('company', e.target.value)}
+                    className={inputClass}
+                    placeholder="Company name"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Title</label>
+                  <input
+                    type="text"
+                    value={formState.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    className={inputClass}
+                    placeholder="Job title"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Location</label>
+                  <input
+                    type="text"
+                    value={formState.location}
+                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    className={inputClass}
+                    placeholder="City, State"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>LinkedIn URL</label>
+                  <input
+                    type="url"
+                    value={formState.linkedinUrl}
+                    onChange={(e) => handleInputChange('linkedinUrl', e.target.value)}
+                    className={inputClass}
+                    placeholder="https://linkedin.com/in/..."
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>X / Twitter Handle</label>
+                  <input
+                    type="text"
+                    value={formState.xHandle}
+                    onChange={(e) => handleInputChange('xHandle', e.target.value)}
+                    className={inputClass}
+                    placeholder="@username"
+                  />
+                </div>
               </>
             ) : (
               <>
+                {(contact.title || contact.company) && (
+                  <div className="text-xs text-gray-400 mb-2">
+                    {contact.title && contact.company ? `${contact.title} at ${contact.company}` : contact.title || contact.company}
+                  </div>
+                )}
+                {contact.location && (
+                  <div className="text-xs text-gray-500 mb-2">{contact.location}</div>
+                )}
+                {(contact.linkedinUrl || contact.xHandle) && (
+                  <div className="flex items-center justify-center gap-3 mt-2 mb-2">
+                    {contact.linkedinUrl && (
+                      <a
+                        href={contact.linkedinUrl.startsWith('http') ? contact.linkedinUrl : `https://${contact.linkedinUrl}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#4433FF] hover:text-white text-xs flex items-center gap-1"
+                      >
+                        <User size={12} /> LinkedIn
+                      </a>
+                    )}
+                    {contact.xHandle && (
+                      <a
+                        href={`https://x.com/${contact.xHandle.replace(/^@/, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#4433FF] hover:text-white text-xs flex items-center gap-1"
+                      >
+                        <AtSign size={12} /> X
+                      </a>
+                    )}
+                  </div>
+                )}
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-500 flex items-center gap-2">
                     <Mail size={12} /> Email
