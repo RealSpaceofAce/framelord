@@ -40,7 +40,8 @@ export type ContactZero = Contact & { id: 'contact_zero' };
 
 export interface Note {
   id: string;
-  contactId: string;              // REQUIRED — links to Contact.id
+  contactId: string;              // REQUIRED — who the note is ABOUT
+  authorContactId: string;        // REQUIRED — who WROTE the note (typically CONTACT_ZERO)
   content: string;
   createdAt: string;              // ISO timestamp
   updatedAt?: string | null;

@@ -4,6 +4,8 @@
 // This component works for ANY contact, not just Contact Zero.
 // It receives selectedContactId as a prop and renders that contact's details.
 // Supports in-place editing of contact fields.
+// Includes Notes section with add form.
+// For Contact Zero: includes Activity feed showing actions taken about others.
 // =============================================================================
 
 import React, { useState, useEffect } from 'react';
@@ -11,11 +13,11 @@ import { motion } from 'framer-motion';
 import { 
   Target, TrendingUp, TrendingDown, Minus,
   Activity, Zap, Calendar, FileText, Mail, Phone,
-  Tag, Clock, Edit2, Save, X
+  Tag, Clock, Edit2, Save, X, Send, ArrowRight, User
 } from 'lucide-react';
-import { getContactById, CONTACT_ZERO, updateContact } from '../../services/contactStore';
-import { getNotesByContactId } from '../../services/noteStore';
-import { Contact, RelationshipDomain, ContactStatus } from '../../types';
+import { getContactById, CONTACT_ZERO, updateContact, MOCK_CONTACTS } from '../../services/contactStore';
+import { getNotesByContactId, getNotesByAuthorId, createNote } from '../../services/noteStore';
+import { Contact, RelationshipDomain, ContactStatus, Note } from '../../types';
 
 const MotionDiv = motion.div as any;
 
@@ -23,6 +25,8 @@ const MotionDiv = motion.div as any;
 
 interface ContactDossierViewProps {
   selectedContactId: string;
+  setSelectedContactId?: (id: string) => void;
+  onNavigateToDossier?: () => void;
 }
 
 // --- EDIT FORM STATE TYPE ---
@@ -39,10 +43,17 @@ interface EditFormState {
 
 // --- COMPONENT ---
 
-export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selectedContactId }) => {
+export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ 
+  selectedContactId,
+  setSelectedContactId,
+  onNavigateToDossier
+}) => {
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  
+  // New note input state
+  const [newNoteContent, setNewNoteContent] = useState('');
   
   // Get contact from store (re-fetch on refreshKey change)
   const contact = getContactById(selectedContactId);
@@ -76,6 +87,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selected
   // Reset edit mode when contact changes
   useEffect(() => {
     setIsEditing(false);
+    setNewNoteContent('');
   }, [selectedContactId]);
   
   // Fallback if contact not found
@@ -88,7 +100,14 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selected
   }
 
   const isContactZero = contact.id === CONTACT_ZERO.id;
-  const notes = getNotesByContactId(contact.id);
+  
+  // Notes ABOUT this contact
+  const notesAboutContact = getNotesByContactId(contact.id);
+  
+  // For Contact Zero: notes written BY Contact Zero about OTHER contacts
+  const activityNotes = isContactZero 
+    ? getNotesByAuthorId(CONTACT_ZERO.id).filter(n => n.contactId !== CONTACT_ZERO.id)
+    : [];
 
   // --- HANDLERS ---
 
@@ -147,6 +166,37 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selected
     setFormState(prev => ({ ...prev, [field]: value }));
   };
 
+  // Handle adding a new note
+  const handleAddNote = () => {
+    if (!newNoteContent.trim()) return;
+
+    createNote({
+      contactId: selectedContactId,
+      authorContactId: CONTACT_ZERO.id,
+      content: newNoteContent.trim(),
+    });
+
+    setNewNoteContent('');
+    setRefreshKey(k => k + 1);
+  };
+
+  const handleNoteKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAddNote();
+    }
+  };
+
+  // Navigate to a contact's dossier (for Activity feed)
+  const handleNavigateToContact = (contactId: string) => {
+    if (setSelectedContactId) {
+      setSelectedContactId(contactId);
+    }
+    if (onNavigateToDossier) {
+      onNavigateToDossier();
+    }
+  };
+
   // --- HELPER COMPONENTS ---
 
   const TrendIcon: React.FC<{ trend: 'up' | 'down' | 'flat' }> = ({ trend }) => {
@@ -178,6 +228,20 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selected
       hybrid: 'text-orange-400 bg-orange-500/20',
     };
     return colors[domain];
+  };
+
+  // Truncate content for snippets
+  const truncate = (text: string, maxLength: number): string => {
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength).trim() + '…';
+  };
+
+  // Format date
+  const formatDate = (dateStr: string): string => {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   // --- INPUT STYLES ---
@@ -454,10 +518,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selected
               </div>
             </div>
           </div>
-        </div>
 
-        {/* RIGHT: Tags & Notes */}
-        <div className="space-y-6">
           {/* Tags */}
           <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -490,36 +551,60 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selected
               <p className="text-gray-600 text-sm italic">No tags set</p>
             )}
           </div>
+        </div>
 
-          {/* Recent Notes Preview */}
+        {/* RIGHT: Notes Section */}
+        <div className="space-y-6">
+          {/* Notes ABOUT this contact */}
           <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
             <div className="flex items-center gap-2 mb-4">
               <FileText size={16} className="text-[#4433FF]" />
-              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Recent Notes</h3>
+              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                Notes {!isContactZero && 'About'}
+              </h3>
+              <span className="text-[10px] text-gray-600 ml-auto">{notesAboutContact.length} total</span>
             </div>
-            {notes.length > 0 ? (
-              <div className="space-y-3">
-                {notes.slice(0, 3).map((note) => (
+
+            {/* Add Note Form */}
+            <div className="mb-4">
+              <textarea
+                value={newNoteContent}
+                onChange={(e) => setNewNoteContent(e.target.value)}
+                onKeyDown={handleNoteKeyDown}
+                placeholder={`Add a note ${isContactZero ? '' : `about ${contact.fullName}`}...`}
+                className="w-full bg-[#1A1A1D] border border-[#333] rounded-lg p-3 text-white text-sm resize-none focus:border-[#4433FF] outline-none"
+                rows={2}
+              />
+              <button
+                onClick={handleAddNote}
+                disabled={!newNoteContent.trim()}
+                className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#4433FF] hover:bg-[#5544FF] disabled:bg-[#333] disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors"
+              >
+                <Send size={12} /> Add Note
+              </button>
+            </div>
+
+            {/* Recent Notes */}
+            {notesAboutContact.length > 0 ? (
+              <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                {notesAboutContact.slice(0, 5).map((note) => (
                   <div 
                     key={note.id}
-                    className="border-l-2 border-[#4433FF]/30 pl-3"
+                    className="border-l-2 border-[#4433FF]/30 pl-3 py-1"
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Clock size={10} className="text-gray-600" />
                       <span className="text-[10px] text-gray-500">
-                        {new Date(note.createdAt).toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric'
-                        })}
+                        {formatDate(note.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-400 line-clamp-2">
-                      {note.content}
+                    <p className="text-sm text-gray-400">
+                      {truncate(note.content, 100)}
                     </p>
                   </div>
                 ))}
-                {notes.length > 3 && (
-                  <p className="text-xs text-gray-600">+{notes.length - 3} more notes</p>
+                {notesAboutContact.length > 5 && (
+                  <p className="text-xs text-gray-600 pl-3">+{notesAboutContact.length - 5} more notes</p>
                 )}
               </div>
             ) : (
@@ -529,14 +614,68 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ selected
         </div>
       </div>
 
-      {/* BOTTOM: Activity Summary */}
+      {/* CONTACT ZERO ONLY: Activity Feed (what you did about others) */}
+      {isContactZero && activityNotes.length > 0 && (
+        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Activity size={16} className="text-green-500" />
+            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Your Activity (Notes About Others)
+            </h3>
+            <span className="text-[10px] text-gray-600 ml-auto">{activityNotes.length} entries</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {activityNotes.slice(0, 6).map((note) => {
+              const targetContact = getContactById(note.contactId);
+              if (!targetContact) return null;
+
+              return (
+                <div 
+                  key={note.id}
+                  className="bg-[#1A1A1D] border border-[#333] rounded-lg p-4 hover:border-[#4433FF]/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <img 
+                      src={targetContact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${targetContact.id}`}
+                      alt={targetContact.fullName}
+                      className="w-8 h-8 rounded-full border border-[#333]"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <button
+                        onClick={() => handleNavigateToContact(targetContact.id)}
+                        className="text-sm font-bold text-[#4433FF] hover:text-white transition-colors flex items-center gap-1 truncate"
+                      >
+                        {targetContact.fullName}
+                        <ArrowRight size={12} />
+                      </button>
+                      <div className="text-[10px] text-gray-500">{formatDate(note.createdAt)}</div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    {truncate(note.content, 80)}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          {activityNotes.length > 6 && (
+            <p className="text-xs text-gray-600 mt-4 text-center">
+              +{activityNotes.length - 6} more activity entries
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* BOTTOM: Stats Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <FileText size={14} className="text-gray-600" />
             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Notes</span>
           </div>
-          <div className="text-3xl font-display font-bold text-white">{notes.length}</div>
+          <div className="text-3xl font-display font-bold text-white">{notesAboutContact.length}</div>
           <div className="text-xs text-gray-600">entries</div>
         </div>
 

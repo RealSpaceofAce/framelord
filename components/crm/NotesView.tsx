@@ -1,23 +1,20 @@
 // =============================================================================
-// NOTES VIEW — Journal entries synced to contacts
+// NOTES VIEW — Global Notes Dashboard with All Notes + Daily modes
 // =============================================================================
-// Accepts selectedContactId and setSelectedContactId as props from Dashboard.
-// - Filters notes by selectedContactId
-// - Creates new notes with contactId = selectedContactId
-// - Contact dropdown calls setSelectedContactId to change focus across the app
+// - All Notes: Shows all notes across all contacts with clickable contact names
+// - Daily: Groups notes by day and contact, with @mention support for quick notes
 // =============================================================================
 
 import React, { useState, useMemo } from 'react';
-import { Note } from '../../types';
+import { Note, Contact } from '../../types';
 import { CONTACT_ZERO, MOCK_CONTACTS, getContactById } from '../../services/contactStore';
 import { 
-  getNotesByContactId, 
   createNote, 
   getAllNotes 
 } from '../../services/noteStore';
 import { 
   FileText, Calendar, Tag, Send, 
-  ChevronDown, Clock
+  ChevronDown, Clock, ArrowRight, User, AtSign
 } from 'lucide-react';
 
 // --- PROPS ---
@@ -25,60 +22,57 @@ import {
 interface NotesViewProps {
   selectedContactId: string;
   setSelectedContactId: (id: string) => void;
+  onNavigateToDossier?: () => void;
 }
 
-type ViewMode = 'contact' | 'all';
+type ViewMode = 'all' | 'daily';
 
 // --- COMPONENT ---
 
 export const NotesView: React.FC<NotesViewProps> = ({ 
   selectedContactId, 
-  setSelectedContactId 
+  setSelectedContactId,
+  onNavigateToDossier
 }) => {
-  // Local state for view mode and new note input
-  const [viewMode, setViewMode] = useState<ViewMode>('contact');
-  const [newNoteContent, setNewNoteContent] = useState('');
+  // Local state
+  const [viewMode, setViewMode] = useState<ViewMode>('daily');
+  const [dailyNoteContent, setDailyNoteContent] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Get notes based on view mode — always uses selectedContactId
-  const notes = useMemo(() => {
-    if (viewMode === 'all') {
-      return getAllNotes();
-    }
-    // IMPORTANT: Always filter by the centralized selectedContactId
-    return getNotesByContactId(selectedContactId);
-  }, [viewMode, selectedContactId, refreshKey]);
+  // Get all notes
+  const allNotes = useMemo(() => getAllNotes(), [refreshKey]);
 
-  // Get selected contact for display
-  const selectedContact = useMemo(() => {
-    return getContactById(selectedContactId) || CONTACT_ZERO;
-  }, [selectedContactId]);
+  // --- HELPER FUNCTIONS ---
 
-  // Handle creating a new note — ALWAYS uses selectedContactId
-  const handleCreateNote = () => {
-    if (!newNoteContent.trim()) return;
+  // Parse @mention from text — finds first @Name pattern
+  const parseMention = (text: string): string | null => {
+    // Match @Name where Name can contain letters and spaces
+    const match = text.match(/@([A-Za-z][A-Za-z\s]*)/);
+    if (!match) return null;
+    return match[1].trim();
+  };
 
-    // Create note with contactId = selectedContactId
-    // This is the key invariant: notes always attach to the active contact
-    createNote(selectedContactId, newNoteContent.trim());
+  // Find contact by name (case-insensitive, startsWith or exact match)
+  const findContactByName = (name: string): Contact | null => {
+    const lowerName = name.toLowerCase();
     
-    // Clear input and refresh
-    setNewNoteContent('');
-    setRefreshKey(k => k + 1);
-  };
-
-  // Handle key press in textarea
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleCreateNote();
-    }
-  };
-
-  // Handle contact dropdown change — updates centralized state
-  const handleContactChange = (newContactId: string) => {
-    // This updates selectedContactId across the entire app
-    setSelectedContactId(newContactId);
+    // Try exact match first
+    const exactMatch = MOCK_CONTACTS.find(
+      c => c.fullName.toLowerCase() === lowerName
+    );
+    if (exactMatch) return exactMatch;
+    
+    // Try startsWith match
+    const startsWithMatch = MOCK_CONTACTS.find(
+      c => c.fullName.toLowerCase().startsWith(lowerName)
+    );
+    if (startsWithMatch) return startsWithMatch;
+    
+    // Try contains match
+    const containsMatch = MOCK_CONTACTS.find(
+      c => c.fullName.toLowerCase().includes(lowerName)
+    );
+    return containsMatch || null;
   };
 
   // Format date for display
@@ -100,10 +94,78 @@ export const NotesView: React.FC<NotesViewProps> = ({
     });
   };
 
-  // Group notes by date
+  const formatDayHeader = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    }
+    if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    }
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long',
+      month: 'long', 
+      day: 'numeric'
+    });
+  };
+
+  // Truncate text for snippets
+  const truncate = (text: string, maxLength: number): string => {
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength).trim() + '…';
+  };
+
+  // --- HANDLERS ---
+
+  // Handle contact click — navigate to dossier
+  const handleContactClick = (contactId: string) => {
+    setSelectedContactId(contactId);
+    if (onNavigateToDossier) {
+      onNavigateToDossier();
+    }
+  };
+
+  // Handle Daily note submission with @mention parsing
+  const handleDailyNoteSubmit = () => {
+    if (!dailyNoteContent.trim()) return;
+
+    const mentionedName = parseMention(dailyNoteContent);
+    let targetContactId: string = CONTACT_ZERO.id;
+
+    if (mentionedName) {
+      const matchedContact = findContactByName(mentionedName);
+      if (matchedContact) {
+        targetContactId = matchedContact.id;
+      }
+    }
+
+    createNote({
+      contactId: targetContactId,
+      authorContactId: CONTACT_ZERO.id,
+      content: dailyNoteContent.trim(),
+    });
+
+    setDailyNoteContent('');
+    setRefreshKey(k => k + 1);
+  };
+
+  const handleDailyNoteKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleDailyNoteSubmit();
+    }
+  };
+
+  // --- COMPUTED DATA ---
+
+  // Group notes by date (for Daily view)
   const notesByDate = useMemo((): Record<string, Note[]> => {
     const groups: Record<string, Note[]> = {};
-    notes.forEach((note: Note) => {
+    allNotes.forEach((note) => {
       const dateKey = new Date(note.createdAt).toDateString();
       if (!groups[dateKey]) {
         groups[dateKey] = [];
@@ -111,9 +173,55 @@ export const NotesView: React.FC<NotesViewProps> = ({
       groups[dateKey].push(note);
     });
     return groups;
-  }, [notes]);
+  }, [allNotes]);
 
-  const isContactZero = selectedContactId === CONTACT_ZERO.id;
+  // For Daily view: group notes by date, then by contact
+  const dailyData = useMemo(() => {
+    const result: Array<{
+      dateKey: string;
+      dateDisplay: string;
+      contacts: Array<{
+        contact: Contact;
+        notes: Note[];
+        latestNote: Note;
+      }>;
+    }> = [];
+
+    (Object.entries(notesByDate) as [string, Note[]][]).forEach(([dateKey, dateNotes]) => {
+      // Group by contactId
+      const byContact: Record<string, Note[]> = {};
+      dateNotes.forEach(note => {
+        if (!byContact[note.contactId]) {
+          byContact[note.contactId] = [];
+        }
+        byContact[note.contactId].push(note);
+      });
+
+      const contacts = Object.entries(byContact).map(([contactId, notes]) => {
+        const contact = getContactById(contactId);
+        if (!contact) return null;
+        return {
+          contact,
+          notes,
+          latestNote: notes[0], // Already sorted by createdAt desc
+        };
+      }).filter(Boolean) as Array<{
+        contact: Contact;
+        notes: Note[];
+        latestNote: Note;
+      }>;
+
+      result.push({
+        dateKey,
+        dateDisplay: formatDayHeader(dateNotes[0].createdAt),
+        contacts,
+      });
+    });
+
+    return result;
+  }, [notesByDate]);
+
+  // --- RENDER ---
 
   return (
     <div className="flex h-full bg-[#030412]">
@@ -123,14 +231,14 @@ export const NotesView: React.FC<NotesViewProps> = ({
         <div className="p-4 border-b border-[#2A2A2A]">
           <div className="flex bg-[#1A1A1D] rounded-lg p-1">
             <button
-              onClick={() => setViewMode('contact')}
+              onClick={() => setViewMode('daily')}
               className={`flex-1 px-3 py-2 text-xs font-bold uppercase rounded transition-colors ${
-                viewMode === 'contact'
+                viewMode === 'daily'
                   ? 'bg-[#4433FF] text-white'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              By Contact
+              Daily
             </button>
             <button
               onClick={() => setViewMode('all')}
@@ -145,66 +253,41 @@ export const NotesView: React.FC<NotesViewProps> = ({
           </div>
         </div>
 
-        {/* Contact Selector — always visible, changes app-wide selectedContactId */}
-        <div className="p-4 border-b border-[#2A2A2A]">
-          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 block">
-            Active Contact
-          </label>
-          <div className="relative">
-            <select
-              value={selectedContactId}
-              onChange={(e) => handleContactChange(e.target.value)}
-              className="w-full bg-[#1A1A1D] border border-[#333] rounded-lg px-4 py-3 text-white text-sm appearance-none cursor-pointer focus:border-[#4433FF] outline-none"
-            >
-              {MOCK_CONTACTS.map((contact) => (
-                <option key={contact.id} value={contact.id}>
-                  {contact.fullName} {contact.id === CONTACT_ZERO.id ? '(You)' : ''}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-          </div>
-          <p className="text-[10px] text-gray-600 mt-2">
-            Changing this updates the selected contact app-wide
-          </p>
-        </div>
-
-        {/* Selected Contact Info */}
-        <div className="p-4 border-b border-[#2A2A2A]">
-          <div className="flex items-center gap-3">
-            <img 
-              src={selectedContact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedContact.id}`}
-              alt={selectedContact.fullName}
-              className={`w-12 h-12 rounded-full border-2 ${
-                isContactZero 
-                  ? 'border-[#4433FF]' 
-                  : 'border-[#333]'
-              }`}
-            />
-            <div>
-              <div className="font-bold text-white flex items-center gap-2">
-                {selectedContact.fullName}
-                {isContactZero && (
-                  <span className="text-[9px] bg-[#4433FF] text-white px-1 py-0.5 rounded">YOU</span>
-                )}
-              </div>
-              <div className="text-xs text-gray-500 capitalize">{selectedContact.relationshipRole}</div>
-            </div>
-          </div>
-        </div>
-
         {/* Stats */}
         <div className="p-4 flex-1">
-          <div className="bg-[#1A1A1D] rounded-lg p-4 border border-[#333]">
+          <div className="bg-[#1A1A1D] rounded-lg p-4 border border-[#333] mb-4">
             <div className="flex items-center gap-2 mb-2">
               <FileText size={14} className="text-[#4433FF]" />
               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                {viewMode === 'contact' ? 'Contact Notes' : 'Total Notes'}
+                Total Notes
               </span>
             </div>
             <div className="text-3xl font-display font-bold text-white">
-              {notes.length}
+              {allNotes.length}
             </div>
+          </div>
+
+          <div className="bg-[#1A1A1D] rounded-lg p-4 border border-[#333]">
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar size={14} className="text-green-500" />
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                Days Active
+              </span>
+            </div>
+            <div className="text-3xl font-display font-bold text-white">
+              {Object.keys(notesByDate).length}
+            </div>
+          </div>
+        </div>
+
+        {/* Quick tip */}
+        <div className="p-4 border-t border-[#2A2A2A]">
+          <div className="text-[10px] text-gray-600">
+            <div className="flex items-center gap-1 mb-1">
+              <AtSign size={10} />
+              <span className="font-bold text-gray-500">Pro tip</span>
+            </div>
+            Use @Name in Daily view to attach notes to contacts
           </div>
         </div>
       </div>
@@ -214,144 +297,196 @@ export const NotesView: React.FC<NotesViewProps> = ({
         {/* Header */}
         <div className="p-6 border-b border-[#2A2A2A] bg-[#0E0E0E]">
           <h1 className="text-xl font-display font-bold text-white">
-            {viewMode === 'contact' 
-              ? `Notes: ${selectedContact.fullName}` 
-              : 'All Notes'
-            }
+            {viewMode === 'daily' ? 'Daily Log' : 'All Notes'}
           </h1>
           <p className="text-xs text-gray-500 mt-1">
-            {viewMode === 'contact' 
-              ? `Journal entries synced to ${selectedContact.fullName}`
-              : 'All notes across all contacts'
+            {viewMode === 'daily' 
+              ? 'Track your daily touchpoints with contacts'
+              : 'Browse all notes across all contacts'
             }
           </p>
         </div>
 
-        {/* New Note Input — always creates notes for selectedContactId */}
-        <div className="p-6 border-b border-[#2A2A2A] bg-[#0A0A0A]">
-          <div className="flex gap-4">
-            <img 
-              src={CONTACT_ZERO.avatarUrl}
-              alt="You"
-              className="w-10 h-10 rounded-full border-2 border-[#4433FF] shrink-0"
-            />
-            <div className="flex-1">
-              <div className="mb-2 text-xs text-gray-500">
-                Adding note to: <span className="text-[#4433FF] font-bold">{selectedContact.fullName}</span>
-              </div>
-              <textarea
-                value={newNoteContent}
-                onChange={(e) => setNewNoteContent(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={`Add a note about ${selectedContact.fullName}...`}
-                className="w-full bg-[#1A1A1D] border border-[#333] rounded-lg p-4 text-white text-sm resize-none focus:border-[#4433FF] outline-none min-h-[100px]"
-                rows={3}
+        {/* Daily Note Composer (only in Daily view) */}
+        {viewMode === 'daily' && (
+          <div className="p-6 border-b border-[#2A2A2A] bg-[#0A0A0A]">
+            <div className="flex gap-4">
+              <img 
+                src={CONTACT_ZERO.avatarUrl}
+                alt="You"
+                className="w-10 h-10 rounded-full border-2 border-[#4433FF] shrink-0"
               />
-              <div className="flex justify-between items-center mt-3">
-                <div className="text-[10px] text-gray-600">
-                  Press Enter to save • Shift+Enter for new line
+              <div className="flex-1">
+                <div className="mb-2 text-xs text-gray-500 flex items-center gap-2">
+                  <AtSign size={12} className="text-[#4433FF]" />
+                  Type @Name to attach this note to a contact
                 </div>
-                <button
-                  onClick={handleCreateNote}
-                  disabled={!newNoteContent.trim()}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#4433FF] hover:bg-[#5544FF] disabled:bg-[#333] disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors"
-                >
-                  <Send size={14} /> Save Note
-                </button>
+                <textarea
+                  value={dailyNoteContent}
+                  onChange={(e) => setDailyNoteContent(e.target.value)}
+                  onKeyDown={handleDailyNoteKeyDown}
+                  placeholder="What did you do today? Use @Name to mention someone..."
+                  className="w-full bg-[#1A1A1D] border border-[#333] rounded-lg p-4 text-white text-sm resize-none focus:border-[#4433FF] outline-none min-h-[80px]"
+                  rows={2}
+                />
+                <div className="flex justify-between items-center mt-3">
+                  <div className="text-[10px] text-gray-600">
+                    Press Enter to save • Shift+Enter for new line
+                  </div>
+                  <button
+                    onClick={handleDailyNoteSubmit}
+                    disabled={!dailyNoteContent.trim()}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#4433FF] hover:bg-[#5544FF] disabled:bg-[#333] disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors"
+                  >
+                    <Send size={14} /> Add Daily Note
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Notes List */}
+        {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6">
-          {notes.length === 0 ? (
+          {allNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <FileText size={48} className="text-gray-700 mb-4" />
               <h3 className="text-lg font-bold text-gray-500 mb-2">No notes yet</h3>
               <p className="text-sm text-gray-600 max-w-sm">
-                {viewMode === 'contact' 
-                  ? `Start documenting your interactions with ${selectedContact.fullName}`
-                  : 'No notes have been created yet'
-                }
+                Start documenting your interactions and thoughts
               </p>
             </div>
+          ) : viewMode === 'all' ? (
+            // ALL NOTES VIEW
+            <div className="space-y-4">
+              {allNotes.map((note) => {
+                const noteContact = getContactById(note.contactId);
+                if (!noteContact) return null;
+
+                return (
+                  <div 
+                    key={note.id}
+                    className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-4 hover:border-[#333] transition-colors"
+                  >
+                    {/* Note Header */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={noteContact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${noteContact.id}`}
+                          alt={noteContact.fullName}
+                          className="w-8 h-8 rounded-full border border-[#333]"
+                        />
+                        <div>
+                          <button
+                            onClick={() => handleContactClick(noteContact.id)}
+                            className="text-sm font-bold text-[#4433FF] hover:text-white transition-colors flex items-center gap-1"
+                          >
+                            {noteContact.fullName}
+                            {noteContact.id === CONTACT_ZERO.id && (
+                              <span className="text-[9px] bg-[#4433FF]/20 text-[#4433FF] px-1 py-0.5 rounded ml-1">You</span>
+                            )}
+                            <ArrowRight size={12} />
+                          </button>
+                          <div className="text-[10px] text-gray-500 capitalize">{noteContact.relationshipRole}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500">{formatDate(note.createdAt)}</div>
+                        <div className="text-[10px] text-gray-600">{formatTime(note.createdAt)}</div>
+                      </div>
+                    </div>
+
+                    {/* Note Content */}
+                    <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+                      {note.content}
+                    </p>
+
+                    {/* Tags */}
+                    {note.tags && note.tags.length > 0 && (
+                      <div className="flex items-center gap-2 mt-3">
+                        <Tag size={12} className="text-gray-600" />
+                        <div className="flex flex-wrap gap-1">
+                          {note.tags.map((tag, idx) => (
+                            <span 
+                              key={idx}
+                              className="text-[10px] px-2 py-0.5 rounded bg-[#1A1A1D] text-gray-400"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           ) : (
+            // DAILY VIEW
             <div className="space-y-8">
-              {Object.entries(notesByDate).map(([dateKey, dateNotes]: [string, Note[]]) => (
+              {dailyData.map(({ dateKey, dateDisplay, contacts }) => (
                 <div key={dateKey}>
                   {/* Date Header */}
                   <div className="flex items-center gap-3 mb-4">
-                    <Calendar size={14} className="text-[#4433FF]" />
-                    <span className="text-sm font-bold text-white">{formatDate(dateNotes[0].createdAt)}</span>
+                    <Calendar size={16} className="text-[#4433FF]" />
+                    <span className="text-lg font-display font-bold text-white">{dateDisplay}</span>
                     <div className="flex-1 h-px bg-[#2A2A2A]" />
+                    <span className="text-xs text-gray-600">
+                      {contacts.reduce((sum, c) => sum + c.notes.length, 0)} notes
+                    </span>
                   </div>
 
-                  {/* Notes for this date */}
-                  <div className="space-y-4 pl-7">
-                    {dateNotes.map((note) => {
-                      const noteContact = getContactById(note.contactId);
-                      const isNoteForSelectedContact = note.contactId === selectedContactId;
-                      
-                      return (
-                        <div 
-                          key={note.id}
-                          className={`bg-[#0E0E0E] border rounded-lg p-4 transition-colors ${
-                            isNoteForSelectedContact 
-                              ? 'border-[#4433FF]/30 hover:border-[#4433FF]/50' 
-                              : 'border-[#2A2A2A] hover:border-[#333]'
-                          }`}
-                        >
-                          {/* Note Header */}
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              {viewMode === 'all' && noteContact && (
-                                <>
-                                  <img 
-                                    src={noteContact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${noteContact.id}`}
-                                    alt={noteContact.fullName}
-                                    className="w-6 h-6 rounded-full border border-[#333]"
-                                  />
-                                  <span className={`text-xs font-bold ${
-                                    isNoteForSelectedContact ? 'text-[#4433FF]' : 'text-gray-400'
-                                  }`}>
-                                    {noteContact.fullName}
-                                  </span>
-                                  <span className="text-gray-600">•</span>
-                                </>
+                  {/* Contacts for this day */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pl-7">
+                    {contacts.map(({ contact, notes, latestNote }) => (
+                      <div 
+                        key={contact.id}
+                        className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-4 hover:border-[#4433FF]/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <img 
+                            src={contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
+                            alt={contact.fullName}
+                            className="w-10 h-10 rounded-full border border-[#333]"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <button
+                              onClick={() => handleContactClick(contact.id)}
+                              className="text-sm font-bold text-white hover:text-[#4433FF] transition-colors flex items-center gap-1"
+                            >
+                              {contact.fullName}
+                              {contact.id === CONTACT_ZERO.id && (
+                                <span className="text-[9px] bg-[#4433FF]/20 text-[#4433FF] px-1 py-0.5 rounded ml-1">You</span>
                               )}
-                              <Clock size={12} className="text-gray-600" />
-                              <span className="text-xs text-gray-500">{formatTime(note.createdAt)}</span>
-                            </div>
-                            {note.updatedAt && (
-                              <span className="text-[10px] text-gray-600 italic">edited</span>
-                            )}
+                            </button>
+                            <div className="text-[10px] text-gray-500 capitalize">{contact.relationshipRole}</div>
                           </div>
-
-                          {/* Note Content */}
-                          <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
-                            {note.content}
-                          </p>
-
-                          {/* Tags */}
-                          {note.tags && note.tags.length > 0 && (
-                            <div className="flex items-center gap-2 mt-3">
-                              <Tag size={12} className="text-gray-600" />
-                              <div className="flex flex-wrap gap-1">
-                                {note.tags.map((tag, idx) => (
-                                  <span 
-                                    key={idx}
-                                    className="text-[10px] px-2 py-0.5 rounded bg-[#1A1A1D] text-gray-400"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
+                          <div className="text-right">
+                            <div className="text-2xl font-display font-bold text-[#4433FF]">{notes.length}</div>
+                            <div className="text-[9px] text-gray-600 uppercase">notes</div>
+                          </div>
                         </div>
-                      );
-                    })}
+
+                        {/* Latest note snippet */}
+                        <div className="bg-[#1A1A1D] rounded p-3 border-l-2 border-[#4433FF]/30">
+                          <div className="flex items-center gap-1 mb-1">
+                            <Clock size={10} className="text-gray-600" />
+                            <span className="text-[10px] text-gray-500">{formatTime(latestNote.createdAt)}</span>
+                          </div>
+                          <p className="text-xs text-gray-400">
+                            {truncate(latestNote.content, 60)}
+                          </p>
+                        </div>
+
+                        {/* View more link */}
+                        <button
+                          onClick={() => handleContactClick(contact.id)}
+                          className="mt-3 w-full text-center text-[10px] text-[#4433FF] hover:text-white transition-colors flex items-center justify-center gap-1"
+                        >
+                          View {contact.fullName}'s Dossier <ArrowRight size={10} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}

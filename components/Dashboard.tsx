@@ -604,6 +604,8 @@ export const Dashboard: React.FC = () => {
              {currentView === 'DOSSIER' && (
                <ContactDossierView 
                  selectedContactId={selectedContactId}
+                 setSelectedContactId={setSelectedContactId}
+                 onNavigateToDossier={() => setCurrentView('DOSSIER')}
                />
              )}
              {currentView === 'SCAN' && <ScanView />}
@@ -611,6 +613,7 @@ export const Dashboard: React.FC = () => {
                <NotesView 
                  selectedContactId={selectedContactId}
                  setSelectedContactId={setSelectedContactId}
+                 onNavigateToDossier={() => setCurrentView('DOSSIER')}
                />
              )}
              {currentView === 'CONTACTS' && (
