@@ -21,7 +21,7 @@ import { GroupsProjectsView } from './crm/GroupsProjectsView';
 import { NotesView } from './crm/NotesView';
 import { ThreeParticles } from './ThreeParticles';
 import { ContactZeroDashboard } from './dashboard/ContactZeroDashboard';
-import { getContactZero } from '../services/crmService';
+import { getContactZero } from '../services/contactStore';
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -273,10 +273,10 @@ const ScanView: React.FC = () => {
 const DashboardOverview: React.FC = () => {
     // CONTACT ZERO (The User) is the source of truth
     const user = getContactZero();
-    const tasksDue = user.tasks.filter(t => !t.isCompleted).length;
-    const scansDone = user.history.filter(h => h.type === 'scan').length;
-    // Mock leaks calculation from insights for now
-    const leaks = user.aiModels.insights.length * 3; 
+    // Using static values for now since the new Contact type is simpler
+    const tasksDue = 3;  // Mock value
+    const scansDone = user.frame.lastScanAt ? 5 : 0;  // Mock based on scan existence
+    const leaks = 100 - user.frame.currentScore;  // Derive from frame score 
 
     return (
         <div className="space-y-6 h-full flex flex-col pb-20">

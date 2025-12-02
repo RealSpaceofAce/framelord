@@ -1,180 +1,370 @@
+// =============================================================================
+// CONTACTS VIEW — Directory of all contacts in the spine
+// =============================================================================
 
-import React, { useState } from 'react';
-import { Contact } from '../../types';
-import { getContacts, getContactById, createContact, updateContact, appendNoteToEntity } from '../../services/crmService';
-import { User, Phone, Mail, Linkedin, MapPin, Briefcase, Activity, Target, Plus, X, Save, Edit2, Globe, Instagram, Facebook, Twitter, Youtube, Send } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useMemo } from 'react';
+import { Contact, RelationshipDomain } from '../../types';
+import { MOCK_CONTACTS, CONTACT_ZERO } from '../../services/contactStore';
+import { getNoteCountByContactId } from '../../services/noteStore';
+import { 
+  User, TrendingUp, TrendingDown, Minus, 
+  Calendar, Target, Filter, FileText
+} from 'lucide-react';
 
-const MotionDiv = motion.div as any;
+type DomainFilter = 'all' | RelationshipDomain;
 
 export const ContactsView: React.FC = () => {
-    const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-    const [isCreating, setIsCreating] = useState(false);
-    
-    // Sort contacts: Self first, then others
-    const contacts = getContacts().sort((a, b) => (a.isSelf ? -1 : b.isSelf ? 1 : 0));
+  const [domainFilter, setDomainFilter] = useState<DomainFilter>('all');
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
 
+  // Filter contacts by domain
+  const filteredContacts = useMemo(() => {
+    if (domainFilter === 'all') return MOCK_CONTACTS;
+    return MOCK_CONTACTS.filter(c => c.relationshipDomain === domainFilter);
+  }, [domainFilter]);
+
+  // Sort: Contact Zero first, then by frame score descending
+  const sortedContacts = useMemo(() => {
+    return [...filteredContacts].sort((a, b) => {
+      if (a.id === CONTACT_ZERO.id) return -1;
+      if (b.id === CONTACT_ZERO.id) return 1;
+      return b.frame.currentScore - a.frame.currentScore;
+    });
+  }, [filteredContacts]);
+
+  const formatDate = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return '—';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const TrendIcon: React.FC<{ trend: 'up' | 'down' | 'flat' }> = ({ trend }) => {
+    if (trend === 'up') return <TrendingUp size={14} className="text-green-500" />;
+    if (trend === 'down') return <TrendingDown size={14} className="text-red-500" />;
+    return <Minus size={14} className="text-gray-500" />;
+  };
+
+  const scoreColor = (score: number): string => {
+    if (score >= 80) return 'text-green-400';
+    if (score >= 60) return 'text-yellow-400';
+    if (score >= 40) return 'text-orange-400';
+    return 'text-red-400';
+  };
+
+  const statusBadge = (status: Contact['status']): string => {
+    const styles: Record<Contact['status'], string> = {
+      active: 'bg-green-500/20 text-green-400 border-green-500/30',
+      dormant: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+      blocked: 'bg-red-500/20 text-red-400 border-red-500/30',
+      testing: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    };
+    return styles[status];
+  };
+
+  const domainBadge = (domain: RelationshipDomain): string => {
+    const styles: Record<RelationshipDomain, string> = {
+      business: 'bg-blue-500/20 text-blue-400',
+      personal: 'bg-purple-500/20 text-purple-400',
+      hybrid: 'bg-orange-500/20 text-orange-400',
+    };
+    return styles[domain];
+  };
+
+  if (selectedContact) {
     return (
-        <div className="h-full flex flex-col relative">
-            {!selectedContact ? (
-                <>
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-display font-bold text-white">DIRECTORY</h2>
-                        <button 
-                            onClick={() => setIsCreating(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-[#4433FF] hover:bg-[#5544FF] text-white rounded text-xs font-bold transition-colors"
-                        >
-                            <Plus size={16} /> ADD CONTACT
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {contacts.map(contact => (
-                            <div 
-                                key={contact.id} 
-                                onClick={() => setSelectedContact(contact)}
-                                className={`bg-[#0E0E0E] border rounded-lg p-5 transition-all cursor-pointer group ${contact.isSelf ? 'border-[#4433FF] bg-[#4433FF]/10 shadow-[0_0_20px_rgba(68,51,255,0.15)]' : 'border-[#2A2A2A] hover:border-[#4433FF] hover:bg-[#121214]'}`}
-                            >
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-12 h-12 rounded-full overflow-hidden border ${contact.isSelf ? 'border-[#4433FF]' : 'border-[#333]'}`}>
-                                            <img src={contact.identity.avatarUrl} className="w-full h-full object-cover" />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-white font-bold font-display tracking-wide">{contact.identity.name}</h3>
-                                                {contact.isSelf && <span className="bg-[#4433FF] text-white text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">IDENTITY PRIME</span>}
-                                            </div>
-                                            <p className="text-xs text-gray-500 font-mono">{contact.classification.type}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className={`text-xl font-display font-bold ${contact.pipeline.score >= 75 ? 'text-green-500' : 'text-orange-500'}`}>
-                                            {contact.pipeline.score}
-                                        </div>
-                                        <div className="text-[9px] text-gray-600 uppercase">{contact.pipeline.trend}</div>
-                                    </div>
-                                </div>
-                                
-                                <div className="space-y-2 mb-4">
-                                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                                        <Target size={12} className="text-[#4433FF]" />
-                                        <span className="truncate">{contact.goals.topGoal || 'No primary objective'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                                        <Activity size={12} className="text-gray-600" />
-                                        <span>Stage: <span className="text-white">{contact.pipeline.stage}</span></span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </>
-            ) : (
-                <ContactDossier 
-                    contact={selectedContact} 
-                    onBack={() => setSelectedContact(null)} 
-                />
-            )}
-
-            {/* CREATE MODAL simplified */}
-        </div>
+      <ContactDetail 
+        contact={selectedContact} 
+        onBack={() => setSelectedContact(null)} 
+      />
     );
+  }
+
+  return (
+    <div className="space-y-6 pb-20">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-white">CONTACTS DIRECTORY</h1>
+          <p className="text-xs text-gray-500 mt-1">
+            {sortedContacts.length} contacts • {filteredContacts.filter(c => c.status === 'active').length} active
+          </p>
+        </div>
+
+        {/* Domain Filter */}
+        <div className="flex items-center gap-2">
+          <Filter size={14} className="text-gray-500" />
+          <div className="flex bg-[#1A1A1D] rounded-lg p-1 border border-[#333]">
+            {(['all', 'business', 'personal', 'hybrid'] as DomainFilter[]).map((domain) => (
+              <button
+                key={domain}
+                onClick={() => setDomainFilter(domain)}
+                className={`px-3 py-1.5 text-xs font-bold uppercase rounded transition-colors ${
+                  domainFilter === domain
+                    ? 'bg-[#4433FF] text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {domain}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Contacts Table */}
+      <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-[#121212] border-b border-[#2A2A2A]">
+                <th className="text-left p-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Contact</th>
+                <th className="text-left p-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Role</th>
+                <th className="text-left p-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Domain</th>
+                <th className="text-left p-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                <th className="text-center p-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Frame</th>
+                <th className="text-left p-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Last Contact</th>
+                <th className="text-left p-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Next Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedContacts.map((contact) => {
+                const isContactZero = contact.id === CONTACT_ZERO.id;
+                const noteCount = getNoteCountByContactId(contact.id);
+                
+                return (
+                  <tr 
+                    key={contact.id}
+                    onClick={() => setSelectedContact(contact)}
+                    className={`border-b border-[#2A2A2A] cursor-pointer transition-colors ${
+                      isContactZero 
+                        ? 'bg-[#4433FF]/5 hover:bg-[#4433FF]/10' 
+                        : 'hover:bg-[#1A1A1D]'
+                    }`}
+                  >
+                    {/* Contact Name + Avatar */}
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
+                          alt={contact.fullName}
+                          className={`w-10 h-10 rounded-full border-2 ${isContactZero ? 'border-[#4433FF]' : 'border-[#333]'}`}
+                        />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-white">{contact.fullName}</span>
+                            {isContactZero && (
+                              <span className="text-[9px] bg-[#4433FF] text-white px-1.5 py-0.5 rounded font-bold uppercase">
+                                YOU
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                            <FileText size={10} />
+                            <span>{noteCount} notes</span>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Role */}
+                    <td className="p-4">
+                      <span className="text-sm text-gray-300 capitalize">{contact.relationshipRole}</span>
+                    </td>
+
+                    {/* Domain */}
+                    <td className="p-4">
+                      <span className={`text-[10px] px-2 py-1 rounded uppercase font-bold ${domainBadge(contact.relationshipDomain)}`}>
+                        {contact.relationshipDomain}
+                      </span>
+                    </td>
+
+                    {/* Status */}
+                    <td className="p-4">
+                      <span className={`text-[10px] px-2 py-1 rounded border uppercase font-bold ${statusBadge(contact.status)}`}>
+                        {contact.status}
+                      </span>
+                    </td>
+
+                    {/* Frame Score + Trend */}
+                    <td className="p-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <span className={`text-lg font-display font-bold ${scoreColor(contact.frame.currentScore)}`}>
+                          {contact.frame.currentScore}
+                        </span>
+                        <TrendIcon trend={contact.frame.trend} />
+                      </div>
+                    </td>
+
+                    {/* Last Contact */}
+                    <td className="p-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <Calendar size={12} />
+                        <span>{formatDate(contact.lastContactAt)}</span>
+                      </div>
+                    </td>
+
+                    {/* Next Action */}
+                    <td className="p-4">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Target size={12} className="text-[#4433FF]" />
+                        <span className={contact.nextActionAt ? 'text-white' : 'text-gray-600'}>
+                          {formatDate(contact.nextActionAt)}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-const ContactDossier: React.FC<{ contact: Contact, onBack: () => void }> = ({ contact: initialContact, onBack }) => {
-    // FORCE REFRESH: Always pull the latest version of the contact from the service
-    const contact = getContactById(initialContact.id) || initialContact;
-    const [noteInput, setNoteInput] = useState('');
-    const [refresh, setRefresh] = useState(0);
+// =============================================================================
+// CONTACT DETAIL VIEW
+// =============================================================================
 
-    const handleNoteSubmit = () => {
-        if (!noteInput.trim()) return;
-        appendNoteToEntity(contact.id, 'Contact', noteInput);
-        setNoteInput('');
-        setRefresh(p => p+1); // Force re-render to show new note
-    };
+const ContactDetail: React.FC<{ contact: Contact; onBack: () => void }> = ({ contact, onBack }) => {
+  const isContactZero = contact.id === CONTACT_ZERO.id;
+  const noteCount = getNoteCountByContactId(contact.id);
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleNoteSubmit();
-        }
-    };
+  const scoreColor = (score: number): string => {
+    if (score >= 80) return 'text-green-400';
+    if (score >= 60) return 'text-yellow-400';
+    return 'text-orange-400';
+  };
 
-    return (
-        <div className="h-full flex flex-col gap-6 relative pb-20">
-            <div className="flex justify-between items-center">
-                <button onClick={onBack} className="text-xs text-gray-500 hover:text-white uppercase tracking-wider flex items-center gap-2 w-fit">
-                    ← Back to Directory
-                </button>
-                <div className="text-xl font-display font-bold text-white flex items-center gap-2">
-                    {contact.identity.name}
-                    {contact.isSelf && <span className="text-[#4433FF] text-xs border border-[#4433FF] px-2 py-0.5 rounded">CONTACT ZERO</span>}
-                </div>
+  return (
+    <div className="space-y-6 pb-20">
+      {/* Back Button */}
+      <button 
+        onClick={onBack}
+        className="text-xs text-gray-500 hover:text-white uppercase tracking-wider flex items-center gap-2"
+      >
+        ← Back to Directory
+      </button>
+
+      {/* Header Card */}
+      <div className={`bg-[#0E0E0E] border rounded-xl p-6 ${isContactZero ? 'border-[#4433FF]/50' : 'border-[#2A2A2A]'}`}>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+          {/* Identity */}
+          <div className="flex items-center gap-4">
+            <img 
+              src={contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
+              alt={contact.fullName}
+              className={`w-20 h-20 rounded-full border-4 ${isContactZero ? 'border-[#4433FF]' : 'border-[#333]'}`}
+            />
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-display font-bold text-white">{contact.fullName}</h1>
+                {isContactZero && (
+                  <span className="text-[10px] bg-[#4433FF] text-white px-2 py-0.5 rounded font-bold uppercase">
+                    Contact Zero
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-400 capitalize">{contact.relationshipRole}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-[10px] px-2 py-1 rounded bg-[#1A1A1D] text-gray-400 uppercase">
+                  {contact.relationshipDomain}
+                </span>
+                <span className="text-[10px] px-2 py-1 rounded bg-[#1A1A1D] text-gray-400 uppercase">
+                  {contact.status}
+                </span>
+              </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-                {/* IDENTITY */}
-                <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6 h-fit">
-                    <div className="flex flex-col items-center text-center mb-6">
-                        <img src={contact.identity.avatarUrl} className="w-24 h-24 rounded-full border-2 border-[#4433FF] mb-4" />
-                        <div className="px-2 py-0.5 bg-[#4433FF]/20 text-[#4433FF] text-[10px] font-bold uppercase rounded border border-[#4433FF]/30">{contact.classification.type}</div>
-                    </div>
-                    
-                    <div className="space-y-3 text-sm text-gray-400 border-t border-[#2A2A2A] pt-4">
-                        <div className="flex justify-between">
-                            <span>Email</span> <span className="text-white">{contact.contactInfo.email}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>Phone</span> <span className="text-white">{contact.contactInfo.phone}</span>
-                        </div>
-                        <div className="pt-2">
-                            <span className="block text-[10px] uppercase text-gray-600 mb-1">Context</span>
-                            <p className="text-xs italic">{contact.classification.roleDescription}</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* WORKFLOW */}
-                <div className="lg:col-span-2 space-y-6 flex flex-col">
-                    <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
-                        <h3 className="text-xs font-bold text-[#4433FF] uppercase tracking-widest mb-4">Pipeline Status</h3>
-                        <div className="flex items-center gap-4">
-                            <div className="flex-1 bg-[#1A1A1D] h-2 rounded-full overflow-hidden">
-                                <div className="h-full bg-[#4433FF]" style={{ width: `${contact.pipeline.score}%` }} />
-                            </div>
-                            <span className="font-bold text-white">{contact.pipeline.score}/100</span>
-                        </div>
-                        <div className="mt-4 flex gap-4 text-xs text-gray-400">
-                            <div>Stage: <span className="text-white font-bold">{contact.pipeline.stage}</span></div>
-                            <div>Trend: <span className="text-white font-bold">{contact.pipeline.trend}</span></div>
-                        </div>
-                    </div>
-
-                    {/* NOTES FEED */}
-                    <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6 flex flex-col flex-grow min-h-[400px]">
-                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Interaction Log</h3>
-                        <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 bg-[#121212] rounded p-4 border border-[#333]">
-                            {contact.notes.length === 0 && <div className="text-gray-600 text-xs italic">No interactions recorded.</div>}
-                            {contact.notes.map((note) => (
-                                <div key={note.id} className="text-sm text-gray-300 border-l-2 border-gray-600 pl-3">
-                                    <div className="text-[10px] text-gray-500 mb-1">{note.dateStr}</div>
-                                    <p className="whitespace-pre-wrap">{note.content}</p>
-                                </div>
-                            ))}
-                        </div>
-                        <textarea
-                            className="w-full bg-[#1A1A1D] border border-[#333] rounded p-3 text-white text-sm focus:border-[#4433FF] outline-none resize-none"
-                            placeholder="Add interaction note... (Shift+Enter for newline, Enter to submit)"
-                            value={noteInput}
-                            onChange={e => setNoteInput(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            rows={2}
-                        />
-                    </div>
-                </div>
+          {/* Frame Score */}
+          <div className="bg-[#1A1A1D] rounded-xl p-6 text-center min-w-[150px]">
+            <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Frame Score</div>
+            <div className={`text-5xl font-display font-bold ${scoreColor(contact.frame.currentScore)}`}>
+              {contact.frame.currentScore}
             </div>
+            <div className="text-xs text-gray-500 mt-2 uppercase">
+              Trend: <span className="text-white">{contact.frame.trend}</span>
+            </div>
+          </div>
         </div>
-    );
+      </div>
+
+      {/* Details Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Contact Info */}
+        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Contact Info</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Email</span>
+              <span className="text-white">{contact.email || '—'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Phone</span>
+              <span className="text-white">{contact.phone || '—'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Timeline */}
+        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Timeline</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Last Contact</span>
+              <span className="text-white">
+                {contact.lastContactAt ? new Date(contact.lastContactAt).toLocaleDateString() : '—'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Next Action</span>
+              <span className="text-white">
+                {contact.nextActionAt ? new Date(contact.nextActionAt).toLocaleDateString() : '—'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Last Scan</span>
+              <span className="text-white">
+                {contact.frame.lastScanAt ? new Date(contact.frame.lastScanAt).toLocaleDateString() : 'Never'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Activity */}
+        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Activity</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Notes</span>
+              <span className="text-white font-bold">{noteCount}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Tags</span>
+              <span className="text-white">{contact.tags.length}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tags */}
+      {contact.tags.length > 0 && (
+        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Tags</h3>
+          <div className="flex flex-wrap gap-2">
+            {contact.tags.map((tag) => (
+              <span 
+                key={tag}
+                className="text-xs px-3 py-1 rounded-full bg-[#4433FF]/20 text-[#737AFF] border border-[#4433FF]/30"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };

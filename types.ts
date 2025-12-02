@@ -1,4 +1,79 @@
+// =============================================================================
+// FRAMELORD CRM — CORE TYPES
+// =============================================================================
+// The Contact is the canonical spine. All other entities (Notes, Tasks,
+// Interactions) attach to a Contact via contactId. No orphan data.
+// =============================================================================
 
+// --- FRAME METRICS ---
+
+export interface ContactFrameMetrics {
+  currentScore: number;           // 0-100
+  trend: 'up' | 'down' | 'flat';
+  lastScanAt: string | null;      // ISO timestamp
+}
+
+// --- CONTACT (THE SPINE) ---
+
+export type RelationshipDomain = 'business' | 'personal' | 'hybrid';
+export type ContactStatus = 'active' | 'dormant' | 'blocked' | 'testing';
+
+export interface Contact {
+  id: string;
+  fullName: string;
+  avatarUrl?: string;
+  email?: string;
+  phone?: string;
+  relationshipDomain: RelationshipDomain;
+  relationshipRole: string;       // e.g., "prospect", "client", "friend", "manager"
+  status: ContactStatus;
+  frame: ContactFrameMetrics;
+  lastContactAt?: string | null;  // ISO timestamp
+  nextActionAt?: string | null;   // ISO timestamp
+  tags: string[];
+}
+
+/** Contact Zero is the user's own record */
+export type ContactZero = Contact & { id: 'contact_zero' };
+
+// --- NOTE (SYNCS TO CONTACT) ---
+
+export interface Note {
+  id: string;
+  contactId: string;              // REQUIRED — links to Contact.id
+  content: string;
+  createdAt: string;              // ISO timestamp
+  updatedAt?: string | null;
+  tags?: string[];
+}
+
+// --- INTERACTION ---
+
+export type InteractionType = 'call' | 'meeting' | 'message' | 'other';
+
+export interface Interaction {
+  id: string;
+  contactId: string;              // REQUIRED — links to Contact.id
+  type: InteractionType;
+  occurredAt: string;             // ISO timestamp
+  summary: string;
+}
+
+// --- TASK ---
+
+export type TaskStatus = 'open' | 'done' | 'blocked';
+
+export interface Task {
+  id: string;
+  contactId: string;              // REQUIRED — links to Contact.id
+  title: string;
+  dueAt?: string | null;          // ISO timestamp
+  status: TaskStatus;
+}
+
+// =============================================================================
+// LEGACY TYPES (kept for backward compatibility with existing components)
+// =============================================================================
 
 export interface FrameAnalysisResult {
   score: number;
@@ -28,104 +103,15 @@ export interface ChatMessage {
   timestamp: number;
 }
 
-// --- CORE SPINE: CONTACT ---
-
-export interface Contact {
-  id: string;
-  isSelf?: boolean; // Contact Zero
-  
-  identity: {
-    name: string;
-    avatarUrl: string;
-    socials: {
-      linkedin?: string;
-      twitter?: string;
-      instagram?: string;
-      website?: string;
-      [key: string]: string | undefined;
-    };
-  };
-
-  contactInfo: {
-    email?: string;
-    phone?: string;
-  };
-
-  classification: {
-    domain: 'business' | 'personal';
-    type: 'client' | 'prospect' | 'partner' | 'friend' | 'family' | 'dating' | 'ltr' | 'self' | 'none';
-    roleDescription: string;
-  };
-
-  pipeline: {
-    stage: string; // e.g., 'Lead', 'Negotiation', 'FriendZone', 'Committed'
-    status: 'active' | 'stagnant' | 'archived' | 'closedWon' | 'closedLost';
-    score: number; // FrameScore (0-100)
-    trend: 'up' | 'down' | 'flat';
-    lastScanAt: number;
-  };
-
-  goals: {
-    topGoal: string;
-    secondaryGoals: string[];
-  };
-
-  // Embedded Data (No parallel models)
-  notes: Note[];
-  tasks: Task[];
-  interactions: Interaction[];
-  history: TimelineEvent[];
-
-  // AI Output
-  aiModels: {
-    insights: string[];
-    summaries: string;
-    forecasts: string;
-    plans: string;
-    recommendedActions: string[];
-  };
-}
-
-export interface Note {
-  id: string;
-  content: string;
-  timestamp: number;
-  dateStr: string; // YYYY-MM-DD for grouping
-  isSystem?: boolean; // Auto-generated
-  topics: string[]; // [[Topic]]
-}
-
-export interface Task {
-  id: string;
-  text: string;
-  isCompleted: boolean;
-  createdAt: number;
-  dueAt?: number;
-}
-
-export interface Interaction {
-  id: string;
-  type: 'call' | 'email' | 'meeting' | 'dm' | 'scan' | 'note';
-  summary: string;
-  timestamp: number;
-}
-
-export interface TimelineEvent {
-  id: string;
-  type: 'scan' | 'stage_change' | 'note' | 'interaction';
-  description: string;
-  timestamp: number;
-}
-
-// --- CONTAINERS (Organizing Layers Only) ---
+// --- CONTAINERS (Organizing Layers) ---
 
 export interface Group {
   id: string;
   name: string;
   description: string;
   bannerUrl?: string;
-  contactIds: string[]; // Reference only
-  frameScore: number; // Aggregated from members
+  contactIds: string[];
+  frameScore: number;
   notes?: string;
   lastScanAt?: number;
 }
@@ -136,14 +122,10 @@ export interface Project {
   description: string;
   bannerUrl?: string;
   status: 'active' | 'onHold' | 'completed';
-  contactIds: string[]; // Reference only
-  taskIds: string[]; // Reference to specific tasks inside contacts? Or Project-level tasks attached to Contact Zero?
-                     // Per rules: "Tasks attach to a Contact." 
-                     // So Project Tasks are likely tasks on Contact Zero tagged with this Project, or tasks on Members.
-                     // For simplicity in this UI, we will view them as aggregated tasks.
+  contactIds: string[];
+  taskIds: string[];
   layoutOrder?: string[];
-  linkedPipelineStage?: string; // Filter contacts by this stage?
-  // Extended fields
+  linkedPipelineStage?: string;
   linkedPipelineId?: string;
   notes?: string;
   actions?: ActionItem[];
@@ -152,8 +134,6 @@ export interface Project {
   lastScanAt?: number;
 }
 
-// --- CONFIG ---
-
 export interface PipelineStageConfig {
   id: string;
   name: string;
@@ -161,11 +141,9 @@ export interface PipelineStageConfig {
   order: number;
 }
 
-export interface Plan {
+export interface Pipeline {
+  id: string;
   name: string;
-  price: string;
-  features: string[];
-  isPopular?: boolean;
 }
 
 export interface ActionItem {
@@ -180,12 +158,9 @@ export interface FileAttachment {
   url?: string;
 }
 
-export interface Pipeline {
-  id: string;
+export interface Plan {
   name: string;
+  price: string;
+  features: string[];
+  isPopular?: boolean;
 }
-
-// --- TYPE ALIASES ---
-
-/** Contact Zero is the user's own record (isSelf = true) */
-export type ContactZero = Contact & { isSelf: true };
