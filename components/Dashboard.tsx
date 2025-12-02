@@ -21,7 +21,9 @@ import { GroupsProjectsView } from './crm/GroupsProjectsView';
 import { NotesView } from './crm/NotesView';
 import { ThreeParticles } from './ThreeParticles';
 import { ContactDossierView } from './crm/ContactDossierView';
+import { TopicView } from './crm/TopicView';
 import { getContactZero, CONTACT_ZERO, getContactById } from '../services/contactStore';
+import { getTopicById } from '../services/topicStore';
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -444,7 +446,7 @@ const DashboardOverview: React.FC = () => {
     );
 }
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'GROUPS' | 'PROJECTS';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'GROUPS' | 'PROJECTS' | 'TOPIC';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -458,8 +460,16 @@ export const Dashboard: React.FC = () => {
   // ==========================================================================
   const [selectedContactId, setSelectedContactId] = useState<string>(CONTACT_ZERO.id);
 
+  // ==========================================================================
+  // SELECTED TOPIC STATE (for Topic view)
+  // ==========================================================================
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+
   // Get selected contact for display in header
   const selectedContact = getContactById(selectedContactId) || getContactZero();
+  
+  // Get selected topic for display in header
+  const selectedTopic = selectedTopicId ? getTopicById(selectedTopicId) : null;
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -487,10 +497,19 @@ export const Dashboard: React.FC = () => {
       setIsMobileMenuOpen(false);
   };
 
+  // Handler for navigating to a topic
+  const handleNavigateToTopic = (topicId: string) => {
+    setSelectedTopicId(topicId);
+    setCurrentView('TOPIC');
+  };
+
   // Get header title based on view
   const getHeaderTitle = (): string => {
     if (currentView === 'DOSSIER') {
       return selectedContact.fullName.toUpperCase();
+    }
+    if (currentView === 'TOPIC' && selectedTopic) {
+      return `#${selectedTopic.label.toUpperCase()}`;
     }
     return currentView;
   };
@@ -586,6 +605,11 @@ export const Dashboard: React.FC = () => {
                      You
                    </span>
                  )}
+                 {currentView === 'TOPIC' && selectedTopic && (
+                   <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded border border-purple-500/30 font-bold uppercase ml-2">
+                     Topic
+                   </span>
+                 )}
              </div>
              <div className="flex items-center gap-6">
                  <span className="text-xs text-gray-600 font-mono">Last updated {formatTime(time)}</span>
@@ -606,6 +630,16 @@ export const Dashboard: React.FC = () => {
                  selectedContactId={selectedContactId}
                  setSelectedContactId={setSelectedContactId}
                  onNavigateToDossier={() => setCurrentView('DOSSIER')}
+                 onNavigateToTopic={handleNavigateToTopic}
+               />
+             )}
+             {currentView === 'TOPIC' && selectedTopicId && (
+               <TopicView
+                 topicId={selectedTopicId}
+                 selectedContactId={selectedContactId}
+                 setSelectedContactId={setSelectedContactId}
+                 onNavigateToDossier={() => setCurrentView('DOSSIER')}
+                 onBack={() => setCurrentView('DOSSIER')}
                />
              )}
              {currentView === 'SCAN' && <ScanView />}

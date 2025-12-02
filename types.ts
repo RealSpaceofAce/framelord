@@ -48,6 +48,19 @@ export interface Note {
   tags?: string[];
 }
 
+// --- TOPIC (OBSIDIAN-STYLE [[TOPIC]] LINKS) ---
+
+export interface Topic {
+  id: string;
+  label: string;                  // Human-facing name, e.g. "Sales"
+  slug: string;                   // Normalized key, e.g. "sales"
+}
+
+export interface NoteTopic {
+  noteId: string;
+  topicId: string;
+}
+
 // --- INTERACTION ---
 
 export type InteractionType = 'call' | 'meeting' | 'message' | 'other';

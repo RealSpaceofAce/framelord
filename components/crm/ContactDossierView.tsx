@@ -6,6 +6,7 @@
 // Supports in-place editing of contact fields.
 // Includes Notes section with add form.
 // For Contact Zero: includes Activity feed showing actions taken about others.
+// Includes Topic chips for Obsidian-style [[Topic]] links.
 // =============================================================================
 
 import React, { useState, useEffect } from 'react';
@@ -13,11 +14,12 @@ import { motion } from 'framer-motion';
 import { 
   Target, TrendingUp, TrendingDown, Minus,
   Activity, Zap, Calendar, FileText, Mail, Phone,
-  Tag, Clock, Edit2, Save, X, Send, ArrowRight, User
+  Tag, Clock, Edit2, Save, X, Send, ArrowRight, User, Hash
 } from 'lucide-react';
-import { getContactById, CONTACT_ZERO, updateContact, MOCK_CONTACTS } from '../../services/contactStore';
+import { getContactById, CONTACT_ZERO, updateContact } from '../../services/contactStore';
 import { getNotesByContactId, getNotesByAuthorId, createNote } from '../../services/noteStore';
-import { Contact, RelationshipDomain, ContactStatus, Note } from '../../types';
+import { getTopicsForContact, getTopicsForAuthor } from '../../services/topicStore';
+import { Contact, RelationshipDomain, ContactStatus, Topic } from '../../types';
 
 const MotionDiv = motion.div as any;
 
@@ -27,6 +29,7 @@ interface ContactDossierViewProps {
   selectedContactId: string;
   setSelectedContactId?: (id: string) => void;
   onNavigateToDossier?: () => void;
+  onNavigateToTopic?: (topicId: string) => void;
 }
 
 // --- EDIT FORM STATE TYPE ---
@@ -46,7 +49,8 @@ interface EditFormState {
 export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ 
   selectedContactId,
   setSelectedContactId,
-  onNavigateToDossier
+  onNavigateToDossier,
+  onNavigateToTopic
 }) => {
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -108,6 +112,12 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   const activityNotes = isContactZero 
     ? getNotesByAuthorId(CONTACT_ZERO.id).filter(n => n.contactId !== CONTACT_ZERO.id)
     : [];
+
+  // Topics linked to notes ABOUT this contact
+  const topicsForContact = getTopicsForContact(selectedContactId);
+
+  // For Contact Zero: all topics from notes written by them
+  const topicsForAuthor = isContactZero ? getTopicsForAuthor(CONTACT_ZERO.id) : [];
 
   // --- HANDLERS ---
 
@@ -197,6 +207,13 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     }
   };
 
+  // Navigate to a topic view
+  const handleTopicClick = (topic: Topic) => {
+    if (onNavigateToTopic) {
+      onNavigateToTopic(topic.id);
+    }
+  };
+
   // --- HELPER COMPONENTS ---
 
   const TrendIcon: React.FC<{ trend: 'up' | 'down' | 'flat' }> = ({ trend }) => {
@@ -204,6 +221,16 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     if (trend === 'down') return <TrendingDown size={16} className="text-red-500" />;
     return <Minus size={16} className="text-gray-500" />;
   };
+
+  const TopicChip: React.FC<{ topic: Topic }> = ({ topic }) => (
+    <button
+      onClick={() => handleTopicClick(topic)}
+      className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 hover:bg-purple-500/30 hover:text-purple-300 transition-colors"
+    >
+      <Hash size={10} />
+      {topic.label}
+    </button>
+  );
 
   const scoreColor = contact.frame.currentScore >= 80 
     ? 'text-green-400' 
@@ -440,7 +467,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           </div>
         </div>
 
-        {/* CENTER: Frame Metrics */}
+        {/* CENTER: Frame Metrics + Topics */}
         <div className="space-y-6">
           {/* Frame Score */}
           <MotionDiv 
@@ -469,6 +496,28 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               />
             </div>
           </MotionDiv>
+
+          {/* Topics with this contact */}
+          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Hash size={16} className="text-purple-500" />
+              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                {isContactZero ? 'Topics in Your Notes' : 'Topics with this Contact'}
+              </h3>
+            </div>
+            {topicsForContact.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {topicsForContact.map((topic) => (
+                  <TopicChip key={topic.id} topic={topic} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600 text-sm italic">No topics linked yet</p>
+            )}
+            <p className="text-[10px] text-gray-600 mt-3">
+              Use [[Topic]] syntax in notes to create links
+            </p>
+          </div>
 
           {/* Timeline */}
           <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
@@ -518,6 +567,66 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* RIGHT: Notes Section + Tags */}
+        <div className="space-y-6">
+          {/* Notes ABOUT this contact */}
+          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText size={16} className="text-[#4433FF]" />
+              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                Notes {!isContactZero && 'About'}
+              </h3>
+              <span className="text-[10px] text-gray-600 ml-auto">{notesAboutContact.length} total</span>
+            </div>
+
+            {/* Add Note Form */}
+            <div className="mb-4">
+              <textarea
+                value={newNoteContent}
+                onChange={(e) => setNewNoteContent(e.target.value)}
+                onKeyDown={handleNoteKeyDown}
+                placeholder={`Add a note ${isContactZero ? '(use [[Topic]] for links)' : `about ${contact.fullName}`}...`}
+                className="w-full bg-[#1A1A1D] border border-[#333] rounded-lg p-3 text-white text-sm resize-none focus:border-[#4433FF] outline-none"
+                rows={2}
+              />
+              <button
+                onClick={handleAddNote}
+                disabled={!newNoteContent.trim()}
+                className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#4433FF] hover:bg-[#5544FF] disabled:bg-[#333] disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors"
+              >
+                <Send size={12} /> Add Note
+              </button>
+            </div>
+
+            {/* Recent Notes */}
+            {notesAboutContact.length > 0 ? (
+              <div className="space-y-3 max-h-[250px] overflow-y-auto">
+                {notesAboutContact.slice(0, 5).map((note) => (
+                  <div 
+                    key={note.id}
+                    className="border-l-2 border-[#4433FF]/30 pl-3 py-1"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <Clock size={10} className="text-gray-600" />
+                      <span className="text-[10px] text-gray-500">
+                        {formatDate(note.createdAt)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-400">
+                      {truncate(note.content, 100)}
+                    </p>
+                  </div>
+                ))}
+                {notesAboutContact.length > 5 && (
+                  <p className="text-xs text-gray-600 pl-3">+{notesAboutContact.length - 5} more notes</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-gray-600 text-sm italic">No notes yet</p>
+            )}
+          </div>
 
           {/* Tags */}
           <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
@@ -552,67 +661,26 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             )}
           </div>
         </div>
+      </div>
 
-        {/* RIGHT: Notes Section */}
-        <div className="space-y-6">
-          {/* Notes ABOUT this contact */}
-          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <FileText size={16} className="text-[#4433FF]" />
-              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                Notes {!isContactZero && 'About'}
-              </h3>
-              <span className="text-[10px] text-gray-600 ml-auto">{notesAboutContact.length} total</span>
-            </div>
+      {/* CONTACT ZERO ONLY: Your Topics (all topics from your notes) */}
+      {isContactZero && topicsForAuthor.length > 0 && (
+        <div className="bg-[#0E0E0E] border border-purple-500/30 rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Hash size={16} className="text-purple-500" />
+            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Your Topics (All Notes)
+            </h3>
+            <span className="text-[10px] text-gray-600 ml-auto">{topicsForAuthor.length} topics</span>
+          </div>
 
-            {/* Add Note Form */}
-            <div className="mb-4">
-              <textarea
-                value={newNoteContent}
-                onChange={(e) => setNewNoteContent(e.target.value)}
-                onKeyDown={handleNoteKeyDown}
-                placeholder={`Add a note ${isContactZero ? '' : `about ${contact.fullName}`}...`}
-                className="w-full bg-[#1A1A1D] border border-[#333] rounded-lg p-3 text-white text-sm resize-none focus:border-[#4433FF] outline-none"
-                rows={2}
-              />
-              <button
-                onClick={handleAddNote}
-                disabled={!newNoteContent.trim()}
-                className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#4433FF] hover:bg-[#5544FF] disabled:bg-[#333] disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors"
-              >
-                <Send size={12} /> Add Note
-              </button>
-            </div>
-
-            {/* Recent Notes */}
-            {notesAboutContact.length > 0 ? (
-              <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                {notesAboutContact.slice(0, 5).map((note) => (
-                  <div 
-                    key={note.id}
-                    className="border-l-2 border-[#4433FF]/30 pl-3 py-1"
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <Clock size={10} className="text-gray-600" />
-                      <span className="text-[10px] text-gray-500">
-                        {formatDate(note.createdAt)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-400">
-                      {truncate(note.content, 100)}
-                    </p>
-                  </div>
-                ))}
-                {notesAboutContact.length > 5 && (
-                  <p className="text-xs text-gray-600 pl-3">+{notesAboutContact.length - 5} more notes</p>
-                )}
-              </div>
-            ) : (
-              <p className="text-gray-600 text-sm italic">No notes yet</p>
-            )}
+          <div className="flex flex-wrap gap-2">
+            {topicsForAuthor.map((topic) => (
+              <TopicChip key={topic.id} topic={topic} />
+            ))}
           </div>
         </div>
-      </div>
+      )}
 
       {/* CONTACT ZERO ONLY: Activity Feed (what you did about others) */}
       {isContactZero && activityNotes.length > 0 && (
@@ -681,6 +749,15 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
 
         <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
+            <Hash size={14} className="text-gray-600" />
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Topics</span>
+          </div>
+          <div className="text-3xl font-display font-bold text-purple-400">{topicsForContact.length}</div>
+          <div className="text-xs text-gray-600">linked</div>
+        </div>
+
+        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-2">
             <Activity size={14} className="text-gray-600" />
             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Frame</span>
           </div>
@@ -688,18 +765,6 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             {contact.frame.currentScore}
           </div>
           <div className="text-xs text-gray-600">score</div>
-        </div>
-
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp size={14} className="text-gray-600" />
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Trend</span>
-          </div>
-          <div className="text-3xl font-display font-bold text-white flex items-center gap-2">
-            <TrendIcon trend={contact.frame.trend} />
-            <span className="capitalize">{contact.frame.trend}</span>
-          </div>
-          <div className="text-xs text-gray-600">momentum</div>
         </div>
 
         <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
