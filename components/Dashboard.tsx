@@ -685,7 +685,13 @@ export const Dashboard: React.FC = () => {
                  onNavigateToDossier={() => setCurrentView('DOSSIER')}
                />
              )}
-             {currentView === 'PIPELINES' && <PipelinesView />}
+             {currentView === 'PIPELINES' && (
+               <PipelinesView
+                 selectedContactId={selectedContactId}
+                 setSelectedContactId={setSelectedContactId}
+                 onNavigateToDossier={() => setCurrentView('DOSSIER')}
+               />
+             )}
              {(currentView === 'GROUPS' || currentView === 'PROJECTS') && <GroupsProjectsView />}
          </div>
       </main>

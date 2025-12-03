@@ -16,7 +16,7 @@ import {
   Activity, Zap, Calendar, FileText, Mail, Phone,
   Tag, Clock, Edit2, Save, X, Send, ArrowRight, User, Hash,
   CheckSquare, Square, Plus, AlertCircle, PhoneCall, Users, MessageSquare, AtSign,
-  Trash2, Paperclip, Image, File
+  Trash2, Paperclip, Image, File, Layout
 } from 'lucide-react';
 import { getContactById, CONTACT_ZERO, updateContact } from '../../services/contactStore';
 import { getNotesByContactId, getNotesByAuthorId, createNote } from '../../services/noteStore';
@@ -41,6 +41,10 @@ import {
   formatDueTime,
   hasTimeComponent
 } from '../../services/taskStore';
+import {
+  getPipelineItemsByContact,
+  getPipelineTemplateById,
+} from '../../services/pipelineStore';
 import { Contact, RelationshipDomain, ContactStatus, Topic, Task, Interaction, InteractionType, InteractionAttachment } from '../../types';
 
 const MotionDiv = motion.div as any;
@@ -185,6 +189,9 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
 
   // For Contact Zero: all topics from notes written by them
   const topicsForAuthor = isContactZero ? getTopicsForAuthor(CONTACT_ZERO.id) : [];
+
+  // Pipeline items for this contact
+  const pipelineItems = getPipelineItemsByContact(selectedContactId);
 
   // For Contact Zero: open tasks grouped by contact (what you owe to others)
   const openTasksByContact = isContactZero ? getOpenTasksGroupedByContact() : new Map();
@@ -989,6 +996,84 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               </div>
             ) : (
               <p className="text-gray-600 text-sm italic">No topics linked yet</p>
+            )}
+          </div>
+
+          {/* Pipeline Status */}
+          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Layout size={16} className="text-blue-500" />
+              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                Pipeline
+              </h3>
+            </div>
+            {pipelineItems.length > 0 ? (
+              <div className="space-y-3">
+                {pipelineItems.map((item) => {
+                  const template = getPipelineTemplateById(item.templateId);
+                  if (!template) return null;
+
+                  const currentStage = template.stages.find(s => s.id === item.currentStageId);
+                  if (!currentStage) return null;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="p-3 bg-[#1A1A1D] border border-[#333] rounded-lg"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <div className="text-sm font-bold text-white">{template.name}</div>
+                          {item.label && (
+                            <div className="text-xs text-gray-400">{item.label}</div>
+                          )}
+                        </div>
+                        <span className={`text-[10px] px-2 py-0.5 rounded uppercase font-bold ${
+                          item.status === 'won'
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                            : item.status === 'lost'
+                              ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                              : item.status === 'archived'
+                                ? 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                                : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        }`}>
+                          {item.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {currentStage.color && (
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: currentStage.color }}
+                          />
+                        )}
+                        <span className="text-xs text-gray-300">{currentStage.name}</span>
+                        <span className="text-[10px] text-gray-600 ml-auto">
+                          {new Date(item.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {item.closedAt && (
+                        <div className="text-[10px] text-gray-600 mt-1">
+                          Closed: {new Date(item.closedAt).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-gray-600 text-sm italic mb-2">Not in any pipeline yet</p>
+                <button
+                  onClick={() => {
+                    // Simple: could navigate to Pipelines view, but keeping minimal for now
+                    // This could be enhanced to open Pipelines view with contact pre-selected
+                  }}
+                  className="text-xs text-[#4433FF] hover:text-white transition-colors"
+                >
+                  Add to pipeline →
+                </button>
+              </div>
             )}
           </div>
 

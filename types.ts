@@ -201,3 +201,38 @@ export interface Plan {
   features: string[];
   isPopular?: boolean;
 }
+
+// --- PIPELINE ---
+
+export interface PipelineStageTemplate {
+  id: string;
+  name: string;
+  order: number; // 0..N left to right
+  color?: string; // simple string like "green" or hex, optional
+  autoTaskTitle?: string; // if set, create a task when item enters this stage
+  autoTaskDueInDays?: number; // days from now for due date when autoTaskTitle is used
+}
+
+export interface PipelineTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  domain: 'business' | 'personal' | 'hybrid';
+  isDefault?: boolean;
+  stages: PipelineStageTemplate[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PipelineItem {
+  id: string;
+  templateId: string;
+  contactId: string;
+  label?: string; // optional free text (deal name / case name)
+  currentStageId: string;
+  createdAt: string;
+  updatedAt: string;
+  closedAt?: string | null;
+  status: 'open' | 'won' | 'lost' | 'archived';
+  value?: number; // optional numeric value for later analytics
+}
