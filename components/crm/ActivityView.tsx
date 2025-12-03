@@ -8,7 +8,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   PhoneCall, Users, MessageSquare, Mail, AtSign, Activity,
-  ArrowRight, Filter, Clock
+  ArrowRight, Filter, Clock, Image, File, Paperclip
 } from 'lucide-react';
 import { getAllInteractions } from '../../services/interactionStore';
 import { getContactById, CONTACT_ZERO } from '../../services/contactStore';
@@ -230,6 +230,37 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
                         <p className="text-sm text-white mb-3 leading-relaxed">
                           {interaction.summary}
                         </p>
+
+                        {/* Attachments */}
+                        {interaction.attachments && interaction.attachments.length > 0 && (
+                          <div className="mb-3">
+                            <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Attachments</div>
+                            <div className="flex flex-wrap gap-2">
+                              {interaction.attachments.map((attachment) => {
+                                const getIcon = () => {
+                                  if (attachment.mimeType.startsWith('image/')) {
+                                    return <Image size={12} className="text-blue-400" />;
+                                  }
+                                  if (attachment.mimeType === 'application/pdf') {
+                                    return <File size={12} className="text-red-400" />;
+                                  }
+                                  return <Paperclip size={12} className="text-gray-400" />;
+                                };
+
+                                return (
+                                  <button
+                                    key={attachment.id}
+                                    onClick={() => window.open(attachment.dataUrl, '_blank')}
+                                    className="flex items-center gap-1 px-2 py-1 bg-[#1A1A1D] border border-[#333] rounded text-xs hover:border-[#4433FF] transition-colors"
+                                  >
+                                    {getIcon()}
+                                    <span className="text-[#4433FF] hover:text-white">{attachment.fileName}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
 
                         {/* Contact */}
                         <button

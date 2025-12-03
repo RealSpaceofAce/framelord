@@ -76,6 +76,15 @@ export interface NoteTopic {
 
 export type InteractionType = 'call' | 'meeting' | 'message' | 'email' | 'dm' | 'other';
 
+export interface InteractionAttachment {
+  id: string;
+  interactionId: string;
+  fileName: string;
+  mimeType: string;
+  dataUrl: string;                 // Data URL (data:image/... or data:application/pdf;base64,...)
+  createdAt: string;               // ISO timestamp
+}
+
 export interface Interaction {
   id: string;
   contactId: string;              // REQUIRED — who the interaction was WITH
@@ -83,6 +92,7 @@ export interface Interaction {
   type: InteractionType;
   occurredAt: string;             // ISO timestamp
   summary: string;
+  attachments?: InteractionAttachment[];
 }
 
 // --- TASK ---

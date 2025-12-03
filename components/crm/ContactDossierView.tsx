@@ -15,12 +15,21 @@ import {
   Target, TrendingUp, TrendingDown, Minus,
   Activity, Zap, Calendar, FileText, Mail, Phone,
   Tag, Clock, Edit2, Save, X, Send, ArrowRight, User, Hash,
-  CheckSquare, Square, Plus, AlertCircle, PhoneCall, Users, MessageSquare, AtSign
+  CheckSquare, Square, Plus, AlertCircle, PhoneCall, Users, MessageSquare, AtSign,
+  Trash2, Paperclip, Image, File
 } from 'lucide-react';
 import { getContactById, CONTACT_ZERO, updateContact } from '../../services/contactStore';
 import { getNotesByContactId, getNotesByAuthorId, createNote } from '../../services/noteStore';
 import { getTopicsForContact, getTopicsForAuthor } from '../../services/topicStore';
-import { getInteractionsByContactId, getInteractionsByAuthorId, createInteraction } from '../../services/interactionStore';
+import { 
+  getInteractionsByContactId, 
+  getInteractionsByAuthorId, 
+  createInteraction,
+  updateInteraction,
+  deleteInteraction,
+  addAttachmentToInteraction,
+  removeAttachmentFromInteraction
+} from '../../services/interactionStore';
 import { 
   getOpenTasksByContactId, 
   getTasksByContactId, 
@@ -32,7 +41,7 @@ import {
   formatDueTime,
   hasTimeComponent
 } from '../../services/taskStore';
-import { Contact, RelationshipDomain, ContactStatus, Topic, Task, Interaction, InteractionType } from '../../types';
+import { Contact, RelationshipDomain, ContactStatus, Topic, Task, Interaction, InteractionType, InteractionAttachment } from '../../types';
 
 const MotionDiv = motion.div as any;
 
@@ -86,6 +95,14 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   const [newInteractionType, setNewInteractionType] = useState<InteractionType>('call');
   const [newInteractionSummary, setNewInteractionSummary] = useState('');
   const [newInteractionOccurredAt, setNewInteractionOccurredAt] = useState('');
+  
+  // Interaction editing state
+  const [editingInteractionId, setEditingInteractionId] = useState<string | null>(null);
+  const [editInteractionForm, setEditInteractionForm] = useState<{
+    type: InteractionType;
+    occurredAt: string;
+    summary: string;
+  } | null>(null);
   
   // Get contact from store (re-fetch on refreshKey change)
   const contact = getContactById(selectedContactId);
@@ -221,6 +238,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   // Timeline: Merge Interactions and Notes for this contact
   type TimelineItem = {
     type: 'interaction' | 'note';
+    interaction?: Interaction;  // Full interaction object for interactions
     interactionType?: InteractionType;
     occurredAt: string;
     summary: string;
@@ -234,6 +252,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     const items: TimelineItem[] = [
       ...interactions.map(i => ({
         type: 'interaction' as const,
+        interaction: i,
         interactionType: i.type,
         occurredAt: i.occurredAt,
         summary: i.summary,
@@ -400,6 +419,102 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     setNewInteractionSummary('');
     setNewInteractionOccurredAt('');
     setRefreshKey(k => k + 1);
+  };
+
+  // Handle edit interaction
+  const handleStartEditInteraction = (interaction: Interaction) => {
+    setEditingInteractionId(interaction.id);
+    // Convert ISO string to datetime-local format (YYYY-MM-DDTHH:mm)
+    const date = new Date(interaction.occurredAt);
+    const localDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+    setEditInteractionForm({
+      type: interaction.type,
+      occurredAt: localDateTime,
+      summary: interaction.summary,
+    });
+  };
+
+  const handleCancelEditInteraction = () => {
+    setEditingInteractionId(null);
+    setEditInteractionForm(null);
+  };
+
+  const handleSaveEditInteraction = () => {
+    if (!editingInteractionId || !editInteractionForm) return;
+
+    const interaction = getInteractionsByContactId(selectedContactId).find(i => i.id === editingInteractionId);
+    if (!interaction) return;
+
+    const updatedInteraction: Interaction = {
+      ...interaction,
+      type: editInteractionForm.type,
+      occurredAt: new Date(editInteractionForm.occurredAt).toISOString(),
+      summary: editInteractionForm.summary.trim(),
+    };
+
+    updateInteraction(updatedInteraction);
+    setEditingInteractionId(null);
+    setEditInteractionForm(null);
+    setRefreshKey(k => k + 1);
+  };
+
+  const handleDeleteInteraction = (interactionId: string) => {
+    const confirmed = window.confirm('Delete this interaction? This cannot be undone.');
+    if (!confirmed) return;
+
+    deleteInteraction(interactionId);
+    setRefreshKey(k => k + 1);
+  };
+
+  // Handle attachment file upload
+  const handleAttachmentFileChange = (interactionId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        if (dataUrl) {
+          addAttachmentToInteraction(interactionId, {
+            interactionId,
+            fileName: file.name,
+            mimeType: file.type,
+            dataUrl,
+          });
+          setRefreshKey(k => k + 1);
+        }
+      };
+      reader.onerror = () => {
+        console.error('Error reading attachment file');
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Reset input
+    event.target.value = '';
+  };
+
+  const handleRemoveAttachment = (interactionId: string, attachmentId: string) => {
+    removeAttachmentFromInteraction(interactionId, attachmentId);
+    setRefreshKey(k => k + 1);
+  };
+
+  const handleOpenAttachment = (attachment: InteractionAttachment) => {
+    window.open(attachment.dataUrl, '_blank');
+  };
+
+  // Get attachment icon based on mimeType
+  const getAttachmentIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) {
+      return <Image size={12} className="text-blue-400" />;
+    }
+    if (mimeType === 'application/pdf') {
+      return <File size={12} className="text-red-400" />;
+    }
+    return <Paperclip size={12} className="text-gray-400" />;
   };
 
   // Navigate to a contact's dossier
@@ -926,30 +1041,170 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             {/* Timeline Items */}
             {timelineItems.length > 0 ? (
               <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                {timelineItems.map((item) => (
-                  <div key={item.id} className="border-l-2 border-[#4433FF]/30 pl-3 py-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      {item.type === 'interaction' && item.interactionType && (
-                        <div className="flex items-center gap-1">
-                          {getInteractionTypeIcon(item.interactionType)}
-                          <span className="text-[10px] text-gray-500 uppercase font-bold">
-                            {getInteractionTypeLabel(item.interactionType)}
-                          </span>
+                {timelineItems.map((item) => {
+                  const isEditing = item.type === 'interaction' && editingInteractionId === item.id;
+                  const interaction = item.interaction;
+
+                  return (
+                    <div key={item.id} className="border-l-2 border-[#4433FF]/30 pl-3 py-2">
+                      {isEditing && editInteractionForm ? (
+                        // Edit mode for interaction
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {item.interactionType && (
+                                <div className="flex items-center gap-1">
+                                  {getInteractionTypeIcon(item.interactionType)}
+                                  <span className="text-[10px] text-gray-500 uppercase font-bold">
+                                    {getInteractionTypeLabel(item.interactionType)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={handleCancelEditInteraction}
+                                className="p-1 text-gray-400 hover:text-white"
+                                title="Cancel"
+                              >
+                                <X size={12} />
+                              </button>
+                              <button
+                                onClick={handleSaveEditInteraction}
+                                className="p-1 text-green-400 hover:text-green-300"
+                                title="Save"
+                              >
+                                <Save size={12} />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <select
+                              value={editInteractionForm.type}
+                              onChange={(e) => setEditInteractionForm(prev => prev ? { ...prev, type: e.target.value as InteractionType } : null)}
+                              className="w-full bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-white text-xs focus:border-[#4433FF] outline-none"
+                            >
+                              <option value="call">Call</option>
+                              <option value="meeting">Meeting</option>
+                              <option value="message">Message</option>
+                              <option value="email">Email</option>
+                              <option value="dm">DM</option>
+                              <option value="other">Other</option>
+                            </select>
+                            <input
+                              type="datetime-local"
+                              value={editInteractionForm.occurredAt}
+                              onChange={(e) => setEditInteractionForm(prev => prev ? { ...prev, occurredAt: e.target.value } : null)}
+                              className="w-full bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-white text-xs focus:border-[#4433FF] outline-none"
+                            />
+                            <textarea
+                              value={editInteractionForm.summary}
+                              onChange={(e) => setEditInteractionForm(prev => prev ? { ...prev, summary: e.target.value } : null)}
+                              className="w-full bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-white text-xs focus:border-[#4433FF] outline-none resize-none"
+                              rows={3}
+                            />
+                            {/* File upload for attachments */}
+                            <div>
+                              <label className="text-[10px] text-gray-500 mb-1 block">Attachments</label>
+                              <input
+                                type="file"
+                                multiple
+                                accept="image/*,application/pdf"
+                                onChange={(e) => handleAttachmentFileChange(item.id, e)}
+                                className="w-full bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-white text-xs focus:border-[#4433FF] outline-none file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-[#4433FF] file:text-white hover:file:bg-[#5544FF] file:cursor-pointer cursor-pointer"
+                              />
+                            </div>
+                            {/* Existing attachments */}
+                            {interaction?.attachments && interaction.attachments.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {interaction.attachments.map((attachment) => (
+                                  <div
+                                    key={attachment.id}
+                                    className="flex items-center gap-1 px-2 py-1 bg-[#1A1A1D] border border-[#333] rounded text-xs"
+                                  >
+                                    {getAttachmentIcon(attachment.mimeType)}
+                                    <button
+                                      onClick={() => handleOpenAttachment(attachment)}
+                                      className="text-[#4433FF] hover:text-white transition-colors"
+                                    >
+                                      {attachment.fileName}
+                                    </button>
+                                    <button
+                                      onClick={() => handleRemoveAttachment(item.id, attachment.id)}
+                                      className="text-gray-500 hover:text-red-400 transition-colors ml-1"
+                                      title="Remove attachment"
+                                    >
+                                      <X size={10} />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
+                      ) : (
+                        // View mode
+                        <>
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              {item.type === 'interaction' && item.interactionType && (
+                                <div className="flex items-center gap-1">
+                                  {getInteractionTypeIcon(item.interactionType)}
+                                  <span className="text-[10px] text-gray-500 uppercase font-bold">
+                                    {getInteractionTypeLabel(item.interactionType)}
+                                  </span>
+                                </div>
+                              )}
+                              {item.type === 'note' && (
+                                <div className="flex items-center gap-1">
+                                  <FileText size={12} className="text-gray-400" />
+                                  <span className="text-[10px] text-gray-500 uppercase font-bold">Note</span>
+                                </div>
+                              )}
+                              <span className="text-[10px] text-gray-600">
+                                {formatDateTime(item.occurredAt)}
+                              </span>
+                            </div>
+                            {item.type === 'interaction' && (
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => interaction && handleStartEditInteraction(interaction)}
+                                  className="p-1 text-gray-400 hover:text-[#4433FF] transition-colors"
+                                  title="Edit"
+                                >
+                                  <Edit2 size={12} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteInteraction(item.id)}
+                                  className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+                                  title="Delete"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-300 leading-relaxed mb-2">{item.summary}</p>
+                          {/* Attachments in view mode */}
+                          {interaction?.attachments && interaction.attachments.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {interaction.attachments.map((attachment) => (
+                                <button
+                                  key={attachment.id}
+                                  onClick={() => handleOpenAttachment(attachment)}
+                                  className="flex items-center gap-1 px-2 py-1 bg-[#1A1A1D] border border-[#333] rounded text-xs hover:border-[#4433FF] transition-colors"
+                                >
+                                  {getAttachmentIcon(attachment.mimeType)}
+                                  <span className="text-[#4433FF] hover:text-white">{attachment.fileName}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </>
                       )}
-                      {item.type === 'note' && (
-                        <div className="flex items-center gap-1">
-                          <FileText size={12} className="text-gray-400" />
-                          <span className="text-[10px] text-gray-500 uppercase font-bold">Note</span>
-                        </div>
-                      )}
-                      <span className="text-[10px] text-gray-600">
-                        {formatDateTime(item.occurredAt)}
-                      </span>
                     </div>
-                    <p className="text-sm text-gray-300 leading-relaxed">{item.summary}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="text-gray-600 text-sm italic">No timeline entries yet</p>
@@ -1309,9 +1564,24 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                         {formatDateTime(interaction.occurredAt)}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400 leading-relaxed">
+                    <p className="text-xs text-gray-400 leading-relaxed mb-2">
                       {truncate(interaction.summary, 100)}
                     </p>
+                    {/* Attachments */}
+                    {interaction.attachments && interaction.attachments.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {interaction.attachments.map((attachment) => (
+                          <button
+                            key={attachment.id}
+                            onClick={() => handleOpenAttachment(attachment)}
+                            className="flex items-center gap-1 px-2 py-1 bg-[#0E0E0E] border border-[#333] rounded text-[10px] hover:border-[#4433FF] transition-colors"
+                          >
+                            {getAttachmentIcon(attachment.mimeType)}
+                            <span className="text-[#4433FF] hover:text-white">{attachment.fileName}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               );

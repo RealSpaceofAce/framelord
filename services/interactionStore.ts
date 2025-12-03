@@ -5,7 +5,7 @@
 // Interactions track calls, meetings, messages, emails, DMs, etc. with contacts.
 // =============================================================================
 
-import { Interaction, InteractionType } from '../types';
+import { Interaction, InteractionType, InteractionAttachment } from '../types';
 import { CONTACT_ZERO } from './contactStore';
 
 // --- MOCK INTERACTIONS ---
@@ -220,5 +220,79 @@ export const createInteraction = (params: {
 /** Get an interaction by ID */
 export const getInteractionById = (id: string): Interaction | undefined => {
   return MOCK_INTERACTIONS.find(i => i.id === id);
+};
+
+/**
+ * Update an existing interaction.
+ * Replaces the interaction with matching id in MOCK_INTERACTIONS.
+ */
+export const updateInteraction = (updated: Interaction): void => {
+  const index = MOCK_INTERACTIONS.findIndex(i => i.id === updated.id);
+  if (index === -1) {
+    console.warn(`Interaction with id ${updated.id} not found`);
+    return;
+  }
+  MOCK_INTERACTIONS[index] = updated;
+};
+
+/**
+ * Delete an interaction (hard delete).
+ * Removes it from MOCK_INTERACTIONS.
+ */
+export const deleteInteraction = (id: string): void => {
+  const index = MOCK_INTERACTIONS.findIndex(i => i.id === id);
+  if (index === -1) {
+    console.warn(`Interaction with id ${id} not found`);
+    return;
+  }
+  MOCK_INTERACTIONS.splice(index, 1);
+};
+
+/**
+ * Add an attachment to an interaction.
+ * @param interactionId - The ID of the interaction
+ * @param attachment - Attachment data (without id and createdAt)
+ * @returns The created InteractionAttachment
+ */
+export const addAttachmentToInteraction = (
+  interactionId: string,
+  attachment: Omit<InteractionAttachment, 'id' | 'createdAt'>
+): InteractionAttachment => {
+  const interaction = getInteractionById(interactionId);
+  if (!interaction) {
+    throw new Error(`Interaction with id ${interactionId} not found`);
+  }
+
+  const newAttachment: InteractionAttachment = {
+    id: `attachment-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    interactionId: interactionId,
+    fileName: attachment.fileName,
+    mimeType: attachment.mimeType,
+    dataUrl: attachment.dataUrl,
+    createdAt: new Date().toISOString(),
+  };
+
+  // Initialize attachments array if needed
+  if (!interaction.attachments) {
+    interaction.attachments = [];
+  }
+
+  interaction.attachments.push(newAttachment);
+  return newAttachment;
+};
+
+/**
+ * Remove an attachment from an interaction.
+ * @param interactionId - The ID of the interaction
+ * @param attachmentId - The ID of the attachment to remove
+ */
+export const removeAttachmentFromInteraction = (interactionId: string, attachmentId: string): void => {
+  const interaction = getInteractionById(interactionId);
+  if (!interaction || !interaction.attachments) {
+    console.warn(`Interaction with id ${interactionId} not found or has no attachments`);
+    return;
+  }
+
+  interaction.attachments = interaction.attachments.filter(a => a.id !== attachmentId);
 };
 
