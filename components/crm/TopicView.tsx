@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { getTopicById, getNotesForTopic, getContactIdsForTopic, getNoteCountForTopic } from '../../services/topicStore';
 import { getContactById } from '../../services/contactStore';
+import { getAllGroups, getMembers } from '../../services/groupStore';
 import { Note, Contact, Topic } from '../../types';
 
 // --- PROPS ---
@@ -22,6 +23,7 @@ interface TopicViewProps {
   selectedContactId: string;
   setSelectedContactId: (id: string) => void;
   onNavigateToDossier: () => void;
+  onNavigateToGroup?: (groupId: string) => void;
   onBack?: () => void;
 }
 
@@ -32,6 +34,7 @@ export const TopicView: React.FC<TopicViewProps> = ({
   selectedContactId,
   setSelectedContactId,
   onNavigateToDossier,
+  onNavigateToGroup,
   onBack
 }) => {
   // Load topic
@@ -62,6 +65,16 @@ export const TopicView: React.FC<TopicViewProps> = ({
     
     return groups;
   }, [notesForTopic]);
+
+  // Get groups linked to this topic (groups where any member has notes with this topic)
+  const linkedGroups = useMemo(() => {
+    const allGroups = getAllGroups();
+    return allGroups.filter(group => {
+      const memberIds = getMembers(group.id);
+      // Check if any member has notes with this topic
+      return memberIds.some(memberId => contactIds.includes(memberId));
+    });
+  }, [contactIds]);
 
   // Handle contact click
   const handleContactClick = (contactId: string) => {
@@ -139,6 +152,34 @@ export const TopicView: React.FC<TopicViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* GROUPS LINKED TO THIS TOPIC */}
+      {linkedGroups.length > 0 && (
+        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Users size={16} className="text-green-500" />
+            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Groups linked to this topic
+            </h3>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {linkedGroups.map(group => (
+              <button
+                key={group.id}
+                onClick={() => {
+                  if (onNavigateToGroup) {
+                    onNavigateToGroup(group.id);
+                  }
+                }}
+                className="px-3 py-1.5 bg-[#1A1A1D] border border-[#333] hover:border-[#4433FF] text-[#4433FF] hover:text-white text-xs font-bold rounded transition-colors flex items-center gap-2"
+              >
+                <Users size={12} />
+                {group.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* CONTACTS ON THIS TOPIC */}
       <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">

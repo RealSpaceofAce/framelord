@@ -12,6 +12,7 @@ import {
   createNote, 
   getAllNotes 
 } from '../../services/noteStore';
+import { getAllGroups, getMembers } from '../../services/groupStore';
 import { 
   FileText, Calendar, Tag, Send, 
   ChevronDown, Clock, ArrowRight, User, AtSign
@@ -25,7 +26,7 @@ interface NotesViewProps {
   onNavigateToDossier?: () => void;
 }
 
-type ViewMode = 'all' | 'daily';
+type ViewMode = 'all' | 'daily' | 'group';
 
 // --- COMPONENT ---
 
@@ -37,10 +38,18 @@ export const NotesView: React.FC<NotesViewProps> = ({
   // Local state
   const [viewMode, setViewMode] = useState<ViewMode>('daily');
   const [dailyNoteContent, setDailyNoteContent] = useState('');
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Get all notes
-  const allNotes = useMemo(() => getAllNotes(), [refreshKey]);
+  // Get all notes (filtered by group if in group mode)
+  const allNotes = useMemo(() => {
+    const notes = getAllNotes();
+    if (viewMode === 'group' && selectedGroupId) {
+      const memberIds = getMembers(selectedGroupId);
+      return notes.filter(note => memberIds.includes(note.contactId));
+    }
+    return notes;
+  }, [refreshKey, viewMode, selectedGroupId]);
 
   // --- HELPER FUNCTIONS ---
 
@@ -156,8 +165,8 @@ export const NotesView: React.FC<NotesViewProps> = ({
   };
 
   const handleDailyNoteKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
       handleDailyNoteSubmit();
     }
   };
@@ -225,7 +234,7 @@ export const NotesView: React.FC<NotesViewProps> = ({
 
   // --- RENDER ---
 
-  return (
+    return (
     <div className="flex h-full bg-[#030412]">
       {/* Sidebar */}
       <div className="w-72 bg-[#0E0E0E] border-r border-[#2A2A2A] flex flex-col">
@@ -252,7 +261,31 @@ export const NotesView: React.FC<NotesViewProps> = ({
             >
               All Notes
             </button>
+            <button
+              onClick={() => setViewMode('group')}
+              className={`flex-1 px-3 py-2 text-xs font-bold uppercase rounded transition-colors ${
+                viewMode === 'group'
+                  ? 'bg-[#4433FF] text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              By Group
+            </button>
           </div>
+          {viewMode === 'group' && (
+            <select
+              value={selectedGroupId}
+              onChange={(e) => setSelectedGroupId(e.target.value)}
+              className="w-full mt-3 bg-[#1A1A1D] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none"
+            >
+              <option value="">Select a group...</option>
+              {getAllGroups().map(group => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Stats */}
@@ -299,12 +332,14 @@ export const NotesView: React.FC<NotesViewProps> = ({
         {/* Header */}
         <div className="p-6 border-b border-[#2A2A2A] bg-[#0E0E0E]">
           <h1 className="text-xl font-display font-bold text-white">
-            {viewMode === 'daily' ? 'Daily Log' : 'All Notes'}
+            {viewMode === 'daily' ? 'Daily Log' : viewMode === 'group' ? 'Notes by Group' : 'All Notes'}
           </h1>
           <p className="text-xs text-gray-500 mt-1">
             {viewMode === 'daily' 
               ? 'Track your daily touchpoints with contacts'
-              : 'Browse all notes across all contacts'
+              : viewMode === 'group'
+                ? 'Notes for contacts in the selected group'
+                : 'Browse all notes across all contacts'
             }
           </p>
         </div>
@@ -358,14 +393,63 @@ export const NotesView: React.FC<NotesViewProps> = ({
                 Start documenting your interactions and thoughts
               </p>
             </div>
+          ) : viewMode === 'group' && selectedGroupId ? (
+            // GROUP NOTES VIEW (same as all notes but filtered)
+            <div className="space-y-4">
+              {allNotes.map((note) => {
+                const noteContact = getContactById(note.contactId);
+                if (!noteContact) return null;
+    
+                return (
+                  <div 
+                    key={note.id}
+                    className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-4 hover:border-[#333] transition-colors"
+                  >
+                    <div className="flex items-start gap-3">
+                      <img
+                        src={noteContact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${noteContact.id}`}
+                        alt={noteContact.fullName}
+                        className="w-10 h-10 rounded-full border border-[#333] shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <button
+                          onClick={() => handleContactClick(noteContact.id)}
+                          className="text-sm font-bold text-[#4433FF] hover:text-white transition-colors flex items-center gap-2 mb-1"
+                        >
+                          {noteContact.fullName}
+                          <ArrowRight size={12} />
+                        </button>
+                        <div className="text-xs text-gray-600 mb-2">
+                          {new Date(note.createdAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                        <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+                          {note.content}
+                        </p>
+                      </div>
+            </div>
+        </div>
+    );
+              })}
+              {allNotes.length === 0 && (
+                <div className="text-center py-12 text-gray-500 text-sm">
+                  No notes for this group yet
+                </div>
+              )}
+            </div>
           ) : viewMode === 'all' ? (
             // ALL NOTES VIEW
             <div className="space-y-4">
               {allNotes.map((note) => {
                 const noteContact = getContactById(note.contactId);
                 if (!noteContact) return null;
-
-                return (
+    
+    return (
                   <div 
                     key={note.id}
                     className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-4 hover:border-[#333] transition-colors"
@@ -495,7 +579,7 @@ export const NotesView: React.FC<NotesViewProps> = ({
             </div>
           )}
         </div>
-      </div>
-    </div>
-  );
+            </div>
+        </div>
+    );
 };

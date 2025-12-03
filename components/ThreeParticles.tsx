@@ -316,16 +316,21 @@ export const ThreeParticles: React.FC<ThreeParticlesProps> = ({ forcedShape = nu
     const velocities = new Float32Array(particleCount * 3);
     velocitiesRef.current = velocities;
 
-    // Initial random positions
+    // Initial random positions and velocities
     for (let i = 0; i < particleCount; i++) {
       const i3 = i * 3;
       positions[i3] = (Math.random() - 0.5) * 300;
       positions[i3 + 1] = (Math.random() - 0.5) * 300;
-      positions[i3 + 2] = (Math.random() * 200) - 100; 
-      
-      colors[i3] = 0.26; 
-      colors[i3 + 1] = 0.2; 
-      colors[i3 + 2] = 1.0; 
+      positions[i3 + 2] = (Math.random() * 200) - 100;
+
+      // Initialize with random velocities for floating effect
+      velocities[i3] = (Math.random() - 0.5) * 0.5;
+      velocities[i3 + 1] = (Math.random() - 0.5) * 0.5;
+      velocities[i3 + 2] = (Math.random() - 0.5) * 0.5;
+
+      colors[i3] = 0.26;
+      colors[i3 + 1] = 0.2;
+      colors[i3 + 2] = 1.0;
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -465,7 +470,7 @@ export const ThreeParticles: React.FC<ThreeParticlesProps> = ({ forcedShape = nu
             
           } else {
             // RELEASE MODE: Disperse
-            const noise = 0.02;
+            const noise = 0.15;
             velocities[i3] += (Math.random() - 0.5) * noise;
             velocities[i3 + 1] += (Math.random() - 0.5) * noise;
             velocities[i3 + 2] += (Math.random() - 0.5) * noise;
@@ -520,7 +525,7 @@ export const ThreeParticles: React.FC<ThreeParticlesProps> = ({ forcedShape = nu
       }
       rendererRef.current?.dispose();
     };
-  }, [activeShape]); 
+  }, []); // Only run once on mount - don't rebuild scene on shape changes 
 
   // Random Shape Selector logic
   const shapes: ShapeType[] = ['statue', 'heart', 'saturn', 'flower', 'dna', 'buddha', 'sphere', 'fireworks'];
@@ -559,7 +564,7 @@ export const ThreeParticles: React.FC<ThreeParticlesProps> = ({ forcedShape = nu
 
   return (
     <>
-      <div ref={containerRef} className="fixed inset-0 z-[1]" style={{ pointerEvents: 'none' }} />
+      <div ref={containerRef} className="fixed inset-0 z-[5]" style={{ pointerEvents: 'none' }} />
 
       {!forcedShape && (
         <div 

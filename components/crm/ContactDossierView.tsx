@@ -45,7 +45,16 @@ import {
   getPipelineItemsByContact,
   getPipelineTemplateById,
 } from '../../services/pipelineStore';
+import {
+  getGroupsForContact,
+  getAllGroups,
+  addMember,
+} from '../../services/groupStore';
+import {
+  getProjectsByContact,
+} from '../../services/projectStore';
 import { Contact, RelationshipDomain, ContactStatus, Topic, Task, Interaction, InteractionType, InteractionAttachment } from '../../types';
+import { DatePicker } from '../DatePicker';
 
 const MotionDiv = motion.div as any;
 
@@ -56,6 +65,8 @@ interface ContactDossierViewProps {
   setSelectedContactId?: (id: string) => void;
   onNavigateToDossier?: () => void;
   onNavigateToTopic?: (topicId: string) => void;
+  onNavigateToGroup?: (groupId: string) => void;
+  onNavigateToProject?: (projectId: string) => void;
 }
 
 // --- EDIT FORM STATE TYPE ---
@@ -78,11 +89,13 @@ interface EditFormState {
 
 // --- COMPONENT ---
 
-export const ContactDossierView: React.FC<ContactDossierViewProps> = ({ 
+export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   selectedContactId,
   setSelectedContactId,
   onNavigateToDossier,
-  onNavigateToTopic
+  onNavigateToTopic,
+  onNavigateToGroup,
+  onNavigateToProject
 }) => {
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -178,6 +191,9 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   // Tasks for this contact
   const openTasks = getOpenTasksByContactId(selectedContactId);
   const allTasks = getTasksByContactId(selectedContactId);
+
+  // Projects for this contact
+  const projects = getProjectsByContact(selectedContactId);
   
   // For Contact Zero: notes written BY Contact Zero about OTHER contacts
   const activityNotes = isContactZero 
@@ -192,6 +208,10 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
 
   // Pipeline items for this contact
   const pipelineItems = getPipelineItemsByContact(selectedContactId);
+
+  // Groups for this contact
+  const contactGroups = getGroupsForContact(selectedContactId);
+  const [newGroupId, setNewGroupId] = useState<string>('');
 
   // For Contact Zero: open tasks grouped by contact (what you owe to others)
   const openTasksByContact = isContactZero ? getOpenTasksGroupedByContact() : new Map();
@@ -1323,6 +1343,21 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Frame Scan Section */}
+          <div className="mt-6 pt-6 border-t border-[#2A2A2A]">
+            <div className="flex items-center gap-2 mb-3">
+              <Scan size={16} className="text-[#4433FF]" />
+              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Frame Analysis</h3>
+            </div>
+            <button className="w-full px-4 py-3 bg-gradient-to-r from-[#4433FF] to-[#6A82FC] hover:opacity-90 text-white text-sm font-bold rounded transition-opacity flex items-center justify-center gap-2">
+              <Scan size={16} />
+              Run Frame Scan
+            </button>
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              Analyze communication patterns for authority leaks
+            </p>
+          </div>
         </div>
 
         {/* RIGHT: Notes + Tasks + Tags */}
@@ -1347,11 +1382,11 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                 className="w-full bg-[#1A1A1D] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none"
               />
               <div className="flex gap-2">
-                <input
-                  type="date"
+                <DatePicker
                   value={newTaskDueDate}
-                  onChange={(e) => setNewTaskDueDate(e.target.value)}
-                  className="flex-1 bg-[#1A1A1D] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none"
+                  onChange={setNewTaskDueDate}
+                  placeholder="Select due date..."
+                  className="flex-1"
                 />
                 <button
                   onClick={handleAddTask}
@@ -1391,6 +1426,45 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               </div>
             ) : (
               <p className="text-gray-600 text-sm italic">No open tasks</p>
+            )}
+          </div>
+
+          {/* Projects Section */}
+          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Layout size={16} className="text-purple-500" />
+              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                Projects
+              </h3>
+              <span className="text-[10px] text-gray-600 ml-auto">{projects.length}</span>
+            </div>
+
+            {projects.length > 0 ? (
+              <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                {projects.map((project) => (
+                  <div
+                    key={project.id}
+                    onClick={() => onNavigateToProject && onNavigateToProject(project.id)}
+                    className="p-3 bg-[#1A1A1D] rounded border border-[#333] hover:border-purple-500/30 transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white font-bold group-hover:text-purple-500 transition-colors">{project.name}</p>
+                        {project.description && (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{project.description}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-600">
+                      <span className="capitalize">{project.status.replace('_', ' ')}</span>
+                      <span>•</span>
+                      <span className="capitalize">{project.priority}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600 text-sm italic">No projects</p>
             )}
           </div>
 

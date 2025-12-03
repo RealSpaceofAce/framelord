@@ -17,7 +17,9 @@ import { Reveal } from './Reveal';
 import { ContactsView } from './crm/ContactsView';
 import { CasesView } from './crm/CasesView';
 import { PipelinesView } from './crm/PipelinesView';
-import { GroupsProjectsView } from './crm/GroupsProjectsView';
+import { GroupsView } from './crm/GroupsView';
+import { ProjectsView } from './crm/ProjectsView';
+import { ProjectDetailView } from './crm/ProjectDetailView';
 import { NotesView } from './crm/NotesView';
 import { ThreeParticles } from './ThreeParticles';
 import { ContactDossierView } from './crm/ContactDossierView';
@@ -468,6 +470,16 @@ export const Dashboard: React.FC = () => {
   // ==========================================================================
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
 
+  // ==========================================================================
+  // SELECTED GROUP STATE (for Group view)
+  // ==========================================================================
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+
+  // ==========================================================================
+  // SELECTED PROJECT STATE (for Project detail view)
+  // ==========================================================================
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
   // Get selected contact for display in header
   const selectedContact = getContactById(selectedContactId) || getContactZero();
   
@@ -504,6 +516,16 @@ export const Dashboard: React.FC = () => {
   const handleNavigateToTopic = (topicId: string) => {
     setSelectedTopicId(topicId);
     setCurrentView('TOPIC');
+  };
+
+  const handleNavigateToGroup = (groupId: string) => {
+    setSelectedGroupId(groupId);
+    setCurrentView('GROUPS');
+  };
+
+  const handleNavigateToProject = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    setCurrentView('PROJECTS');
   };
 
   // Get header title based on view
@@ -632,11 +654,13 @@ export const Dashboard: React.FC = () => {
          <div className="p-4 md:p-6 overflow-y-auto flex-1 custom-scrollbar">
              {currentView === 'OVERVIEW' && <DashboardOverview />}
              {currentView === 'DOSSIER' && (
-               <ContactDossierView 
+               <ContactDossierView
                  selectedContactId={selectedContactId}
                  setSelectedContactId={setSelectedContactId}
                  onNavigateToDossier={() => setCurrentView('DOSSIER')}
                  onNavigateToTopic={handleNavigateToTopic}
+                 onNavigateToGroup={handleNavigateToGroup}
+                 onNavigateToProject={handleNavigateToProject}
                />
              )}
              {currentView === 'TOPIC' && selectedTopicId && (
@@ -645,6 +669,7 @@ export const Dashboard: React.FC = () => {
                  selectedContactId={selectedContactId}
                  setSelectedContactId={setSelectedContactId}
                  onNavigateToDossier={() => setCurrentView('DOSSIER')}
+                 onNavigateToGroup={handleNavigateToGroup}
                  onBack={() => setCurrentView('DOSSIER')}
                />
              )}
@@ -692,7 +717,32 @@ export const Dashboard: React.FC = () => {
                  onNavigateToDossier={() => setCurrentView('DOSSIER')}
                />
              )}
-             {(currentView === 'GROUPS' || currentView === 'PROJECTS') && <GroupsProjectsView />}
+             {currentView === 'PROJECTS' && !selectedProjectId && (
+               <ProjectsView
+                 selectedContactId={selectedContactId}
+                 setSelectedContactId={setSelectedContactId}
+                 onNavigateToDossier={() => setCurrentView('DOSSIER')}
+                 onNavigateToProject={handleNavigateToProject}
+               />
+             )}
+             {currentView === 'PROJECTS' && selectedProjectId && (
+               <ProjectDetailView
+                 projectId={selectedProjectId}
+                 onBack={() => setSelectedProjectId(null)}
+                 selectedContactId={selectedContactId}
+                 setSelectedContactId={setSelectedContactId}
+                 onNavigateToDossier={() => setCurrentView('DOSSIER')}
+               />
+             )}
+             {currentView === 'GROUPS' && (
+               <GroupsView
+                 selectedContactId={selectedContactId}
+                 setSelectedContactId={setSelectedContactId}
+                 onNavigateToDossier={() => setCurrentView('DOSSIER')}
+                 onNavigateToGroup={handleNavigateToGroup}
+                 onNavigateToTopic={handleNavigateToTopic}
+               />
+             )}
          </div>
       </main>
 

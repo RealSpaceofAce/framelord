@@ -59,6 +59,39 @@ export interface Note {
   tags?: string[];
 }
 
+// --- DAILY NOTES & STANDALONE PAGES (OBSIDIAN-STYLE) ---
+
+/**
+ * DailyNote - Daily journal entry, bullet-point based
+ * Can reference contacts via [[Contact Name]] syntax
+ * Can be standalone or linked to a specific date
+ */
+export interface DailyNote {
+  id: string;
+  date: string;                   // YYYY-MM-DD format
+  authorContactId: string;        // Typically CONTACT_ZERO
+  content: string;                // Markdown with bullet points and [[links]]
+  createdAt: string;              // ISO timestamp
+  updatedAt?: string | null;
+}
+
+/**
+ * NotePage - Standalone note page (like Obsidian pages)
+ * Created when [[Page Name]] is referenced but doesn't exist yet
+ * Supports bi-directional linking
+ */
+export interface NotePage {
+  id: string;
+  title: string;                  // Page title (unique)
+  slug: string;                   // URL-safe slug
+  content: string;                // Markdown content
+  authorContactId: string;
+  linkedFromIds: string[];        // IDs of notes/pages that link here
+  linkedToIds: string[];          // IDs of notes/pages this links to
+  createdAt: string;
+  updatedAt?: string | null;
+}
+
 // --- TOPIC (OBSIDIAN-STYLE [[TOPIC]] LINKS) ---
 
 export interface Topic {
@@ -153,7 +186,9 @@ export interface Group {
   lastScanAt?: number;
 }
 
-export interface Project {
+// DEPRECATED - Replaced by new Project types below (see line 256+)
+// Kept for backward compatibility only
+export interface LegacyProject {
   id: string;
   name: string;
   description: string;
@@ -235,4 +270,97 @@ export interface PipelineItem {
   closedAt?: string | null;
   status: 'open' | 'won' | 'lost' | 'archived';
   value?: number; // optional numeric value for later analytics
+}
+
+// --- GROUP ---
+
+export interface Group {
+  id: string;
+  name: string;
+  description?: string;
+  bannerUrl?: string;               // Banner image URL or Data URL (Notion-style)
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GroupMembership {
+  groupId: string;
+  contactId: string;
+  joinedAt: string;
+}
+
+// --- PROJECTS (ASANA-STYLE) ---
+
+export type ProjectStatus = 'active' | 'on_hold' | 'completed' | 'archived';
+export type ProjectPriority = 'low' | 'medium' | 'high' | 'critical';
+
+/**
+ * ProjectAttachment - File attachments for projects (similar to InteractionAttachment)
+ */
+export interface ProjectAttachment {
+  id: string;
+  projectId: string;
+  fileName: string;
+  mimeType: string;
+  dataUrl: string;                  // Data URL (data:image/... or data:application/pdf;base64,...)
+  uploadedBy: string;               // Contact ID of uploader
+  createdAt: string;                // ISO timestamp
+}
+
+/**
+ * Project - Asana-style project management aligned with Contact spine
+ * A Project always has a primaryContactId (the main contact it's about)
+ * and can have additional relatedContactIds
+ */
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  bannerUrl?: string;               // Banner image URL or Data URL (Notion-style)
+  primaryContactId: string;        // REQUIRED — the main contact this project is about
+  relatedContactIds: string[];     // Other contacts involved in the project
+  status: ProjectStatus;
+  priority: ProjectPriority;
+  createdAt: string;                // ISO timestamp
+  updatedAt: string;                // ISO timestamp
+  startDate?: string | null;        // ISO date string (YYYY-MM-DD)
+  dueDate?: string | null;          // ISO date string (YYYY-MM-DD)
+  sectionIds: string[];             // Ordered list of section IDs for display
+  topicIds: string[];               // Linked topics
+  groupIds: string[];               // Linked groups (if relevant)
+  attachments: ProjectAttachment[]; // File attachments
+}
+
+/**
+ * ProjectSection - Vertical sections within a project (like "Backlog", "In Progress", "Done")
+ * Tasks are organized under sections
+ */
+export interface ProjectSection {
+  id: string;
+  projectId: string;
+  name: string;
+  sortOrder: number;                // 0-based ordering for display
+  createdAt: string;                // ISO timestamp
+}
+
+/**
+ * ProjectTaskLink - Links existing tasks from taskStore into project sections
+ * Tasks are never duplicated - we only create links
+ */
+export interface ProjectTaskLink {
+  id: string;
+  projectId: string;
+  sectionId: string;
+  taskId: string;                   // References a Task from taskStore
+  sortOrder: number;                // 0-based ordering within the section
+  createdAt: string;                // ISO timestamp
+}
+
+/**
+ * Section name to task status mapping
+ * When a task is moved to a section, we can auto-update its status
+ */
+export interface SectionStatusMapping {
+  sectionName: string;
+  taskStatus: TaskStatus;
 }

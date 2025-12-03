@@ -18,8 +18,8 @@ const MotionDiv = motion.div as any;
 const MotionNav = motion.nav as any;
 
 const App: React.FC = () => {
-  // Set default to 'application' as requested previously for immediate access, change to 'landing' for production
-  const [currentView, setCurrentView] = useState<'landing' | 'application' | 'beta' | 'dashboard'>('application');
+  // Set default to 'dashboard' for immediate access to Dashboard and Projects
+  const [currentView, setCurrentView] = useState<'landing' | 'application' | 'beta' | 'dashboard'>('dashboard');
   
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 500], [1, 0]);
@@ -61,11 +61,13 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-fl-black text-white selection:bg-fl-primary selection:text-white overflow-hidden relative">
       
       {/* Background Systems */}
-      <MouseBackground />
+      {/* Hide MouseBackground on application page since it has its own ThreeParticles */}
+      {currentView !== 'application' && <MouseBackground />}
       {/* Particles adapt to the view. If beta, maybe force a specific shape or keep standard. */}
       {/* Hide particles on dashboard to avoid z-index conflicts and clutter */}
-      {currentView !== 'dashboard' && (
-        <ThreeParticles forcedShape={currentView === 'application' ? 'dna' : currentView === 'beta' ? 'sphere' : null} />
+      {/* ApplicationPage renders its own ThreeParticles, so exclude it here */}
+      {currentView !== 'dashboard' && currentView !== 'application' && (
+        <ThreeParticles forcedShape={currentView === 'beta' ? 'sphere' : null} />
       )}
       <SparkSystem />
 

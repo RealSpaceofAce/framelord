@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Terminal, ShieldAlert, CheckCircle, Lock, Cpu } from 'lucide-react';
 import { Button } from './Button';
 import { Reveal } from './Reveal';
+import { ThreeParticles } from './ThreeParticles';
 import { ChatMessage } from '../types';
 import { submitApplicationChat } from '../services/geminiService';
 
@@ -51,6 +52,10 @@ export const ApplicationPage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
 
   return (
     <div className="min-h-screen pt-24 px-4 pb-12 relative z-20 flex flex-col items-center justify-center">
+      {/* Particle Animation Background - Interactive mode (no forcedShape) */}
+      <div className="fixed inset-0 z-0">
+        <ThreeParticles forcedShape={null} />
+      </div>
       
       {/* Header */}
       <Reveal width="100%" className="max-w-4xl mx-auto text-center mb-8">
