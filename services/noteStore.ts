@@ -4,9 +4,10 @@
 // INVARIANT: Every Note has a contactId (who it's ABOUT) and authorContactId (who wrote it).
 // No orphan notes.
 // Supports [[Topic]] syntax for Obsidian-style topic links.
+// Adds Obsidian-style note-to-note backlinks via [[Note Title]].
 // =============================================================================
 
-import { Note } from '../types';
+import { Note, NoteLink } from '../types';
 import { CONTACT_ZERO } from './contactStore';
 import { getOrCreateTopic, linkNoteToTopic } from './topicStore';
 
@@ -44,150 +45,114 @@ const processNoteTopics = (note: Note): void => {
   }
 };
 
+// --- NOTE LINK (BACKLINK) PARSING ---
+
+let NOTE_LINKS: NoteLink[] = [];
+
+const normalizeTitle = (title: string): string =>
+  title.trim().toLowerCase();
+
+const deriveTitleFromContent = (content: string): string => {
+  const firstLine = content.split('\n')[0] || content;
+  return firstLine.trim().slice(0, 120) || 'Untitled';
+};
+
+const extractNoteLinkLabelsFromContent = (content: string): string[] => {
+  const regex = /\[\[([^\]]+)\]\]/g;
+  const labels: string[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(content)) !== null) {
+    const label = match[1].trim();
+    if (label && !labels.includes(label)) {
+      labels.push(label);
+    }
+  }
+
+  return labels;
+};
+
+const getNoteByTitle = (title: string): Note | undefined => {
+  const normalized = normalizeTitle(title);
+  return MOCK_NOTES.find(
+    n => n.title && normalizeTitle(n.title) === normalized
+  );
+};
+
+const ensureNoteForLink = (
+  label: string,
+  contextContactId: string,
+  authorContactId: string
+): Note => {
+  const existing = getNoteByTitle(label);
+  if (existing) return existing;
+
+  // Create a lightweight note anchored to the same contact context
+  const newNote: Note = {
+    id: `note-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    contactId: contextContactId || CONTACT_ZERO.id,
+    authorContactId: authorContactId || CONTACT_ZERO.id,
+    title: label.trim(),
+    content: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: null,
+    tags: [],
+  };
+
+  MOCK_NOTES = [newNote, ...MOCK_NOTES];
+  return newNote;
+};
+
+const processNoteLinks = (note: Note): void => {
+  // Remove existing outgoing links for this note
+  NOTE_LINKS = NOTE_LINKS.filter(link => link.sourceNoteId !== note.id);
+
+  const linkLabels = extractNoteLinkLabelsFromContent(note.content);
+  for (const label of linkLabels) {
+    const targetNote = ensureNoteForLink(label, note.contactId, note.authorContactId);
+    if (targetNote.id === note.id) continue; // avoid self-loop
+
+    const exists = NOTE_LINKS.some(
+      link => link.sourceNoteId === note.id && link.targetNoteId === targetNote.id
+    );
+
+    if (!exists) {
+      NOTE_LINKS.push({
+        sourceNoteId: note.id,
+        targetNoteId: targetNote.id,
+      });
+    }
+  }
+};
+
 // --- MOCK NOTES ---
 // All notes are linked to a Contact via contactId
 // All notes have an author via authorContactId (typically CONTACT_ZERO)
 // Some notes include [[Topic]] syntax for testing
 
-let MOCK_NOTES: Note[] = [
-  // Notes for Contact Zero (the user's journal) — written by Contact Zero about themselves
-  {
-    id: 'n_001',
-    contactId: CONTACT_ZERO.id,
-    authorContactId: CONTACT_ZERO.id,
-    content: '[[Review]] Reviewed quarterly frame audit. Score improved from 78 to 85 over the past month. Key wins: removed apologetic language from [[Sales]] calls, established stronger [[Boundaries]] with clients.',
-    createdAt: '2025-12-01T09:00:00Z',
-    updatedAt: null,
-    tags: ['review', 'progress'],
-  },
-  {
-    id: 'n_002',
-    contactId: CONTACT_ZERO.id,
-    authorContactId: CONTACT_ZERO.id,
-    content: '[[Communication]] Need to work on vocal tonality during high-stakes calls. Detected pattern of voice rising at end of statements — sounds like questions. Practice declarative endings.',
-    createdAt: '2025-11-30T14:30:00Z',
-    updatedAt: null,
-    tags: ['improvement', 'voice'],
-  },
-  {
-    id: 'n_003',
-    contactId: CONTACT_ZERO.id,
-    authorContactId: CONTACT_ZERO.id,
-    content: '[[Daily]] Morning frame check: Energy level 8/10. Clear objectives for the day. Remember to lead with value, not seeking approval.',
-    createdAt: '2025-11-29T08:00:00Z',
-    updatedAt: null,
-    tags: ['daily', 'mindset'],
-  },
-
-  // Notes ABOUT Sarah Chen — written by Contact Zero
-  {
-    id: 'n_004',
-    contactId: 'c_sarah_chen',
-    authorContactId: CONTACT_ZERO.id,
-    content: '[[Sales]] [[Discovery]] Initial discovery call went well. She values brevity and direct communication. Skeptical of "sales fluff" — need to lead with technical substance.',
-    createdAt: '2025-11-28T11:00:00Z',
-    updatedAt: null,
-    tags: ['discovery', 'sales'],
-  },
-  {
-    id: 'n_005',
-    contactId: 'c_sarah_chen',
-    authorContactId: CONTACT_ZERO.id,
-    content: '[[Sales]] [[Follow-up]] Sent technical whitepaper. She responded positively. Meeting scheduled for Dec 5 to discuss implementation.',
-    createdAt: '2025-11-30T16:00:00Z',
-    updatedAt: null,
-    tags: ['follow-up', 'progress'],
-  },
-
-  // Notes ABOUT Marcus Johnson — written by Contact Zero
-  {
-    id: 'n_006',
-    contactId: 'c_marcus_johnson',
-    authorContactId: CONTACT_ZERO.id,
-    content: '[[Client]] [[Review]] Quarterly review completed. Retainer renewed for 6 months. Good frame balance — mutual respect established.',
-    createdAt: '2025-11-25T17:00:00Z',
-    updatedAt: null,
-    tags: ['client', 'renewal'],
-  },
-
-  // Notes ABOUT Elena Rodriguez — written by Contact Zero
-  {
-    id: 'n_007',
-    contactId: 'c_elena_rodriguez',
-    authorContactId: CONTACT_ZERO.id,
-    content: '[[Boundaries]] [[Warning]] Frame slipping in recent conversations. She interrupted me 4 times in last call. Need to reset boundaries and reestablish leadership position.',
-    createdAt: '2025-11-20T10:00:00Z',
-    updatedAt: null,
-    tags: ['warning', 'boundaries'],
-  },
-
-  // Notes ABOUT David Kim — written by Contact Zero
-  {
-    id: 'n_008',
-    contactId: 'c_david_kim',
-    authorContactId: CONTACT_ZERO.id,
-    content: '[[Strategy]] [[Board]] Board meeting prep. He tends to dominate conversations. Strategy: arrive with clear agenda, state positions definitively, do not hedge.',
-    createdAt: '2025-11-18T12:00:00Z',
-    updatedAt: null,
-    tags: ['prep', 'strategy'],
-  },
-
-  // Notes ABOUT James Wilson — written by Contact Zero
-  {
-    id: 'n_009',
-    contactId: 'c_james_wilson',
-    authorContactId: CONTACT_ZERO.id,
-    content: '[[Personal]] Great dinner catch-up. No frame dynamics needed — genuine friendship. Good to maintain relationships outside business context.',
-    createdAt: '2025-11-28T21:00:00Z',
-    updatedAt: null,
-    tags: ['personal', 'social'],
-  },
-
-  // Additional daily notes to test the Daily view
-  {
-    id: 'n_010',
-    contactId: 'c_sarah_chen',
-    authorContactId: CONTACT_ZERO.id,
-    content: '[[Sales]] [[Pricing]] @Sarah Chen Quick check-in call. She asked about pricing tiers. Promised to send comparison doc by EOD.',
-    createdAt: '2025-12-02T10:30:00Z',
-    updatedAt: null,
-    tags: ['call', 'pricing'],
-  },
-  {
-    id: 'n_011',
-    contactId: 'c_marcus_johnson',
-    authorContactId: CONTACT_ZERO.id,
-    content: '[[Client]] [[Expansion]] @Marcus Johnson Sent December invoice. He confirmed receipt and mentioned possible scope expansion in Q1.',
-    createdAt: '2025-12-02T14:15:00Z',
-    updatedAt: null,
-    tags: ['invoice', 'expansion'],
-  },
-  {
-    id: 'n_012',
-    contactId: CONTACT_ZERO.id,
-    authorContactId: CONTACT_ZERO.id,
-    content: '[[Daily]] [[Reflection]] End of day reflection: Solid day. Two client touchpoints, one new lead progressed. Frame felt strong throughout.',
-    createdAt: '2025-12-02T18:00:00Z',
-    updatedAt: null,
-    tags: ['daily', 'reflection'],
-  },
-];
+// Start with empty notes - users will create their own
+let MOCK_NOTES: Note[] = [];
 
 // --- INITIALIZATION ---
-// Process existing mock notes to create topics
+// Process existing mock notes to create topics and note links
 let _initialized = false;
 
-export const initializeNoteTopics = (): void => {
+export const initializeNoteMetadata = (): void => {
   if (_initialized) return;
   _initialized = true;
   
   for (const note of MOCK_NOTES) {
+    // Ensure a derived title exists for backlink lookup
+    if (!note.title) {
+      note.title = deriveTitleFromContent(note.content);
+    }
     processNoteTopics(note);
+    processNoteLinks(note);
   }
 };
 
 // Auto-initialize when module loads
-initializeNoteTopics();
+initializeNoteMetadata();
 
 // --- HELPER FUNCTIONS ---
 
@@ -228,22 +193,25 @@ const generateNoteId = (): string => {
 
 /** 
  * Create a new note (always attached to a contact) 
- * Automatically parses [[Topic]] syntax and creates topic links.
+ * Automatically parses [[Topic]] syntax, note [[links]], and creates graph links.
  * @param params.contactId - Who the note is ABOUT
  * @param params.authorContactId - Who is WRITING the note
  * @param params.content - The note content
+ * @param params.title - Optional explicit title (otherwise derived from content)
  * @param params.tags - Optional tags
  */
 export const createNote = (params: {
   contactId: string;
   authorContactId: string;
   content: string;
+  title?: string;
   tags?: string[];
 }): Note => {
   const newNote: Note = {
     id: generateNoteId(),
     contactId: params.contactId,
     authorContactId: params.authorContactId,
+    title: params.title?.trim() || deriveTitleFromContent(params.content),
     content: params.content,
     createdAt: new Date().toISOString(),
     updatedAt: null,
@@ -254,12 +222,14 @@ export const createNote = (params: {
   
   // Process [[Topic]] links
   processNoteTopics(newNote);
+  // Process [[Note]] links/backlinks
+  processNoteLinks(newNote);
   
   return newNote;
 };
 
 /** Update an existing note */
-export const updateNote = (noteId: string, updates: Partial<Pick<Note, 'content' | 'tags'>>): Note | null => {
+export const updateNote = (noteId: string, updates: Partial<Pick<Note, 'content' | 'tags' | 'title'>>): Note | null => {
   const index = MOCK_NOTES.findIndex(n => n.id === noteId);
   if (index === -1) return null;
   
@@ -269,9 +239,10 @@ export const updateNote = (noteId: string, updates: Partial<Pick<Note, 'content'
     updatedAt: new Date().toISOString(),
   };
   
-  // If content changed, re-process topics
+  // If content changed, re-process topics and links
   if (updates.content) {
     processNoteTopics(MOCK_NOTES[index]);
+    processNoteLinks(MOCK_NOTES[index]);
   }
   
   return MOCK_NOTES[index];
@@ -284,6 +255,11 @@ export const deleteNote = (noteId: string): boolean => {
   return MOCK_NOTES.length < initialLength;
 };
 
+/** Get notes for a specific date (YYYY-MM-DD) */
+export const getNotesByDate = (dateKey: string): Note[] => {
+  return getAllNotes().filter(note => note.createdAt.startsWith(dateKey));
+};
+
 /** Get note count for a contact */
 export const getNoteCountByContactId = (contactId: string): number => {
   return MOCK_NOTES.filter(n => n.contactId === contactId).length;
@@ -292,4 +268,42 @@ export const getNoteCountByContactId = (contactId: string): number => {
 /** Get a note by ID */
 export const getNoteById = (noteId: string): Note | undefined => {
   return MOCK_NOTES.find(n => n.id === noteId);
+};
+
+/** Get a note by title (case-insensitive match) */
+export const findNoteByTitle = (title: string): Note | undefined => {
+  return getNoteByTitle(title);
+};
+
+/** Outgoing linked notes (notes this note links to) */
+export const getForwardLinkedNotes = (noteId: string): Note[] => {
+  const outgoing = NOTE_LINKS.filter(link => link.sourceNoteId === noteId).map(l => l.targetNoteId);
+  return getAllNotes().filter(n => outgoing.includes(n.id));
+};
+
+/** Incoming backlinks (notes that link to this note) */
+export const getBacklinkedNotes = (noteId: string): Note[] => {
+  const incoming = NOTE_LINKS.filter(link => link.targetNoteId === noteId).map(l => l.sourceNoteId);
+  return getAllNotes().filter(n => incoming.includes(n.id));
+};
+
+/** Raw links (useful for UI badges) */
+export const getNoteLinks = (): NoteLink[] => [...NOTE_LINKS];
+
+/** Get all notes for autocomplete (filtered by search query) */
+export const searchNotesByTitle = (query: string, limit: number = 10): Note[] => {
+  const normalizedQuery = normalizeTitle(query);
+  if (!normalizedQuery) return [];
+  
+  return getAllNotes()
+    .filter(note => {
+      const title = note.title || deriveTitleFromContent(note.content);
+      return normalizeTitle(title).includes(normalizedQuery);
+    })
+    .slice(0, limit);
+};
+
+/** Get note by exact title match (case-insensitive) */
+export const getNoteByExactTitle = (title: string): Note | undefined => {
+  return getNoteByTitle(title);
 };

@@ -9,14 +9,14 @@
 // For Contact Zero: includes Activity feed, Topics, and Open Tasks summary.
 // =============================================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Target, TrendingUp, TrendingDown, Minus,
   Activity, Zap, Calendar, FileText, Mail, Phone,
   Tag, Clock, Edit2, Save, X, Send, ArrowRight, User, Hash,
   CheckSquare, Square, Plus, AlertCircle, PhoneCall, Users, MessageSquare, AtSign,
-  Trash2, Paperclip, Image, File, Layout
+  Trash2, Paperclip, Image, File, Layout, Scan
 } from 'lucide-react';
 import { getContactById, CONTACT_ZERO, updateContact } from '../../services/contactStore';
 import { getNotesByContactId, getNotesByAuthorId, createNote } from '../../services/noteStore';
@@ -121,45 +121,45 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     summary: string;
   } | null>(null);
   
-  // Get contact from store (re-fetch on refreshKey change)
-  const contact = getContactById(selectedContactId);
+  // Get contact from store (re-fetch on selectedContactId or refreshKey change)
+  const contact = useMemo(() => {
+    return getContactById(selectedContactId) || CONTACT_ZERO;
+  }, [selectedContactId, refreshKey]);
   
   // Form state for editing
   const [formState, setFormState] = useState<EditFormState>({
-    fullName: '',
-    email: '',
-    phone: '',
-    avatarUrl: '',
-    company: '',
-    title: '',
-    location: '',
-    linkedinUrl: '',
-    xHandle: '',
-    relationshipDomain: 'business',
-    relationshipRole: '',
-    status: 'active',
-    tags: '',
+    fullName: contact.fullName,
+    email: contact.email || '',
+    phone: contact.phone || '',
+    avatarUrl: contact.avatarUrl || '',
+    company: contact.company || '',
+    title: contact.title || '',
+    location: contact.location || '',
+    linkedinUrl: contact.linkedinUrl || '',
+    xHandle: contact.xHandle || '',
+    relationshipDomain: contact.relationshipDomain,
+    relationshipRole: contact.relationshipRole,
+    status: contact.status,
+    tags: contact.tags.join(', '),
   });
 
   // Initialize form state when entering edit mode or when contact changes
   useEffect(() => {
-    if (contact) {
-      setFormState({
-        fullName: contact.fullName,
-        email: contact.email || '',
-        phone: contact.phone || '',
-        avatarUrl: contact.avatarUrl || '',
-        company: contact.company || '',
-        title: contact.title || '',
-        location: contact.location || '',
-        linkedinUrl: contact.linkedinUrl || '',
-        xHandle: contact.xHandle || '',
-        relationshipDomain: contact.relationshipDomain,
-        relationshipRole: contact.relationshipRole,
-        status: contact.status,
-        tags: contact.tags.join(', '),
-      });
-    }
+    setFormState({
+      fullName: contact.fullName,
+      email: contact.email || '',
+      phone: contact.phone || '',
+      avatarUrl: contact.avatarUrl || '',
+      company: contact.company || '',
+      title: contact.title || '',
+      location: contact.location || '',
+      linkedinUrl: contact.linkedinUrl || '',
+      xHandle: contact.xHandle || '',
+      relationshipDomain: contact.relationshipDomain,
+      relationshipRole: contact.relationshipRole,
+      status: contact.status,
+      tags: contact.tags.join(', '),
+    });
   }, [contact, isEditing]);
 
   // Reset state when contact changes
@@ -172,15 +172,6 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     setNewInteractionSummary('');
     setNewInteractionOccurredAt('');
   }, [selectedContactId]);
-  
-  // Fallback if contact not found
-  if (!contact) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-500">Contact not found</p>
-      </div>
-    );
-  }
 
   const isContactZero = contact.id === CONTACT_ZERO.id;
   const isArchived = contact.status === 'archived';
@@ -591,6 +582,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
       dormant: 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30',
       blocked: 'text-red-400 bg-red-500/20 border-red-500/30',
       testing: 'text-blue-400 bg-blue-500/20 border-blue-500/30',
+      archived: 'text-gray-400 bg-gray-500/20 border-gray-500/30',
     };
     return colors[status];
   };

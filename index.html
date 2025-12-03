@@ -58,6 +58,42 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #4433FF;
       }
+      
+      /* Theme Switching */
+      .light-mode body {
+        background-color: #FFFFFF;
+        color: #111827;
+      }
+      
+      .light-mode ::-webkit-scrollbar-track {
+        background: #F5F5F5;
+      }
+      
+      .light-mode ::-webkit-scrollbar-thumb {
+        background: #D1D5DB;
+      }
+      
+      /* Compact Mode */
+      .compact-mode .p-4 {
+        padding: 0.5rem !important;
+      }
+      
+      .compact-mode .p-6 {
+        padding: 0.75rem !important;
+      }
+      
+      .compact-mode .space-y-4 > * + * {
+        margin-top: 0.5rem !important;
+      }
+      
+      .compact-mode .space-y-6 > * + * {
+        margin-top: 0.75rem !important;
+      }
+      
+      @keyframes static {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 0.5; }
+      }
     </style>
   <script type="importmap">
 {

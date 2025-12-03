@@ -1,0 +1,64 @@
+/* Theme Variables */
+:root {
+  --bg-primary: #030412;
+  --bg-secondary: #0E0E0E;
+  --bg-tertiary: #1A1A1D;
+  --border-color: #2A2A2A;
+  --text-primary: #FFFFFF;
+  --text-secondary: #9CA3AF;
+  --accent-color: #4433FF;
+}
+
+/* Light Mode */
+.light-mode {
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F5F5F5;
+  --bg-tertiary: #E5E5E5;
+  --border-color: #D1D5DB;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --accent-color: #4433FF;
+}
+
+.light-mode body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Compact Mode */
+.compact-mode {
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.75rem;
+  --spacing-lg: 1rem;
+  --spacing-xl: 1.25rem;
+}
+
+.compact-mode .p-4 {
+  padding: var(--spacing-sm) !important;
+}
+
+.compact-mode .p-6 {
+  padding: var(--spacing-md) !important;
+}
+
+.compact-mode .space-y-4 > * + * {
+  margin-top: var(--spacing-sm) !important;
+}
+
+.compact-mode .space-y-6 > * + * {
+  margin-top: var(--spacing-md) !important;
+}
+
+.compact-mode .text-2xl {
+  font-size: 1.25rem !important;
+}
+
+.compact-mode .text-xl {
+  font-size: 1.125rem !important;
+}
+
+.compact-mode .text-lg {
+  font-size: 1rem !important;
+}
+

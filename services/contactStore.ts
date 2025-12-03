@@ -227,6 +227,7 @@ export const getAllContacts = (includeArchived = false): Contact[] => {
  * Get a contact by ID. Works for all contacts including archived.
  */
 export const getContactById = (id: string): Contact | undefined => {
+  if (id === CONTACT_ZERO.id) return CONTACT_ZERO;
   return CONTACTS.find(c => c.id === id);
 };
 

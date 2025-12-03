@@ -23,15 +23,10 @@ export const CasesView: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl font-display font-bold text-white">ACTIVE WORKLOAD</h2>
-                    <p className="text-xs text-gray-500 mt-1">
-                        {activeContacts.length} active contacts requiring attention
-                    </p>
-                </div>
-            </div>
+        <div className="space-y-4">
+            <p className="text-xs text-gray-500">
+                {activeContacts.length} active contacts requiring attention
+            </p>
 
             <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl overflow-hidden">
                 <div className="overflow-x-auto">

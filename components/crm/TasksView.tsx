@@ -1,50 +1,50 @@
 // =============================================================================
-// TASKS VIEW — Global Tasks Dashboard
-// =============================================================================
-// Shows all tasks across all contacts with filtering and sorting.
-// Tasks can be filtered by status and are sorted by due date.
-// Contact names are clickable to navigate to their dossier.
+// TASKS VIEW — Redesigned to match NotesView style
 // =============================================================================
 
 import React, { useState, useMemo } from 'react';
 import { 
-  CheckSquare, Square, CheckCircle, Clock, Calendar,
-  ArrowRight, Filter, AlertCircle, XCircle
+  CheckSquare, Square, Clock, Calendar,
+  ArrowRight, Filter, Search, Mic, Pencil, FileText, Map, Notebook
 } from 'lucide-react';
 import { getAllTasks, updateTaskStatus } from '../../services/taskStore';
 import { getContactById, CONTACT_ZERO } from '../../services/contactStore';
 import { Task, TaskStatus } from '../../types';
 
-// --- PROPS ---
-
 interface TasksViewProps {
   selectedContactId: string;
   setSelectedContactId: (id: string) => void;
   onNavigateToDossier: () => void;
+  onNavigateToNotes?: () => void;
 }
 
 type StatusFilter = 'all' | TaskStatus;
 
-// --- COMPONENT ---
-
 export const TasksView: React.FC<TasksViewProps> = ({
   selectedContactId,
   setSelectedContactId,
-  onNavigateToDossier
+  onNavigateToDossier,
+  onNavigateToNotes,
 }) => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Get all tasks
   const allTasks = useMemo(() => getAllTasks(), [refreshKey]);
 
-  // Filter tasks by status
   const filteredTasks = useMemo(() => {
-    if (statusFilter === 'all') return allTasks;
-    return allTasks.filter(t => t.status === statusFilter);
-  }, [allTasks, statusFilter]);
+    let tasks = statusFilter === 'all' ? allTasks : allTasks.filter(t => t.status === statusFilter);
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      tasks = tasks.filter(task => 
+        task.title.toLowerCase().includes(query)
+      );
+    }
+    
+    return tasks;
+  }, [allTasks, statusFilter, searchQuery]);
 
-  // Stats
   const stats = useMemo(() => {
     const open = allTasks.filter(t => t.status === 'open').length;
     const done = allTasks.filter(t => t.status === 'done').length;
@@ -52,25 +52,21 @@ export const TasksView: React.FC<TasksViewProps> = ({
     return { total: allTasks.length, open, done, blocked };
   }, [allTasks]);
 
-  // Handle marking task as done
   const handleMarkTaskDone = (taskId: string) => {
     updateTaskStatus(taskId, 'done');
     setRefreshKey(k => k + 1);
   };
 
-  // Handle marking task as open (undo done)
   const handleMarkTaskOpen = (taskId: string) => {
     updateTaskStatus(taskId, 'open');
     setRefreshKey(k => k + 1);
   };
 
-  // Handle contact click
   const handleContactClick = (contactId: string) => {
     setSelectedContactId(contactId);
     onNavigateToDossier();
   };
 
-  // Format date
   const formatDate = (dateStr: string): string => {
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',
@@ -90,70 +86,92 @@ export const TasksView: React.FC<TasksViewProps> = ({
     return `Due ${formatDate(dateStr)}`;
   };
 
-  const isDueUrgent = (dateStr: string | null | undefined): boolean => {
-    if (!dateStr) return false;
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return diffDays <= 1;
-  };
-
   const isOverdue = (dateStr: string | null | undefined): boolean => {
     if (!dateStr) return false;
     return new Date(dateStr) < new Date();
   };
 
-  // Status badge styles
-  const statusBadge = (status: TaskStatus) => {
-    const styles: Record<TaskStatus, string> = {
-      open: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-      done: 'bg-green-500/20 text-green-400 border-green-500/30',
-      blocked: 'bg-red-500/20 text-red-400 border-red-500/30',
-    };
-    return styles[status];
-  };
-
   return (
-    <div className="flex h-full bg-[#030412]">
-      {/* Sidebar */}
-      <div className="w-72 bg-[#0E0E0E] border-r border-[#2A2A2A] flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-[#2A2A2A]">
-          <div className="flex items-center gap-2 mb-1">
-            <CheckSquare size={18} className="text-cyan-500" />
-            <h2 className="font-display font-bold text-white">TASKS</h2>
+    <div className="flex h-full bg-[#0B0C14] text-white">
+      {/* LEFT SIDEBAR */}
+      <aside className="w-64 bg-[#0E0E0E] border-r border-[#1C1D26] flex flex-col">
+        {/* Search Bar */}
+        <div className="p-4 border-b border-[#1C1D26]">
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tasks..."
+              className="w-full bg-[#0A0A12] border border-[#1F2028] rounded-lg pl-9 pr-8 py-2 text-sm text-gray-200 focus:border-[#4433FF] outline-none"
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              <kbd className="text-[10px] text-gray-500 bg-[#1A1A1D] px-1.5 py-0.5 rounded">⌘K</kbd>
+              <button className="p-1 text-gray-500 hover:text-gray-300">
+                <Mic size={12} />
+              </button>
+            </div>
           </div>
-          <p className="text-[10px] text-gray-500">Manage tasks across all contacts</p>
         </div>
 
-        {/* Filter Buttons */}
-        <div className="p-4 border-b border-[#2A2A2A]">
-          <div className="flex items-center gap-2 mb-3">
-            <Filter size={12} className="text-gray-500" />
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Filter by Status</span>
-          </div>
-          <div className="space-y-1">
-            {(['all', 'open', 'done', 'blocked'] as const).map((status) => (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded text-xs font-bold uppercase transition-colors ${
-                  statusFilter === status
-                    ? 'bg-[#4433FF] text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-[#1A1A1D]'
-                }`}
-              >
-                <span>{status}</span>
-                <span className="text-[10px] opacity-60">
-                  {status === 'all' ? stats.total : stats[status as TaskStatus]}
-                </span>
-              </button>
-            ))}
+        {/* Navigation */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-1">
+          <button
+            onClick={() => onNavigateToNotes && onNavigateToNotes()}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-gray-400 hover:text-white hover:bg-[#151623]"
+          >
+            <Pencil size={14} />
+            Daily notes
+          </button>
+          <button
+            onClick={() => onNavigateToNotes && onNavigateToNotes()}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-gray-400 hover:text-white hover:bg-[#151623]"
+          >
+            <FileText size={14} />
+            All notes
+          </button>
+          <button
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors bg-[#4433FF]/20 text-[#4433FF]"
+          >
+            <CheckSquare size={14} />
+            Tasks
+          </button>
+          <button
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-gray-400 hover:text-white hover:bg-[#151623]"
+          >
+            <Map size={14} />
+            Map
+          </button>
+
+          {/* Filter Section */}
+          <div className="mt-8">
+            <div className="flex items-center gap-2 mb-3 px-3">
+              <Filter size={12} className="text-gray-500" />
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Filter</span>
+            </div>
+            <div className="space-y-1">
+              {(['all', 'open', 'done', 'blocked'] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                    statusFilter === status
+                      ? 'bg-[#4433FF]/20 text-[#4433FF]'
+                      : 'text-gray-400 hover:text-white hover:bg-[#151623]'
+                  }`}
+                >
+                  <span className="capitalize">{status}</span>
+                  <span className="text-[10px] opacity-60">
+                    {status === 'all' ? stats.total : stats[status as TaskStatus]}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="p-4 flex-1">
+        <div className="p-4 border-t border-[#1C1D26]">
           <div className="space-y-3">
             <div className="bg-[#1A1A1D] rounded-lg p-4 border border-[#333]">
               <div className="flex items-center gap-2 mb-2">
@@ -165,7 +183,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
 
             <div className="bg-[#1A1A1D] rounded-lg p-4 border border-[#333]">
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle size={14} className="text-green-500" />
+                <CheckSquare size={14} className="text-green-500" />
                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Done</span>
               </div>
               <div className="text-3xl font-display font-bold text-green-400">{stats.done}</div>
@@ -173,29 +191,34 @@ export const TasksView: React.FC<TasksViewProps> = ({
 
             <div className="bg-[#1A1A1D] rounded-lg p-4 border border-[#333]">
               <div className="flex items-center gap-2 mb-2">
-                <XCircle size={14} className="text-red-500" />
+                <Clock size={14} className="text-red-500" />
                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Blocked</span>
               </div>
               <div className="text-3xl font-display font-bold text-red-400">{stats.blocked}</div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="p-6 border-b border-[#2A2A2A] bg-[#0E0E0E]">
-          <h1 className="text-xl font-display font-bold text-white">
-            {statusFilter === 'all' ? 'All Tasks' : `${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)} Tasks`}
-          </h1>
-          <p className="text-xs text-gray-500 mt-1">
-            {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} • Sorted by due date
-          </p>
+        {/* Bottom Icon */}
+        <div className="p-4 border-t border-[#1C1D26]">
+          <div className="w-8 h-8 rounded-lg bg-[#4433FF]/20 flex items-center justify-center">
+            <Notebook size={16} className="text-[#4433FF]" />
+          </div>
         </div>
+      </aside>
 
-        {/* Tasks List */}
-        <div className="flex-1 overflow-y-auto p-6">
+      {/* MAIN CONTENT */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto px-8 py-6">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-white mb-1">Tasks</h2>
+            {searchQuery && (
+              <span className="text-sm text-gray-500">
+                {filteredTasks.length} result{filteredTasks.length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+
           {filteredTasks.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <CheckSquare size={48} className="text-gray-700 mb-4" />
@@ -217,15 +240,15 @@ export const TasksView: React.FC<TasksViewProps> = ({
                 return (
                   <div 
                     key={task.id}
-                    className={`bg-[#0E0E0E] border rounded-lg p-4 transition-colors ${
+                    className={`p-4 bg-[#0E0E16] border rounded-lg transition-colors ${
                       task.status === 'done' 
-                        ? 'border-[#2A2A2A] opacity-60' 
+                        ? 'border-[#1C1D26] opacity-60' 
                         : isOverdue(task.dueAt)
                           ? 'border-red-500/30 hover:border-red-500/50'
-                          : 'border-[#2A2A2A] hover:border-cyan-500/30'
+                          : 'border-[#1C1D26] hover:border-cyan-500/30'
                     }`}
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-3">
                       {/* Checkbox */}
                       <button
                         onClick={() => task.status === 'done' 
@@ -239,19 +262,17 @@ export const TasksView: React.FC<TasksViewProps> = ({
                         }`}
                         title={task.status === 'done' ? 'Mark as open' : 'Mark as done'}
                       >
-                        {task.status === 'done' ? <CheckCircle size={20} /> : <Square size={20} />}
+                        {task.status === 'done' ? <CheckSquare size={18} /> : <Square size={18} />}
                       </button>
 
                       {/* Task Content */}
                       <div className="flex-1 min-w-0">
-                        {/* Title */}
-                        <p className={`text-sm font-medium ${
+                        <p className={`text-sm ${
                           task.status === 'done' ? 'text-gray-500 line-through' : 'text-white'
                         }`}>
                           {task.title}
                         </p>
 
-                        {/* Meta Row */}
                         <div className="flex items-center gap-3 mt-2 flex-wrap">
                           {/* Contact */}
                           <button
@@ -277,19 +298,12 @@ export const TasksView: React.FC<TasksViewProps> = ({
                             <div className={`flex items-center gap-1 text-xs ${
                               isOverdue(task.dueAt) && task.status !== 'done'
                                 ? 'text-red-400'
-                                : isDueUrgent(task.dueAt) && task.status !== 'done'
-                                  ? 'text-orange-400'
-                                  : 'text-gray-500'
+                                : 'text-gray-500'
                             }`}>
                               <Calendar size={12} />
                               {formatDueDate(task.dueAt)}
                             </div>
                           )}
-
-                          {/* Status Badge */}
-                          <span className={`text-[10px] px-2 py-0.5 rounded border font-bold uppercase ${statusBadge(task.status)}`}>
-                            {task.status}
-                          </span>
 
                           {/* Created Date */}
                           <div className="flex items-center gap-1 text-xs text-gray-600">
@@ -309,4 +323,3 @@ export const TasksView: React.FC<TasksViewProps> = ({
     </div>
   );
 };
-

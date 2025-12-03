@@ -27,6 +27,8 @@ import { TopicView } from './crm/TopicView';
 import { TasksView } from './crm/TasksView';
 import { CalendarView } from './crm/CalendarView';
 import { ActivityView } from './crm/ActivityView';
+import { SettingsView } from './crm/SettingsView';
+import { RetroClockPanel } from './RetroClockPanel';
 import { getContactZero, CONTACT_ZERO, getContactById } from '../services/contactStore';
 import { getTopicById } from '../services/topicStore';
 
@@ -34,49 +36,71 @@ const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
 const MotionPath = motion.path as any;
 
-// RETRO COMPUTER COMPONENT (SPINNING TV)
-const RetroComputer: React.FC<{ className?: string }> = ({ className }) => {
-    return (
-        <div className={`relative w-32 h-32 ${className}`}>
-            <svg viewBox="0 0 200 200" className="w-full h-full animate-[spin_10s_linear_infinite]" style={{ transformStyle: 'preserve-3d' }}>
-                <defs>
-                    <linearGradient id="wireframe" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#4433FF" stopOpacity="0.8" />
-                        <stop offset="100%" stopColor="#6A82FC" stopOpacity="0.3" />
-                    </linearGradient>
-                </defs>
-                {/* Simplified Wireframe Monitor Shape */}
-                <path d="M40,50 L160,50 L160,130 L40,130 Z" fill="none" stroke="url(#wireframe)" strokeWidth="2" />
-                <path d="M40,50 L60,30" fill="none" stroke="url(#wireframe)" strokeWidth="1" />
-                <path d="M160,50 L140,30" fill="none" stroke="url(#wireframe)" strokeWidth="1" />
-                <path d="M160,130 L140,150" fill="none" stroke="url(#wireframe)" strokeWidth="1" />
-                <path d="M40,130 L60,150" fill="none" stroke="url(#wireframe)" strokeWidth="1" />
-                <rect x="60" y="30" width="80" height="120" fill="none" stroke="url(#wireframe)" strokeWidth="1" />
-            </svg>
-        </div>
-    );
-};
-
-const ClockWidget: React.FC<{ time: Date }> = ({ time }) => (
-    <div className="p-6 border-b border-[#2A2A2A] relative overflow-hidden group">
-        <div className="absolute inset-0 bg-blue-900/5 group-hover:bg-blue-900/10 transition-colors" />
-        <div className="relative z-10 flex justify-between items-start">
-            <div>
-                <div className="text-4xl font-display font-bold text-white tracking-tighter tabular-nums">
-                    {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                </div>
-                <div className="text-xs text-gray-500 font-mono mt-1 uppercase tracking-widest flex items-center gap-2">
-                    <ClockIcon size={10} />
-                    {time.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
-                </div>
-                <div className="mt-4 text-[10px] font-bold text-[#4433FF] uppercase tracking-widest">
-                    NEW YORK, USA
-                </div>
-            </div>
-            <RetroComputer className="w-20 h-20 opacity-50" />
-        </div>
-    </div>
+// STATIC OVERLAY EFFECT
+const StaticOverlay: React.FC = () => (
+  <div 
+    className="absolute inset-0 pointer-events-none opacity-30"
+    style={{
+      backgroundImage: `
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(68, 51, 255, 0.1) 2px, rgba(68, 51, 255, 0.1) 4px),
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(68, 51, 255, 0.1) 2px, rgba(68, 51, 255, 0.1) 4px)
+      `,
+      backgroundSize: '4px 4px',
+      animation: 'static 0.1s infinite',
+    }}
+  />
 );
+
+// ClockWidget with location fetching - used by RetroClockPanel
+const ClockWidget: React.FC<{ time: Date }> = ({ time }) => {
+  const [userLocation, setUserLocation] = useState<{ city: string; country: string; timezone: string } | null>(null);
+
+  useEffect(() => {
+    const fetchLocation = async () => {
+      try {
+        // Try ipapi.co first
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+
+        if (data.city && data.country_name) {
+          setUserLocation({
+            city: data.city,
+            country: data.country_name,
+            timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+          });
+          return;
+        }
+      } catch (error) {
+        console.log('ipapi.co failed, trying fallback');
+      }
+
+      // Fallback: use timezone to determine location
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const parts = tz.split('/');
+        const city = parts[parts.length - 1].replace(/_/g, ' ');
+        const region = parts[parts.length - 2] || '';
+
+        setUserLocation({
+          city: city,
+          country: region || 'Unknown',
+          timezone: tz,
+        });
+      } catch (error) {
+        console.error('All location methods failed:', error);
+        setUserLocation({
+          city: 'Unknown',
+          country: 'Unknown',
+          timezone: 'UTC',
+        });
+      }
+    };
+
+    fetchLocation();
+  }, []);
+
+  return <RetroClockPanel time={time} userLocation={userLocation} />;
+};
 
 const NotificationWidget: React.FC = () => (
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -400,6 +424,19 @@ const DashboardOverview: React.FC = () => {
                 </div>
             </SparkBorder>
 
+            {/* CASES / WORKLOAD SECTION */}
+            <SparkBorder>
+                <div className="bg-[#0E0E0E] rounded-xl p-6 relative overflow-hidden">
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2 text-orange-500">
+                            <Briefcase size={16} />
+                            <h3 className="text-xs font-bold uppercase tracking-widest">Cases / Workload</h3>
+                        </div>
+                    </div>
+                    <CasesView />
+                </div>
+            </SparkBorder>
+
             {/* BOTTOM ROW */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <SparkBorder>
@@ -451,7 +488,7 @@ const DashboardOverview: React.FC = () => {
     );
 }
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'GROUPS' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'GROUPS' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -459,6 +496,7 @@ export const Dashboard: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(true);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
 
   // ==========================================================================
   // CENTRALIZED SELECTED CONTACT STATE
@@ -490,6 +528,13 @@ export const Dashboard: React.FC = () => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Only show the right sidebar on Overview
+  useEffect(() => {
+    setIsRightSidebarOpen(currentView === 'OVERVIEW');
+    // Default left sidebar: open on overview, allow closed elsewhere
+    setIsLeftSidebarOpen(currentView === 'OVERVIEW');
+  }, [currentView]);
 
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -542,8 +587,8 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="fixed inset-0 bg-[#030412] text-[#DBDBDB] font-sans flex flex-col lg:flex-row overflow-hidden z-[50]">
       <aside className={`
-          fixed inset-y-0 left-0 w-[280px] bg-[#0E0E0E] border-r border-[#2A2A2A] flex flex-col z-40 transform transition-transform duration-300 lg:relative lg:translate-x-0
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${isLeftSidebarOpen ? 'w-[280px]' : 'w-0'} bg-[#0E0E0E] border-r border-[#2A2A2A] flex flex-col z-40 transform transition-all duration-300 lg:relative overflow-hidden
+          ${isMobileMenuOpen && isLeftSidebarOpen ? 'translate-x-0' : isLeftSidebarOpen ? 'translate-x-0' : 'lg:translate-x-0 -translate-x-full'}
       `}>
         <div className="hidden lg:flex h-16 items-center px-6 border-b border-[#2A2A2A]">
             <Zap size={20} className="text-[#4433FF] mr-3" />
@@ -564,13 +609,10 @@ export const Dashboard: React.FC = () => {
               icon={<Crosshair size={16} />} 
               label="CONTACT ZERO" 
             />
-            <NavItem active={currentView === 'NOTES'} onClick={() => handleNav('NOTES')} icon={<Notebook size={16} />} label="NOTES / LOG" />
+            <NavItem active={currentView === 'NOTES'} onClick={() => handleNav('NOTES')} icon={<Notebook size={16} />} label="LOG" />
             <NavItem active={currentView === 'SCAN'} onClick={() => handleNav('SCAN')} icon={<Scan size={16} />} label="SCAN" />
-            <NavItem active={currentView === 'CASES'} onClick={() => handleNav('CASES')} icon={<Briefcase size={16} />} label="CASES / WORKLOAD" />
-            <NavItem active={currentView === 'TASKS'} onClick={() => handleNav('TASKS')} icon={<CheckCircle size={16} />} label="TASKS" />
-            <NavItem active={currentView === 'CALENDAR'} onClick={() => handleNav('CALENDAR')} icon={<Calendar size={16} />} label="CALENDAR" />
-            <NavItem active={currentView === 'ACTIVITY'} onClick={() => handleNav('ACTIVITY')} icon={<ClockIcon size={16} />} label="ACTIVITY" />
             <NavItem active={currentView === 'PIPELINES'} onClick={() => handleNav('PIPELINES')} icon={<GitCommit size={16} />} label="PIPELINES" />
+            
             
             <div className="h-6" />
             
@@ -603,29 +645,53 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Selected Contact Indicator in Footer */}
-        <div className="p-4 bg-[#18181A] border-t border-[#2A2A2A] flex items-center gap-3">
-             <div className={`w-10 h-10 rounded flex items-center justify-center overflow-hidden ${selectedContactId === CONTACT_ZERO.id ? 'bg-[#4433FF]' : 'bg-[#333]'}`}>
-                <img src={selectedContact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedContact.id}`} alt="User" className="w-full h-full object-cover" />
-             </div>
-             <div className="overflow-hidden flex-1">
-                 <h4 className="font-display font-bold text-white text-sm">{selectedContact.fullName.toUpperCase()}</h4>
-                 <p className="text-[9px] text-gray-500 truncate uppercase">{selectedContact.relationshipRole}</p>
-             </div>
-             {selectedContactId !== CONTACT_ZERO.id && (
-               <button 
-                 onClick={handleContactZeroNav}
-                 className="text-[9px] text-[#4433FF] hover:text-white"
-                 title="Switch to Contact Zero"
-               >
-                 <User size={14} />
-               </button>
-             )}
+        <div className="p-4 bg-[#18181A] border-t border-[#2A2A2A] space-y-2">
+          {/* Contact Info */}
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded flex items-center justify-center overflow-hidden ${selectedContactId === CONTACT_ZERO.id ? 'bg-[#4433FF]' : 'bg-[#333]'}`}>
+              <img src={selectedContact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedContact.id}`} alt="User" className="w-full h-full object-cover" />
+            </div>
+            <div className="overflow-hidden flex-1">
+              <h4 className="font-display font-bold text-white text-sm">{selectedContact.fullName.toUpperCase()}</h4>
+              <p className="text-[9px] text-gray-500 truncate uppercase">{selectedContact.relationshipRole}</p>
+            </div>
+            {selectedContactId !== CONTACT_ZERO.id && (
+              <button 
+                onClick={handleContactZeroNav}
+                className="text-[9px] text-[#4433FF] hover:text-white"
+                title="Switch to Contact Zero"
+              >
+                <User size={14} />
+              </button>
+            )}
+          </div>
+          {/* Settings Button - Only show when on Contact Zero */}
+          {selectedContactId === CONTACT_ZERO.id && (
+            <button
+              onClick={() => setCurrentView('SETTINGS')}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
+                currentView === 'SETTINGS'
+                  ? 'bg-[#4433FF]/20 text-[#4433FF]'
+                  : 'text-gray-500 hover:text-white hover:bg-[#1A1A1D]'
+              }`}
+            >
+              <Settings size={14} />
+              <span className="font-bold uppercase tracking-widest">Settings</span>
+            </button>
+          )}
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col bg-[#030412] overflow-hidden relative">
+      <main className="flex-1 flex flex-col bg-[#030412] overflow-hidden relative transition-all duration-300">
          <div className="hidden lg:flex h-16 border-b border-[#2A2A2A] items-center justify-between px-8 shrink-0 bg-[#0E0E0E]">
              <div className="flex items-center gap-2">
+                 <button
+                   onClick={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
+                   className="p-2 rounded hover:bg-[#1A1A1D] text-gray-500 hover:text-white transition-colors"
+                   title="Toggle navigation"
+                 >
+                   {isLeftSidebarOpen ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
+                 </button>
                  <span className="bg-[#4433FF] text-white text-xs px-1.5 py-0.5 rounded-sm font-bold">[ ]</span>
                  <h2 className="font-display font-bold text-2xl text-white tracking-tight">{getHeaderTitle()}</h2>
                  {currentView === 'DOSSIER' && selectedContactId === CONTACT_ZERO.id && (
@@ -641,17 +707,19 @@ export const Dashboard: React.FC = () => {
              </div>
              <div className="flex items-center gap-6">
                  <span className="text-xs text-gray-600 font-mono">Last updated {formatTime(time)}</span>
-                 <button 
-                    onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)} 
-                    className="p-1.5 hover:bg-[#1A1A1D] rounded text-gray-500 hover:text-white transition-colors"
-                    title="Toggle Sidebar"
-                 >
-                     {isRightSidebarOpen ? <ArrowRight size={16} /> : <ArrowLeft size={16} />}
-                 </button>
+                 {currentView === 'OVERVIEW' && (
+                   <button 
+                      onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)} 
+                      className="p-1.5 hover:bg-[#1A1A1D] rounded text-gray-500 hover:text-white transition-colors"
+                      title="Toggle Sidebar"
+                   >
+                       {isRightSidebarOpen ? <ArrowRight size={16} /> : <ArrowLeft size={16} />}
+                   </button>
+                 )}
              </div>
          </div>
 
-         <div className="p-4 md:p-6 overflow-y-auto flex-1 custom-scrollbar">
+         <div className={`p-4 md:p-6 overflow-y-auto flex-1 custom-scrollbar ${!isLeftSidebarOpen ? 'max-w-full' : ''}`}>
              {currentView === 'OVERVIEW' && <DashboardOverview />}
              {currentView === 'DOSSIER' && (
                <ContactDossierView
@@ -674,26 +742,27 @@ export const Dashboard: React.FC = () => {
                />
              )}
              {currentView === 'SCAN' && <ScanView />}
-             {currentView === 'NOTES' && (
+            {currentView === 'NOTES' && (
                <NotesView 
                  selectedContactId={selectedContactId}
                  setSelectedContactId={setSelectedContactId}
                  onNavigateToDossier={() => setCurrentView('DOSSIER')}
+                 onNavigateToTasks={() => setCurrentView('TASKS')}
                />
-             )}
-             {currentView === 'CONTACTS' && (
+            )}
+            {currentView === 'CONTACTS' && (
                <ContactsView 
                  selectedContactId={selectedContactId}
                  setSelectedContactId={setSelectedContactId}
                  onViewDossier={() => setCurrentView('DOSSIER')}
                />
              )}
-             {currentView === 'CASES' && <CasesView />}
              {currentView === 'TASKS' && (
                <TasksView
                  selectedContactId={selectedContactId}
                  setSelectedContactId={setSelectedContactId}
                  onNavigateToDossier={() => setCurrentView('DOSSIER')}
+                 onNavigateToNotes={() => setCurrentView('NOTES')}
                />
              )}
              {currentView === 'CALENDAR' && (
@@ -743,6 +812,12 @@ export const Dashboard: React.FC = () => {
                  onNavigateToTopic={handleNavigateToTopic}
                />
              )}
+             {currentView === 'SETTINGS' && (
+               <SettingsView
+                 selectedContactId={selectedContactId}
+                 setSelectedContactId={setSelectedContactId}
+               />
+             )}
          </div>
       </main>
 
@@ -752,9 +827,11 @@ export const Dashboard: React.FC = () => {
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 300, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
-            className="hidden xl:flex bg-[#0E0E0E] border-l border-[#2A2A2A] flex-col shrink-0 z-40 overflow-hidden"
+            className="hidden xl:flex bg-[#0E0E0E] border-l border-[#2A2A2A] flex-col shrink-0 z-40 overflow-hidden relative"
           >
-              <ClockWidget time={time} />
+              <div className="h-[400px] shrink-0 border-b border-[#2A2A2A]">
+                <ClockWidget time={time} />
+              </div>
               <NotificationWidget />
           </MotionAside>
       )}

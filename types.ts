@@ -53,10 +53,20 @@ export interface Note {
   id: string;
   contactId: string;              // REQUIRED — who the note is ABOUT
   authorContactId: string;        // REQUIRED — who WROTE the note (typically CONTACT_ZERO)
+  title?: string;                 // Optional title for backlinking / Obsidian-style links
   content: string;
   createdAt: string;              // ISO timestamp
   updatedAt?: string | null;
   tags?: string[];
+}
+
+/**
+ * NoteLink - bi-directional note graph edges
+ * sourceNoteId -> targetNoteId represents a [[Target]] link inside Source content
+ */
+export interface NoteLink {
+  sourceNoteId: string;
+  targetNoteId: string;
 }
 
 // --- DAILY NOTES & STANDALONE PAGES (OBSIDIAN-STYLE) ---
