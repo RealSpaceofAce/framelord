@@ -289,6 +289,35 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     });
   })();
 
+  const engagementSeries = useMemo(() => {
+    const now = new Date();
+    const buckets = Array.from({ length: 12 }).map((_, idx) => {
+      const date = new Date(now.getFullYear(), now.getMonth() - (11 - idx), 1);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      return {
+        key,
+        label: date.toLocaleDateString('en-US', { month: 'short' }),
+        count: 0,
+      };
+    });
+
+    timelineItems.forEach((item) => {
+      const date = new Date(item.occurredAt);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const bucket = buckets.find((b) => b.key === key);
+      if (bucket) {
+        bucket.count += 1;
+      }
+    });
+
+    const max = Math.max(1, ...buckets.map((b) => b.count));
+    return buckets.map((bucket) => ({
+      label: bucket.label,
+      count: bucket.count,
+      value: Math.round((bucket.count / max) * 100),
+    }));
+  }, [timelineItems]);
+
   // For Contact Zero: Last interactions authored by Contact Zero
   const lastInteractions = isContactZero 
     ? getInteractionsByAuthorId(CONTACT_ZERO.id).slice(0, 10)
@@ -658,92 +687,107 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   };
 
   // --- INPUT STYLES ---
-  const inputClass = "w-full bg-[#1A1A1D] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none";
-  const selectClass = "w-full bg-[#1A1A1D] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none cursor-pointer";
-  const labelClass = "text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block";
+  const glassCard = "bg-[#0c1424]/80 border border-[#1b2c45] rounded-2xl shadow-[0_20px_70px_rgba(0,0,0,0.55),0_0_30px_rgba(20,210,255,0.15)] backdrop-blur";
+  const subCard = "bg-[#0a111d]/80 border border-[#112035] rounded-2xl shadow-[0_16px_50px_rgba(0,0,0,0.5)] backdrop-blur";
+  const inputClass = "w-full bg-[#0a1020]/80 border border-[#1a2a3f] rounded-lg px-3 py-2 text-[#e0edff] text-sm focus:border-[#2ee0ff] outline-none placeholder:text-[#5f7ca6] shadow-[0_10px_30px_rgba(0,0,0,0.35)]";
+  const selectClass = "w-full bg-[#0a1020]/80 border border-[#1a2a3f] rounded-lg px-3 py-2 text-[#e0edff] text-sm focus:border-[#2ee0ff] outline-none cursor-pointer shadow-[0_10px_30px_rgba(0,0,0,0.35)]";
+  const labelClass = "text-[10px] font-semibold text-[#6b92b9] uppercase tracking-[0.18em] mb-1 block";
+  const engagementPolylinePoints = engagementSeries.map((point, idx) => {
+    const x = engagementSeries.length > 1 ? (idx / (engagementSeries.length - 1)) * 100 : 0;
+    const y = 100 - point.value * 0.9;
+    return `${x},${y}`;
+  }).join(' ');
 
   return (
-    <div className="space-y-8 pb-20">
-      {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-3 h-3 bg-[#4433FF] rounded-sm" />
-          <h1 className="text-2xl font-display font-bold text-white tracking-wide">
-            CONTACT DOSSIER
-          </h1>
-          {isContactZero && (
-            <span className="text-[10px] bg-[#4433FF]/20 text-[#4433FF] px-2 py-0.5 rounded border border-[#4433FF]/30 font-bold uppercase">
-              Identity Prime
-            </span>
-          )}
-          {isArchived && (
-            <span className="text-[10px] bg-gray-500/20 text-gray-400 px-2 py-0.5 rounded border border-gray-500/30 font-bold uppercase">
-              Archived
-            </span>
-          )}
-          {isEditing && (
-            <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded border border-orange-500/30 font-bold uppercase animate-pulse">
-              Editing…
-            </span>
-          )}
+    <div className="relative min-h-screen text-[#dce8ff]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(0,255,209,0.08),transparent_32%),radial-gradient(circle_at_80%_10%,rgba(68,140,255,0.12),transparent_28%),linear-gradient(140deg,#050810_0%,#060b17_45%,#04060d_100%)]" />
+      <div className="relative space-y-8 pb-20 px-4 lg:px-8">
+        {/* HEADER */}
+        <div className={`${glassCard} px-5 py-4 flex items-center justify-between`}>
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-2xl border border-[#1f2f45] bg-[radial-gradient(circle_at_30%_30%,rgba(31,226,255,0.6),rgba(31,226,255,0)),#0b1728] shadow-[0_0_24px_rgba(31,226,255,0.25)] flex items-center justify-center">
+              <User className="text-[#8beaff]" size={18} />
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-[#6b92b9]">Contact dashboard</p>
+              <h1 className="text-2xl font-display font-bold text-white leading-tight">
+                Contact Dossier
+              </h1>
+            </div>
+            <div className="flex items-center gap-2">
+              {isContactZero && (
+                <span className="text-[11px] px-3 py-1 rounded-full border border-[#2ee0ff55] bg-[#0c2c3d]/60 text-[#82f2ff] font-semibold uppercase tracking-[0.15em]">
+                  Identity Prime
+                </span>
+              )}
+              {isArchived && (
+                <span className="text-[11px] px-3 py-1 rounded-full border border-[#65738a55] bg-[#1b2433]/70 text-[#9fb2c9] font-semibold uppercase tracking-[0.15em]">
+                  Archived
+                </span>
+              )}
+              {isEditing && (
+                <span className="text-[11px] px-3 py-1 rounded-full border border-[#f6a74c66] bg-[#2b1d10]/80 text-[#f6c68e] font-semibold uppercase tracking-[0.15em] animate-pulse">
+                  Editing
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            {!isEditing ? (
+              <button
+                onClick={handleEdit}
+                disabled={isArchived}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0e1a2d] border border-[#1f2f45] hover:border-[#2ee0ff] disabled:opacity-50 disabled:cursor-not-allowed text-[#dce8ff] text-xs font-bold transition-colors shadow-[0_0_20px_rgba(0,0,0,0.35)]"
+              >
+                <Edit2 size={14} /> Edit Profile
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={handleCancel}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#12192b] border border-[#2b3c55] hover:border-[#ff8a8a] text-[#dce8ff] text-xs font-bold transition-colors shadow-[0_0_20px_rgba(0,0,0,0.35)]"
+                >
+                  <X size={14} /> Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#1cf1ff] via-[#28c5ff] to-[#7a5dff] text-[#03101d] text-xs font-bold transition-colors shadow-[0_15px_45px_rgba(24,210,255,0.35)]"
+                >
+                  <Save size={14} /> Save Changes
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
-        <div className="flex gap-2">
-          {!isEditing ? (
-            <button
-              onClick={handleEdit}
-              disabled={isArchived}
-              className="flex items-center gap-2 px-4 py-2 bg-[#1A1A1D] border border-[#333] hover:border-[#4433FF] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors"
-            >
-              <Edit2 size={14} /> Edit
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={handleCancel}
-                className="flex items-center gap-2 px-4 py-2 bg-[#1A1A1D] border border-[#333] hover:border-red-500 text-white text-xs font-bold rounded transition-colors"
-              >
-                <X size={14} /> Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                className="flex items-center gap-2 px-4 py-2 bg-[#4433FF] hover:bg-[#5544FF] text-white text-xs font-bold rounded transition-colors"
-              >
-                <Save size={14} /> Save
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* MAIN GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* MAIN GRID */}
+        <div className="grid grid-cols-1 xl:grid-cols-[320px_1fr_360px] gap-6 items-start">
         
         {/* LEFT: Identity Card */}
-        <div className={`bg-[#0E0E0E] border rounded-xl p-6 shadow-[0_0_30px_rgba(68,51,255,0.1)] ${
-          isContactZero ? 'border-[#4433FF]/30' : 'border-[#2A2A2A]'
-        }`}>
-          <div className="flex flex-col items-center text-center mb-6">
-            <div className="relative mb-4">
+        <div className={`${glassCard} p-6 relative overflow-hidden ${isContactZero ? 'border-[#2ee0ff66]' : ''}`}>
+          <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(31,226,255,0.18),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(122,93,255,0.18),transparent_35%)]" />
+          <div className="relative flex flex-col items-center text-center mb-6 gap-2">
+            <div className="relative mb-3">
+              <div className="absolute inset-[-10px] rounded-full bg-[conic-gradient(from_120deg,#1cf1ff,#7a5dff,#1cf1ff)] opacity-50 blur-sm" />
+              <div className="absolute inset-[-14px] rounded-full bg-[#1cf1ff22] blur-2xl" />
               <img 
                 src={isEditing 
                   ? (formState.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`)
                   : (contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`)
                 }
                 alt={contact.fullName}
-                className={`w-28 h-28 rounded-full border-4 shadow-[0_0_20px_rgba(68,51,255,0.3)] ${
-                  isContactZero ? 'border-[#4433FF]' : 'border-[#333]'
-                }`}
+                className="relative w-28 h-28 rounded-full border-4 border-[#0a111d] shadow-[0_10px_45px_rgba(0,0,0,0.55),0_0_25px_rgba(31,226,255,0.35)] object-cover"
               />
               {contact.status === 'active' && !isEditing && (
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-[#0E0E0E] flex items-center justify-center">
-                  <Zap size={12} className="text-white" />
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-br from-[#1cf1ff] to-[#7a5dff] border-2 border-[#0c1424] flex items-center justify-center shadow-[0_0_18px_rgba(28,241,255,0.5)]">
+                  <Zap size={12} className="text-[#04101d]" />
                 </div>
               )}
             </div>
             
             {isEditing ? (
-              <div className="w-full mb-4">
+              <div className="w-full mb-2">
                 <label className={labelClass}>Full Name *</label>
                 <input
                   type="text"
@@ -758,7 +802,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             )}
             
             {isEditing ? (
-              <div className="w-full mb-4">
+              <div className="w-full mb-2">
                 <label className={labelClass}>Role</label>
                 <input
                   type="text"
@@ -769,13 +813,13 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                 />
               </div>
             ) : (
-              <p className="text-xs text-gray-500 mt-1 font-mono uppercase tracking-wider">
+              <p className="text-[13px] text-[#8fb0d4] mt-1 font-medium">
                 {contact.relationshipRole}
               </p>
             )}
 
             {isEditing ? (
-              <div className="w-full space-y-4 mt-2">
+              <div className="w-full grid grid-cols-2 gap-3 mt-2">
                 <div>
                   <label className={labelClass}>Domain</label>
                   <select
@@ -803,40 +847,38 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="flex gap-2 mt-3">
-                <span className={`text-[10px] px-2 py-1 rounded uppercase font-bold ${domainColor(contact.relationshipDomain)}`}>
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+                <span className={`text-[11px] px-3 py-1 rounded-full uppercase font-semibold border border-[#1f2f45] bg-[#0e1a2d] text-[#9cc8ff] shadow-[0_0_16px_rgba(0,0,0,0.35)]`}>
                   {contact.relationshipDomain}
                 </span>
-                <span className={`text-[10px] px-2 py-1 rounded border uppercase font-bold ${statusColor(contact.status)}`}>
+                <span className={`text-[11px] px-3 py-1 rounded-full uppercase font-semibold border ${statusColor(contact.status)} shadow-[0_0_16px_rgba(0,0,0,0.35)]`}>
                   {contact.status}
                 </span>
               </div>
             )}
           </div>
 
-          <div className="space-y-3 border-t border-[#2A2A2A] pt-4">
+          <div className="relative space-y-3 border-t border-[#16253a] pt-4">
             {isEditing ? (
               <>
                 <div>
                   <label className={labelClass}>Avatar</label>
                   <div className="flex items-center gap-4">
-                    {/* Preview */}
                     <div className="flex-shrink-0">
                       <img
                         src={formState.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
                         alt="Avatar preview"
-                        className="w-16 h-16 rounded-full border-2 border-[#333] object-cover"
+                        className="w-16 h-16 rounded-full border-2 border-[#1a2a3f] object-cover shadow-[0_8px_25px_rgba(0,0,0,0.35)]"
                       />
                     </div>
-                    {/* File Input */}
                     <div className="flex-1">
                       <input
                         type="file"
                         accept="image/*"
                         onChange={handleAvatarFileChange}
-                        className="w-full bg-[#1A1A1D] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#4433FF] file:text-white hover:file:bg-[#5544FF] file:cursor-pointer cursor-pointer"
+                        className="w-full bg-[#0a1020]/80 border border-[#1a2a3f] rounded-lg px-3 py-2 text-[#e0edff] text-sm focus:border-[#2ee0ff] outline-none file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-gradient-to-r from-[#1cf1ff] to-[#7a5dff] file:text-[#04101f] hover:file:opacity-90 cursor-pointer"
                       />
-                      <p className="text-[10px] text-gray-600 mt-1">Upload an image file (max 2MB recommended)</p>
+                      <p className="text-[10px] text-[#6b92b9] mt-1">Upload an image file (max 2MB recommended)</p>
                     </div>
                   </div>
                 </div>
@@ -914,21 +956,21 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             ) : (
               <>
                 {(contact.title || contact.company) && (
-                  <div className="text-xs text-gray-400 mb-2">
+                  <div className="text-sm text-[#8fb0d4] mb-1">
                     {contact.title && contact.company ? `${contact.title} at ${contact.company}` : contact.title || contact.company}
                   </div>
                 )}
                 {contact.location && (
-                  <div className="text-xs text-gray-500 mb-2">{contact.location}</div>
+                  <div className="text-xs text-[#6b92b9] mb-2">{contact.location}</div>
                 )}
                 {(contact.linkedinUrl || contact.xHandle) && (
-                  <div className="flex items-center justify-center gap-3 mt-2 mb-2">
+                  <div className="flex items-center justify-center gap-3 mt-2 mb-3">
                     {contact.linkedinUrl && (
                       <a
                         href={contact.linkedinUrl.startsWith('http') ? contact.linkedinUrl : `https://${contact.linkedinUrl}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[#4433FF] hover:text-white text-xs flex items-center gap-1"
+                        className="text-[#8beaff] hover:text-white text-xs flex items-center gap-1"
                       >
                         <User size={12} /> LinkedIn
                       </a>
@@ -938,25 +980,28 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                         href={`https://x.com/${contact.xHandle.replace(/^@/, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[#4433FF] hover:text-white text-xs flex items-center gap-1"
+                        className="text-[#8beaff] hover:text-white text-xs flex items-center gap-1"
                       >
                         <AtSign size={12} /> X
                       </a>
                     )}
                   </div>
                 )}
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500 flex items-center gap-2">
+                <div className="flex justify-between items-center text-sm bg-[#0d1627]/80 border border-[#1a2a3f] rounded-lg px-3 py-2">
+                  <span className="text-[#7fa6d1] flex items-center gap-2">
                     <Mail size={12} /> Email
                   </span>
                   <span className="text-white font-mono text-xs">{contact.email || '—'}</span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500 flex items-center gap-2">
+                <div className="flex justify-between items-center text-sm bg-[#0d1627]/80 border border-[#1a2a3f] rounded-lg px-3 py-2">
+                  <span className="text-[#7fa6d1] flex items-center gap-2">
                     <Phone size={12} /> Phone
                   </span>
                   <span className="text-white font-mono text-xs">{contact.phone || '—'}</span>
                 </div>
+                <button className="w-full mt-3 px-4 py-3 bg-gradient-to-r from-[#00f0ff] via-[#2bc8ff] to-[#7c5dff] text-[#03101d] text-sm font-bold rounded-xl shadow-[0_12px_40px_rgba(24,210,255,0.35)] hover:opacity-95 transition">
+                  Run Frame Scan
+                </button>
               </>
             )}
           </div>
@@ -968,35 +1013,66 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           <MotionDiv 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6 relative overflow-hidden"
+            className={`${glassCard} p-6 relative overflow-hidden`}
           >
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#4433FF] to-[#737AFF]" />
-            <div className="flex items-center gap-2 mb-4">
-              <Activity size={16} className="text-[#4433FF]" />
-              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Frame Score</h3>
-            </div>
-            <div className="flex items-end gap-4">
-              <span className={`text-6xl font-display font-bold ${scoreColor}`}>
-                {contact.frame.currentScore}
-              </span>
-              <div className="flex items-center gap-1 mb-2">
-                <TrendIcon trend={contact.frame.trend} />
-                <span className="text-xs text-gray-400 uppercase">{contact.frame.trend}</span>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(28,241,255,0.08),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(122,93,255,0.08),transparent_40%)]" />
+            <div className="relative flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Activity size={16} className="text-[#8beaff]" />
+                  <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">Frame Score</h3>
+                </div>
+                <p className="text-sm text-[#7fa6d1] mt-1">Engagement & relationship strength</p>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-[#8beaff] bg-[#0e1a2d] border border-[#1f2f45] px-3 py-1 rounded-full">
+                <Clock size={12} />
+                {contact.frame.lastScanAt ? `Updated ${formatDate(contact.frame.lastScanAt)}` : 'Never scanned'}
               </div>
             </div>
-            <div className="mt-4 h-2 bg-[#1A1A1D] rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-[#4433FF] to-[#737AFF] transition-all duration-500"
-                style={{ width: `${contact.frame.currentScore}%` }}
-              />
+            <div className="relative flex items-center justify-center py-6">
+              <div className="relative w-44 h-44">
+                <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_120deg,#1cf1ff,#7a5dff,#1cf1ff)] opacity-50 blur-sm" />
+                <div className="absolute inset-0 rounded-full border border-[#1df2ff55] shadow-[0_0_32px_rgba(29,242,255,0.25)]" />
+                <div className="absolute inset-4 rounded-full bg-[#0b1220] border border-[#1b2d45] shadow-inner" />
+                <div className="absolute inset-8 rounded-full bg-[radial-gradient(circle,rgba(12,20,36,0.8),rgba(8,12,22,0.9))] flex flex-col items-center justify-center gap-1">
+                  <span className={`text-6xl font-display font-bold ${scoreColor}`}>
+                    {contact.frame.currentScore}
+                  </span>
+                  <span className="text-[12px] uppercase tracking-[0.16em] text-[#7fa6d1]">Frame score</span>
+                  <div className="flex items-center gap-1 text-xs text-[#8beaff]">
+                    <TrendIcon trend={contact.frame.trend} />
+                    <span className="uppercase">{contact.frame.trend}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 mt-2 text-xs text-[#7fa6d1]">
+              <div className="rounded-xl bg-[#0e1a2d] border border-[#1f2f45] p-3">
+                <div className="uppercase tracking-[0.12em] text-[10px] text-[#5f7ca6]">Last contact</div>
+                <div className="text-white text-sm mt-1 font-semibold">
+                  {contact.lastContactAt ? formatDate(contact.lastContactAt) : '—'}
+                </div>
+              </div>
+              <div className="rounded-xl bg-[#0e1a2d] border border-[#1f2f45] p-3">
+                <div className="uppercase tracking-[0.12em] text-[10px] text-[#5f7ca6]">Next action</div>
+                <div className="text-white text-sm mt-1 font-semibold">
+                  {contact.nextActionAt ? formatDate(contact.nextActionAt) : '—'}
+                </div>
+              </div>
+              <div className="rounded-xl bg-[#0e1a2d] border border-[#1f2f45] p-3">
+                <div className="uppercase tracking-[0.12em] text-[10px] text-[#5f7ca6]">Last scan</div>
+                <div className="text-white text-sm mt-1 font-semibold">
+                  {contact.frame.lastScanAt ? formatDate(contact.frame.lastScanAt) : 'Never'}
+                </div>
+              </div>
             </div>
           </MotionDiv>
 
           {/* Topics */}
-          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <div className={`${subCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
-              <Hash size={16} className="text-purple-500" />
-              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              <Hash size={16} className="text-[#c49bff]" />
+              <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">
                 {isContactZero ? 'Topics in Your Notes' : 'Topics with this Contact'}
               </h3>
             </div>
@@ -1007,15 +1083,15 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                 ))}
               </div>
             ) : (
-              <p className="text-gray-600 text-sm italic">No topics linked yet</p>
+              <p className="text-[#6b92b9] text-sm italic">No topics linked yet</p>
             )}
           </div>
 
           {/* Pipeline Status */}
-          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <div className={`${subCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
-              <Layout size={16} className="text-blue-500" />
-              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              <Layout size={16} className="text-[#8beaff]" />
+              <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">
                 Pipeline
               </h3>
             </div>
@@ -1031,13 +1107,13 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                   return (
                     <div
                       key={item.id}
-                      className="p-3 bg-[#1A1A1D] border border-[#333] rounded-lg"
+                      className="p-3 bg-[#0d1627]/80 border border-[#1f2f45] rounded-lg shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <div className="text-sm font-bold text-white">{template.name}</div>
                           {item.label && (
-                            <div className="text-xs text-gray-400">{item.label}</div>
+                            <div className="text-xs text-[#7fa6d1]">{item.label}</div>
                           )}
                         </div>
                         <span className={`text-[10px] px-2 py-0.5 rounded uppercase font-bold ${
@@ -1059,13 +1135,13 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                             style={{ backgroundColor: currentStage.color }}
                           />
                         )}
-                        <span className="text-xs text-gray-300">{currentStage.name}</span>
-                        <span className="text-[10px] text-gray-600 ml-auto">
+                        <span className="text-xs text-[#9cc8ff]">{currentStage.name}</span>
+                        <span className="text-[10px] text-[#6b92b9] ml-auto">
                           {new Date(item.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                       {item.closedAt && (
-                        <div className="text-[10px] text-gray-600 mt-1">
+                        <div className="text-[10px] text-[#6b92b9] mt-1">
                           Closed: {new Date(item.closedAt).toLocaleDateString()}
                         </div>
                       )}
@@ -1075,13 +1151,13 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               </div>
             ) : (
               <div className="text-center py-4">
-                <p className="text-gray-600 text-sm italic mb-2">Not in any pipeline yet</p>
+                <p className="text-[#6b92b9] text-sm italic mb-2">Not in any pipeline yet</p>
                 <button
                   onClick={() => {
                     // Simple: could navigate to Pipelines view, but keeping minimal for now
                     // This could be enhanced to open Pipelines view with contact pre-selected
                   }}
-                  className="text-xs text-[#4433FF] hover:text-white transition-colors"
+                  className="text-xs text-[#8beaff] hover:text-white transition-colors"
                 >
                   Add to pipeline →
                 </button>
@@ -1090,20 +1166,62 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           </div>
 
           {/* Timeline (Interactions + Notes) */}
-          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <div className={`${glassCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
-              <Clock size={16} className="text-green-500" />
-              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Timeline</h3>
-              <span className="text-[10px] text-gray-600 ml-auto">{timelineItems.length} entries</span>
+              <Clock size={16} className="text-[#8beaff]" />
+              <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">Engagement Timeline</h3>
+              <span className="text-[11px] text-[#7fa6d1] ml-auto">{timelineItems.length} entries</span>
+            </div>
+
+            <div className="mb-5 rounded-2xl bg-[#0d1627]/80 border border-[#1f2f45] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+              <svg className="w-full h-40" viewBox="0 0 100 110" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="timelineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#1cf1ff" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#7a5dff" stopOpacity="0.05" />
+                  </linearGradient>
+                </defs>
+                <polyline
+                  fill="url(#timelineGradient)"
+                  stroke="#1cf1ff"
+                  strokeWidth="1.5"
+                  points={`0,110 ${engagementPolylinePoints} 100,110`}
+                  className="drop-shadow-[0_8px_24px_rgba(28,241,255,0.3)]"
+                />
+                <polyline
+                  fill="none"
+                  stroke="#7a5dff"
+                  strokeWidth="1"
+                  strokeOpacity="0.6"
+                  points={engagementPolylinePoints}
+                />
+                {engagementSeries.map((point, idx) => {
+                  const x = engagementSeries.length > 1 ? (idx / (engagementSeries.length - 1)) * 100 : 0;
+                  const y = 100 - point.value * 0.9;
+                  return (
+                    <circle key={idx} cx={x} cy={y} r="1.4" fill="#1cf1ff" />
+                  );
+                })}
+              </svg>
+              <div className="flex justify-between text-[10px] text-[#6b92b9] mt-2">
+                {engagementSeries.map((point, idx) => (
+                  <span
+                    key={`${point.label}-${idx}`}
+                    className={`${idx % 3 !== 0 ? 'opacity-0 md:opacity-60' : ''}`}
+                  >
+                    {point.label}
+                  </span>
+                ))}
+              </div>
             </div>
 
             {/* Add Interaction Form */}
-            <div className="mb-4 space-y-2 p-3 bg-[#1A1A1D] rounded border border-[#333]">
-              <div className="flex gap-2">
+            <div className="mb-4 space-y-2 p-3 bg-[#0d1627]/80 rounded-2xl border border-[#1f2f45] shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+              <div className="flex gap-2 flex-col md:flex-row">
                 <select
                   value={newInteractionType}
                   onChange={(e) => setNewInteractionType(e.target.value as InteractionType)}
-                  className="flex-1 bg-[#0E0E0E] border border-[#333] rounded px-2 py-1.5 text-white text-xs focus:border-[#4433FF] outline-none"
+                  className="flex-1 bg-[#0a1020]/80 border border-[#1a2a3f] rounded-lg px-2 py-2 text-[#dce8ff] text-xs focus:border-[#2ee0ff] outline-none"
                 >
                   <option value="call">Call</option>
                   <option value="meeting">Meeting</option>
@@ -1116,20 +1234,20 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                   type="datetime-local"
                   value={newInteractionOccurredAt}
                   onChange={(e) => setNewInteractionOccurredAt(e.target.value)}
-                  className="bg-[#0E0E0E] border border-[#333] rounded px-2 py-1.5 text-white text-xs focus:border-[#4433FF] outline-none"
+                  className="bg-[#0a1020]/80 border border-[#1a2a3f] rounded-lg px-2 py-2 text-[#dce8ff] text-xs focus:border-[#2ee0ff] outline-none"
                 />
               </div>
               <textarea
                 value={newInteractionSummary}
                 onChange={(e) => setNewInteractionSummary(e.target.value)}
                 placeholder="Summary..."
-                className="w-full bg-[#0E0E0E] border border-[#333] rounded px-2 py-1.5 text-white text-xs resize-none focus:border-[#4433FF] outline-none"
+                className="w-full bg-[#0a1020]/80 border border-[#1a2a3f] rounded-lg px-2 py-2 text-[#dce8ff] text-xs resize-none focus:border-[#2ee0ff] outline-none"
                 rows={2}
               />
               <button
                 onClick={handleAddInteraction}
                 disabled={!newInteractionSummary.trim()}
-                className="w-full px-3 py-1.5 bg-green-600 hover:bg-green-500 disabled:bg-[#333] disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors"
+                className="w-full px-3 py-2 bg-gradient-to-r from-[#34f5ff] to-[#7a5dff] hover:opacity-95 disabled:bg-[#1a2a3f] disabled:cursor-not-allowed text-[#03101d] text-xs font-bold rounded-lg transition-colors shadow-[0_12px_30px_rgba(24,210,255,0.35)]"
               >
                 Log Interaction
               </button>
@@ -1137,13 +1255,13 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
 
             {/* Timeline Items */}
             {timelineItems.length > 0 ? (
-              <div className="space-y-3 max-h-[300px] overflow-y-auto">
+              <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
                 {timelineItems.map((item) => {
                   const isEditing = item.type === 'interaction' && editingInteractionId === item.id;
                   const interaction = item.interaction;
 
                   return (
-                    <div key={item.id} className="border-l-2 border-[#4433FF]/30 pl-3 py-2">
+                    <div key={item.id} className="border-l-2 border-[#2ee0ff44] pl-3 py-2">
                       {isEditing && editInteractionForm ? (
                         // Edit mode for interaction
                         <div className="space-y-3">
@@ -1152,7 +1270,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                               {item.interactionType && (
                                 <div className="flex items-center gap-1">
                                   {getInteractionTypeIcon(item.interactionType)}
-                                  <span className="text-[10px] text-gray-500 uppercase font-bold">
+                                  <span className="text-[10px] text-[#6b92b9] uppercase font-bold">
                                     {getInteractionTypeLabel(item.interactionType)}
                                   </span>
                                 </div>
@@ -1161,14 +1279,14 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                             <div className="flex gap-1">
                               <button
                                 onClick={handleCancelEditInteraction}
-                                className="p-1 text-gray-400 hover:text-white"
+                                className="p-1 text-[#6b92b9] hover:text-white"
                                 title="Cancel"
                               >
                                 <X size={12} />
                               </button>
                               <button
                                 onClick={handleSaveEditInteraction}
-                                className="p-1 text-green-400 hover:text-green-300"
+                                className="p-1 text-[#8beaff] hover:text-white"
                                 title="Save"
                               >
                                 <Save size={12} />
@@ -1179,7 +1297,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                             <select
                               value={editInteractionForm.type}
                               onChange={(e) => setEditInteractionForm(prev => prev ? { ...prev, type: e.target.value as InteractionType } : null)}
-                              className="w-full bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-white text-xs focus:border-[#4433FF] outline-none"
+                              className="w-full bg-[#0a1020]/80 border border-[#1a2a3f] rounded px-2 py-1.5 text-[#dce8ff] text-xs focus:border-[#2ee0ff] outline-none"
                             >
                               <option value="call">Call</option>
                               <option value="meeting">Meeting</option>
@@ -1192,23 +1310,23 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                               type="datetime-local"
                               value={editInteractionForm.occurredAt}
                               onChange={(e) => setEditInteractionForm(prev => prev ? { ...prev, occurredAt: e.target.value } : null)}
-                              className="w-full bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-white text-xs focus:border-[#4433FF] outline-none"
+                              className="w-full bg-[#0a1020]/80 border border-[#1a2a3f] rounded px-2 py-1.5 text-[#dce8ff] text-xs focus:border-[#2ee0ff] outline-none"
                             />
                             <textarea
                               value={editInteractionForm.summary}
                               onChange={(e) => setEditInteractionForm(prev => prev ? { ...prev, summary: e.target.value } : null)}
-                              className="w-full bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-white text-xs focus:border-[#4433FF] outline-none resize-none"
+                              className="w-full bg-[#0a1020]/80 border border-[#1a2a3f] rounded px-2 py-1.5 text-[#dce8ff] text-xs focus:border-[#2ee0ff] outline-none resize-none"
                               rows={3}
                             />
                             {/* File upload for attachments */}
                             <div>
-                              <label className="text-[10px] text-gray-500 mb-1 block">Attachments</label>
+                              <label className="text-[10px] text-[#6b92b9] mb-1 block">Attachments</label>
                               <input
                                 type="file"
                                 multiple
                                 accept="image/*,application/pdf"
                                 onChange={(e) => handleAttachmentFileChange(item.id, e)}
-                                className="w-full bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-white text-xs focus:border-[#4433FF] outline-none file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-[#4433FF] file:text-white hover:file:bg-[#5544FF] file:cursor-pointer cursor-pointer"
+                                className="w-full bg-[#0a1020]/80 border border-[#1a2a3f] rounded px-2 py-1.5 text-[#dce8ff] text-xs focus:border-[#2ee0ff] outline-none file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-semibold file:bg-gradient-to-r from-[#1cf1ff] to-[#7a5dff] file:text-[#04101f] hover:file:opacity-90 file:cursor-pointer cursor-pointer"
                               />
                             </div>
                             {/* Existing attachments */}
@@ -1217,18 +1335,18 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                                 {interaction.attachments.map((attachment) => (
                                   <div
                                     key={attachment.id}
-                                    className="flex items-center gap-1 px-2 py-1 bg-[#1A1A1D] border border-[#333] rounded text-xs"
+                                    className="flex items-center gap-1 px-2 py-1 bg-[#0d1627]/80 border border-[#1f2f45] rounded text-xs"
                                   >
                                     {getAttachmentIcon(attachment.mimeType)}
                                     <button
                                       onClick={() => handleOpenAttachment(attachment)}
-                                      className="text-[#4433FF] hover:text-white transition-colors"
+                                      className="text-[#8beaff] hover:text-white transition-colors"
                                     >
                                       {attachment.fileName}
                                     </button>
                                     <button
                                       onClick={() => handleRemoveAttachment(item.id, attachment.id)}
-                                      className="text-gray-500 hover:text-red-400 transition-colors ml-1"
+                                      className="text-[#6b92b9] hover:text-red-400 transition-colors ml-1"
                                       title="Remove attachment"
                                     >
                                       <X size={10} />
@@ -1247,18 +1365,18 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                               {item.type === 'interaction' && item.interactionType && (
                                 <div className="flex items-center gap-1">
                                   {getInteractionTypeIcon(item.interactionType)}
-                                  <span className="text-[10px] text-gray-500 uppercase font-bold">
+                                  <span className="text-[10px] text-[#6b92b9] uppercase font-bold">
                                     {getInteractionTypeLabel(item.interactionType)}
                                   </span>
                                 </div>
                               )}
                               {item.type === 'note' && (
                                 <div className="flex items-center gap-1">
-                                  <FileText size={12} className="text-gray-400" />
-                                  <span className="text-[10px] text-gray-500 uppercase font-bold">Note</span>
+                                  <FileText size={12} className="text-[#6b92b9]" />
+                                  <span className="text-[10px] text-[#6b92b9] uppercase font-bold">Note</span>
                                 </div>
                               )}
-                              <span className="text-[10px] text-gray-600">
+                              <span className="text-[10px] text-[#7fa6d1]">
                                 {formatDateTime(item.occurredAt)}
                               </span>
                             </div>
@@ -1266,14 +1384,14 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                               <div className="flex gap-1">
                                 <button
                                   onClick={() => interaction && handleStartEditInteraction(interaction)}
-                                  className="p-1 text-gray-400 hover:text-[#4433FF] transition-colors"
+                                  className="p-1 text-[#6b92b9] hover:text-[#8beaff] transition-colors"
                                   title="Edit"
                                 >
                                   <Edit2 size={12} />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteInteraction(item.id)}
-                                  className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+                                  className="p-1 text-[#6b92b9] hover:text-red-400 transition-colors"
                                   title="Delete"
                                 >
                                   <Trash2 size={12} />
@@ -1281,7 +1399,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                               </div>
                             )}
                           </div>
-                          <p className="text-sm text-gray-300 leading-relaxed mb-2">{item.summary}</p>
+                          <p className="text-sm text-white/80 leading-relaxed mb-2">{item.summary}</p>
                           {/* Attachments in view mode */}
                           {interaction?.attachments && interaction.attachments.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
@@ -1289,10 +1407,10 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                                 <button
                                   key={attachment.id}
                                   onClick={() => handleOpenAttachment(attachment)}
-                                  className="flex items-center gap-1 px-2 py-1 bg-[#1A1A1D] border border-[#333] rounded text-xs hover:border-[#4433FF] transition-colors"
+                                  className="flex items-center gap-1 px-2 py-1 bg-[#0d1627]/80 border border-[#1f2f45] rounded text-xs hover:border-[#2ee0ff] transition-colors"
                                 >
                                   {getAttachmentIcon(attachment.mimeType)}
-                                  <span className="text-[#4433FF] hover:text-white">{attachment.fileName}</span>
+                                  <span className="text-[#8beaff] hover:text-white">{attachment.fileName}</span>
                                 </button>
                               ))}
                             </div>
@@ -1304,49 +1422,49 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                 })}
               </div>
             ) : (
-              <p className="text-gray-600 text-sm italic">No timeline entries yet</p>
+              <p className="text-[#6b92b9] text-sm italic">No timeline entries yet</p>
             )}
           </div>
 
           {/* Timeline Stats (Last Contact, Next Action, Last Scan) */}
-          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <div className={`${subCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
-              <Calendar size={16} className="text-green-500" />
-              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Key Dates</h3>
+              <Calendar size={16} className="text-[#8beaff]" />
+              <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">Key Dates</h3>
             </div>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Last Contact</span>
-                <span className="text-sm text-white font-mono">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="rounded-xl bg-[#0d1627]/80 border border-[#1f2f45] p-3">
+                <span className="text-[10px] text-[#6b92b9] uppercase tracking-[0.12em]">Last Contact</span>
+                <div className="text-lg text-white font-semibold mt-1">
                   {contact.lastContactAt ? formatDate(contact.lastContactAt) : '—'}
-                </span>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Next Action</span>
-                <span className={`text-sm font-mono ${contact.nextActionAt ? 'text-[#4433FF]' : 'text-gray-600'}`}>
+              <div className="rounded-xl bg-[#0d1627]/80 border border-[#1f2f45] p-3">
+                <span className="text-[10px] text-[#6b92b9] uppercase tracking-[0.12em]">Next Action</span>
+                <div className={`text-lg font-semibold mt-1 ${contact.nextActionAt ? 'text-[#8beaff]' : 'text-white'}`}>
                   {contact.nextActionAt ? formatDate(contact.nextActionAt) : '—'}
-                </span>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Last Scan</span>
-                <span className="text-sm text-white font-mono">
+              <div className="rounded-xl bg-[#0d1627]/80 border border-[#1f2f45] p-3">
+                <span className="text-[10px] text-[#6b92b9] uppercase tracking-[0.12em]">Last Scan</span>
+                <div className="text-lg text-white font-semibold mt-1">
                   {contact.frame.lastScanAt ? formatDate(contact.frame.lastScanAt) : 'Never'}
-                </span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Frame Scan Section */}
-          <div className="mt-6 pt-6 border-t border-[#2A2A2A]">
+          <div className={`${subCard} p-5`}>
             <div className="flex items-center gap-2 mb-3">
-              <Scan size={16} className="text-[#4433FF]" />
-              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Frame Analysis</h3>
+              <Scan size={16} className="text-[#8beaff]" />
+              <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">Frame Analysis</h3>
             </div>
-            <button className="w-full px-4 py-3 bg-gradient-to-r from-[#4433FF] to-[#6A82FC] hover:opacity-90 text-white text-sm font-bold rounded transition-opacity flex items-center justify-center gap-2">
+            <button className="w-full px-4 py-3 bg-gradient-to-r from-[#00f0ff] via-[#2bc8ff] to-[#7c5dff] hover:opacity-95 text-[#03101d] text-sm font-bold rounded-xl transition-opacity flex items-center justify-center gap-2 shadow-[0_12px_40px_rgba(24,210,255,0.35)]">
               <Scan size={16} />
               Run Frame Scan
             </button>
-            <p className="text-xs text-gray-500 mt-2 text-center">
+            <p className="text-xs text-[#7fa6d1] mt-2 text-center">
               Analyze communication patterns for authority leaks
             </p>
           </div>
@@ -1355,13 +1473,13 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
         {/* RIGHT: Notes + Tasks + Tags */}
         <div className="space-y-6">
           {/* Tasks Section */}
-          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <div className={`${glassCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
-              <CheckSquare size={16} className="text-cyan-500" />
-              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              <CheckSquare size={16} className="text-[#8beaff]" />
+              <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">
                 Tasks {!isContactZero && 'For'}
               </h3>
-              <span className="text-[10px] text-gray-600 ml-auto">{openTasks.length} open</span>
+              <span className="text-[11px] text-[#7fa6d1] ml-auto">{openTasks.length} open</span>
             </div>
 
             {/* Add Task Form */}
@@ -1371,7 +1489,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
                 placeholder="New task..."
-                className="w-full bg-[#1A1A1D] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none"
+                className={inputClass}
               />
               <div className="flex gap-2">
                 <DatePicker
@@ -1383,7 +1501,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                 <button
                   onClick={handleAddTask}
                   disabled={!newTaskTitle.trim()}
-                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:bg-[#333] disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors flex items-center gap-1"
+                  className="px-4 py-2 bg-gradient-to-r from-[#34f5ff] to-[#7a5dff] hover:opacity-95 disabled:bg-[#1a2a3f] disabled:cursor-not-allowed text-[#03101d] text-xs font-bold rounded-lg transition-colors flex items-center gap-1 shadow-[0_10px_30px_rgba(24,210,255,0.35)]"
                 >
                   <Plus size={12} /> Add
                 </button>
@@ -1396,11 +1514,11 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                 {openTasks.map((task) => (
                   <div 
                     key={task.id}
-                    className="flex items-start gap-3 p-2 bg-[#1A1A1D] rounded border border-[#333] hover:border-cyan-500/30 transition-colors"
+                    className="flex items-start gap-3 p-2 bg-[#0d1627]/80 rounded border border-[#1f2f45] hover:border-[#2ee0ff] transition-colors shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
                   >
                     <button
                       onClick={() => handleMarkTaskDone(task.id)}
-                      className="mt-0.5 text-gray-500 hover:text-cyan-500 transition-colors"
+                      className="mt-0.5 text-[#6b92b9] hover:text-[#8beaff] transition-colors"
                       title="Mark as done"
                     >
                       <Square size={16} />
@@ -1408,7 +1526,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-white">{task.title}</p>
                       {task.dueAt && (
-                        <p className="text-[10px] text-cyan-400 mt-1">
+                        <p className="text-[10px] text-[#8beaff] mt-1">
                           Due: {formatDueDate(task.dueAt)}
                         </p>
                       )}
@@ -1417,18 +1535,18 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                 ))}
               </div>
             ) : (
-              <p className="text-gray-600 text-sm italic">No open tasks</p>
+              <p className="text-[#6b92b9] text-sm italic">No open tasks</p>
             )}
           </div>
 
           {/* Projects Section */}
-          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <div className={`${glassCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
-              <Layout size={16} className="text-purple-500" />
-              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              <Layout size={16} className="text-[#c49bff]" />
+              <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">
                 Projects
               </h3>
-              <span className="text-[10px] text-gray-600 ml-auto">{projects.length}</span>
+              <span className="text-[11px] text-[#7fa6d1] ml-auto">{projects.length}</span>
             </div>
 
             {projects.length > 0 ? (
@@ -1437,17 +1555,17 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                   <div
                     key={project.id}
                     onClick={() => onNavigateToProject && onNavigateToProject(project.id)}
-                    className="p-3 bg-[#1A1A1D] rounded border border-[#333] hover:border-purple-500/30 transition-colors cursor-pointer group"
+                    className="p-3 bg-[#0d1627]/80 rounded border border-[#1f2f45] hover:border-[#c49bff] transition-colors cursor-pointer group shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white font-bold group-hover:text-purple-500 transition-colors">{project.name}</p>
+                        <p className="text-sm text-white font-bold group-hover:text-[#c49bff] transition-colors">{project.name}</p>
                         {project.description && (
-                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{project.description}</p>
+                          <p className="text-xs text-[#7fa6d1] mt-1 line-clamp-2">{project.description}</p>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-600">
+                    <div className="flex items-center gap-3 mt-2 text-xs text-[#6b92b9]">
                       <span className="capitalize">{project.status.replace('_', ' ')}</span>
                       <span>•</span>
                       <span className="capitalize">{project.priority}</span>
@@ -1456,18 +1574,18 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                 ))}
               </div>
             ) : (
-              <p className="text-gray-600 text-sm italic">No projects</p>
+              <p className="text-[#6b92b9] text-sm italic">No projects</p>
             )}
           </div>
 
           {/* Notes Section */}
-          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <div className={`${glassCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
-              <FileText size={16} className="text-[#4433FF]" />
-              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              <FileText size={16} className="text-[#8beaff]" />
+              <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">
                 Notes {!isContactZero && 'About'}
               </h3>
-              <span className="text-[10px] text-gray-600 ml-auto">{notesAboutContact.length} total</span>
+              <span className="text-[11px] text-[#7fa6d1] ml-auto">{notesAboutContact.length} total</span>
             </div>
 
             <div className="mb-4">
@@ -1476,13 +1594,13 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                 onChange={(e) => setNewNoteContent(e.target.value)}
                 onKeyDown={handleNoteKeyDown}
                 placeholder={`Add a note...`}
-                className="w-full bg-[#1A1A1D] border border-[#333] rounded-lg p-3 text-white text-sm resize-none focus:border-[#4433FF] outline-none"
+                className="w-full bg-[#0a1020]/80 border border-[#1a2a3f] rounded-lg p-3 text-[#e0edff] text-sm resize-none focus:border-[#2ee0ff] outline-none shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
                 rows={2}
               />
               <button
                 onClick={handleAddNote}
                 disabled={!newNoteContent.trim()}
-                className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#4433FF] hover:bg-[#5544FF] disabled:bg-[#333] disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors"
+                className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-[#34f5ff] to-[#7a5dff] hover:opacity-95 disabled:bg-[#1a2a3f] disabled:cursor-not-allowed text-[#03101d] text-xs font-bold rounded-lg transition-colors shadow-[0_12px_30px_rgba(24,210,255,0.35)]"
               >
                 <Send size={12} /> Add Note
               </button>
@@ -1491,28 +1609,28 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             {notesAboutContact.length > 0 ? (
               <div className="space-y-3 max-h-[150px] overflow-y-auto">
                 {notesAboutContact.slice(0, 3).map((note) => (
-                  <div key={note.id} className="border-l-2 border-[#4433FF]/30 pl-3 py-1">
+                  <div key={note.id} className="border-l-2 border-[#2ee0ff44] pl-3 py-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <Clock size={10} className="text-gray-600" />
-                      <span className="text-[10px] text-gray-500">{formatDate(note.createdAt)}</span>
+                      <Clock size={10} className="text-[#6b92b9]" />
+                      <span className="text-[10px] text-[#6b92b9]">{formatDate(note.createdAt)}</span>
                     </div>
-                    <p className="text-sm text-gray-400">{truncate(note.content, 80)}</p>
+                    <p className="text-sm text-white/80">{truncate(note.content, 80)}</p>
                   </div>
                 ))}
                 {notesAboutContact.length > 3 && (
-                  <p className="text-xs text-gray-600 pl-3">+{notesAboutContact.length - 3} more</p>
+                  <p className="text-xs text-[#6b92b9] pl-3">+{notesAboutContact.length - 3} more</p>
                 )}
               </div>
             ) : (
-              <p className="text-gray-600 text-sm italic">No notes yet</p>
+              <p className="text-[#6b92b9] text-sm italic">No notes yet</p>
             )}
           </div>
 
           {/* Tags */}
-          <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+          <div className={`${glassCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
-              <Tag size={16} className="text-orange-500" />
-              <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tags</h3>
+              <Tag size={16} className="text-[#ffc78f]" />
+              <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">Tags</h3>
             </div>
             {isEditing ? (
               <div>
@@ -1527,13 +1645,13 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             ) : contact.tags.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {contact.tags.map((tag) => (
-                  <span key={tag} className="text-xs px-3 py-1 rounded-full bg-[#4433FF]/20 text-[#737AFF] border border-[#4433FF]/30">
+                  <span key={tag} className="text-xs px-3 py-1 rounded-full bg-[#0d1627]/80 text-[#8beaff] border border-[#1f2f45] shadow-[0_8px_20px_rgba(0,0,0,0.25)]">
                     {tag}
                   </span>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-600 text-sm italic">No tags set</p>
+              <p className="text-[#6b92b9] text-sm italic">No tags set</p>
             )}
           </div>
         </div>
@@ -1789,51 +1907,52 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
 
       {/* BOTTOM: Stats Summary */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-4">
+        <div className={`${subCard} p-4`}>
           <div className="flex items-center gap-2 mb-1">
-            <CheckSquare size={12} className="text-gray-600" />
-            <span className="text-[9px] font-bold text-gray-500 uppercase">Tasks</span>
+            <CheckSquare size={12} className="text-[#8beaff]" />
+            <span className="text-[9px] font-bold text-white uppercase tracking-[0.14em]">Tasks</span>
           </div>
-          <div className="text-2xl font-display font-bold text-cyan-400">{openTasks.length}</div>
-          <div className="text-[10px] text-gray-600">open</div>
+          <div className="text-2xl font-display font-bold text-[#8beaff]">{openTasks.length}</div>
+          <div className="text-[10px] text-[#6b92b9]">open</div>
         </div>
 
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-4">
+        <div className={`${subCard} p-4`}>
           <div className="flex items-center gap-2 mb-1">
-            <FileText size={12} className="text-gray-600" />
-            <span className="text-[9px] font-bold text-gray-500 uppercase">Notes</span>
+            <FileText size={12} className="text-[#8beaff]" />
+            <span className="text-[9px] font-bold text-white uppercase tracking-[0.14em]">Notes</span>
           </div>
           <div className="text-2xl font-display font-bold text-white">{notesAboutContact.length}</div>
-          <div className="text-[10px] text-gray-600">entries</div>
+          <div className="text-[10px] text-[#6b92b9]">entries</div>
         </div>
 
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-4">
+        <div className={`${subCard} p-4`}>
           <div className="flex items-center gap-2 mb-1">
-            <Hash size={12} className="text-gray-600" />
-            <span className="text-[9px] font-bold text-gray-500 uppercase">Topics</span>
+            <Hash size={12} className="text-[#c49bff]" />
+            <span className="text-[9px] font-bold text-white uppercase tracking-[0.14em]">Topics</span>
           </div>
-          <div className="text-2xl font-display font-bold text-purple-400">{topicsForContact.length}</div>
-          <div className="text-[10px] text-gray-600">linked</div>
+          <div className="text-2xl font-display font-bold text-[#c49bff]">{topicsForContact.length}</div>
+          <div className="text-[10px] text-[#6b92b9]">linked</div>
         </div>
 
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-4">
+        <div className={`${subCard} p-4`}>
           <div className="flex items-center gap-2 mb-1">
-            <Activity size={12} className="text-gray-600" />
-            <span className="text-[9px] font-bold text-gray-500 uppercase">Frame</span>
+            <Activity size={12} className="text-[#8beaff]" />
+            <span className="text-[9px] font-bold text-white uppercase tracking-[0.14em]">Frame</span>
           </div>
           <div className={`text-2xl font-display font-bold ${scoreColor}`}>{contact.frame.currentScore}</div>
-          <div className="text-[10px] text-gray-600">score</div>
+          <div className="text-[10px] text-[#6b92b9]">score</div>
         </div>
 
-        <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-4">
+        <div className={`${subCard} p-4`}>
           <div className="flex items-center gap-2 mb-1">
-            <Tag size={12} className="text-gray-600" />
-            <span className="text-[9px] font-bold text-gray-500 uppercase">Tags</span>
+            <Tag size={12} className="text-[#ffc78f]" />
+            <span className="text-[9px] font-bold text-white uppercase tracking-[0.14em]">Tags</span>
           </div>
           <div className="text-2xl font-display font-bold text-white">{contact.tags.length}</div>
-          <div className="text-[10px] text-gray-600">labels</div>
+          <div className="text-[10px] text-[#6b92b9]">labels</div>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Folder, Plus, Filter, User, Calendar as CalendarIcon, CheckCircle, AlertCircle, Clock, Trash2 } from 'lucide-react';
+import { Folder, Plus, Filter, User, Calendar as CalendarIcon, CheckCircle, AlertCircle, Clock, Trash2, Users } from 'lucide-react';
 import type { Project, ProjectStatus, ProjectPriority } from '../../types';
 import {
   getAllProjects,
@@ -9,7 +9,7 @@ import {
   getProjectTaskCount,
   getProjectOpenTaskCount
 } from '../../services/projectStore';
-import { getContactById } from '../../services/contactStore';
+import { getContactById, getContactsExcludingSelf, CONTACT_ZERO } from '../../services/contactStore';
 
 interface ProjectsViewProps {
   selectedContactId: string;
@@ -33,8 +33,12 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [newProjectPriority, setNewProjectPriority] = useState<ProjectPriority>('medium');
   const [newProjectPrimaryContactId, setNewProjectPrimaryContactId] = useState(selectedContactId);
+  const [newProjectIsGroup, setNewProjectIsGroup] = useState(false);
+  const [newProjectGroupMembers, setNewProjectGroupMembers] = useState<string[]>([]);
+  const [memberQuery, setMemberQuery] = useState('');
 
   const projects = getAllProjects();
+  const availableContacts = getContactsExcludingSelf(true);
 
   // Filter projects
   const filteredProjects = projects.filter(p => {
@@ -45,24 +49,40 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
 
   const handleCreateProject = () => {
     if (!newProjectName.trim()) return;
+    const primaryContactId = newProjectPrimaryContactId || CONTACT_ZERO.id;
 
     const project = createProject({
       name: newProjectName,
       description: newProjectDescription,
-      primaryContactId: newProjectPrimaryContactId,
+      primaryContactId,
       priority: newProjectPriority,
       status: 'active',
+      isGroupProject: newProjectIsGroup,
+      groupMemberIds: newProjectIsGroup
+        ? Array.from(new Set([...newProjectGroupMembers, primaryContactId]))
+        : [],
     });
 
     setNewProjectName('');
     setNewProjectDescription('');
     setNewProjectPriority('medium');
+    setNewProjectIsGroup(false);
+    setNewProjectGroupMembers([]);
+    setMemberQuery('');
     setIsCreating(false);
 
     // Navigate to project detail
     if (onNavigateToProject) {
       onNavigateToProject(project.id);
     }
+  };
+
+  const toggleGroupMember = (contactId: string) => {
+    setNewProjectGroupMembers((prev) =>
+      prev.includes(contactId)
+        ? prev.filter(id => id !== contactId)
+        : [...prev, contactId]
+    );
   };
 
   const handleProjectClick = (project: Project) => {
@@ -166,6 +186,97 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
               </div>
             </div>
 
+            <div className="flex items-center gap-2 pt-2">
+              <input
+                id="project-group-toggle"
+                type="checkbox"
+                checked={newProjectIsGroup}
+                onChange={(e) => {
+                  const next = e.target.checked;
+                  setNewProjectIsGroup(next);
+                  if (next) {
+                    setNewProjectGroupMembers((prev) => {
+                      if (prev.includes(newProjectPrimaryContactId)) return prev;
+                      return [...prev, newProjectPrimaryContactId];
+                    });
+                  }
+                }}
+                className="accent-[#4433FF]"
+              />
+              <label htmlFor="project-group-toggle" className="text-xs text-gray-400 select-none">
+                Treat this project as a group workspace (add members + goals)
+              </label>
+            </div>
+
+            {newProjectIsGroup && (
+              <div className="bg-[#0F1018] border border-[#1F2028] rounded-lg p-3 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500 flex items-center gap-1">
+                    <Users size={12} /> Group Members
+                  </div>
+                  <span className="text-[11px] text-gray-500">
+                    {newProjectGroupMembers.length} selected
+                  </span>
+                </div>
+                <input
+                  value={memberQuery}
+                  onChange={(e) => setMemberQuery(e.target.value)}
+                  placeholder="Type to search contacts..."
+                  className="w-full bg-[#0E0E0E] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none"
+                />
+                <div className="flex flex-wrap gap-2">
+                  {newProjectGroupMembers.map(id => {
+                    const contact = availableContacts.find(c => c.id === id);
+                    if (!contact) return null;
+                    return (
+                      <span
+                        key={id}
+                        className="px-3 py-1 rounded-full text-xs border border-[#4433FF] bg-[#4433FF]/20 text-white flex items-center gap-2"
+                      >
+                        {contact.fullName}
+                        <button
+                          type="button"
+                          onClick={() => toggleGroupMember(id)}
+                          className="text-gray-300 hover:text-white"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    );
+                  })}
+                  {newProjectGroupMembers.length === 0 && (
+                    <div className="text-xs text-gray-500">No members selected</div>
+                  )}
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {availableContacts
+                    .filter(c => c.fullName.toLowerCase().includes(memberQuery.trim().toLowerCase()))
+                    .slice(0, 12)
+                    .map(contact => {
+                      const isSelected = newProjectGroupMembers.includes(contact.id);
+                      return (
+                        <button
+                          key={contact.id}
+                          type="button"
+                          onClick={() => toggleGroupMember(contact.id)}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded border text-xs transition-colors ${
+                            isSelected
+                              ? 'border-[#4433FF] bg-[#4433FF]/10 text-white'
+                              : 'border-[#333] text-gray-300 hover:border-[#4433FF]/50 hover:text-white'
+                          }`}
+                        >
+                          <span className="truncate">{contact.fullName}</span>
+                          {isSelected && <span className="text-[10px] text-[#9AE6B4]">Added</span>}
+                        </button>
+                      );
+                    })}
+                  {availableContacts.filter(c => c.fullName.toLowerCase().includes(memberQuery.trim().toLowerCase())).length === 0 && (
+                    <div className="text-xs text-gray-500 px-1">No matches</div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-end gap-2 pt-4 border-t border-[#2A2A2A]">
               <button
                 onClick={() => setIsCreating(false)}
@@ -229,6 +340,7 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
           const contact = getContactById(project.primaryContactId);
           const totalTasks = getProjectTaskCount(project.id);
           const openTasks = getProjectOpenTaskCount(project.id);
+          const groupMembers = (project.groupMemberIds || []).map(id => getContactById(id)).filter(Boolean);
 
           return (
             <div
@@ -249,9 +361,16 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
                   )}
                 </div>
 
-                <span className={`text-[10px] font-bold px-2 py-1 rounded ${getPriorityColor(project.priority)}`}>
-                  {project.priority.toUpperCase()}
-                </span>
+                <div className="flex items-center gap-2">
+                  {project.isGroupProject && (
+                    <span className="text-[10px] font-bold px-2 py-1 rounded bg-[#1A1A1D] text-[#9AE6B4] flex items-center gap-1 border border-[#2F3A2F]">
+                      <Users size={10} /> GROUP
+                    </span>
+                  )}
+                  <span className={`text-[10px] font-bold px-2 py-1 rounded ${getPriorityColor(project.priority)}`}>
+                    {project.priority.toUpperCase()}
+                  </span>
+                </div>
               </div>
 
               {/* Contact */}
@@ -285,6 +404,13 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
                   <AlertCircle size={12} />
                   <span>{openTasks}/{totalTasks} tasks</span>
                 </div>
+
+                {project.isGroupProject && (
+                  <div className="flex items-center gap-1">
+                    <Users size={12} />
+                    <span>{groupMembers.length} member{groupMembers.length === 1 ? '' : 's'}</span>
+                  </div>
+                )}
               </div>
 
               {/* Dates */}

@@ -25,6 +25,19 @@ let PROJECTS: Project[] = [];
 let PROJECT_SECTIONS: ProjectSection[] = [];
 let PROJECT_TASK_LINKS: ProjectTaskLink[] = [];
 
+const ensureProjectDefaults = (project: Project): Project => {
+  if (project.isGroupProject === undefined) {
+    project.isGroupProject = false;
+  }
+  if (!project.groupMemberIds) {
+    project.groupMemberIds = [];
+  }
+  if (!project.groupGoals) {
+    project.groupGoals = [];
+  }
+  return project;
+};
+
 // Section name patterns to task status mapping
 const DEFAULT_STATUS_MAPPINGS: Record<string, TaskStatus> = {
   'backlog': 'open',
@@ -62,9 +75,10 @@ const getSectionTaskStatus = (sectionName: string): TaskStatus => {
 // =============================================================================
 
 export const getAllProjects = (includeArchived = false): Project[] => {
-  const filtered = includeArchived
+  const filtered = (includeArchived
     ? PROJECTS
-    : PROJECTS.filter(p => p.status !== 'archived');
+    : PROJECTS.filter(p => p.status !== 'archived'))
+    .map(ensureProjectDefaults);
 
   return [...filtered].sort((a, b) =>
     new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
@@ -72,19 +86,23 @@ export const getAllProjects = (includeArchived = false): Project[] => {
 };
 
 export const getProjectById = (id: string): Project | undefined => {
-  return PROJECTS.find(p => p.id === id);
+  const project = PROJECTS.find(p => p.id === id);
+  return project ? ensureProjectDefaults(project) : undefined;
 };
 
 export const getProjectsByContact = (contactId: string): Project[] => {
   return PROJECTS.filter(p =>
     p.primaryContactId === contactId || p.relatedContactIds.includes(contactId)
-  ).sort((a, b) =>
-    new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  );
+  )
+    .map(ensureProjectDefaults)
+    .sort((a, b) =>
+      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
 };
 
 export const getProjectsByStatus = (status: ProjectStatus): Project[] => {
   return PROJECTS.filter(p => p.status === status)
+    .map(ensureProjectDefaults)
     .sort((a, b) =>
       new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
@@ -92,6 +110,7 @@ export const getProjectsByStatus = (status: ProjectStatus): Project[] => {
 
 export const getProjectsByPriority = (priority: ProjectPriority): Project[] => {
   return PROJECTS.filter(p => p.priority === priority)
+    .map(ensureProjectDefaults)
     .sort((a, b) =>
       new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
@@ -106,12 +125,18 @@ export const createProject = (input: {
   priority?: ProjectPriority;
   startDate?: string | null;
   dueDate?: string | null;
+  isGroupProject?: boolean;
+  groupMemberIds?: string[];
+  groupGoals?: string[];
 }): Project => {
   const now = new Date().toISOString();
 
   const newProject: Project = {
     id: `project-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     name: input.name,
+    isGroupProject: input.isGroupProject ?? false,
+    groupMemberIds: input.groupMemberIds ? [...input.groupMemberIds] : [],
+    groupGoals: input.groupGoals ? [...input.groupGoals] : [],
     description: input.description || '',
     primaryContactId: input.primaryContactId,
     relatedContactIds: input.relatedContactIds || [],
@@ -518,5 +543,49 @@ export const changePrimaryContact = (projectId: string, newPrimaryContactId: str
   project.primaryContactId = newPrimaryContactId;
   project.relatedContactIds = project.relatedContactIds.filter(id => id !== newPrimaryContactId);
 
+  updateProject(project);
+};
+
+// =============================================================================
+// GROUP MODE HELPERS
+// =============================================================================
+
+export const addGroupMemberToProject = (projectId: string, contactId: string): void => {
+  const project = getProjectById(projectId);
+  if (!project) return;
+
+  if (!project.groupMemberIds.includes(contactId)) {
+    project.groupMemberIds.push(contactId);
+    // Keep related contacts in sync for visibility
+    addRelatedContact(projectId, contactId);
+    updateProject(project);
+  }
+};
+
+export const removeGroupMemberFromProject = (projectId: string, contactId: string): void => {
+  const project = getProjectById(projectId);
+  if (!project) return;
+
+  project.groupMemberIds = project.groupMemberIds.filter(id => id !== contactId);
+  updateProject(project);
+};
+
+export const addGoalToProject = (projectId: string, goal: string): void => {
+  const trimmed = goal.trim();
+  if (!trimmed) return;
+  const project = getProjectById(projectId);
+  if (!project) return;
+
+  if (!project.groupGoals.includes(trimmed)) {
+    project.groupGoals.push(trimmed);
+    updateProject(project);
+  }
+};
+
+export const removeGoalFromProject = (projectId: string, goal: string): void => {
+  const project = getProjectById(projectId);
+  if (!project) return;
+
+  project.groupGoals = project.groupGoals.filter(g => g !== goal);
   updateProject(project);
 };

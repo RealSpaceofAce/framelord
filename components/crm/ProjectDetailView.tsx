@@ -28,7 +28,7 @@ import {
   Download,
   Image as ImageIcon
 } from 'lucide-react';
-import type { Project, ProjectSection as ProjectSectionType, Task } from '../../types';
+import type { Project, ProjectSection as ProjectSectionType, Task, Contact } from '../../types';
 import { TabNavigation, TabItem } from '../ui/TabNavigation';
 import { DatePicker } from '../DatePicker';
 import {
@@ -44,7 +44,11 @@ import {
   addAttachmentToProject,
   removeAttachmentFromProject,
   addRelatedContact,
-  removeRelatedContact
+  removeRelatedContact,
+  addGroupMemberToProject,
+  removeGroupMemberFromProject,
+  addGoalToProject,
+  removeGoalFromProject
 } from '../../services/projectStore';
 import { getContactById, getContactsExcludingSelf, CONTACT_ZERO } from '../../services/contactStore';
 import { getTaskById, createTask } from '../../services/taskStore';
@@ -68,22 +72,65 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   const [refreshKey, setRefreshKey] = useState(0);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
-  const project = getProjectById(projectId);
+  const projectRaw = getProjectById(projectId);
+
+  const project = projectRaw
+    ? {
+        ...projectRaw,
+        groupMemberIds: projectRaw.groupMemberIds ?? [],
+        groupGoals: projectRaw.groupGoals ?? [],
+        attachments: projectRaw.attachments ?? [],
+        relatedContactIds: projectRaw.relatedContactIds ?? [],
+        sectionIds: projectRaw.sectionIds ?? [],
+        isGroupProject: projectRaw.isGroupProject ?? false,
+      }
+    : null;
+
+  class ProjectErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+    constructor(props: { children: React.ReactNode }) {
+      super(props);
+      this.state = { hasError: false };
+    }
+    static getDerivedStateFromError() {
+      return { hasError: true };
+    }
+    componentDidCatch(error: any) {
+      console.error('ProjectDetailView crashed:', error);
+    }
+    render() {
+      if (this.state.hasError) {
+        return (
+          <div className="space-y-4 p-6 bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg">
+            <div className="text-white font-bold">Something went wrong loading this project.</div>
+            <button
+              onClick={onBack}
+              className="px-3 py-2 bg-[#4433FF] text-white rounded text-sm"
+            >
+              Back to Projects
+            </button>
+          </div>
+        );
+      }
+      return this.props.children;
+    }
+  }
 
   if (!project) {
     return (
-      <div className="space-y-6 pb-20">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-sm"
-        >
-          <ArrowLeft size={16} />
-          Back to Projects
-        </button>
-        <div className="text-center py-12 text-gray-500">
-          <p>Project not found</p>
+      <ProjectErrorBoundary>
+        <div className="space-y-6 pb-20">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-sm"
+          >
+            <ArrowLeft size={16} />
+            Back to Projects
+          </button>
+          <div className="text-center py-12 text-gray-500">
+            <p>Project not found</p>
+          </div>
         </div>
-      </div>
+      </ProjectErrorBoundary>
     );
   }
 
@@ -123,6 +170,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   ];
 
   return (
+    <ProjectErrorBoundary>
     <div className="space-y-0 pb-20">
       {/* Back Button */}
       <div className="mb-4">
@@ -265,6 +313,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
         )}
       </div>
     </div>
+    </ProjectErrorBoundary>
   );
 };
 
@@ -289,9 +338,19 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
 }) => {
   const [isAddingContact, setIsAddingContact] = useState(false);
   const [selectedNewContact, setSelectedNewContact] = useState('');
+  const [newGroupMemberId, setNewGroupMemberId] = useState('');
+  const [newGoal, setNewGoal] = useState('');
 
   const availableContacts = getContactsExcludingSelf().filter(
     c => c.id !== project.primaryContactId && !project.relatedContactIds.includes(c.id)
+  );
+  const groupMembers = (project.groupMemberIds || [])
+    .map(id => getContactById(id))
+    .filter((c): c is Contact => Boolean(c));
+  const availableGroupContacts = getContactsExcludingSelf().filter(
+    c =>
+      c.id !== project.primaryContactId &&
+      !(project.groupMemberIds || []).includes(c.id)
   );
 
   const handleAddContact = () => {
@@ -305,6 +364,43 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
 
   const handleRemoveContact = (contactId: string) => {
     removeRelatedContact(project.id, contactId);
+    onRefresh();
+  };
+
+  const handleToggleGroupMode = () => {
+    const next = !project.isGroupProject;
+    const ensureMembers = next && (project.groupMemberIds || []).length === 0
+      ? [project.primaryContactId]
+      : project.groupMemberIds || [];
+    updateProject({
+      ...project,
+      isGroupProject: next,
+      groupMemberIds: ensureMembers
+    });
+    onRefresh();
+  };
+
+  const handleAddGroupMember = () => {
+    if (!newGroupMemberId) return;
+    addGroupMemberToProject(project.id, newGroupMemberId);
+    setNewGroupMemberId('');
+    onRefresh();
+  };
+
+  const handleRemoveGroupMember = (contactId: string) => {
+    removeGroupMemberFromProject(project.id, contactId);
+    onRefresh();
+  };
+
+  const handleAddGoal = () => {
+    if (!newGoal.trim()) return;
+    addGoalToProject(project.id, newGoal);
+    setNewGoal('');
+    onRefresh();
+  };
+
+  const handleRemoveGoal = (goal: string) => {
+    removeGoalFromProject(project.id, goal);
     onRefresh();
   };
 
@@ -456,6 +552,126 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             </div>
           </div>
         )}
+
+        {/* Group Mode */}
+        <div className="pt-6 border-t border-[#2A2A2A] space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[10px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-2">
+              <Users size={12} /> Group Workspace
+            </h3>
+            <button
+              onClick={handleToggleGroupMode}
+              className={`text-xs px-3 py-1 rounded border transition-colors ${
+                project.isGroupProject
+                  ? 'border-[#2F3A2F] bg-[#1A1A1D] text-[#9AE6B4]'
+                  : 'border-[#333] text-gray-400 hover:text-white'
+              }`}
+            >
+              {project.isGroupProject ? 'Disable Group Mode' : 'Enable Group Mode'}
+            </button>
+          </div>
+
+          {!project.isGroupProject && (
+            <p className="text-xs text-gray-500">
+              Turn this project into a group to curate members and lightweight goals inside the project instead of a separate Groups module.
+            </p>
+          )}
+
+          {project.isGroupProject && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Members */}
+              <div className="bg-[#0F1018] border border-[#1F2028] rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] uppercase tracking-widest text-gray-500">Members</div>
+                  <div className="text-[11px] text-gray-400">{groupMembers.length} total</div>
+                </div>
+                <div className="space-y-2">
+                  {groupMembers.length === 0 && (
+                    <div className="text-xs text-gray-500">No members yet</div>
+                  )}
+                  {groupMembers.map(member => (
+                    <div key={member.id} className="flex items-center gap-3 bg-[#0E0E0E] border border-[#1C1D26] rounded-lg p-2">
+                      <img
+                        src={member.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.id}`}
+                        alt={member.fullName}
+                        className="w-8 h-8 rounded-full border border-[#333]"
+                      />
+                      <div className="flex-1">
+                        <div className="text-sm text-white">{member.fullName}</div>
+                        <div className="text-[11px] text-gray-500">{member.relationshipRole}</div>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveGroupMember(member.id)}
+                        className="text-gray-500 hover:text-red-400 transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <select
+                    value={newGroupMemberId}
+                    onChange={(e) => setNewGroupMemberId(e.target.value)}
+                    className="flex-1 bg-[#0E0E0E] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none"
+                  >
+                    <option value="">Add member...</option>
+                    {availableGroupContacts.map(contact => (
+                      <option key={contact.id} value={contact.id}>
+                        {contact.fullName}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleAddGroupMember}
+                    disabled={!newGroupMemberId}
+                    className="px-3 py-2 bg-[#4433FF] hover:bg-[#5544FF] disabled:bg-[#333] disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {/* Goals */}
+              <div className="bg-[#0F1018] border border-[#1F2028] rounded-lg p-4 space-y-3">
+                <div className="text-[11px] uppercase tracking-widest text-gray-500">Group Goals</div>
+                <div className="space-y-2">
+                  {(project.groupGoals || []).length === 0 && (
+                    <div className="text-xs text-gray-500">No goals yet</div>
+                  )}
+                  {(project.groupGoals || []).map(goal => (
+                    <div key={goal} className="flex items-center gap-2 bg-[#0E0E0E] border border-[#1C1D26] rounded-lg p-2">
+                      <span className="text-sm text-white flex-1">{goal}</span>
+                      <button
+                        onClick={() => handleRemoveGoal(goal)}
+                        className="text-gray-500 hover:text-red-400 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <input
+                    type="text"
+                    value={newGoal}
+                    onChange={(e) => setNewGoal(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddGoal()}
+                    placeholder="Add a goal..."
+                    className="flex-1 bg-[#0E0E0E] border border-[#333] rounded px-3 py-2 text-white text-sm focus:border-[#4433FF] outline-none"
+                  />
+                  <button
+                    onClick={handleAddGoal}
+                    disabled={!newGoal.trim()}
+                    className="px-3 py-2 bg-[#4433FF] hover:bg-[#5544FF] disabled:bg-[#333] disabled:cursor-not-allowed text-white text-xs font-bold rounded transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

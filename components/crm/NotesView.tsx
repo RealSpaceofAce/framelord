@@ -530,7 +530,8 @@ const NotesView: React.FC<NotesViewProps> = ({
   const isCurrentNotePinned = currentNote ? pinnedNotes.includes(currentNote.id) : false;
 
   return (
-    <div className="flex h-full bg-[#0B0C14] text-white">
+    <div className="flex h-full text-white relative overflow-hidden app-neon">
+      <div className="pointer-events-none absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_20%_20%,rgba(0,255,209,0.07),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(122,93,255,0.08),transparent_40%)]" />
       {/* LEFT SIDEBAR */}
       <aside className="w-64 bg-[#0E0E0E] border-r border-[#1C1D26] flex flex-col">
         {/* Search Bar */}

@@ -6,7 +6,7 @@ import {
   TrendingUp, TrendingDown, 
   Bot, Zap, 
   Menu, ExternalLink, Shield, Lock, 
-  Plus, MoreHorizontal, X, Folder, Layers, ChevronDown,
+  Plus, MoreHorizontal, X, Folder, ChevronDown,
   Upload, Image as ImageIcon, FileText, ArrowRight, AlertTriangle, Lightbulb,
   CheckCircle, Loader2, Paperclip, Mic, FileCode, Crosshair, Binary, Terminal, Cpu, GitCommit, Briefcase, Camera, Notebook, ArrowLeft, Clock as ClockIcon, User, Calendar
 } from 'lucide-react';
@@ -17,7 +17,6 @@ import { Reveal } from './Reveal';
 import { ContactsView } from './crm/ContactsView';
 import { CasesView } from './crm/CasesView';
 import { PipelinesView } from './crm/PipelinesView';
-import { GroupsView } from './crm/GroupsView';
 import { ProjectsView } from './crm/ProjectsView';
 import { ProjectDetailView } from './crm/ProjectDetailView';
 import { NotesView } from './crm/NotesView';
@@ -488,10 +487,10 @@ const DashboardOverview: React.FC = () => {
     );
 }
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'GROUPS' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS';
 
 export const Dashboard: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
+  const [currentView, setCurrentView] = useState<ViewMode>('DOSSIER');
   const [time, setTime] = useState(new Date());
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(true);
@@ -507,11 +506,6 @@ export const Dashboard: React.FC = () => {
   // SELECTED TOPIC STATE (for Topic view)
   // ==========================================================================
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
-
-  // ==========================================================================
-  // SELECTED GROUP STATE (for Group view)
-  // ==========================================================================
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
   // ==========================================================================
   // SELECTED PROJECT STATE (for Project detail view)
@@ -563,9 +557,9 @@ export const Dashboard: React.FC = () => {
     setCurrentView('TOPIC');
   };
 
-  const handleNavigateToGroup = (groupId: string) => {
-    setSelectedGroupId(groupId);
-    setCurrentView('GROUPS');
+  const handleNavigateToGroup = () => {
+    // Groups live inside Projects now; jump to Projects workspace
+    setCurrentView('PROJECTS');
   };
 
   const handleNavigateToProject = (projectId: string) => {
@@ -585,7 +579,7 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#030412] text-[#DBDBDB] font-sans flex flex-col lg:flex-row overflow-hidden z-[50]">
+    <div className="fixed inset-0 text-[#DBDBDB] font-sans flex flex-col lg:flex-row overflow-hidden z-[50] app-neon">
       <aside className={`
           ${isLeftSidebarOpen ? 'w-[280px]' : 'w-0'} bg-[#0E0E0E] border-r border-[#2A2A2A] flex flex-col z-40 transform transition-all duration-300 lg:relative overflow-hidden
           ${isMobileMenuOpen && isLeftSidebarOpen ? 'translate-x-0' : isLeftSidebarOpen ? 'translate-x-0' : 'lg:translate-x-0 -translate-x-full'}
@@ -635,7 +629,6 @@ export const Dashboard: React.FC = () => {
                             exit={{ height: 0, opacity: 0 }}
                             className="overflow-hidden space-y-1"
                         >
-                            <NavItem active={currentView === 'GROUPS'} onClick={() => handleNav('GROUPS')} icon={<Layers size={16} />} label="GROUPS" isSubItem />
                             <NavItem active={currentView === 'PROJECTS'} onClick={() => handleNav('PROJECTS')} icon={<Folder size={16} />} label="PROJECTS" isSubItem />
                             <NavItem active={currentView === 'CONTACTS'} onClick={() => handleNav('CONTACTS')} icon={<Users size={16} />} label="CONTACTS" isSubItem />
                         </MotionDiv>
@@ -682,8 +675,8 @@ export const Dashboard: React.FC = () => {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col bg-[#030412] overflow-hidden relative transition-all duration-300">
-         <div className="hidden lg:flex h-16 border-b border-[#2A2A2A] items-center justify-between px-8 shrink-0 bg-[#0E0E0E]">
+      <main className="flex-1 flex flex-col overflow-hidden relative transition-all duration-300">
+         <div className="hidden lg:flex h-16 border-b border-[#2A2A2A] items-center justify-between px-8 shrink-0 glass-card">
              <div className="flex items-center gap-2">
                  <button
                    onClick={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
@@ -803,15 +796,6 @@ export const Dashboard: React.FC = () => {
                  onNavigateToDossier={() => setCurrentView('DOSSIER')}
                />
              )}
-             {currentView === 'GROUPS' && (
-               <GroupsView
-                 selectedContactId={selectedContactId}
-                 setSelectedContactId={setSelectedContactId}
-                 onNavigateToDossier={() => setCurrentView('DOSSIER')}
-                 onNavigateToGroup={handleNavigateToGroup}
-                 onNavigateToTopic={handleNavigateToTopic}
-               />
-             )}
              {currentView === 'SETTINGS' && (
                <SettingsView
                  selectedContactId={selectedContactId}
@@ -827,7 +811,7 @@ export const Dashboard: React.FC = () => {
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 300, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
-            className="hidden xl:flex bg-[#0E0E0E] border-l border-[#2A2A2A] flex-col shrink-0 z-40 overflow-hidden relative"
+            className="hidden xl:flex glass-card border-l border-[#2A2A2A] flex-col shrink-0 z-40 overflow-hidden relative"
           >
               <div className="h-[400px] shrink-0 border-b border-[#2A2A2A]">
                 <ClockWidget time={time} />

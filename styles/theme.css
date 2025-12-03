@@ -1,12 +1,97 @@
 /* Theme Variables */
 :root {
-  --bg-primary: #030412;
-  --bg-secondary: #0E0E0E;
-  --bg-tertiary: #1A1A1D;
-  --border-color: #2A2A2A;
-  --text-primary: #FFFFFF;
-  --text-secondary: #9CA3AF;
-  --accent-color: #4433FF;
+  --bg-primary: #03050f;
+  --bg-secondary: rgba(12, 20, 36, 0.82);
+  --bg-tertiary: rgba(14, 26, 45, 0.8);
+  --border-color: #1f2f45;
+  --text-primary: #e7f3ff;
+  --text-secondary: #7fa6d1;
+  --accent-color: #1cf1ff;
+  --accent-2: #7a5dff;
+  --glass-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 30px rgba(31, 226, 255, 0.16);
+}
+
+.app-neon {
+  background: radial-gradient(circle at 20% 20%, rgba(0, 255, 209, 0.08), transparent 35%),
+              radial-gradient(circle at 80% 10%, rgba(68, 140, 255, 0.12), transparent 32%),
+              linear-gradient(140deg, #050810 0%, #060b17 45%, #04060d 100%);
+  color: var(--text-primary);
+  position: relative;
+}
+
+.app-neon::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 10%, rgba(31, 226, 255, 0.07), transparent 30%),
+              radial-gradient(circle at 80% 80%, rgba(122, 93, 255, 0.08), transparent 38%);
+  z-index: 0;
+}
+
+.glass-card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.neon-button {
+  background: linear-gradient(135deg, var(--accent-color), var(--accent-2));
+  color: #03101d;
+  box-shadow: 0 12px 36px rgba(24, 210, 255, 0.35);
+}
+
+.neon-chip {
+  background: rgba(12, 26, 45, 0.65);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+
+.app-neon .bg-\[\#030412\],
+.app-neon .bg-\[\#0B0C14\],
+.app-neon .bg-\[\#0E0E0E\],
+.app-neon .bg-\[\#0E0E16\],
+.app-neon .bg-\[\#0F1018\],
+.app-neon .bg-\[\#0A0A12\],
+.app-neon .bg-\[\#1A1A1D\],
+.app-neon .bg-\[\#151623\],
+.app-neon .bg-\[\#0E0E16\],
+.app-neon .bg-\[\#18181A\] {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.app-neon .border-\[\#2A2A2A\],
+.app-neon .border-\[\#1C1D26\],
+.app-neon .border-\[\#1F2028\],
+.app-neon .border-\[\#333\],
+.app-neon .border-\[\#333333\] {
+  border-color: var(--border-color) !important;
+}
+
+.app-neon .text-gray-500 { color: var(--text-secondary) !important; }
+.app-neon .text-gray-400 { color: #6f8cb5 !important; }
+.app-neon .text-gray-300 { color: #9ab7dc !important; }
+.app-neon .text-gray-200 { color: #c3dbff !important; }
+
+.app-neon .bg-\[\#4433FF\],
+.app-neon .bg-cyan-600,
+.app-neon .bg-purple-500 {
+  background: linear-gradient(135deg, var(--accent-color), var(--accent-2)) !important;
+  color: #03101d !important;
+  box-shadow: 0 12px 30px rgba(24, 210, 255, 0.32);
+}
+
+.app-neon .hover\:bg-\[\#1A1A1D\]:hover,
+.app-neon .hover\:bg-\[\#151623\]:hover,
+.app-neon .hover\:bg-\[\#0E0E0E\]:hover {
+  background-color: rgba(27, 45, 69, 0.7) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Light Mode */
@@ -23,6 +108,41 @@
 .light-mode body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
+}
+
+/* Light mode overrides for common dark utility classes */
+.light-mode .bg-\[\#030412\],
+.light-mode .bg-\[\#0B0C14\],
+.light-mode .bg-\[\#0E0E0E\],
+.light-mode .bg-\[\#0E0E16\],
+.light-mode .bg-\[\#0F1018\],
+.light-mode .bg-\[\#0A0A12\],
+.light-mode .bg-\[\#1A1A1D\],
+.light-mode .bg-\[\#151623\],
+.light-mode .bg-\[\#0E0E16\] {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.light-mode .text-white { color: var(--text-primary) !important; }
+.light-mode .text-gray-500 { color: var(--text-secondary) !important; }
+.light-mode .text-gray-400 { color: #6B7280 !important; }
+.light-mode .text-gray-300 { color: #4B5563 !important; }
+.light-mode .text-gray-200 { color: #374151 !important; }
+
+.light-mode .border-\[\#2A2A2A\],
+.light-mode .border-\[\#1C1D26\],
+.light-mode .border-\[\#1F2028\],
+.light-mode .border-\[\#333\] {
+  border-color: var(--border-color) !important;
+}
+
+/* Hover states that were dark-mode centric */
+.light-mode .hover\:bg-\[\#1A1A1D\]:hover,
+.light-mode .hover\:bg-\[\#151623\]:hover,
+.light-mode .hover\:bg-\[\#0E0E0E\]:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Compact Mode */
@@ -61,4 +181,3 @@
 .compact-mode .text-lg {
   font-size: 1rem !important;
 }
-

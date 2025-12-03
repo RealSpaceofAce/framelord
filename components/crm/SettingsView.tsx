@@ -66,13 +66,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [analytics, setAnalytics] = useState(true);
 
   useEffect(() => {
-    // Load settings from localStorage
+    // Load settings from localStorage and current DOM to avoid sudden theme flips
     const savedDarkMode = localStorage.getItem('framelord_dark_mode');
-    if (savedDarkMode !== null) {
-      const isDark = savedDarkMode === 'true';
-      setDarkMode(isDark);
-      applyTheme(isDark);
-    }
+    const root = document.documentElement;
+    const body = document.body;
+    const domIsDark = root.classList.contains('dark-mode') || (!root.classList.contains('light-mode') && !body.classList.contains('light-mode'));
+    const initialDark = savedDarkMode !== null ? savedDarkMode === 'true' : domIsDark;
+
+    setDarkMode(initialDark);
+    applyTheme(initialDark);
     
     const savedCompactMode = localStorage.getItem('framelord_compact_mode');
     if (savedCompactMode !== null) {
@@ -94,12 +96,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   const applyTheme = (isDark: boolean) => {
     const root = document.documentElement;
+    const body = document.body;
     if (isDark) {
       root.classList.remove('light-mode');
+      body.classList.remove('light-mode');
       root.classList.add('dark-mode');
+      body.classList.add('dark-mode');
     } else {
       root.classList.remove('dark-mode');
+      body.classList.remove('dark-mode');
       root.classList.add('light-mode');
+      body.classList.add('light-mode');
     }
   };
 
@@ -714,4 +721,3 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     </div>
   );
 };
-

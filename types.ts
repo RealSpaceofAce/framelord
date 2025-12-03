@@ -325,6 +325,9 @@ export interface ProjectAttachment {
 export interface Project {
   id: string;
   name: string;
+  isGroupProject: boolean;        // If true, treat this project as a group workspace
+  groupMemberIds: string[];       // Contacts participating in the group project
+  groupGoals: string[];           // Simple goal checklist for the group/project
   description?: string;
   bannerUrl?: string;               // Banner image URL or Data URL (Notion-style)
   primaryContactId: string;        // REQUIRED — the main contact this project is about

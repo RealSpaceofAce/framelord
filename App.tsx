@@ -58,7 +58,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-fl-black text-white selection:bg-fl-primary selection:text-white overflow-hidden relative">
+    <div className="min-h-screen text-white selection:bg-fl-primary selection:text-white overflow-hidden relative app-neon">
       
       {/* Background Systems */}
       {/* Hide MouseBackground on application page since it has its own ThreeParticles */}
