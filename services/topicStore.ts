@@ -172,3 +172,4 @@ export const getContactIdsForTopic = (topicId: string): string[] => {
   return Array.from(contactIds);
 };
 
+

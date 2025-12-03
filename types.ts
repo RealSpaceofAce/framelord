@@ -49,12 +49,36 @@ export type ContactZero = Contact & { id: 'contact_zero' };
 
 // --- NOTE (SYNCS TO CONTACT) ---
 
+export type NoteAttachmentType = 'image' | 'audio' | 'file';
+
+export interface NoteAttachment {
+  id: string;
+  type: NoteAttachmentType;
+  dataUrl: string;                // Data URL for the attachment
+  filename?: string;
+  mimeType?: string;
+  createdAt: string;              // ISO timestamp
+  transcript?: string;            // For audio: transcribed text (stub for future integration)
+}
+
+export interface NoteEntry {
+  id: string;
+  text: string;                   // The bullet point text content
+  attachments: NoteAttachment[];  // Media embedded in this entry
+  createdAt: string;              // ISO timestamp
+}
+
 export interface Note {
   id: string;
-  contactId: string;              // REQUIRED — who the note is ABOUT
-  authorContactId: string;        // REQUIRED — who WROTE the note (typically CONTACT_ZERO)
+  contactId: string;              // REQUIRED — who the note is ABOUT (legacy, kept for backward compatibility)
+  authorContactId: string;        // REQUIRED — who WROTE the note (always CONTACT_ZERO)
+  targetContactId?: string;       // Optional — explicit target contact for this note
+  mentionedContactIds?: string[];  // Optional — contacts mentioned via @mention in the note
   title?: string;                 // Optional title for backlinking / Obsidian-style links
-  content: string;
+  content: string;                // Legacy field - kept for backward compatibility
+  entries: NoteEntry[];           // Bullet-based entries with embedded content
+  attachments?: NoteAttachment[]; // Direct attachments on the note (in addition to entry attachments)
+  isPinned: boolean;              // Whether note is pinned to top
   createdAt: string;              // ISO timestamp
   updatedAt?: string | null;
   tags?: string[];
@@ -376,4 +400,40 @@ export interface ProjectTaskLink {
 export interface SectionStatusMapping {
   sectionName: string;
   taskStatus: TaskStatus;
+}
+
+// =============================================================================
+// SYSTEM LOG / NOTIFICATIONS
+// =============================================================================
+
+export type SystemLogType = 'billing' | 'announcement' | 'task' | 'system' | 'custom';
+export type SystemLogSeverity = 'info' | 'warning' | 'urgent';
+export type SystemLogSource = 'owner' | 'system' | 'userRule';
+
+/**
+ * SystemLogEntry - Intelligent notification stream entries
+ * Appears in the System Log panel on the right sidebar
+ * Can be filtered based on user preferences in Settings → Notifications
+ */
+export interface SystemLogEntry {
+  id: string;
+  type: SystemLogType;
+  title: string;
+  message: string;
+  createdAt: string;              // ISO timestamp
+  isRead: boolean;
+  severity: SystemLogSeverity;
+  source: SystemLogSource;
+}
+
+/**
+ * NotificationSettings - User preferences for System Log filtering
+ * Stored in settings and controls which notification types are shown
+ */
+export interface NotificationSettings {
+  showAnnouncements: boolean;
+  showSystemEvents: boolean;
+  showTasks: boolean;
+  showBillingAlerts: boolean;      // May be mandatory depending on policy
+  showCustom: boolean;
 }

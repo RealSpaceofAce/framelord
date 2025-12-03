@@ -18,8 +18,8 @@ const MotionDiv = motion.div as any;
 const MotionNav = motion.nav as any;
 
 const App: React.FC = () => {
-  // Set default to 'dashboard' for immediate access to Dashboard and Projects
-  const [currentView, setCurrentView] = useState<'landing' | 'application' | 'beta' | 'dashboard'>('dashboard');
+  // Set default to 'landing' for the main landing page
+  const [currentView, setCurrentView] = useState<'landing' | 'application' | 'beta' | 'dashboard'>('landing');
   
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 500], [1, 0]);
@@ -79,7 +79,7 @@ const App: React.FC = () => {
       >
         <div className="max-w-7xl mx-auto w-full px-6 flex justify-between items-center">
           <div className="font-display font-bold text-xl tracking-widest text-white flex items-center gap-2 interactive cursor-pointer" onClick={navigateToHome}>
-            <Terminal size={20} className="text-fl-primary" /> FRAMELORD
+            <span className="px-2 py-1 rounded-md border border-[#1f2f45] bg-[#0e1a2d]/80 text-fl-primary shadow-[0_0_14px_rgba(31,226,255,0.35)]">[ ]</span> FRAMELORD
           </div>
           
           {/* Only show nav links on Landing Page */}
@@ -134,7 +134,7 @@ const App: React.FC = () => {
                         className="relative z-10 max-w-6xl mx-auto px-6 text-center flex flex-col items-center"
                     >
                     <Reveal delay={0.1}>
-                        <div className="inline-block mb-6 px-4 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm shadow-[0_0_15px_rgba(68,51,255,0.2)]">
+                        <div className="inline-block mb-6 px-4 py-1 rounded-full glass-card border border-[#1f2f45] shadow-[0_0_15px_rgba(68,51,255,0.25)]">
                             <span className="text-fl-secondary text-xs font-bold tracking-[0.2em] uppercase">Authority Diagnostics V1.0</span>
                         </div>
                     </Reveal>

@@ -25,8 +25,12 @@ import {
   X,
 } from 'lucide-react';
 import { CONTACT_ZERO, getContactZero, updateContact } from '../../services/contactStore';
+import {
+  getNotificationSettings,
+  updateNotificationSettings,
+} from '../../services/notificationStore';
 
-type SettingsTab = 'profile' | 'billing' | 'appearance' | 'notifications' | 'privacy' | 'help';
+type SettingsTab = 'profile' | 'billing' | 'appearance' | 'notifications' | 'integrations' | 'privacy' | 'help';
 
 interface SettingsViewProps {
   selectedContactId: string;
@@ -60,6 +64,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [scanReminders, setScanReminders] = useState(false);
   const [weeklyReports, setWeeklyReports] = useState(true);
+  const [googleCalLinked, setGoogleCalLinked] = useState(false);
+  const [googleCalEmail, setGoogleCalEmail] = useState('');
+
+  // System Log notification preferences
+  const notificationSettings = getNotificationSettings();
+  const [systemLogSettings, setSystemLogSettings] = useState(notificationSettings);
 
   // Privacy state
   const [dataSharing, setDataSharing] = useState(false);
@@ -91,6 +101,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     const savedScanReminders = localStorage.getItem('framelord_scan_reminders');
     if (savedScanReminders !== null) {
       setScanReminders(savedScanReminders === 'true');
+    }
+
+    const savedGoogleCal = localStorage.getItem('framelord_google_cal');
+    if (savedGoogleCal) {
+      try {
+        const parsed = JSON.parse(savedGoogleCal) as { linked: boolean; email: string };
+        setGoogleCalLinked(Boolean(parsed.linked));
+        setGoogleCalEmail(parsed.email || '');
+      } catch {
+        // ignore parse errors
+      }
     }
   }, []);
 
@@ -144,6 +165,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  const persistGoogleCal = (linked: boolean, email: string) => {
+    localStorage.setItem('framelord_google_cal', JSON.stringify({ linked, email }));
+  };
+
   const handleDeleteAccount = () => {
     const confirmed = window.confirm(
       'Are you sure you want to delete your account? This will permanently delete all your data. This action cannot be undone.'
@@ -184,10 +209,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     description: string;
     children: React.ReactNode;
   }> = ({ title, description, children }) => (
-    <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-6">
+    <div className="glass-card rounded-lg p-6 border border-[#1f2f45]">
       <div className="mb-4">
         <h3 className="text-sm font-bold text-white mb-1">{title}</h3>
-        <p className="text-xs text-gray-500">{description}</p>
+        <p className="text-xs text-[#7fa6d1]">{description}</p>
       </div>
       {children}
     </div>
@@ -246,6 +271,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         >
           <Bell size={16} />
           Notifications
+        </button>
+        <button
+          onClick={() => setActiveTab('integrations')}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors border-b-2 ${
+            activeTab === 'integrations'
+              ? 'text-white border-[#4433FF]'
+              : 'text-gray-500 border-transparent hover:text-gray-300'
+          }`}
+        >
+          <LinkIcon size={16} />
+          Integrations
         </button>
         <button
           onClick={() => setActiveTab('privacy')}
@@ -523,8 +559,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {activeTab === 'notifications' && (
           <div className="space-y-6">
             <SettingCard
-              title="Notifications"
-              description="Manage your notification preferences"
+              title="Email & General Notifications"
+              description="Manage your email and general notification preferences"
             >
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -565,6 +601,162 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     onChange={setWeeklyReports}
                   />
                 </div>
+              </div>
+            </SettingCard>
+
+            <SettingCard
+              title="System Log Notifications"
+              description="Control which notifications appear in the System Log panel"
+            >
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-white mb-1">Owner Announcements</div>
+                    <div className="text-xs text-gray-500">Updates and announcements from FrameLord team</div>
+                  </div>
+                  <ToggleSwitch
+                    enabled={systemLogSettings.showAnnouncements}
+                    onChange={(enabled) => {
+                      const updated = updateNotificationSettings({ showAnnouncements: enabled });
+                      setSystemLogSettings(updated);
+                    }}
+                  />
+                </div>
+                <div className="h-px bg-[#2A2A2A]" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-white mb-1">System Events</div>
+                    <div className="text-xs text-gray-500">Data sync, analysis completion, and system updates</div>
+                  </div>
+                  <ToggleSwitch
+                    enabled={systemLogSettings.showSystemEvents}
+                    onChange={(enabled) => {
+                      const updated = updateNotificationSettings({ showSystemEvents: enabled });
+                      setSystemLogSettings(updated);
+                    }}
+                  />
+                </div>
+                <div className="h-px bg-[#2A2A2A]" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-white mb-1">Task Reminders</div>
+                    <div className="text-xs text-gray-500">Notifications for due tasks and action items</div>
+                  </div>
+                  <ToggleSwitch
+                    enabled={systemLogSettings.showTasks}
+                    onChange={(enabled) => {
+                      const updated = updateNotificationSettings({ showTasks: enabled });
+                      setSystemLogSettings(updated);
+                    }}
+                  />
+                </div>
+                <div className="h-px bg-[#2A2A2A]" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-white mb-1">
+                      Billing Alerts
+                      <span className="ml-2 text-[9px] px-2 py-0.5 bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded uppercase">
+                        Mandatory
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500">Payment reminders and subscription updates (always shown)</div>
+                  </div>
+                  <ToggleSwitch
+                    enabled={systemLogSettings.showBillingAlerts}
+                    onChange={(enabled) => {
+                      // Billing alerts are mandatory, but we still allow the toggle for UI consistency
+                      const updated = updateNotificationSettings({ showBillingAlerts: enabled });
+                      setSystemLogSettings(updated);
+                    }}
+                  />
+                </div>
+                <div className="h-px bg-[#2A2A2A]" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-white mb-1">Custom Alerts</div>
+                    <div className="text-xs text-gray-500">User-defined rules and custom notifications</div>
+                  </div>
+                  <ToggleSwitch
+                    enabled={systemLogSettings.showCustom}
+                    onChange={(enabled) => {
+                      const updated = updateNotificationSettings({ showCustom: enabled });
+                      setSystemLogSettings(updated);
+                    }}
+                  />
+                </div>
+              </div>
+            </SettingCard>
+          </div>
+        )}
+
+        {/* INTEGRATIONS TAB */}
+        {activeTab === 'integrations' && (
+          <div className="space-y-6">
+            <SettingCard
+              title="Calendar Integrations"
+              description="Link calendars to push tasks, scans, and notes as events"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-white mb-1">Google Calendar</div>
+                    <div className="text-xs text-[#7fa6d1]">Enable write access to schedule directly from FrameLord.</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {googleCalLinked && (
+                      <span className="text-[10px] px-2 py-1 rounded-full bg-[#0a2b3d] border border-[#1f2f45] text-[#8beaff]">
+                        Connected
+                      </span>
+                    )}
+                    <ToggleSwitch enabled={googleCalLinked} onChange={(enabled) => {
+                      setGoogleCalLinked(enabled);
+                      if (!enabled) {
+                        setGoogleCalEmail('');
+                        persistGoogleCal(false, '');
+                      } else {
+                        persistGoogleCal(true, googleCalEmail);
+                      }
+                    }} />
+                  </div>
+                </div>
+                {googleCalLinked && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">
+                      Google Account Email
+                    </label>
+                    <input
+                      type="email"
+                      value={googleCalEmail}
+                      onChange={(e) => {
+                        setGoogleCalEmail(e.target.value);
+                        persistGoogleCal(true, e.target.value);
+                      }}
+                      placeholder="name@gmail.com"
+                      className="w-full bg-[#0a1020]/80 border border-[#1a2a3f] rounded-lg px-3 py-2 text-[#e0edff] text-sm focus:border-[#2ee0ff] outline-none"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        className="px-4 py-2 text-xs font-bold rounded-lg neon-button"
+                        onClick={() => alert('Linking to Google Calendar... (local-first mock). State saved locally.')}
+                      >
+                        Link now
+                      </button>
+                      <button
+                        className="px-4 py-2 text-xs font-bold rounded-lg border border-[#1f2f45] text-[#7fa6d1]"
+                        onClick={() => {
+                          setGoogleCalLinked(false);
+                          setGoogleCalEmail('');
+                          persistGoogleCal(false, '');
+                        }}
+                      >
+                        Disconnect
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-[#7fa6d1]">
+                      Local-first only: status and email are stored locally. When we wire OAuth, this will trigger the consent flow.
+                    </p>
+                  </div>
+                )}
               </div>
             </SettingCard>
           </div>

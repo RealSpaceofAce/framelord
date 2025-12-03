@@ -87,6 +87,25 @@
   box-shadow: 0 12px 30px rgba(24, 210, 255, 0.32);
 }
 
+.app-neon .bg-fl-black,
+.app-neon .bg-fl-navy,
+.app-neon .bg-fl-navy\/40,
+.app-neon .bg-fl-black\/60 {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.app-neon .border-fl-primary,
+.app-neon .border-fl-secondary,
+.app-neon .border-fl-primary\/20,
+.app-neon .border-fl-primary\/30,
+.app-neon .border-fl-secondary\/20,
+.app-neon .border-fl-secondary\/30 {
+  border-color: var(--border-color) !important;
+}
+
 .app-neon .hover\:bg-\[\#1A1A1D\]:hover,
 .app-neon .hover\:bg-\[\#151623\]:hover,
 .app-neon .hover\:bg-\[\#0E0E0E\]:hover {
@@ -181,3 +200,4 @@
 .compact-mode .text-lg {
   font-size: 1rem !important;
 }
+

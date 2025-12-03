@@ -51,7 +51,7 @@ export const ApplicationPage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
   };
 
   return (
-    <div className="min-h-screen pt-24 px-4 pb-12 relative z-20 flex flex-col items-center justify-center">
+    <div className="min-h-screen pt-24 px-4 pb-12 relative z-20 flex flex-col items-center justify-center app-neon">
       {/* Particle Animation Background - Interactive mode (no forcedShape) */}
       <div className="fixed inset-0 z-0">
         <ThreeParticles forcedShape={null} />
@@ -75,7 +75,7 @@ export const ApplicationPage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
         
         {/* Left Column: The Pitch */}
         <Reveal width="100%" delay={0.2} className="h-full">
-          <div className="bg-fl-black/60 backdrop-blur-xl border border-fl-primary/20 rounded-2xl p-8 h-full flex flex-col relative overflow-hidden">
+          <div className="glass-card rounded-2xl p-8 h-full flex flex-col relative overflow-hidden border border-[#1f2f45]">
              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-fl-primary to-transparent opacity-50" />
              
              <h3 className="text-xl font-display text-white mb-6 flex items-center gap-2">
@@ -117,7 +117,7 @@ export const ApplicationPage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
 
         {/* Right Column: AI Chat Interface */}
         <Reveal width="100%" delay={0.4} className="lg:col-span-2 h-[600px]">
-          <div className="bg-fl-navy/40 backdrop-blur-xl border border-fl-primary/30 rounded-2xl flex flex-col h-full shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+          <div className="glass-card rounded-2xl flex flex-col h-full shadow-[0_0_50px_rgba(0,0,0,0.45)] relative overflow-hidden border border-[#1f2f45]">
             {/* CRT Scanline Effect */}
             <div className="absolute inset-0 pointer-events-none z-10 opacity-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))]" style={{ backgroundSize: '100% 2px, 3px 100%' }} />
             

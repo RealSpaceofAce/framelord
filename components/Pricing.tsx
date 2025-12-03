@@ -63,10 +63,10 @@ export const Pricing: React.FC = () => {
                 <MotionDiv 
                     animate={plan.isPopular ? { y: [0, -10, 0] } : {}}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className={`relative p-8 rounded-2xl border transition-all duration-300 flex flex-col h-full
+                    className={`relative p-8 rounded-2xl border transition-all duration-300 flex flex-col h-full glass-card border-[#1f2f45]
                     ${plan.isPopular 
-                        ? 'bg-fl-primary/10 border-fl-primary shadow-[0_0_50px_rgba(68,51,255,0.2)] md:scale-110 z-10' 
-                        : 'bg-fl-darkPurple/20 border-white/10 hover:border-white/20 backdrop-blur-sm'}`}
+                        ? 'shadow-[0_0_60px_rgba(28,241,255,0.2)] md:scale-110 z-10' 
+                        : 'hover:border-fl-primary/40'}`}
                 >
                 {plan.isPopular && (
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-fl-primary text-white text-[10px] font-bold px-4 py-1 rounded-full tracking-[0.2em] uppercase shadow-lg">

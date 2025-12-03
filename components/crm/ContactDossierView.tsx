@@ -16,7 +16,7 @@ import {
   Activity, Zap, Calendar, FileText, Mail, Phone,
   Tag, Clock, Edit2, Save, X, Send, ArrowRight, User, Hash,
   CheckSquare, Square, Plus, AlertCircle, PhoneCall, Users, MessageSquare, AtSign,
-  Trash2, Paperclip, Image, File, Layout, Scan
+  Trash2, Paperclip, Image, File, Layout, Scan, Music, GripVertical, Eye, EyeOff, Settings2
 } from 'lucide-react';
 import { getContactById, CONTACT_ZERO, updateContact } from '../../services/contactStore';
 import { getNotesByContactId, getNotesByAuthorId, createNote } from '../../services/noteStore';
@@ -55,6 +55,22 @@ import {
 } from '../../services/projectStore';
 import { Contact, RelationshipDomain, ContactStatus, Topic, Task, Interaction, InteractionType, InteractionAttachment } from '../../types';
 import { DatePicker } from '../DatePicker';
+import { 
+  getAllAttachmentsForContactZero, 
+  getAttachmentsForContact, 
+  filterAttachmentsByType, 
+  searchAttachments,
+  NoteAttachmentWithContext 
+} from '../../services/attachmentStore';
+import {
+  getWidgetLayout,
+  saveWidgetLayout,
+  toggleWidgetVisibility,
+  reorderWidgets,
+  resetWidgetLayout,
+  WidgetId,
+  WidgetConfig,
+} from '../../services/widgetLayoutStore';
 
 const MotionDiv = motion.div as any;
 
@@ -99,7 +115,18 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
 }) => {
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
+  const [isCustomizingWidgets, setIsCustomizingWidgets] = useState(false);
+  const [useGlobalLayout, setUseGlobalLayout] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Widget layout
+  const widgetLayout = useMemo(() => getWidgetLayout(selectedContactId), [selectedContactId, refreshKey]);
+  
+  // Helper to check if widget is visible
+  const isWidgetVisible = (widgetId: WidgetId): boolean => {
+    const widget = widgetLayout.widgets.find(w => w.id === widgetId);
+    return widget ? widget.visible : true; // Default to visible if not found
+  };
   
   // New note input state
   const [newNoteContent, setNewNoteContent] = useState('');
@@ -196,6 +223,17 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
 
   // For Contact Zero: all topics from notes written by them
   const topicsForAuthor = isContactZero ? getTopicsForAuthor(CONTACT_ZERO.id) : [];
+
+  // Attachments
+  const [attachmentFilter, setAttachmentFilter] = useState<'all' | 'image' | 'audio' | 'file'>('all');
+  const [attachmentSearch, setAttachmentSearch] = useState('');
+  const allAttachments = useMemo(() => {
+    const attachments = isContactZero 
+      ? getAllAttachmentsForContactZero()
+      : getAttachmentsForContact(selectedContactId);
+    const filtered = filterAttachmentsByType(attachments, attachmentFilter);
+    return searchAttachments(filtered, attachmentSearch);
+  }, [isContactZero, selectedContactId, attachmentFilter, attachmentSearch]);
 
   // Pipeline items for this contact
   const pipelineItems = getPipelineItemsByContact(selectedContactId);
@@ -413,8 +451,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     if (!newNoteContent.trim()) return;
 
     createNote({
-      contactId: selectedContactId,
-      authorContactId: CONTACT_ZERO.id,
+      targetContactId: selectedContactId !== CONTACT_ZERO.id ? selectedContactId : undefined,
       content: newNoteContent.trim(),
     });
 
@@ -520,7 +557,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach(file => {
+    Array.from(files).forEach((file: File) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
@@ -715,6 +752,30 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               </h1>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setIsCustomizingWidgets(!isCustomizingWidgets);
+                  if (isCustomizingWidgets) {
+                    // Save layout when exiting customization mode
+                    const layout = getWidgetLayout(selectedContactId);
+                    layout.isGlobal = useGlobalLayout;
+                    if (!useGlobalLayout) {
+                      layout.contactId = selectedContactId;
+                    }
+                    saveWidgetLayout(layout);
+                    setRefreshKey(k => k + 1);
+                  }
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 ${
+                  isCustomizingWidgets
+                    ? 'bg-[#4433FF] text-white'
+                    : 'bg-[#1A1A1D] text-gray-400 hover:text-white border border-[#333]'
+                }`}
+                title="Customize widget layout"
+              >
+                <Settings2 size={14} />
+                {isCustomizingWidgets ? 'Done' : 'Layout'}
+              </button>
               {isContactZero && (
                 <span className="text-[11px] px-3 py-1 rounded-full border border-[#2ee0ff55] bg-[#0c2c3d]/60 text-[#82f2ff] font-semibold uppercase tracking-[0.15em]">
                   Identity Prime
@@ -760,6 +821,95 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             )}
           </div>
         </div>
+
+        {/* Widget Customization Panel */}
+        {isCustomizingWidgets && (
+          <div className={`${glassCard} p-6`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-white">Customize Widget Layout</h3>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 text-xs text-gray-400">
+                  <input
+                    type="checkbox"
+                    checked={useGlobalLayout}
+                    onChange={(e) => setUseGlobalLayout(e.target.checked)}
+                    className="rounded"
+                  />
+                  Apply to all contacts
+                </label>
+                <button
+                  onClick={() => {
+                    resetWidgetLayout(selectedContactId, useGlobalLayout);
+                    setRefreshKey(k => k + 1);
+                  }}
+                  className="px-3 py-1.5 text-xs bg-[#1A1A1D] border border-[#333] rounded hover:bg-[#2A2A2A] text-gray-400 hover:text-white"
+                >
+                  Reset to Default
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {widgetLayout.widgets
+                .filter(w => {
+                  // Filter out Contact Zero only widgets if not Contact Zero
+                  if (!isContactZero) {
+                    return !['openTasksOwed', 'upcomingTasks', 'topics', 'activityFeed', 'lastInteractions'].includes(w.id);
+                  }
+                  return true;
+                })
+                .map((widget, index) => (
+                  <div
+                    key={widget.id}
+                    className="flex items-center gap-3 p-3 bg-[#1A1A1D] border border-[#333] rounded-lg"
+                  >
+                    <GripVertical size={16} className="text-gray-500 cursor-move" />
+                    <button
+                      onClick={() => {
+                        toggleWidgetVisibility(selectedContactId, widget.id, useGlobalLayout);
+                        setRefreshKey(k => k + 1);
+                      }}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      {widget.visible ? <Eye size={16} /> : <EyeOff size={16} />}
+                    </button>
+                    <span className="flex-1 text-sm text-white capitalize">
+                      {widget.id.replace(/([A-Z])/g, ' $1').trim()}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          if (index > 0) {
+                            const newOrder = [...widgetLayout.widgets.map(w => w.id)];
+                            [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+                            reorderWidgets(selectedContactId, newOrder, useGlobalLayout);
+                            setRefreshKey(k => k + 1);
+                          }
+                        }}
+                        disabled={index === 0}
+                        className="px-2 py-1 text-xs bg-[#0E0E0E] border border-[#333] rounded disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#2A2A2A]"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (index < widgetLayout.widgets.length - 1) {
+                            const newOrder = [...widgetLayout.widgets.map(w => w.id)];
+                            [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+                            reorderWidgets(selectedContactId, newOrder, useGlobalLayout);
+                            setRefreshKey(k => k + 1);
+                          }
+                        }}
+                        disabled={index === widgetLayout.widgets.length - 1}
+                        className="px-2 py-1 text-xs bg-[#0E0E0E] border border-[#333] rounded disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#2A2A2A]"
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
 
         {/* MAIN GRID */}
         <div className="grid grid-cols-1 xl:grid-cols-[320px_1fr_360px] gap-6 items-start">
@@ -1166,6 +1316,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           </div>
 
           {/* Timeline (Interactions + Notes) */}
+          {isWidgetVisible('timeline') && (
           <div className={`${glassCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
               <Clock size={16} className="text-[#8beaff]" />
@@ -1253,8 +1404,8 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               </button>
             </div>
 
-            {/* Timeline Items */}
-            {timelineItems.length > 0 ? (
+          {/* Timeline Items */}
+          {timelineItems.length > 0 ? (
               <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
                 {timelineItems.map((item) => {
                   const isEditing = item.type === 'interaction' && editingInteractionId === item.id;
@@ -1425,8 +1576,10 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               <p className="text-[#6b92b9] text-sm italic">No timeline entries yet</p>
             )}
           </div>
+          )}
 
           {/* Timeline Stats (Last Contact, Next Action, Last Scan) */}
+          {isWidgetVisible('keyDates') && (
           <div className={`${subCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
               <Calendar size={16} className="text-[#8beaff]" />
@@ -1453,8 +1606,10 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               </div>
             </div>
           </div>
+          )}
 
           {/* Frame Scan Section */}
+          {isWidgetVisible('frameScan') && (
           <div className={`${subCard} p-5`}>
             <div className="flex items-center gap-2 mb-3">
               <Scan size={16} className="text-[#8beaff]" />
@@ -1468,11 +1623,13 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               Analyze communication patterns for authority leaks
             </p>
           </div>
+          )}
         </div>
 
         {/* RIGHT: Notes + Tasks + Tags */}
         <div className="space-y-6">
           {/* Tasks Section */}
+          {isWidgetVisible('tasks') && (
           <div className={`${glassCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
               <CheckSquare size={16} className="text-[#8beaff]" />
@@ -1538,8 +1695,10 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               <p className="text-[#6b92b9] text-sm italic">No open tasks</p>
             )}
           </div>
+          )}
 
           {/* Projects Section */}
+          {isWidgetVisible('projects') && (
           <div className={`${glassCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
               <Layout size={16} className="text-[#c49bff]" />
@@ -1577,8 +1736,10 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               <p className="text-[#6b92b9] text-sm italic">No projects</p>
             )}
           </div>
+          )}
 
           {/* Notes Section */}
+          {isWidgetVisible('notes') && (
           <div className={`${glassCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
               <FileText size={16} className="text-[#8beaff]" />
@@ -1625,8 +1786,10 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               <p className="text-[#6b92b9] text-sm italic">No notes yet</p>
             )}
           </div>
+          )}
 
           {/* Tags */}
+          {isWidgetVisible('tags') && (
           <div className={`${glassCard} p-6`}>
             <div className="flex items-center gap-2 mb-4">
               <Tag size={16} className="text-[#ffc78f]" />
@@ -1654,11 +1817,12 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               <p className="text-[#6b92b9] text-sm italic">No tags set</p>
             )}
           </div>
+          )}
         </div>
       </div>
 
       {/* CONTACT ZERO ONLY: Your Open Tasks (what you owe to others) */}
-      {isContactZero && openTasksByContact.size > 0 && (
+      {isContactZero && isWidgetVisible('openTasksOwed') && openTasksByContact.size > 0 && (
         <div className="bg-[#0E0E0E] border border-cyan-500/30 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
             <AlertCircle size={16} className="text-cyan-500" />
@@ -1701,7 +1865,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
       )}
 
       {/* CONTACT ZERO ONLY: Today & Upcoming (next 7 days) */}
-      {isContactZero && upcomingDates.length > 0 && (
+      {isContactZero && isWidgetVisible('upcomingTasks') && upcomingDates.length > 0 && (
         <div className="bg-[#0E0E0E] border border-green-500/30 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
             <Calendar size={16} className="text-green-500" />
@@ -1776,7 +1940,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
       )}
 
       {/* CONTACT ZERO ONLY: Your Topics */}
-      {isContactZero && topicsForAuthor.length > 0 && (
+      {isContactZero && isWidgetVisible('topics') && topicsForAuthor.length > 0 && (
         <div className="bg-[#0E0E0E] border border-purple-500/30 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
             <Hash size={16} className="text-purple-500" />
@@ -1794,7 +1958,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
       )}
 
       {/* CONTACT ZERO ONLY: Your Last Interactions */}
-      {isContactZero && lastInteractions.length > 0 && (
+      {isContactZero && isWidgetVisible('lastInteractions') && lastInteractions.length > 0 && (
         <div className="bg-[#0E0E0E] border border-blue-500/30 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
             <PhoneCall size={16} className="text-blue-500" />
@@ -1860,7 +2024,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
       )}
 
       {/* CONTACT ZERO ONLY: Activity Feed */}
-      {isContactZero && activityNotes.length > 0 && (
+      {isContactZero && isWidgetVisible('activityFeed') && activityNotes.length > 0 && (
         <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
             <Activity size={16} className="text-green-500" />
@@ -1905,7 +2069,124 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
         </div>
       )}
 
+      {/* Attachments Section */}
+      {isWidgetVisible('attachments') && (
+      <div className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Paperclip size={16} className="text-[#4433FF]" />
+            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Attachments
+            </h3>
+            <span className="text-[10px] text-gray-600 ml-2">({allAttachments.length})</span>
+          </div>
+        </div>
+
+        {/* Search and Filter */}
+        <div className="flex items-center gap-2 mb-4">
+          <input
+            type="text"
+            value={attachmentSearch}
+            onChange={(e) => setAttachmentSearch(e.target.value)}
+            placeholder="Search attachments..."
+            className="flex-1 bg-[#1A1A1D] border border-[#333] rounded-lg px-3 py-2 text-sm text-gray-200 focus:border-[#4433FF] outline-none"
+          />
+          <div className="flex gap-1">
+            {(['all', 'image', 'audio', 'file'] as const).map((type) => (
+              <button
+                key={type}
+                onClick={() => setAttachmentFilter(type)}
+                className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                  attachmentFilter === type
+                    ? 'bg-[#4433FF] text-white'
+                    : 'bg-[#1A1A1D] text-gray-400 hover:text-white'
+                }`}
+              >
+                {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Attachments Grid */}
+        {allAttachments.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {allAttachments.map((item) => (
+              <div
+                key={item.attachment.id}
+                className="bg-[#1A1A1D] border border-[#333] rounded-lg p-4 hover:border-[#4433FF]/50 transition-colors"
+              >
+                {item.attachment.type === 'image' && (
+                  <div className="space-y-2">
+                    <img
+                      src={item.attachment.dataUrl}
+                      alt={item.attachment.filename || 'Image'}
+                      className="w-full h-32 object-cover rounded border border-[#333] cursor-pointer hover:border-[#4433FF]/50"
+                      onClick={() => window.open(item.attachment.dataUrl, '_blank')}
+                    />
+                    <div className="text-xs text-gray-400 truncate">
+                      {item.attachment.filename || 'Image'}
+                    </div>
+                    {item.noteTitle && (
+                      <div className="text-[10px] text-gray-600">
+                        From: {item.noteTitle}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {item.attachment.type === 'audio' && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 p-2 bg-[#0E0E0E] rounded">
+                      <Music size={16} className="text-[#4433FF]" />
+                      <audio
+                        src={item.attachment.dataUrl}
+                        controls
+                        className="flex-1 h-8"
+                      />
+                    </div>
+                    <div className="text-xs text-gray-400 truncate">
+                      {item.attachment.filename || 'Audio'}
+                    </div>
+                    {item.noteTitle && (
+                      <div className="text-[10px] text-gray-600">
+                        From: {item.noteTitle}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {(item.attachment.type === 'file' || item.attachment.mimeType === 'application/pdf') && (
+                  <div className="space-y-2">
+                    <a
+                      href={item.attachment.dataUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-2 bg-[#0E0E0E] rounded hover:bg-[#1A1A1D] transition-colors"
+                    >
+                      <File size={16} className="text-[#4433FF]" />
+                      <span className="text-xs text-gray-300 hover:text-[#4433FF] truncate flex-1">
+                        {item.attachment.filename || 'File'}
+                      </span>
+                    </a>
+                    {item.noteTitle && (
+                      <div className="text-[10px] text-gray-600">
+                        From: {item.noteTitle}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-600 text-sm">
+            No attachments found
+          </div>
+        )}
+      </div>
+      )}
+
       {/* BOTTOM: Stats Summary */}
+      {isWidgetVisible('statsSummary') && (
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className={`${subCard} p-4`}>
           <div className="flex items-center gap-2 mb-1">
@@ -1952,6 +2233,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           <div className="text-[10px] text-[#6b92b9]">labels</div>
         </div>
       </div>
+      )}
     </div>
   </div>
 );

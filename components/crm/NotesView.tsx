@@ -23,12 +23,19 @@ import {
   Pin,
   Pencil,
   FileText,
+  X,
+  Paperclip,
+  Image,
+  File,
+  Music,
+  Trash2,
 } from 'lucide-react';
-import { Note } from '../../types';
+import { Note, NoteAttachment } from '../../types';
 import {
   CONTACT_ZERO,
   getAllContacts,
   getContactById,
+  createContact,
 } from '../../services/contactStore';
 import {
   createNote,
@@ -38,16 +45,26 @@ import {
   findNoteByTitle,
   searchNotesByTitle,
   getNoteById,
+  toggleNotePin,
+  addAttachmentToEntry,
+  addAttachmentToNote,
+  removeAttachmentFromNote,
+  searchNotesFullText,
+  transcribeVoiceSearch,
 } from '../../services/noteStore';
 import { DatePicker } from '../DatePicker';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { NoteDocumentView } from './NoteDocumentView';
+import { NoteGraph } from '../noteGraph/NoteGraph';
+import { useNoteGraphData } from '../noteGraph/graphStore';
+import { ContactPicker } from './ContactPicker';
 
 interface NotesViewProps {
   selectedContactId: string;
   setSelectedContactId: (id: string) => void;
   onNavigateToDossier?: () => void;
   onNavigateToTasks?: () => void;
+  onNavigateToTopic?: (topicId: string) => void;
 }
 
 const todayKey = (): string => new Date().toISOString().split('T')[0];
@@ -76,6 +93,7 @@ const NotesView: React.FC<NotesViewProps> = ({
   setSelectedContactId,
   onNavigateToDossier,
   onNavigateToTasks,
+  onNavigateToTopic,
 }) => {
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({
     [todayKey()]: '• ',
@@ -100,8 +118,21 @@ const NotesView: React.FC<NotesViewProps> = ({
     endPos: number;
   } | null>>({});
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState<Record<string, number>>({});
+  const [mentionState, setMentionState] = useState<Record<string, {
+    active: boolean;
+    query: string;
+    startPos: number;
+    endPos: number;
+  } | null>>({});
+  const [selectedMentionIndex, setSelectedMentionIndex] = useState<Record<string, number>>({});
+  const [draggingOverDate, setDraggingOverDate] = useState<string | null>(null);
+  const [draggingOverNote, setDraggingOverNote] = useState<string | null>(null);
+  const [pendingAttachments, setPendingAttachments] = useState<Record<string, File[]>>({}); // dateKey -> files to attach
+  const [contextMenu, setContextMenu] = useState<{ noteId: string; x: number; y: number } | null>(null);
   const editorRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const noteFileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const contacts = useMemo(() => getAllContacts(true), []);
   const hasVisibleContent = (note: Note): boolean => note.content.trim().length > 0;
@@ -142,19 +173,146 @@ const NotesView: React.FC<NotesViewProps> = ({
       .filter((note): note is Note => note !== undefined);
   }, [pinnedNotes, allNotes]);
 
-  const parseMention = (text: string): string | null => {
-    const match = text.match(/@([A-Za-z][A-Za-z\s]*)/);
-    if (!match) return null;
-    const name = match[1].trim().toLowerCase();
-    const contact = contacts.find(
-      (c) =>
-        c.fullName.toLowerCase() === name ||
-        c.fullName.toLowerCase().startsWith(name)
-    );
-    return contact ? contact.id : null;
+  // Handle mention selection from ContactPicker
+  const handleMentionSelect = (dateKey: string, contactId: string, textarea?: HTMLTextAreaElement) => {
+    const state = mentionState[dateKey];
+    if (!state) return;
+
+    const targetTextarea = textarea || textareaRefs.current[dateKey];
+    if (!targetTextarea) return;
+
+    const contact = getContactById(contactId);
+    if (!contact) return;
+
+    const currentValue = targetTextarea.value;
+    const startPos = state.startPos;
+    const endPos = state.endPos;
+
+    const before = currentValue.slice(0, startPos);
+    const after = currentValue.slice(endPos);
+    const newValue = `${before}@${contact.fullName} ${after}`;
+    const newPos = startPos + `@${contact.fullName} `.length;
+
+    // Update textarea value directly (imperatively) first
+    targetTextarea.value = newValue;
+    targetTextarea.focus();
+    targetTextarea.setSelectionRange(newPos, newPos);
+
+    // Then sync to React state
+    setNoteDrafts((prev) => ({ ...prev, [dateKey]: newValue }));
+    setMentionState((prev) => ({ ...prev, [dateKey]: null }));
   };
 
-  const submitNote = (dateKey: string, textarea?: HTMLTextAreaElement) => {
+  // Handle creating new contact from mention
+  const handleMentionCreateNew = (dateKey: string, name: string, textarea?: HTMLTextAreaElement) => {
+    const state = mentionState[dateKey];
+    if (!state) return;
+
+    // Create new contact
+    const newContact = createContact({
+      fullName: name.trim(),
+      relationshipDomain: 'business',
+      relationshipRole: 'contact',
+    });
+
+    // Use the new contact
+    handleMentionSelect(dateKey, newContact.id, textarea);
+  };
+
+
+  const handleTogglePin = (noteId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    toggleNotePin(noteId);
+    const note = getNoteById(noteId);
+    if (!note) return;
+
+    if (note.isPinned && !pinnedNotes.includes(noteId)) {
+      setPinnedNotes(prev => [...prev, noteId]);
+    } else if (!note.isPinned && pinnedNotes.includes(noteId)) {
+      setPinnedNotes(prev => prev.filter(id => id !== noteId));
+    }
+    setRefreshKey(prev => prev + 1);
+  };
+
+  // Extract mentioned contact IDs from content (looks for @ContactName patterns)
+  // Supports full names with spaces (e.g., "@John Smith")
+  const extractMentionedContactIds = (content: string): string[] => {
+    // Match @ followed by name (allowing spaces, stopping at newline or certain punctuation)
+    const mentionRegex = /@([A-Za-z][A-Za-z\s]*?)(?=\s|$|\n|@|\[|\(|\)|{|})/g;
+    const mentionedIds = new Set<string>();
+    let match;
+
+    while ((match = mentionRegex.exec(content)) !== null) {
+      const name = match[1].trim();
+      if (!name) continue;
+      
+      // Try exact match first, then partial match
+      const contact = contacts.find(
+        (c) => {
+          const contactName = c.fullName.toLowerCase();
+          const mentionName = name.toLowerCase();
+          return contactName === mentionName || 
+                 contactName.startsWith(mentionName + ' ') ||
+                 contactName === mentionName;
+        }
+      );
+      if (contact) {
+        mentionedIds.add(contact.id);
+      }
+    }
+
+    return Array.from(mentionedIds);
+  };
+
+  // Handle file drop for new notes (pending attachments)
+  const handleFileDrop = async (dateKey: string, files: FileList) => {
+    const fileArray = Array.from(files);
+    setPendingAttachments((prev) => ({ ...prev, [dateKey]: [...(prev[dateKey] || []), ...fileArray] }));
+  };
+
+  // Handle file drop on existing note
+  const handleNoteFileDrop = async (noteId: string, files: FileList) => {
+    for (const file of Array.from(files)) {
+      await addAttachmentToNote(noteId, file);
+    }
+    setRefreshKey((k) => k + 1);
+    setDraggingOverNote(null);
+  };
+
+  // Handle right-click context menu
+  const handleNoteRightClick = (e: React.MouseEvent, noteId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ noteId, x: e.clientX, y: e.clientY });
+  };
+
+  // Close context menu when clicking elsewhere
+  useEffect(() => {
+    const handleClick = () => setContextMenu(null);
+    if (contextMenu) {
+      window.addEventListener('click', handleClick);
+      return () => window.removeEventListener('click', handleClick);
+    }
+  }, [contextMenu]);
+
+  // Process pending attachments when note is submitted
+  const processPendingAttachments = async (noteId: string, dateKey: string) => {
+    const files = pendingAttachments[dateKey];
+    if (!files || files.length === 0) return;
+
+    for (const file of files) {
+      await addAttachmentToNote(noteId, file);
+    }
+
+    // Clear pending attachments for this date
+    setPendingAttachments((prev) => {
+      const next = { ...prev };
+      delete next[dateKey];
+      return next;
+    });
+  };
+
+  const submitNote = async (dateKey: string, textarea?: HTMLTextAreaElement) => {
     const draft = noteDrafts[dateKey] || '';
 
     // Extract the first line (the note to submit)
@@ -165,8 +323,8 @@ const NotesView: React.FC<NotesViewProps> = ({
     // Remove bullet point if present
     const noteContent = firstLine.trim().replace(/^•\s*/, '').trim();
 
-    // Don't submit if no actual content
-    if (!noteContent) {
+    // Don't submit if no actual content and no pending attachments
+    if (!noteContent && (!pendingAttachments[dateKey] || pendingAttachments[dateKey].length === 0)) {
       // If there's remaining content, keep it; otherwise reset to bullet
       if (remainingLines.trim()) {
         // Ensure first remaining line has a bullet
@@ -182,17 +340,23 @@ const NotesView: React.FC<NotesViewProps> = ({
       return;
     }
 
-    const mentionedContactId = parseMention(noteContent);
-    // Notes created in the main Notes view always default to CONTACT_ZERO
-    // Only use mentioned contact if explicitly @mentioned
-    const targetContactId = mentionedContactId || CONTACT_ZERO.id;
+    // Extract mentioned contacts from content
+    const mentionedContactIds = extractMentionedContactIds(noteContent);
+    
+    // Determine target contact: use first mentioned contact, or CONTACT_ZERO
+    const targetContactId = mentionedContactIds.length > 0 
+      ? mentionedContactIds[0] 
+      : CONTACT_ZERO.id;
 
     // Create note - processNoteLinks will automatically handle [[links]]
-    createNote({
-      contactId: targetContactId,
-      authorContactId: CONTACT_ZERO.id,
-      content: noteContent,
+    const newNote = createNote({
+      targetContactId: targetContactId !== CONTACT_ZERO.id ? targetContactId : undefined,
+      mentionedContactIds: mentionedContactIds.length > 0 ? mentionedContactIds : undefined,
+      content: noteContent || ' ', // Allow empty content if there are attachments
     });
+
+    // Process any pending attachments
+    await processPendingAttachments(newNote.id, dateKey);
 
     // Always reset to a clean single bullet - no remaining lines
     setNoteDrafts((prev) => ({ ...prev, [dateKey]: '• ' }));
@@ -235,6 +399,47 @@ const NotesView: React.FC<NotesViewProps> = ({
       setSelectedSuggestionIndex((prev) => ({ ...prev, [dateKey]: 0 }));
     } else {
       setWikilinkState((prev) => ({ ...prev, [dateKey]: null }));
+    }
+  };
+
+  // Update mention state when typing
+  const updateMentionState = (dateKey: string, textarea: HTMLTextAreaElement) => {
+    const start = textarea.selectionStart;
+    const value = textarea.value;
+    const beforeCursor = value.slice(0, start);
+
+    // Check if we're typing @mention (not inside [[...]])
+    const wikilinkMatch = beforeCursor.match(/\[\[([^\]]*)$/);
+    if (wikilinkMatch) {
+      // Inside wikilink, don't trigger mention
+      setMentionState((prev) => ({ ...prev, [dateKey]: null }));
+      return;
+    }
+
+    // Check for @mention - allow spaces for full names (e.g., "@John Smith")
+    // Stop at newline, @ (another mention), or certain punctuation
+    const mentionMatch = beforeCursor.match(/@([^\n@\[\](){}]*)$/);
+    if (mentionMatch) {
+      const query = mentionMatch[1].trim();
+      // Only activate if there's actual content after @
+      if (query.length > 0) {
+        const startPos = start - query.length - 1; // -1 for @
+
+        setMentionState((prev) => ({
+          ...prev,
+          [dateKey]: {
+            active: true,
+            query,
+            startPos,
+            endPos: start,
+          },
+        }));
+        setSelectedMentionIndex((prev) => ({ ...prev, [dateKey]: 0 }));
+      } else {
+        setMentionState((prev) => ({ ...prev, [dateKey]: null }));
+      }
+    } else {
+      setMentionState((prev) => ({ ...prev, [dateKey]: null }));
     }
   };
 
@@ -318,12 +523,69 @@ const NotesView: React.FC<NotesViewProps> = ({
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const value = textarea.value;
-    const state = wikilinkState[dateKey];
+    const wikilinkStateForDate = wikilinkState[dateKey];
+    const mentionStateForDate = mentionState[dateKey];
+
+    // Handle mention autocomplete navigation (priority over wikilink)
+    if (mentionStateForDate?.active) {
+      // Filter contacts - support multi-word queries
+      const queryWords = mentionStateForDate.query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+      const filteredContacts = contacts.filter(c => {
+        const name = c.fullName.toLowerCase();
+        const email = c.email?.toLowerCase() || '';
+        const query = mentionStateForDate.query.toLowerCase();
+        
+        // If query has multiple words, check if all words appear in name
+        if (queryWords.length > 1) {
+          return queryWords.every(word => name.includes(word)) || email.includes(query);
+        }
+        
+        return name.includes(query) || email.includes(query);
+      });
+      
+      // Show "Create new" if query doesn't exactly match any contact's full name
+      const normalizedQuery = mentionStateForDate.query.trim().toLowerCase();
+      const showCreateNew = normalizedQuery && !filteredContacts.some(c => 
+        c.fullName.toLowerCase() === normalizedQuery
+      );
+      const maxIndex = filteredContacts.length + (showCreateNew ? 1 : 0) - 1;
+      const currentIndex = selectedMentionIndex[dateKey] || 0;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedMentionIndex((prev) => ({
+          ...prev,
+          [dateKey]: Math.min(currentIndex + 1, maxIndex),
+        }));
+        return;
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedMentionIndex((prev) => ({
+          ...prev,
+          [dateKey]: Math.max(currentIndex - 1, 0),
+        }));
+        return;
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        if (filteredContacts.length > 0 && currentIndex < filteredContacts.length) {
+          handleMentionSelect(dateKey, filteredContacts[currentIndex].id, textarea);
+        } else if (showCreateNew && mentionStateForDate.query.trim()) {
+          handleMentionCreateNew(dateKey, mentionStateForDate.query.trim(), textarea);
+        } else {
+          setMentionState((prev) => ({ ...prev, [dateKey]: null }));
+        }
+        return;
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setMentionState((prev) => ({ ...prev, [dateKey]: null }));
+        return;
+      }
+    }
 
     // Handle wikilink autocomplete navigation
-    if (state?.active) {
-      const suggestions = searchNotesByTitle(state.query, 8);
-      const maxIndex = suggestions.length + (state.query.trim() ? 1 : 0) - 1; // +1 for "Create new"
+    if (wikilinkStateForDate?.active) {
+      const suggestions = searchNotesByTitle(wikilinkStateForDate.query, 8);
+      const maxIndex = suggestions.length + (wikilinkStateForDate.query.trim() ? 1 : 0) - 1; // +1 for "Create new"
       const currentIndex = selectedSuggestionIndex[dateKey] || 0;
 
       if (e.key === 'ArrowDown') {
@@ -345,9 +607,9 @@ const NotesView: React.FC<NotesViewProps> = ({
         if (suggestions.length > 0 && currentIndex < suggestions.length) {
           // Select existing note
           handleWikilinkSelect(dateKey, suggestions[currentIndex].id, textarea);
-        } else if (state.query.trim()) {
+        } else if (wikilinkStateForDate.query.trim()) {
           // Create new note
-          handleWikilinkCreateNew(dateKey, state.query.trim(), textarea);
+          handleWikilinkCreateNew(dateKey, wikilinkStateForDate.query.trim(), textarea);
         } else {
           // If no query, just close the wikilink mode without doing anything
           setWikilinkState((prev) => ({ ...prev, [dateKey]: null }));
@@ -450,12 +712,10 @@ const NotesView: React.FC<NotesViewProps> = ({
               setSelectedNoteId(existingNote.id);
             } else {
               // Create new note page
-              const newNote = createNote({
-                contactId: CONTACT_ZERO.id,
-                authorContactId: CONTACT_ZERO.id,
-                content: '',
-                title: linkText,
-              });
+                                    const newNote = createNote({
+                                      content: '',
+                                      title: linkText,
+                                    });
               setSelectedNoteId(newNote.id);
               setRefreshKey(k => k + 1);
             }
@@ -528,6 +788,7 @@ const NotesView: React.FC<NotesViewProps> = ({
   // Get current note for pinning
   const currentNote = selectedNoteId ? allNotes.find(n => n.id === selectedNoteId) : null;
   const isCurrentNotePinned = currentNote ? pinnedNotes.includes(currentNote.id) : false;
+  const graphData = useNoteGraphData([refreshKey, selectedContactId, selectedNoteId]);
 
   return (
     <div className="flex h-full text-white relative overflow-hidden app-neon">
@@ -612,16 +873,27 @@ const NotesView: React.FC<NotesViewProps> = ({
           </div>
               ) : (
                 pinnedNotesData.map((note) => (
-            <button
+            <div
                     key={note.id}
-                    onClick={() => {
-                      setSelectedNoteId(note.id);
-                      setViewMode('document');
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-[#151623] transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[#151623] transition-colors group"
             >
-                    {note.title || note.content.slice(0, 30)}
-            </button>
+              <button
+                      onClick={() => {
+                        setSelectedNoteId(note.id);
+                        setViewMode('document');
+                      }}
+                      className="flex-1 text-left text-xs text-gray-400 hover:text-white transition-colors"
+              >
+                      {note.title || note.content.slice(0, 30)}
+              </button>
+              <button
+                      onClick={(e) => handleTogglePin(note.id, e)}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[#4433FF]/20 transition-all"
+                      title="Unpin note"
+              >
+                <Pin size={12} className="text-[#4433FF] fill-[#4433FF]" />
+              </button>
+            </div>
                 ))
               )}
             </div>
@@ -639,6 +911,38 @@ const NotesView: React.FC<NotesViewProps> = ({
       {/* CENTER CONTENT AREA */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
+          {/* Map View */}
+          {viewMode === 'map' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Knowledge Graph</h2>
+                  <p className="text-xs text-[#7fa6d1]">Notes, topics, and contacts in one Obsidian-style map.</p>
+                </div>
+                <div className="text-[11px] text-[#7fa6d1] px-3 py-1 rounded-lg border border-[#1f2f45] bg-[#0d1627]/80">
+                  Pan / zoom / click to open
+                </div>
+              </div>
+              <div className="h-[calc(100vh-220px)] rounded-2xl border border-[#1f2f45] glass-card overflow-hidden relative">
+                <NoteGraph
+                  data={graphData}
+                  selectedNoteId={selectedNoteId}
+                  selectedContactId={selectedContactId}
+                  onSelectNote={(noteId) => {
+                    setSelectedNoteId(noteId);
+                    setViewMode('document');
+                  }}
+                  onSelectContact={(contactId) => {
+                    handleContactNavigate(contactId);
+                  }}
+                  onSelectTopic={(topicId) => {
+                    onNavigateToTopic?.(topicId);
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Document View - Full Note Editor */}
           {viewMode === 'document' && selectedNoteId && (
             <NoteDocumentView
@@ -692,12 +996,39 @@ const NotesView: React.FC<NotesViewProps> = ({
                             setSelectedNoteId(note.id);
                             setViewMode('document');
                           }}
+                          onContextMenu={(e) => handleNoteRightClick(e, note.id)}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setDraggingOverNote(note.id);
+                          }}
+                          onDragLeave={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setDraggingOverNote(null);
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                              handleNoteFileDrop(note.id, e.dataTransfer.files);
+                            }
+                            setDraggingOverNote(null);
+                          }}
                         >
                           <span className="text-gray-600 mt-1">•</span>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm text-gray-300 leading-relaxed">
                               <MarkdownRenderer
                                 content={note.content}
+                                onMentionClick={(contactName) => {
+                                  const contact = contacts.find(
+                                    c => c.fullName.toLowerCase() === contactName.toLowerCase()
+                                  );
+                                  if (contact) {
+                                    handleContactNavigate(contact.id);
+                                  }
+                                }}
                                 onLinkClick={(linkText) => {
                                   const existingNote = findNoteByTitle(linkText);
                                   if (existingNote) {
@@ -707,8 +1038,7 @@ const NotesView: React.FC<NotesViewProps> = ({
                                     setViewMode('document');
                                   } else {
                                     const newNote = createNote({
-                                      contactId: note.contactId || CONTACT_ZERO.id,
-                                      authorContactId: CONTACT_ZERO.id,
+                                      targetContactId: note.targetContactId || note.contactId !== CONTACT_ZERO.id ? note.contactId : undefined,
                                       content: '',
                                       title: linkText,
                                     });
@@ -720,6 +1050,85 @@ const NotesView: React.FC<NotesViewProps> = ({
                                 }}
                               />
                             </div>
+                            
+                            {/* Attachments */}
+                            {note.attachments && note.attachments.length > 0 && (
+                              <div className="flex flex-col gap-3 mt-3">
+                                {note.attachments.map((attachment) => (
+                                  <div key={attachment.id} className="relative">
+                                    {attachment.type === 'image' && (
+                                      <div className="relative group">
+                                        <img
+                                          src={attachment.dataUrl}
+                                          alt={attachment.filename || 'Image'}
+                                          className="max-w-full max-h-64 rounded-lg border border-[#333] cursor-pointer hover:border-[#4433FF]/50 transition-colors"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.open(attachment.dataUrl, '_blank');
+                                          }}
+                                        />
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeAttachmentFromNote(note.id, attachment.id);
+                                            setRefreshKey((k) => k + 1);
+                                          }}
+                                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 bg-[#0E0E0E]/80 rounded hover:bg-red-500/80 transition-opacity"
+                                        >
+                                          <Trash2 size={14} className="text-white" />
+                                        </button>
+                                      </div>
+                                    )}
+                                    {attachment.type === 'audio' && (
+                                      <div className="flex items-center gap-2 p-3 bg-[#1A1A1D] border border-[#333] rounded-lg">
+                                        <Music size={16} className="text-[#4433FF]" />
+                                        <audio
+                                          src={attachment.dataUrl}
+                                          controls
+                                          className="flex-1 h-8"
+                                          onClick={(e) => e.stopPropagation()}
+                                        />
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeAttachmentFromNote(note.id, attachment.id);
+                                            setRefreshKey((k) => k + 1);
+                                          }}
+                                          className="p-1 hover:bg-red-500/20 rounded transition-colors"
+                                        >
+                                          <Trash2 size={14} className="text-gray-400 hover:text-red-400" />
+                                        </button>
+                                      </div>
+                                    )}
+                                    {(attachment.type === 'file' || attachment.mimeType === 'application/pdf') && (
+                                      <div className="flex items-center gap-2 p-2 bg-[#1A1A1D] border border-[#333] rounded-lg hover:border-[#4433FF]/50 transition-colors group">
+                                        <File size={16} className="text-[#4433FF]" />
+                                        <a
+                                          href={attachment.dataUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="flex-1 text-sm text-gray-300 hover:text-[#4433FF] truncate"
+                                        >
+                                          {attachment.filename || 'File'}
+                                        </a>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeAttachmentFromNote(note.id, attachment.id);
+                                            setRefreshKey((k) => k + 1);
+                                          }}
+                                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded transition-opacity"
+                                        >
+                                          <Trash2 size={14} className="text-gray-400 hover:text-red-400" />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
                             {/* Only show contact link if note is about someone OTHER than Contact Zero */}
                             {contact && !isAboutContactZero && (
                               <button
@@ -734,6 +1143,26 @@ const NotesView: React.FC<NotesViewProps> = ({
                               </button>
                             )}
                           </div>
+                          <input
+                            ref={(el) => {
+                              noteFileInputRefs.current[note.id] = el;
+                            }}
+                            type="file"
+                            multiple
+                            className="hidden"
+                            onChange={async (e) => {
+                              if (e.target.files && e.target.files.length > 0) {
+                                await handleNoteFileDrop(note.id, e.target.files);
+                              }
+                            }}
+                          />
+                          <button
+                            onClick={(e) => handleTogglePin(note.id, e)}
+                            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[#4433FF]/20 transition-all mt-1"
+                            title={note.isPinned ? "Unpin note" : "Pin note"}
+                          >
+                            <Pin size={12} className={note.isPinned ? "text-[#4433FF] fill-[#4433FF]" : "text-gray-500"} />
+                          </button>
                         </div>
                       );
                     })}
@@ -742,7 +1171,67 @@ const NotesView: React.FC<NotesViewProps> = ({
 
                 {/* Editor - At Bottom with Real-time Link Highlighting */}
                 <div className="space-y-2 relative">
-                  <div className="relative min-h-[100px]">
+                  {/* Pending Attachments Preview */}
+                  {pendingAttachments[dateKey] && pendingAttachments[dateKey].length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {pendingAttachments[dateKey].map((file, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-2 px-2 py-1 bg-[#4433FF]/20 border border-[#4433FF]/50 rounded text-xs"
+                        >
+                          <Paperclip size={12} className="text-[#4433FF]" />
+                          <span className="text-[#4433FF] truncate max-w-[200px]">{file.name}</span>
+                          <button
+                            onClick={() => {
+                              setPendingAttachments((prev) => ({
+                                ...prev,
+                                [dateKey]: prev[dateKey].filter((_, i) => i !== idx),
+                              }));
+                            }}
+                            className="text-[#4433FF] hover:text-white"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <input
+                    ref={(el) => {
+                      fileInputRefs.current[dateKey] = el;
+                    }}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        handleFileDrop(dateKey, e.target.files);
+                      }
+                    }}
+                  />
+
+                  <div
+                    className="relative min-h-[100px]"
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDraggingOverDate(dateKey);
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDraggingOverDate(null);
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDraggingOverDate(null);
+                      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        handleFileDrop(dateKey, e.dataTransfer.files);
+                      }
+                    }}
+                  >
                     {/* Visible markdown rendering overlay - Must match textarea exactly */}
                     <div
                       className="absolute inset-0 pointer-events-none z-20 overflow-hidden"
@@ -770,8 +1259,9 @@ const NotesView: React.FC<NotesViewProps> = ({
                       onChange={(e) => {
                         const text = e.target.value;
                         setNoteDrafts((prev) => ({ ...prev, [dateKey]: text }));
-                        // Update wikilink state on every change
+                        // Update wikilink and mention state on every change
                         updateWikilinkState(dateKey, e.target);
+                        updateMentionState(dateKey, e.target);
                       }}
                       onKeyDown={(e) => handleEditorKeyDown(e, dateKey)}
                       placeholder="• Start typing... Press Enter to save"
@@ -791,6 +1281,31 @@ const NotesView: React.FC<NotesViewProps> = ({
                         outline: 'none',
                       }}
                     />
+
+                    {/* Mention ContactPicker */}
+                    {mentionState[dateKey]?.active && (() => {
+                      const state = mentionState[dateKey]!;
+                      const textarea = textareaRefs.current[dateKey];
+                      if (!textarea) return null;
+
+                      // Calculate position for ContactPicker
+                      const rect = textarea.getBoundingClientRect();
+                      const lineHeight = 24; // Approximate line height
+                      const lines = textarea.value.slice(0, textarea.selectionStart).split('\n');
+                      const lineNumber = lines.length - 1;
+                      const top = rect.top + (lineNumber * lineHeight) + lineHeight;
+                      const left = rect.left + 8;
+
+                      return (
+                        <ContactPicker
+                          query={state.query}
+                          position={{ top, left }}
+                          onSelect={(contactId) => handleMentionSelect(dateKey, contactId, textarea)}
+                          onCreateNew={(name) => handleMentionCreateNew(dateKey, name, textarea)}
+                          onClose={() => setMentionState((prev) => ({ ...prev, [dateKey]: null }))}
+                        />
+                      );
+                    })()}
 
                     {/* Wikilink Autocomplete Dropdown */}
                     {wikilinkState[dateKey]?.active && (() => {
@@ -1035,6 +1550,56 @@ const NotesView: React.FC<NotesViewProps> = ({
         )}
       </aside>
 
+      {/* Right-click Context Menu */}
+      {contextMenu && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setContextMenu(null)}
+          />
+          <div
+            className="fixed z-50 bg-[#0E0E0E] border border-[#4433FF]/50 rounded-lg shadow-2xl py-1 min-w-[200px]"
+            style={{ top: contextMenu.y, left: contextMenu.x }}
+          >
+            <input
+              ref={(el) => {
+                if (el) noteFileInputRefs.current[contextMenu.noteId] = el;
+              }}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={async (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  await handleNoteFileDrop(contextMenu.noteId, e.target.files);
+                  setContextMenu(null);
+                }
+              }}
+            />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                noteFileInputRefs.current[contextMenu.noteId]?.click();
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-[#1A1A1D] hover:text-white flex items-center gap-2"
+            >
+              <Paperclip size={14} />
+              Add attachment
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedNoteId(contextMenu.noteId);
+                setViewMode('document');
+                setContextMenu(null);
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-[#1A1A1D] hover:text-white flex items-center gap-2"
+            >
+              <FileText size={14} />
+              Open note
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

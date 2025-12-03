@@ -7,12 +7,14 @@ import React from 'react';
 interface MarkdownRendererProps {
   content: string;
   onLinkClick?: (linkText: string) => void;
+  onMentionClick?: (contactName: string) => void;
   preserveFormattingMarkers?: boolean;
 }
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   content,
   onLinkClick,
+  onMentionClick,
   preserveFormattingMarkers = false,
 }) => {
   const baseStyle = {
@@ -80,6 +82,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       { regex: /\*([^*]+)\*/g, type: 'italic' }, // Italic
       { regex: /`([^`]+)`/g, type: 'code' }, // Inline code
       { regex: /\[\[([^\]]+)\]\]/g, type: 'link' }, // Obsidian links
+      { regex: /@([^\s@\[\]\(\)]+(?:\s+[^\s@\[\]\(\)]+)*)/g, type: 'mention' }, // @mentions (allows spaces for full names)
     ];
 
     const matches: Array<{
@@ -202,6 +205,30 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
               </button>
             );
           }
+          break;
+        case 'mention':
+          const mentionText = `@${match.content}`;
+          parts.push(
+            <span
+              key={key++}
+              onClick={
+                onMentionClick
+                  ? (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onMentionClick(match.content);
+                    }
+                  : undefined
+              }
+              className="text-[#8beaff] hover:text-white cursor-pointer bg-[#8beaff]/10 px-1 rounded"
+              style={{
+                display: 'inline',
+                cursor: onMentionClick ? 'pointer' : 'default',
+              }}
+            >
+              {mentionText}
+            </span>
+          );
           break;
       }
 

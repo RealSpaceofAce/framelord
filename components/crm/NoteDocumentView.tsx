@@ -4,7 +4,7 @@
 // Replaces the modal overlay with a full document view in the main content area
 // =============================================================================
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,6 +14,10 @@ import {
   Edit2,
   Save,
   X,
+  Image,
+  Music,
+  File,
+  Trash2,
 } from 'lucide-react';
 import { Note } from '../../types';
 import {
@@ -23,8 +27,9 @@ import {
   findNoteByTitle,
   updateNote,
   createNote,
+  removeAttachmentFromNote,
 } from '../../services/noteStore';
-import { getContactById } from '../../services/contactStore';
+import { getContactById, getAllContacts } from '../../services/contactStore';
 import { getTopicsForNote } from '../../services/topicStore';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { WikilinkAutocomplete } from './WikilinkAutocomplete';
@@ -86,7 +91,8 @@ export const NoteDocumentView: React.FC<NoteDocumentViewProps> = ({
   onBack,
   onClose,
 }) => {
-  const note = getNoteById(noteId);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const note = useMemo(() => getNoteById(noteId), [noteId, refreshKey]);
   if (!note) return null;
 
   // Auto-open in edit mode if note is empty (newly created from [[link]])
@@ -104,13 +110,16 @@ export const NoteDocumentView: React.FC<NoteDocumentViewProps> = ({
   } | null>(null);
 
   useEffect(() => {
-    setEditContent(note.content);
-    setEditTitle(note.title || '');
-    // Auto-edit if empty note
-    if (!note.content.trim() && note.title) {
-      setIsEditing(true);
+    const currentNote = getNoteById(noteId);
+    if (currentNote) {
+      setEditContent(currentNote.content);
+      setEditTitle(currentNote.title || '');
+      // Auto-edit if empty note
+      if (!currentNote.content.trim() && currentNote.title) {
+        setIsEditing(true);
+      }
     }
-  }, [note]);
+  }, [noteId, refreshKey]);
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -428,6 +437,15 @@ export const NoteDocumentView: React.FC<NoteDocumentViewProps> = ({
           <div className="bg-[#0A0A0A] border border-[#1F1F24] rounded-lg p-6 text-sm text-gray-200 leading-relaxed min-h-[400px]">
             <MarkdownRenderer
               content={note.content || ''}
+              onMentionClick={(contactName) => {
+                const contacts = getAllContacts();
+                const contact = contacts.find(
+                  c => c.fullName.toLowerCase() === contactName.toLowerCase()
+                );
+                if (contact) {
+                  onNavigateContact(contact.id);
+                }
+              }}
               onLinkClick={(linkText) => {
                 const target = findNoteByTitle(linkText);
                 if (target) {
@@ -443,6 +461,85 @@ export const NoteDocumentView: React.FC<NoteDocumentViewProps> = ({
                 }
               }}
             />
+            
+            {/* Attachments */}
+            {note.attachments && note.attachments.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-[#2A2A2A] space-y-4">
+                <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-3">
+                  Attachments ({note.attachments.length})
+                </div>
+                {note.attachments.map((attachment) => (
+                  <div key={attachment.id} className="relative">
+                    {attachment.type === 'image' && (
+                      <div className="relative group">
+                        <img
+                          src={attachment.dataUrl}
+                          alt={attachment.filename || 'Image'}
+                          className="max-w-full max-h-96 rounded-lg border border-[#333] cursor-pointer hover:border-[#4433FF]/50 transition-colors"
+                          onClick={() => window.open(attachment.dataUrl, '_blank')}
+                        />
+                        <button
+                          onClick={() => {
+                            removeAttachmentFromNote(note.id, attachment.id);
+                            setRefreshKey((k) => k + 1);
+                          }}
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 bg-[#0E0E0E]/80 rounded hover:bg-red-500/80 transition-opacity"
+                        >
+                          <Trash2 size={14} className="text-white" />
+                        </button>
+                      </div>
+                    )}
+                    {attachment.type === 'audio' && (
+                      <div className="flex items-center gap-3 p-4 bg-[#1A1A1D] border border-[#333] rounded-lg">
+                        <Music size={20} className="text-[#4433FF]" />
+                        <audio
+                          src={attachment.dataUrl}
+                          controls
+                          className="flex-1 h-10"
+                        />
+                        <button
+                          onClick={() => {
+                            removeAttachmentFromNote(note.id, attachment.id);
+                            const updatedNote = getNoteById(note.id);
+                            if (updatedNote) {
+                              window.location.reload();
+                            }
+                          }}
+                          className="p-2 hover:bg-red-500/20 rounded transition-colors"
+                        >
+                          <Trash2 size={16} className="text-gray-400 hover:text-red-400" />
+                        </button>
+                      </div>
+                    )}
+                    {(attachment.type === 'file' || attachment.mimeType === 'application/pdf') && (
+                      <div className="flex items-center gap-3 p-4 bg-[#1A1A1D] border border-[#333] rounded-lg hover:border-[#4433FF]/50 transition-colors group">
+                        <File size={20} className="text-[#4433FF]" />
+                        <a
+                          href={attachment.dataUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 text-sm text-gray-300 hover:text-[#4433FF] truncate"
+                        >
+                          {attachment.filename || 'File'}
+                        </a>
+                        <button
+                          onClick={() => {
+                            removeAttachmentFromNote(note.id, attachment.id);
+                            const updatedNote = getNoteById(note.id);
+                            if (updatedNote) {
+                              window.location.reload();
+                            }
+                          }}
+                          className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-500/20 rounded transition-opacity"
+                        >
+                          <Trash2 size={16} className="text-gray-400 hover:text-red-400" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

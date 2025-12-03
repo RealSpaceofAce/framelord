@@ -152,7 +152,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
             onMouseLeave={handleMouseLeave}
             onTouchEnd={handleMouseLeave}
             style={{ rotateX, rotateY, transformStyle: "preserve-3d" } as any}
-            className="bg-fl-black/80 backdrop-blur-xl border border-fl-primary/30 rounded-2xl p-8 md:p-12 shadow-[0_0_80px_rgba(3,4,18,0.8)] relative overflow-hidden group touch-none transition-all duration-300"
+            className="glass-card rounded-2xl p-8 md:p-12 shadow-[0_0_80px_rgba(3,4,18,0.8)] relative overflow-hidden group touch-none transition-all duration-300 border border-[#1f2f45]"
         >
             {/* Glossy Reflection Gradient */}
             <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl z-40" />

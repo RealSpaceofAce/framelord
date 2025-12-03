@@ -56,7 +56,7 @@ export const Features: React.FC = () => {
           {features.map((f, i) => (
             <Reveal key={i} delay={i * 0.1}>
                 <div 
-                    className="h-full group p-8 bg-fl-darkPurple/30 backdrop-blur-lg border border-fl-primary/20 hover:border-fl-primary/50 hover:bg-fl-darkPurple/50 transition-all duration-300 rounded-xl hover:-translate-y-2 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+                    className="h-full group p-8 glass-card border border-[#1f2f45] hover:border-fl-primary/60 transition-all duration-300 rounded-2xl hover:-translate-y-2"
                 >
                 <div className="mb-6 p-4 bg-fl-black/50 w-fit rounded-lg border border-white/5 group-hover:border-fl-primary/50 group-hover:shadow-[0_0_15px_rgba(68,51,255,0.3)] transition-all">
                     {f.icon}
