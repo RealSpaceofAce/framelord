@@ -71,6 +71,7 @@ import {
   WidgetId,
   WidgetConfig,
 } from '../../services/widgetLayoutStore';
+import { FrameScanContactTab } from './FrameScanContactTab';
 
 const MotionDiv = motion.div as any;
 
@@ -83,6 +84,7 @@ interface ContactDossierViewProps {
   onNavigateToTopic?: (topicId: string) => void;
   onNavigateToGroup?: (groupId: string) => void;
   onNavigateToProject?: (projectId: string) => void;
+  onNavigateToFrameScanReport?: (reportId: string) => void;
 }
 
 // --- EDIT FORM STATE TYPE ---
@@ -111,7 +113,8 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   onNavigateToDossier,
   onNavigateToTopic,
   onNavigateToGroup,
-  onNavigateToProject
+  onNavigateToProject,
+  onNavigateToFrameScanReport,
 }) => {
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -1608,20 +1611,14 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           </div>
           )}
 
-          {/* Frame Scan Section */}
+          {/* Frame Scan Section with Framelord Assistant */}
           {isWidgetVisible('frameScan') && (
-          <div className={`${subCard} p-5`}>
-            <div className="flex items-center gap-2 mb-3">
-              <Scan size={16} className="text-[#8beaff]" />
-              <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">Frame Analysis</h3>
-            </div>
-            <button className="w-full px-4 py-3 bg-gradient-to-r from-[#00f0ff] via-[#2bc8ff] to-[#7c5dff] hover:opacity-95 text-[#03101d] text-sm font-bold rounded-xl transition-opacity flex items-center justify-center gap-2 shadow-[0_12px_40px_rgba(24,210,255,0.35)]">
-              <Scan size={16} />
-              Run Frame Scan
-            </button>
-            <p className="text-xs text-[#7fa6d1] mt-2 text-center">
-              Analyze communication patterns for authority leaks
-            </p>
+          <div className={`${glassCard} p-4`}>
+            <FrameScanContactTab
+              contactId={selectedContactId}
+              contactName={contact.fullName}
+              onViewReport={(reportId) => onNavigateToFrameScanReport?.(reportId)}
+            />
           </div>
           )}
         </div>

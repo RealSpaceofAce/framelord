@@ -50,6 +50,20 @@ import {
   formatTimeRange,
   CalendarEvent,
 } from '../services/calendarStore';
+import { FrameScanPage } from './crm/FrameScanPage';
+import { FrameScanReportDetail } from './crm/FrameScanReportDetail';
+import { FrameScoreTile } from './crm/FrameScoreTile';
+import { PublicFrameScanPage } from '../pages/PublicFrameScanPage';
+import { FrameReportDemoPage } from '../pages/FrameReportDemoPage';
+import { appConfig } from '../config/appConfig';
+import { getContactZeroReports } from '../services/frameScanReportStore';
+import {
+  computeCumulativeFrameProfileForContact,
+  computeFrameProfileTrend,
+  getFrameScoreLabel,
+  getFrameScoreColorClass,
+  formatProfileDate,
+} from '../lib/frameScan/frameProfile';
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -534,6 +548,79 @@ interface SelectedDataPoint {
     actions: number;
     score: number;
 }
+
+// --- FRAME INTEGRITY WIDGET (with robot GIF) ---
+const FrameIntegrityWidget: React.FC = () => {
+    const user = getContactZero();
+    const reports = getContactZeroReports();
+    const profile = computeCumulativeFrameProfileForContact(CONTACT_ZERO.id, reports);
+    
+    // Calculate metrics based on actual app data
+    const frameIntegrity = profile.currentFrameScore;
+    const scansCompleted = profile.scansCount;
+    const frameLeaks = Math.max(0, 100 - frameIntegrity);
+    
+    return (
+        <div className="bg-[#080a08] rounded-xl p-6 relative overflow-hidden h-full" style={{ minHeight: '320px' }}>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-5">
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#32cd32] rounded-sm animate-pulse" />
+                    <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-[#32cd32] font-mono">Frame Integrity</h3>
+                </div>
+                <div className="text-[10px] text-[#32cd32] font-bold border border-[#32cd32] px-3 py-1 rounded font-mono">ONLINE</div>
+            </div>
+
+            {/* Main Content - Stats on left, Robot on right */}
+            <div className="flex items-center">
+                {/* Left: Stats Stack */}
+                <div className="space-y-3 w-[140px] flex-shrink-0">
+                    {/* Frame Score */}
+                    <div className="p-3 border border-[#32cd32]/50 bg-[#0a0d0a] rounded">
+                        <div className="flex items-center gap-1.5 mb-1">
+                            <div className="w-1.5 h-1.5 bg-[#32cd32] rounded-sm" />
+                            <span className="text-[10px] text-[#32cd32] font-bold uppercase tracking-wider font-mono">Frame Score</span>
+                        </div>
+                        <div className="text-3xl font-display font-bold text-[#32cd32]">{frameIntegrity}/100</div>
+                        <div className="text-[9px] text-[#32cd32]/60 font-mono">[INTEGRITY]</div>
+                    </div>
+
+                    {/* Scans Completed */}
+                    <div className="p-3 border border-[#32cd32]/50 bg-[#0a0d0a] rounded">
+                        <div className="flex items-center gap-1.5 mb-1">
+                            <div className="w-1.5 h-1.5 bg-[#32cd32] rounded-sm" />
+                            <span className="text-[10px] text-[#32cd32] font-bold uppercase tracking-wider font-mono">Scans Done</span>
+                        </div>
+                        <div className="text-3xl font-display font-bold text-[#32cd32]">{scansCompleted}</div>
+                        <div className="text-[9px] text-[#32cd32]/60 font-mono">[COMPLETED]</div>
+                    </div>
+
+                    {/* Frame Leaks */}
+                    <div className="p-3 border border-orange-500/50 bg-[#0a0d0a] rounded">
+                        <div className="flex items-center gap-1.5 mb-1">
+                            <div className="w-1.5 h-1.5 bg-orange-500 rounded-sm" />
+                            <span className="text-[10px] text-orange-500 font-bold uppercase tracking-wider font-mono">Frame Leaks</span>
+                        </div>
+                        <div className="text-3xl font-display font-bold text-orange-500">{frameLeaks}</div>
+                        <div className="text-[9px] text-orange-500/60 font-mono">[DETECTED]</div>
+                    </div>
+                </div>
+
+                {/* Right: Robot GIF - Large and centered */}
+                <div className="flex-1 flex items-center justify-center pl-4">
+                    <img 
+                        src="/bot_greenprint.gif" 
+                        alt="Frame Guardian" 
+                        className="h-[260px] w-auto"
+                        style={{ 
+                            filter: 'drop-shadow(0 0 15px rgba(50, 205, 50, 0.25))',
+                        }}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // --- DASHBOARD OVERVIEW (Rich - Binds to Contact Zero) ---
 const DashboardOverview: React.FC = () => {
@@ -1080,10 +1167,10 @@ const DashboardOverview: React.FC = () => {
                 </div>
             </SparkBorder>
 
-            {/* BOTTOM ROW */}
+            {/* BOTTOM ROW - Two columns */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <SparkBorder>
-                    <div className="bg-[#0E0E0E] rounded-xl p-6 relative overflow-hidden">
+                    <div className="bg-[#0E0E0E] rounded-xl p-6 relative overflow-hidden h-full">
                         <div className="flex justify-between items-center mb-4">
                             <div className="flex items-center gap-2 text-blue-500">
                                 <div className="w-2 h-2 bg-blue-500 rounded-sm" />
@@ -1108,30 +1195,97 @@ const DashboardOverview: React.FC = () => {
                 </SparkBorder>
 
                 <SparkBorder>
-                    <div className="bg-[#0E0E0E] rounded-xl p-6 relative overflow-hidden flex flex-col justify-between">
-                        <div className="flex justify-between items-center mb-4">
-                            <div className="flex items-center gap-2 text-green-500">
-                                <div className="w-2 h-2 bg-green-500 rounded-sm" />
-                                <h3 className="text-xs font-bold uppercase tracking-widest">Security Status</h3>
-                            </div>
-                            <div className="text-[9px] text-green-500 font-bold border border-green-500 px-2 py-0.5 rounded">ONLINE</div>
-                        </div>
-                        <div className="p-4 border border-green-500/30 bg-green-900/10 rounded flex items-center justify-between">
-                            <div>
-                                <div className="text-[10px] text-green-500 font-bold uppercase mb-1 flex items-center gap-1"><div className="w-1 h-1 bg-green-500 rounded-full" /> Guard Bots</div>
-                                <div className="text-2xl font-display font-bold text-green-400">124/124</div>
-                                <div className="text-[9px] text-green-600 font-mono">[RUNNING...]</div>
-                            </div>
-                            <Bot size={32} className="text-green-500 opacity-50" />
-                        </div>
-                    </div>
+                    <FrameIntegrityWidget />
                 </SparkBorder>
             </div>
         </div>
     );
 }
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS';
+// Frame Score Tile Widget for Dashboard Overview
+const FrameScoreTileWidget: React.FC = () => {
+    const reports = getContactZeroReports();
+    const profile = computeCumulativeFrameProfileForContact(CONTACT_ZERO.id, reports);
+    const trend = computeFrameProfileTrend(reports);
+
+    const scoreColorClass = getFrameScoreColorClass(profile.currentFrameScore);
+    const scoreLabel = getFrameScoreLabel(profile.currentFrameScore);
+
+    return (
+        <div className="bg-[#0E0E0E] rounded-xl p-6 relative overflow-hidden h-full flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-2 text-[#4433FF]">
+                    <Crosshair size={16} />
+                    <h3 className="text-xs font-bold uppercase tracking-widest">Frame Score</h3>
+                </div>
+                {profile.scansCount > 0 && (
+                    <div className="text-[9px] bg-[#4433FF]/20 text-[#4433FF] px-2 py-0.5 rounded font-bold border border-[#4433FF]/30">
+                        {profile.scansCount} SCAN{profile.scansCount !== 1 ? 'S' : ''}
+                    </div>
+                )}
+            </div>
+
+            <div className="flex-1 flex items-center justify-between">
+                <div>
+                    <div className={`text-4xl font-display font-bold ${scoreColorClass}`}>
+                        {profile.currentFrameScore}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                        {trend && (
+                            <span className={`flex items-center gap-0.5 text-xs ${
+                                trend.direction === 'up' ? 'text-green-400' :
+                                trend.direction === 'down' ? 'text-red-400' : 'text-gray-500'
+                            }`}>
+                                {trend.direction === 'up' ? <TrendingUp size={12} /> :
+                                 trend.direction === 'down' ? <TrendingDown size={12} /> :
+                                 null}
+                                {trend.changeAmount > 0 && `${trend.changeAmount}`}
+                            </span>
+                        )}
+                        <span className="text-xs text-gray-500">{scoreLabel}</span>
+                    </div>
+                </div>
+
+                {/* Mini circular progress */}
+                <div className="w-16 h-16 relative">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                        <circle
+                            className="stroke-[#222]"
+                            fill="none"
+                            strokeWidth="3"
+                            cx="18"
+                            cy="18"
+                            r="15"
+                        />
+                        <circle
+                            className={`${
+                                profile.currentFrameScore >= 65 ? 'stroke-green-500' :
+                                profile.currentFrameScore >= 45 ? 'stroke-yellow-500' :
+                                'stroke-red-500'
+                            }`}
+                            fill="none"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            cx="18"
+                            cy="18"
+                            r="15"
+                            strokeDasharray={`${profile.currentFrameScore * 0.94} 100`}
+                        />
+                    </svg>
+                </div>
+            </div>
+
+            {profile.lastScanAt && (
+                <div className="text-[9px] text-gray-600 mt-2">
+                    Last: {formatProfileDate(profile.lastScanAt)}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -1155,6 +1309,11 @@ export const Dashboard: React.FC = () => {
   // SELECTED PROJECT STATE (for Project detail view)
   // ==========================================================================
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
+  // ==========================================================================
+  // SELECTED FRAMESCAN REPORT STATE (for FrameScan report detail view)
+  // ==========================================================================
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
 
   // Get selected contact for display in header
   const selectedContact = getContactById(selectedContactId) || getContactZero();
@@ -1202,6 +1361,11 @@ export const Dashboard: React.FC = () => {
     setCurrentView('PROJECTS');
   };
 
+  const handleNavigateToFrameScanReport = (reportId: string) => {
+    setSelectedReportId(reportId);
+    setCurrentView('FRAMESCAN_REPORT');
+  };
+
   // Get header title based on view
   const getHeaderTitle = (): string => {
     if (currentView === 'DOSSIER') {
@@ -1210,7 +1374,33 @@ export const Dashboard: React.FC = () => {
     if (currentView === 'TOPIC' && selectedTopic) {
       return `#${selectedTopic.label.toUpperCase()}`;
     }
+    if (currentView === 'FRAMESCAN' || currentView === 'FRAMESCAN_REPORT') {
+      return 'FRAME SCANS';
+    }
+    if (currentView === 'PUBLIC_SCAN') {
+      return 'TRY FRAMESCAN';
+    }
+    if (currentView === 'FRAME_DEMO') {
+      return 'FRAME REPORT DEMO';
+    }
     return currentView;
+  };
+
+  // Navigate to Frame Scan report detail
+  const handleViewReport = (reportId: string) => {
+    setSelectedReportId(reportId);
+    setCurrentView('FRAMESCAN_REPORT');
+  };
+
+  // Navigate back from Frame Scan report to list
+  const handleBackToFrameScans = () => {
+    setSelectedReportId(null);
+    setCurrentView('FRAMESCAN');
+  };
+
+  // Navigate to Frame Scans list from anywhere
+  const handleOpenFrameScans = () => {
+    setCurrentView('FRAMESCAN');
   };
 
   return (
@@ -1240,6 +1430,7 @@ export const Dashboard: React.FC = () => {
             />
             <NavItem active={currentView === 'NOTES'} onClick={() => handleNav('NOTES')} icon={<Notebook size={16} />} label="LOG" />
             <NavItem active={currentView === 'SCAN'} onClick={() => handleNav('SCAN')} icon={<Scan size={16} />} label="SCAN" />
+            <NavItem active={currentView === 'FRAMESCAN' || currentView === 'FRAMESCAN_REPORT'} onClick={() => handleNav('FRAMESCAN')} icon={<Crosshair size={16} />} label="FRAME SCANS" />
 
             <div className="h-6" />
 
@@ -1342,16 +1533,17 @@ export const Dashboard: React.FC = () => {
 
          <div className={`p-4 md:p-6 overflow-y-auto flex-1 custom-scrollbar ${!isLeftSidebarOpen ? 'max-w-full' : ''}`}>
              {currentView === 'OVERVIEW' && <DashboardOverview />}
-             {currentView === 'DOSSIER' && (
-               <ContactDossierView
-                 selectedContactId={selectedContactId}
-                 setSelectedContactId={setSelectedContactId}
-                 onNavigateToDossier={() => setCurrentView('DOSSIER')}
-                 onNavigateToTopic={handleNavigateToTopic}
-                 onNavigateToGroup={handleNavigateToGroup}
-                 onNavigateToProject={handleNavigateToProject}
-               />
-             )}
+            {currentView === 'DOSSIER' && (
+              <ContactDossierView
+                selectedContactId={selectedContactId}
+                setSelectedContactId={setSelectedContactId}
+                onNavigateToDossier={() => setCurrentView('DOSSIER')}
+                onNavigateToTopic={handleNavigateToTopic}
+                onNavigateToGroup={handleNavigateToGroup}
+                onNavigateToProject={handleNavigateToProject}
+                onNavigateToFrameScanReport={handleNavigateToFrameScanReport}
+              />
+            )}
              {currentView === 'TOPIC' && selectedTopicId && (
                <TopicView
                  topicId={selectedTopicId}
@@ -1430,6 +1622,31 @@ export const Dashboard: React.FC = () => {
                  selectedContactId={selectedContactId}
                  setSelectedContactId={setSelectedContactId}
                />
+             )}
+             {currentView === 'FRAMESCAN' && (
+               <FrameScanPage
+                 onViewReport={handleViewReport}
+                 onNavigateToContact={(contactId) => {
+                   setSelectedContactId(contactId);
+                   setCurrentView('DOSSIER');
+                 }}
+               />
+             )}
+             {currentView === 'FRAMESCAN_REPORT' && selectedReportId && (
+               <FrameScanReportDetail
+                 reportId={selectedReportId}
+                 onBack={handleBackToFrameScans}
+                 onNavigateToContact={(contactId) => {
+                   setSelectedContactId(contactId);
+                   setCurrentView('DOSSIER');
+                 }}
+               />
+             )}
+             {currentView === 'PUBLIC_SCAN' && (
+               <PublicFrameScanPage />
+             )}
+             {currentView === 'FRAME_DEMO' && appConfig.enableDevRoutes && (
+               <FrameReportDemoPage />
              )}
          </div>
       </main>

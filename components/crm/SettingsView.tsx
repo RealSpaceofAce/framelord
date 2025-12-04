@@ -23,7 +23,12 @@ import {
   AlertTriangle,
   Check,
   X,
+  Key,
+  Info,
+  FileText,
 } from 'lucide-react';
+import { appConfig } from '../../config/appConfig';
+import { loadUserSettings, saveUserSettings } from '../../lib/settings/userSettings';
 import { CONTACT_ZERO, getContactZero, updateContact } from '../../services/contactStore';
 import {
   getNotificationSettings,
@@ -66,6 +71,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [weeklyReports, setWeeklyReports] = useState(true);
   const [googleCalLinked, setGoogleCalLinked] = useState(false);
   const [googleCalEmail, setGoogleCalEmail] = useState('');
+  
+  // API Keys state (for advanced users)
+  const [openaiKey, setOpenaiKey] = useState('');
+  const [nanoKey, setNanoKey] = useState('');
+  const [apiKeyStatus, setApiKeyStatus] = useState<'idle' | 'saved'>('idle');
 
   // System Log notification preferences
   const notificationSettings = getNotificationSettings();
@@ -113,7 +123,51 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         // ignore parse errors
       }
     }
+    
+    // Load API keys
+    const userSettings = loadUserSettings();
+    setOpenaiKey(userSettings.openaiApiKey ?? '');
+    setNanoKey(userSettings.nanobananaApiKey ?? '');
   }, []);
+
+  // API Key status labels
+  const openaiStatusLabel = (() => {
+    if (openaiKey.trim().length > 0) return 'Using your personal OpenAI key';
+    const envKey = (import.meta as any).env?.VITE_OPENAI_API_KEY as string | undefined;
+    if (envKey && envKey.trim().length > 0) return 'Using FrameLord system OpenAI key';
+    return 'No OpenAI key configured';
+  })();
+
+  const nanoStatusLabel = (() => {
+    if (nanoKey.trim().length > 0) return 'Using your personal NanoBanana key';
+    const envKey = (import.meta as any).env?.VITE_NANOBANANA_API_KEY as string | undefined;
+    if (envKey && envKey.trim().length > 0) return 'Using FrameLord system NanoBanana key';
+    return 'No NanoBanana key configured';
+  })();
+
+  const handleSaveApiKeys = () => {
+    const current = loadUserSettings();
+    const next = {
+      ...current,
+      openaiApiKey: openaiKey.trim() || undefined,
+      nanobananaApiKey: nanoKey.trim() || undefined,
+    };
+    saveUserSettings(next);
+    setApiKeyStatus('saved');
+    setTimeout(() => setApiKeyStatus('idle'), 1500);
+  };
+
+  const clearOpenAI = () => {
+    const current = loadUserSettings();
+    saveUserSettings({ ...current, openaiApiKey: undefined });
+    setOpenaiKey('');
+  };
+
+  const clearNano = () => {
+    const current = loadUserSettings();
+    saveUserSettings({ ...current, nanobananaApiKey: undefined });
+    setNanoKey('');
+  };
 
   const applyTheme = (isDark: boolean) => {
     const root = document.documentElement;
@@ -692,6 +746,94 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* INTEGRATIONS TAB */}
         {activeTab === 'integrations' && (
           <div className="space-y-6">
+            {/* FrameScan API Keys - Only show if advanced settings enabled */}
+            {appConfig.enableAdvancedApiSettings && (
+              <SettingCard
+                title="FrameScan API Keys"
+                description="Use personal API keys for FrameScan. Leave empty to use FrameLord system keys."
+              >
+                <div className="space-y-4">
+                  <div className="flex items-start gap-2 p-3 bg-[#4433FF]/10 border border-[#4433FF]/30 rounded-lg">
+                    <Info size={14} className="text-[#4433FF] mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-[#7fa6d1]">
+                      <strong className="text-[#4433FF]">For advanced users:</strong> Enter your own API keys to use your quota instead of FrameLord's system keys. Keys are stored locally in your browser.
+                    </p>
+                  </div>
+                  
+                  {/* OpenAI Key */}
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">
+                      OpenAI API Key
+                    </label>
+                    <input
+                      type="password"
+                      value={openaiKey}
+                      onChange={(e) => setOpenaiKey(e.target.value)}
+                      placeholder="sk-..."
+                      className="w-full bg-[#1A1A1D] border border-[#333] rounded-lg px-4 py-2 text-white text-sm focus:border-[#4433FF] outline-none font-mono"
+                    />
+                    <div className="flex items-center justify-between mt-1">
+                      <span className={`text-[10px] ${openaiKey.trim() ? 'text-green-400' : 'text-gray-500'}`}>
+                        {openaiStatusLabel}
+                      </span>
+                      {openaiKey.trim() && (
+                        <button
+                          onClick={clearOpenAI}
+                          className="text-[10px] text-red-400 hover:text-red-300"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* NanoBanana Key */}
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">
+                      NanoBanana API Key
+                    </label>
+                    <input
+                      type="password"
+                      value={nanoKey}
+                      onChange={(e) => setNanoKey(e.target.value)}
+                      placeholder="nb-..."
+                      className="w-full bg-[#1A1A1D] border border-[#333] rounded-lg px-4 py-2 text-white text-sm focus:border-[#4433FF] outline-none font-mono"
+                    />
+                    <div className="flex items-center justify-between mt-1">
+                      <span className={`text-[10px] ${nanoKey.trim() ? 'text-green-400' : 'text-gray-500'}`}>
+                        {nanoStatusLabel}
+                      </span>
+                      {nanoKey.trim() && (
+                        <button
+                          onClick={clearNano}
+                          className="text-[10px] text-red-400 hover:text-red-300"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Save Button */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleSaveApiKeys}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#4433FF] hover:bg-[#5544FF] text-white text-sm font-bold rounded-lg transition-colors"
+                    >
+                      <Key size={14} />
+                      Save Keys
+                    </button>
+                    {apiKeyStatus === 'saved' && (
+                      <span className="flex items-center gap-1 text-xs text-green-400">
+                        <Check size={14} />
+                        Saved!
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </SettingCard>
+            )}
+
             <SettingCard
               title="Calendar Integrations"
               description="Link calendars to push tasks, scans, and notes as events"

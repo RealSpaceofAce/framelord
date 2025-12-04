@@ -1,0 +1,771 @@
+{
+  "version": "1.0.0",
+  "name": "FrameLord_Master_FrameScanSpec",
+  "core_model": {
+    "frames": {
+      "Apex": {
+        "id": "apex",
+        "summary": "Internally validated, Win Win oriented, assumes desirability, positions self as buyer and source of value.",
+        "traits": [
+          "Assumes that the right people already want what he is.",
+          "Treats himself as the buyer who is screening for fit.",
+          "Separates identity from tactics and experiments freely.",
+          "Holds an internal yes to himself before the interaction.",
+          "Seeks clean mutual gain or clean separation without resentment.",
+          "Uses persuasion as leadership and transmission of an ordered field."
+        ]
+      },
+      "Slave": {
+        "id": "slave",
+        "summary": "Externally validated, Win Lose or Lose Lose oriented, chases approval, positions self as product for sale.",
+        "traits": [
+          "Assumes others are not interested and must be convinced.",
+          "Treats himself as a product that must be purchased.",
+          "Fuses identity with tactics so failure feels like a verdict on worth.",
+          "Needs external yes in order to feel ok about himself.",
+          "Uses guilt, pressure, or self erasure instead of clean Win Win.",
+          "Distrusts persuasion while being ruled by external influence."
+        ]
+      }
+    },
+    "win_win_model": {
+      "states": {
+        "win_win": {
+          "description": "Both sides gain vitality, clarity, and long term advantage with no covert resentment.",
+          "markers": [
+            "Both parties are freer and more resourced after the exchange.",
+            "Either party can walk away without bitterness.",
+            "Boundaries, standards, and terms are explicit."
+          ]
+        },
+        "win_lose": {
+          "description": "One side extracts value or validation while the other shrinks, resents, or pays a hidden cost.",
+          "markers": [
+            "One party feels drained or used.",
+            "Manipulation, guilt, or pressure are present.",
+            "Loss is hidden under moral language, flattery, or fear."
+          ]
+        },
+        "lose_lose": {
+          "description": "Both sides lose vitality or integrity, often through sabotage, spite, or mutual resentment.",
+          "markers": [
+            "No one leaves stronger or clearer.",
+            "There is escalation of shame, blame, or chaos.",
+            "The interaction damages future trust."
+          ]
+        },
+        "neutral": {
+          "description": "Low emotional charge and low consequences. Little real gain or loss.",
+          "markers": [
+            "Polite but forgettable.",
+            "No clear decision or movement.",
+            "No strong desire to repeat the interaction."
+          ]
+        }
+      },
+      "default_expectation": "Apex operation aims for Win Win as structural default and treats Win Lose or Lose Lose as failure states to correct."
+    },
+    "axes": [
+      {
+        "id": "assumptive_state",
+        "name": "Assumptive State",
+        "scale": [-3, 3],
+        "description": "Underlying assumption about self and others: from needy and doubtful to already chosen and wanted.",
+        "bands": {
+          "strong_slave": "Assumes others do not want him and that he must earn any positive attention.",
+          "mild_slave": "Shows flashes of confidence but quickly collapses into seeking reassurance.",
+          "neutral": "Mixed signals about desirability and default stance.",
+          "mild_apex": "Speaks as if he is welcome and valued while still occasionally hedging.",
+          "strong_apex": "Acts as if the right people are naturally drawn into his orbit and speaks from that certainty."
+        }
+      },
+      {
+        "id": "buyer_seller_position",
+        "name": "Buyer vs Seller Position",
+        "scale": [-3, 3],
+        "description": "Relational position taken in the interaction: product seeking purchase or buyer screening for fit.",
+        "bands": {
+          "strong_slave": "Begging to be chosen, over explaining, asking for permission to proceed.",
+          "mild_slave": "Frames offers as favors to him rather than value for the other person.",
+          "neutral": "No clear position, feels like mutual uncertainty.",
+          "mild_apex": "Sets some criteria and standards but still over justifies.",
+          "strong_apex": "Clearly frames himself as buyer, sets standards, and screens calmly for fit."
+        }
+      },
+      {
+        "id": "identity_vs_tactic",
+        "name": "Identity vs Tactic Separation",
+        "scale": [-3, 3],
+        "description": "Degree to which the person confuses their worth with the success of a tactic.",
+        "bands": {
+          "strong_slave": "Treats each success or failure as proof of being worthy or worthless.",
+          "mild_slave": "Takes outcomes personally but sometimes detaches after reflection.",
+          "neutral": "Shifts between experimentation and self judgment.",
+          "mild_apex": "Understands that tactics are tools yet still flinches when they fail.",
+          "strong_apex": "Sees tactics as expendable tools and treats outcomes as neutral data."
+        }
+      },
+      {
+        "id": "internal_sale",
+        "name": "Internal Sale",
+        "scale": [-3, 3],
+        "description": "Level of conviction in self and offer before entering the interaction.",
+        "bands": {
+          "strong_slave": "Has not sold himself on his own value and leans on others to decide it.",
+          "mild_slave": "Believes in himself only when getting positive responses.",
+          "neutral": "Belief fluctuates with recent wins and losses.",
+          "mild_apex": "Mostly sold on his own value but still seeks confirmation at key moments.",
+          "strong_apex": "Fully convinced of his own value and uses interactions only for sorting and logistics."
+        }
+      },
+      {
+        "id": "win_win_integrity",
+        "name": "Win Win Integrity",
+        "scale": [-3, 3],
+        "description": "Commitment to mutual gain and clean separation over extraction or covert contracts.",
+        "bands": {
+          "strong_slave": "Uses pressure, guilt, or hidden conditions to secure outcomes.",
+          "mild_slave": "Talks about fairness but still tries to force or corner others.",
+          "neutral": "No clear commitment to mutual gain or clean exit.",
+          "mild_apex": "Intends mutual gain yet sometimes tolerates unclear or lopsided deals.",
+          "strong_apex": "Refuses any deal that harms either party and welcomes clear no responses."
+        }
+      },
+      {
+        "id": "persuasion_style",
+        "name": "Persuasion Style",
+        "scale": [-3, 3],
+        "description": "Use of influence: reactive qualification or proactive leadership and transmission.",
+        "bands": {
+          "strong_slave": "Chases, argues, and tries to talk people into compliance.",
+          "mild_slave": "Over explains and over justifies to ease doubt.",
+          "neutral": "Alternates between leading and appeasing.",
+          "mild_apex": "Usually leads with clarity and gives people room to choose.",
+          "strong_apex": "Radiates an ordered field and treats agreement as voluntary recognition, not surrender."
+        }
+      },
+      {
+        "id": "pedestalization",
+        "name": "Pedestalization",
+        "scale": [-3, 3],
+        "description": "Where the crown is placed: over the self or over an external person, object, or outcome.",
+        "bands": {
+          "strong_slave": "Places others, outcomes, or institutions far above self and orbits them.",
+          "mild_slave": "Oscillates between self abandonment and brief assertion.",
+          "neutral": "No clear center; power seems scattered.",
+          "mild_apex": "Keeps self as center in most cases but still over values a few people or outcomes.",
+          "strong_apex": "Treats self and mission as origin and keeps everything else as secondary orbiters."
+        }
+      },
+      {
+        "id": "self_trust_vs_permission",
+        "name": "Self Trust vs Permission Seeking",
+        "scale": [-3, 3],
+        "description": "Source of authority: inner conviction or external permission.",
+        "bands": {
+          "strong_slave": "Waits for signals, nods, or approval before acting.",
+          "mild_slave": "Acts occasionally but feels wrong without validation.",
+          "neutral": "Mixed internal and external authority.",
+          "mild_apex": "Acts on inner direction most of the time.",
+          "strong_apex": "Treats inner conviction and aligned principles as primary authority."
+        }
+      },
+      {
+        "id": "field_strength",
+        "name": "Field Strength and Coherence",
+        "scale": [-3, 3],
+        "description": "How strongly the person broadcasts an ordered personal field that others can feel and align to.",
+        "bands": {
+          "strong_slave": "Chaotic, apologetic, or fragmented presence with no clear direction.",
+          "mild_slave": "Occasional glimpses of order but unstable under pressure.",
+          "neutral": "Low broadcast, low distortion.",
+          "mild_apex": "Generally clear stance and tone that others can read.",
+          "strong_apex": "Stable, calm, intense presence that makes alignment or misalignment obvious."
+        }
+      }
+    ],
+    "style_guide": {
+      "tone": "Direct, firm, non therapeutic, oriented to sovereignty and responsibility.",
+      "stance_toward_user": "Assume the user is capable of Apex operation and is responsible for decisions.",
+      "banned_patterns": [
+        "Empty reassurance that ignores real structural problems.",
+        "Victim language that excuses Win Lose or Lose Lose behavior.",
+        "Overly soft coaching tone that dilutes hierarchy and clarity."
+      ],
+      "priorities": [
+        "Name reality clearly.",
+        "Expose Slave Frame patterns without cruelty or contempt.",
+        "Show the path to Apex Frame through concrete corrections.",
+        "Guard the Win Win architecture in all advice.",
+        "For images, describe posture, orientation, and aesthetic problems bluntly, using neutral language such as genital shame, dependency posture, or controlling grip where they apply."
+      ]
+    }
+  },
+  "text_scan": {
+    "output_schema": {
+      "overall_frame": "apex | slave | mixed",
+      "overall_win_win_state": "win_win | win_lose | lose_lose | neutral",
+      "axes": [
+        {
+          "axis_id": "string",
+          "score": "integer -3 to 3",
+          "band": "strong_slave | mild_slave | neutral | mild_apex | strong_apex",
+          "notes": "short explanation grounded in specific phrases from the text"
+        }
+      ],
+      "diagnostics": {
+        "primary_patterns": [
+          "short labels of the three strongest patterns, for example: chronic pedestalization, seller posture, external validation seeking"
+        ],
+        "supporting_evidence": [
+          "quoted or paraphrased snippets from the input that demonstrate each pattern"
+        ]
+      },
+      "corrections": {
+        "top_shifts": [
+          {
+            "axis_id": "string",
+            "shift": "short description of the structural change needed",
+            "protocol_steps": [
+              "concrete behavioral or wording changes for the next message"
+            ]
+          }
+        ],
+        "sample_rewrites": [
+          {
+            "purpose": "for example: subject line, first paragraph, closing",
+            "apex_version": "rewritten text that reflects Apex Frame and Win Win"
+          }
+        ]
+      }
+    },
+    "detection_rules": {
+      "assumptive_state": {
+        "positive_cues": [
+          "Language that assumes interest or respect from worthy counterparts.",
+          "Statements that treat attraction or interest as default among the right people.",
+          "Calm references to standards and boundaries without apology."
+        ],
+        "negative_cues": [
+          "Apologies before presenting value.",
+          "Frequent hedging such as hoping, begging, or asking if it is ok to reach out.",
+          "Language that frames self as an imposition or burden."
+        ],
+        "questions_for_model": [
+          "Does the speaker write as if the right people would naturally want to be here?",
+          "Does the speaker seem to ask for permission to exist in the interaction?"
+        ]
+      },
+      "buyer_seller_position": {
+        "positive_cues": [
+          "Phrases that describe the other party as someone who may or may not be a fit.",
+          "Mention of criteria, standards, or filters used by the speaker.",
+          "Clear statements that the speaker is choosing clients, partners, or opportunities."
+        ],
+        "negative_cues": [
+          "Over selling of self with long lists of justifications.",
+          "Language that asks to be picked, approved, or given a chance.",
+          "Self positioning as the one under evaluation instead of the evaluator."
+        ],
+        "questions_for_model": [
+          "Is the speaker presenting as a product seeking purchase or as a buyer screening for alignment?",
+          "Who is implicitly granting permission in this text?"
+        ]
+      },
+      "identity_vs_tactic": {
+        "positive_cues": [
+          "Language that treats this message as one experiment among many.",
+          "References to learning, testing, and gathering data without self attack.",
+          "Ability to critique tactics without attacking self or worth."
+        ],
+        "negative_cues": [
+          "Catastrophic language about a single outreach or message.",
+          "Equating failure of a tactic with being unworthy or doomed.",
+          "Harsh self commentary linked to the success of this one attempt."
+        ],
+        "questions_for_model": [
+          "Does the speaker treat this communication as a referendum on self worth?",
+          "Are tactics treated as tools or as identity?"
+        ]
+      },
+      "internal_sale": {
+        "positive_cues": [
+          "Calm clarity about the value of self and offer before any response.",
+          "Expressions of certainty that do not depend on outcome.",
+          "Focus on fit and timing instead of neediness."
+        ],
+        "negative_cues": [
+          "Needing the other person to validate the offer or the self.",
+          "Language that suggests worth will be decided by the reply.",
+          "Over explaining in order to secure approval."
+        ],
+        "questions_for_model": [
+          "Does the speaker sound already convinced of his own value?",
+          "Would a no response damage his sense of self based on this text?"
+        ]
+      },
+      "win_win_integrity": {
+        "positive_cues": [
+          "Explicit respect for the other party's choice, including the right to decline.",
+          "Transparent offers with clear terms and boundaries.",
+          "Statements that invite mutual gain or clean separation."
+        ],
+        "negative_cues": [
+          "Guilt trips, shaming, or implied obligation.",
+          "Manufactured urgency that is not grounded in reality.",
+          "Hidden conditions or emotional blackmail."
+        ],
+        "questions_for_model": [
+          "Is the interaction structured so both can gain without resentment?",
+          "Is a clear and respected no available to the other party?"
+        ]
+      },
+      "persuasion_style": {
+        "positive_cues": [
+          "Confident, concise statements about reality and options.",
+          "Descriptions of the frame, context, or architecture of the offer.",
+          "Invitations that let the other recognize alignment instead of being pushed."
+        ],
+        "negative_cues": [
+          "Over talking, arguing, and trying to wear down resistance.",
+          "Appeals that lean on fear, shame, or status panic.",
+          "Language that frames the other as a hostile target to be captured."
+        ],
+        "questions_for_model": [
+          "Is the speaker leading with clarity or chasing compliance?",
+          "Does the text feel like an ordered transmission or a desperate performance?"
+        ]
+      },
+      "pedestalization": {
+        "positive_cues": [
+          "Speaking from a stable center with self and mission as reference point.",
+          "Describing others and outcomes as important but not ultimate.",
+          "Willingness to walk away from attractive options that are not fit."
+        ],
+        "negative_cues": [
+          "Treating one person, client, or outcome as sacred and untouchable.",
+          "Language that shrinks self to preserve the pedestalized object.",
+          "Fear of loss that overrides standards and boundaries."
+        ],
+        "questions_for_model": [
+          "Who sits on the throne in this text: the self and mission or the other party?",
+          "Would losing this opportunity collapse the person's sense of power?"
+        ]
+      },
+      "self_trust_vs_permission": {
+        "positive_cues": [
+          "Language that references inner knowing, standards, and decisions.",
+          "Acting without waiting for social proof or collective permission.",
+          "Owning choice and responsibility without outsourcing it to vague forces."
+        ],
+        "negative_cues": [
+          "Waiting for a sign, a trend, or consensus before moving.",
+          "Phrases that blame circumstances or unnamed others for inaction.",
+          "Seeking repeated reassurance before taking a simple step."
+        ],
+        "questions_for_model": [
+          "Does the person anchor authority in self or in external permission?",
+          "Is fear of disapproval steering the interaction?"
+        ]
+      },
+      "field_strength": {
+        "positive_cues": [
+          "Consistent tone, direction, and intention across the message.",
+          "Clear sense of what the speaker wants and where this is going.",
+          "Minimal self interruption and hedging."
+        ],
+        "negative_cues": [
+          "Chaotic switching of tone, purpose, or target.",
+          "Contradictory statements about what is wanted.",
+          "Frequent undercutting of own claims."
+        ],
+        "questions_for_model": [
+          "Is there a coherent direction that could pull others into alignment?",
+          "Does the presence of the text feel steady or shaky?"
+        ]
+      }
+    },
+    "domains": {
+      "generic": {
+        "description": "Default domain when no specific context is provided.",
+        "priority_axes": [
+          "assumptive_state",
+          "buyer_seller_position",
+          "win_win_integrity"
+        ]
+      },
+      "sales_email": {
+        "description": "Outbound or follow up sales messages, proposals, and client communication.",
+        "priority_axes": [
+          "buyer_seller_position",
+          "internal_sale",
+          "win_win_integrity",
+          "persuasion_style"
+        ]
+      },
+      "dating_message": {
+        "description": "Messages in a romantic or sexual context.",
+        "priority_axes": [
+          "assumptive_state",
+          "pedestalization",
+          "field_strength"
+        ]
+      },
+      "leadership_update": {
+        "description": "Messages to teams, partners, or communities where the user is in a leadership role.",
+        "priority_axes": [
+          "field_strength",
+          "win_win_integrity",
+          "self_trust_vs_permission"
+        ]
+      },
+      "social_post": {
+        "description": "Public content on social platforms meant to attract and sort people.",
+        "priority_axes": [
+          "assumptive_state",
+          "field_strength",
+          "persuasion_style"
+        ]
+      }
+    },
+    "feedback_templates": {
+      "by_axis_and_band": {
+        "assumptive_state": {
+          "strong_slave": {
+            "headline": "You are writing as if you are an imposition.",
+            "diagnosis": "You frame yourself as someone who has to earn the right to be here. The tone asks for permission rather than assuming welcome from the right people.",
+            "correction": "Strip apologies and hedging, state why you are here in one clear line, and assume the right reader is already interested.",
+            "suggested_shifts": [
+              "Replace hopeful phrases with calm statements of purpose.",
+              "Remove pre qualifying apologies at the start of the message."
+            ]
+          },
+          "strong_apex": {
+            "headline": "You speak as if the right people are already with you.",
+            "diagnosis": "Your language assumes interest from those who fit and does not ask for permission to exist.",
+            "correction": "Guard against sliding into arrogance by keeping focus on mutual gain instead of personal display.",
+            "suggested_shifts": [
+              "Highlight who this is for rather than boasting.",
+              "Retain warmth and specificity so confidence does not become posturing."
+            ]
+          }
+        },
+        "buyer_seller_position": {
+          "strong_slave": {
+            "headline": "You are positioned as the product, not the buyer.",
+            "diagnosis": "You chase approval and try to be picked instead of screening for fit.",
+            "correction": "Flip the frame so you are interviewing the other side. State your criteria and make it clear you are choosing who to work with.",
+            "suggested_shifts": [
+              "Add one line that defines who you are willing to work with.",
+              "Remove language that begs for a chance and replace it with calm invitations."
+            ]
+          },
+          "strong_apex": {
+            "headline": "You are screening as the buyer.",
+            "diagnosis": "You set standards and treat the other party as someone who may or may not be a fit.",
+            "correction": "Express your standards in Win Win terms so the other party does not feel disposable.",
+            "suggested_shifts": [
+              "Clarify what a good result looks like for both sides.",
+              "Offer a simple next step that lets them opt in without pressure."
+            ]
+          }
+        }
+      }
+    }
+  },
+  "image_scan": {
+    "output_schema": {
+      "overall_frame": "apex | slave | mixed",
+      "overall_win_win_state": "win_win | win_lose | lose_lose | neutral",
+      "axes": [
+        {
+          "axis_id": "string",
+          "score": "integer -3 to 3",
+          "band": "strong_slave | mild_slave | neutral | mild_apex | strong_apex",
+          "notes": "short explanation grounded in visible elements such as posture, composition, relationship dynamics, and environment"
+        }
+      ],
+      "diagnostics": {
+        "primary_patterns": [
+          "labels of key visual patterns, for example: collapsed posture, partner dependency posture, protective pelvis shielding, controlling grip, cheesy or low status presentation"
+        ],
+        "supporting_evidence": [
+          "descriptions of posture, torso and hip orientation, hand placement, camera angle, framing, clothing, and context that show each pattern"
+        ]
+      },
+      "corrections": {
+        "top_shifts": [
+          {
+            "axis_id": "string",
+            "shift": "short description of the structural visual change needed",
+            "protocol_steps": [
+              "concrete suggestions such as change camera height, adjust posture, clean or simplify background, change framing to restore hierarchy, or shoot a new image in a better context"
+            ]
+          }
+        ]
+      }
+    },
+    "detection_rules": {
+      "assumptive_state": {
+        "positive_cues": [
+          "Relaxed upright posture and open chest.",
+          "Head level or slightly above the viewer's eye line, without craning the neck.",
+          "Expression that is calm, grounded, and engaged rather than pleading or tense.",
+          "Body facing the camera or the world comfortably, not hiding behind another person or object.",
+          "Standing or seated as if already belonging in the environment."
+        ],
+        "negative_cues": [
+          "Hunched shoulders, collapsed chest, or twisted posture that shrinks the body.",
+          "Head tilted down with eyes avoiding the viewer, especially when combined with guarded or apologetic facial expression.",
+          "Taking shelter behind a partner, object, or doorway rather than owning space.",
+          "Visible tension in jaw, hands, or neck that reads as self doubt or fear of judgment.",
+          "Hands or objects pulled protectively over the pelvis or lower belly in a way that signals genital shame rather than relaxation."
+        ]
+      },
+      "buyer_seller_position": {
+        "positive_cues": [
+          "Subject firmly grounded in an environment that clearly belongs to him: office, workshop, studio, or landscape that matches his stated role.",
+          "Framing that places the subject at a strong compositional point instead of squeezed into a corner.",
+          "Subject standing in front of or slightly ahead of others when he is the one whose profile is being evaluated.",
+          "Body oriented toward camera or horizon as if already acting from his own world, not clinging to another person.",
+          "Props and clothing chosen as natural extensions of identity rather than costume."
+        ],
+        "negative_cues": [
+          "Subject dwarfed by logos, buildings, or status props, looking like a visitor rather than owner.",
+          "Leaning into another person while that person stands straight and looks outward, signaling dependency rather than sovereignty.",
+          "Standing half behind a partner, with partner closer to camera and visually owning the frame.",
+          "Props and outfits that scream for attention or try to prove status instead of expressing settled identity.",
+          "Camera angle that looks down on the subject, making him appear smaller, or odd selfie angles that distort the face and posture in a low status way."
+        ]
+      },
+      "pedestalization": {
+        "positive_cues": [
+          "Subject visually central when he is the one under evaluation, with other people and objects clearly orbiting his presence.",
+          "Balanced framing where partner, children, or symbols of status do not visually swallow the subject.",
+          "Eye line, torso, and hip orientation that keep the subject as the reference point, not a satellite.",
+          "In couple or group photos, lines of posture and lean that show the subject as self possessed rather than clinging or submitting.",
+          "Hands resting neutrally at sides or in pockets rather than clutching another person for stability."
+        ],
+        "negative_cues": [
+          "Partner placed at center of the frame while the subject leans in from the side, signalling that the partner is the true axis.",
+          "Subject angled inward toward partner while partner faces the world, signalling that the partner is primary and the subject is secondary.",
+          "Obvious dependency posture: subject hanging off a partner, wrapping around them, or clinging with both arms.",
+          "Hands from the partner placed on the subject in a possessive or controlling way, with the subject soft or collapsed.",
+          "Subject visually lower than partner in height or position, without any compensating signs of authority or groundedness.",
+          "Massive background symbols or institutions behind the subject that dominate the frame while the subject is tiny and deferential."
+        ]
+      },
+      "field_strength": {
+        "positive_cues": [
+          "Consistent aesthetic in color, wardrobe, and background that matches the stated role and platform context.",
+          "Clear focal point with minimal visual noise and distractions.",
+          "Lighting that supports the subject, shows the eyes, and reveals texture without harsh distortion.",
+          "Camera angle that presents the subject in a strong, natural way rather than as a distorted selfie or surveillance angle.",
+          "Image quality that looks intentional and sharp: competent resolution, no heavy compression, no obvious AI artifacts."
+        ],
+        "negative_cues": [
+          "Cluttered, messy background with no clear hierarchy, such as random objects, dirty rooms, chaotic shelves, or strangers in frame.",
+          "Cropped or framed in a way that cuts off limbs awkwardly or hides the body in a nervous way.",
+          "Cheesy, try hard posing: over flexing, exaggerated pointing, forced thumbs up, novelty props that cheapen the frame.",
+          "Profile photos where the subject is posing with a spouse, partner, or group instead of being shown clearly alone, when the context is a professional or authority profile.",
+          "Images that look heavily AI generated or fake in a way that undermines trust: plastic skin, impossible lighting, distorted hands, inconsistent reflections.",
+          "Low resolution, blurry, or poorly lit images that signal low care and low standard.",
+          "Wardrobe, grooming, or setting that strongly contradicts the stated role, for example a high price coach with a low effort selfie in a cluttered bedroom."
+        ]
+      },
+      "win_win_integrity": {
+        "positive_cues": [
+          "Imagery that suggests competence, generosity, and stability rather than exploitation or humiliation.",
+          "Scenes where any partner or family member looks resourced and strong next to the subject, not diminished or dragged along.",
+          "Body language that indicates mutual respect between people: open shoulders, relaxed faces, shared orientation toward the world.",
+          "Visual story that matches the claimed promise of the profile, for example a coach looking like someone you could trust with your business or life decisions."
+        ],
+        "negative_cues": [
+          "Images that glorify belittling, mocking, or embarrassing the subject or others.",
+          "Partner or spouse using a controlling grip, dragging posture, or hostile body language while the subject folds inward.",
+          "Scenes that suggest hidden resentment or mutual sabotage: pulled away faces, bodies angled away, tight mouths, eyes scanning for escape.",
+          "Visual promises that are obviously disconnected from reality, such as exaggerated luxury or success imagery that does not match the subject's visible embodiment."
+        ]
+      },
+      "persuasion_style": {
+        "positive_cues": [
+          "Body language that is inviting without begging: open chest, relaxed hands, grounded stance.",
+          "Gestures that open space and indicate leadership rather than crowding the viewer.",
+          "Visual emphasis on clarity, order, and direction: subject appears as someone who knows what he is doing and where he is going.",
+          "For professional contexts, subtle but clear authority in posture and eye contact, not performance or clowning."
+        ],
+        "negative_cues": [
+          "Aggressive lean into the camera with a confrontational face that feels like pressure, not strength.",
+          "Over theatrical expressions, exaggerated faces, or meme like clutter that reads as attention seeking performance rather than presence.",
+          "Desperate signaling: too many badges, logos, or text overlays crammed into the image, trying to force credibility.",
+          "Romantic or sexual posing in a context that should be professional, confusing the viewer and lowering respect."
+        ]
+      },
+      "polarity_dynamics": {
+        "description": "Inter-gender relational posture rules. The same physical cue has different meaning depending on whether the subject is male or female, especially regarding leaning, orientation, spatial claim, touch patterns, and micro-expressions.",
+        "male_subject": {
+          "positive_cues": [
+            "Male subject standing or sitting upright with relaxed structure, not leaning inward for approval or reassurance.",
+            "Male torso and hip orientation directed toward camera or world rather than folding toward partner.",
+            "Partner leaning slightly toward the male subject, indicating comfort and attraction, while the male remains centered.",
+            "Male hand placement neutral or protective rather than gripping or clutching partner.",
+            "Male spatial claim stable: feet grounded, shoulders open, head level, occupying center or fore-plane of the frame.",
+            "Male micro-expressions showing calmness, ownership of environment, and lack of spectator energy."
+          ],
+          "negative_cues": [
+            "Leaning into a female partner instead of standing grounded and allowing her to orient toward him.",
+            "Male head tilt seeking approval or mirroring female submissive cues.",
+            "Male slouching or collapsing posture while partner stands strong or outward-facing.",
+            "Hands gripping partner for reassurance or stability rather than relaxed contact.",
+            "Partner positioned in front while the male hides behind or beside, signaling role reversal.",
+            "Male pelvis or core turning inward toward partner while partner faces outward, reversing polarity."
+          ]
+        },
+        "female_partner": {
+          "positive_cues": [
+            "Subtle leaning toward the male subject when the relationship is romantic or intimate, indicating comfort and choosing.",
+            "Head tilt toward the male subject, signaling interest, softness, and connection.",
+            "Body orientation angled slightly toward the male subject rather than away.",
+            "Placement of hand on male subject that signals connection without dominance (resting touch rather than gripping).",
+            "Height and spatial position allowing the male subject to remain visually anchored and leading the frame."
+          ],
+          "negative_cues": [
+            "Female partner leaning away from male subject, creating relational distance or ambivalence.",
+            "Head tilt away or eyes scanning outward, indicating disengagement or disconnection.",
+            "Female partner positioned in front with male behind in a subservient posture unless context dictates otherwise.",
+            "Hands gripping the male subject in a controlling or possessive way rather than affectionate way.",
+            "Female torso facing outward while the male folds toward her, reversing healthy polarity."
+          ]
+        },
+        "couple_axis_rules": {
+          "description": "Rules describing the spine of the couple frame.",
+          "positive_cues": [
+            "Male subject grounded and world-facing; female partner leaning or orienting softly toward him in romantic contexts.",
+            "Shared orientation toward the world in professional or neutral contexts, without reversal of structure.",
+            "Both partners' micro-expressions aligned: mutual ease, no one signaling anxiety or apology.",
+            "Hand grips or touch patterns that signal connection without dominance or dependence."
+          ],
+          "negative_cues": [
+            "Couple with crossed or opposing orientations indicating conflict or separation.",
+            "Male collapsing inward while female stands upright and outward-facing (inversion of intended polarity).",
+            "Female exhibiting controlling grip or territorial posture while male becomes visually secondary.",
+            "Both partners signaling anxiety, resentment, or withdrawal rather than alignment."
+          ]
+        }
+      },
+      "female_presentation_dynamics": {
+        "description": "Rules governing how a woman's chosen clothing, posture, facial expression, gesture, and sexual display patterns reflect alignment or misalignment with her male partner in romantic or social images.",
+        "alignment_cues": {
+          "positive": [
+            "Woman's clothing and presentation are consistent with a dignified, mutually respectful partnership, neither excessively revealing nor attention-seeking for external validation.",
+            "Outfit and grooming complement the male partner rather than competing with him or drawing the frame entirely toward herself.",
+            "Body orientation angled toward the male partner, indicating emotional alignment and relational investment.",
+            "Facial expression calm or warm toward partner, not mocking, dismissive, or performatively provocative.",
+            "Posture demonstrating shared dignity and team presence, not theatrical display for external male attention."
+          ],
+          "negative": [
+            "Clothing intentionally sexualized in a way that appears directed toward external male attention rather than toward the partner or toward personal expression.",
+            "Outfit selection that contradicts the relational context, for example hyper-revealing clothing while physically paired with a committed partner in a public setting.",
+            "Presentation that signals competitive display rather than partnership, such as positioning herself as the focal point while diminishing or overshadowing the male partner.",
+            "Use of provocative posing that appears intended for outside observers instead of relational alignment, for example exaggerated accentuation of sexual features while ignoring the partner.",
+            "Visual cues suggesting contempt, boredom, resentment, or performative dominance over the partner."
+          ]
+        },
+        "sexual_display_cues": {
+          "positive": [
+            "Subtle expressiveness that remains within relational context and does not shift the locus of attention away from mutual respect or partnership.",
+            "Expressions of warmth or softness directed toward the partner rather than toward the camera or audience."
+          ],
+          "negative": [
+            "Overt sexual display intended for outside observers, for example exaggerated lip expressions, tongue display, or intentionally provocative gestures directed at the camera.",
+            "Poses that frame the body as a sexual offering to an external audience rather than as part of a respectful relational dynamic.",
+            "Deliberate accentuation of sexual anatomy toward the camera in a way that disregards the partner's presence or role in the image.",
+            "Gestures or faces that signal playful disrespect, derision, or defiance rather than intimacy or partnership."
+          ]
+        },
+        "posture_and_orientation": {
+          "positive": [
+            "Woman leaning gently toward the male partner in a context of relationship, signaling comfort and chosen closeness.",
+            "Head tilt toward the male partner, indicating relational attunement.",
+            "Body squared or angled toward partner rather than outward to display herself to the wider audience."
+          ],
+          "negative": [
+            "Woman leaning away from the partner, indicating distance, disagreement, or emotional withdrawal.",
+            "Torso or hips rotated outward toward the observer or external audience, signaling disengagement from the partner.",
+            "Exaggerated display of posterior or chest toward the camera or crowd in a way that undermines the relational pairing."
+          ]
+        },
+        "respect_and_relational_signal": {
+          "positive": [
+            "Woman's expression toward the male partner conveys respect, trust, or warmth.",
+            "Attire and pose contextualized for the event, environment, and relationship, reflecting mutual dignity."
+          ],
+          "negative": [
+            "Expressions or poses that mock, belittle, or reduce the male partner, even subtly.",
+            "Body language showing dominance or territoriality over the male partner in a way that erodes healthy polarity.",
+            "Gestures indicating performative disrespect, including exaggerated faces directed at camera rather than partner, eye-rolling cues, or outward-flaunting postures."
+          ]
+        }
+      }
+    },
+    "visual_domains": {
+      "profile_photo": {
+        "description": "Single subject portraits used for avatars, bios, and profile images on platforms like Facebook, Instagram, LinkedIn, or a website.",
+        "priority_axes": [
+          "assumptive_state",
+          "pedestalization",
+          "field_strength",
+          "buyer_seller_position"
+        ],
+        "context_expectations": [
+          "User may specify role, for example men's coach, consultant, business owner, or artist, and platform, for example Facebook profile, LinkedIn, or Instagram bio.",
+          "Evaluation must judge whether the image matches the stated role and platform: angle, setting, wardrobe, grooming, and energy must support the frame, not fight it.",
+          "If the photo is a couple or family shot used as a profile, evaluation must still center on the subject's frame and whether it weakens his professional or personal authority."
+        ]
+      },
+      "team_photo": {
+        "description": "Images showing the user with clients, team, friends, or family in a way that still reflects on his frame.",
+        "priority_axes": [
+          "win_win_integrity",
+          "field_strength",
+          "buyer_seller_position",
+          "pedestalization"
+        ],
+        "context_expectations": [
+          "Evaluation must read relationship dynamics: who stands as the axis, who leans, who protects, who depends.",
+          "In romantic or family images, evaluation should be honest about dependency posture, protective or controlling touch, and who faces the world versus who hides.",
+          "In professional team photos, subject should not vanish behind others nor cling to them for status."
+        ]
+      },
+      "landing_page_hero": {
+        "description": "Main image on a website hero section or sales page.",
+        "priority_axes": [
+          "field_strength",
+          "assumptive_state",
+          "persuasion_style",
+          "buyer_seller_position"
+        ],
+        "context_expectations": [
+          "Image must clearly communicate the subject as origin of the offer or brand, not as background extra.",
+          "Composition, quality, and styling must be consistent with the price point and claim of the offer.",
+          "Cheesy stock style or obvious AI imagery that undercuts trust should be flagged as low frame."
+        ]
+      },
+      "social_post_image": {
+        "description": "Standalone images or carousels for social content that still reflect the subject's frame.",
+        "priority_axes": [
+          "assumptive_state",
+          "field_strength",
+          "win_win_integrity",
+          "persuasion_style"
+        ],
+        "context_expectations": [
+          "Evaluation should consider the caption or declared purpose if provided, and judge whether the image supports or contradicts it.",
+          "Low quality, gimmicky, or self undermining images should be called out plainly, even if the subject intends humor.",
+          "If the user specifies that the image is just a personal moment, for example a trip with wife, evaluation should still be honest about posture, orientation, hand placement, and what it signals about relational dynamics."
+        ]
+      }
+    }
+  }
+}
+
