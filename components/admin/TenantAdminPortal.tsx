@@ -9,9 +9,14 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Users, AlertTriangle, FlaskConical, Settings, Search, MoreHorizontal,
-  RefreshCw, UserPlus, Shield, ChevronDown, Mail
+  RefreshCw, UserPlus, Shield, ChevronDown, Mail, Target, Calendar
 } from 'lucide-react';
 import type { UserScope, TenantRole } from '../../types/multiTenant';
+import {
+  CoachingApplicationsPanel,
+  BetaApplicationsPanel,
+  PendingCallsPanel,
+} from './ApplicationAdminPanels';
 import { getTenantById } from '../../stores/tenantStore';
 import { 
   getTenantUsers, 
@@ -44,7 +49,7 @@ const MotionDiv = motion.div as any;
 // TYPES
 // =============================================================================
 
-type AdminTab = 'people' | 'struggling' | 'beta' | 'settings';
+type AdminTab = 'people' | 'coaching-apps' | 'beta-apps' | 'pending-calls' | 'struggling' | 'beta' | 'settings';
 
 interface TenantAdminPortalProps {
   userScope: UserScope;
@@ -80,6 +85,9 @@ export const TenantAdminPortal: React.FC<TenantAdminPortalProps> = ({
 
   const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
     { id: 'people', label: 'People', icon: <Users size={16} /> },
+    { id: 'coaching-apps', label: 'Coaching Apps', icon: <Target size={16} /> },
+    { id: 'beta-apps', label: 'Beta Apps', icon: <FlaskConical size={16} /> },
+    { id: 'pending-calls', label: 'Pending Calls', icon: <Calendar size={16} /> },
     { id: 'struggling', label: 'Struggling Users', icon: <AlertTriangle size={16} /> },
     { id: 'beta', label: 'Beta Status', icon: <FlaskConical size={16} /> },
     { id: 'settings', label: 'Settings', icon: <Settings size={16} /> },
@@ -169,6 +177,15 @@ export const TenantAdminPortal: React.FC<TenantAdminPortalProps> = ({
             >
               {activeTab === 'people' && (
                 <PeoplePanel userScope={userScope} searchQuery={searchQuery} />
+              )}
+              {activeTab === 'coaching-apps' && (
+                <CoachingApplicationsPanel userScope={userScope} tenantFilter={userScope.tenantId} />
+              )}
+              {activeTab === 'beta-apps' && (
+                <BetaApplicationsPanel userScope={userScope} tenantFilter={userScope.tenantId} />
+              )}
+              {activeTab === 'pending-calls' && (
+                <PendingCallsPanel userScope={userScope} tenantFilter={userScope.tenantId} />
               )}
               {activeTab === 'struggling' && (
                 <TenantStrugglingPanel userScope={userScope} searchQuery={searchQuery} />

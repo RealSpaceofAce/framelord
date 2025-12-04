@@ -1,65 +1,144 @@
 {
-  "version": "1.0.0",
-  "name": "CoachingApplicationEvaluation",
-  "description": "AI configuration for evaluating coaching applications",
-  
-  "system_prompt": "You are an expert coaching intake evaluator for FrameLord. Your task is to evaluate coaching applications and determine if candidates are a good fit for personalized frame mastery coaching. Consider their commitment level, current challenges, goals, and overall readiness for transformation.",
-  
-  "evaluation_criteria": {
-    "commitment_indicators": {
-      "weight": 0.25,
-      "signals": [
-        "Hours per week they can commit",
-        "Specificity in goals",
-        "Prior experience with self-improvement",
-        "Financial readiness (income band)"
-      ]
-    },
-    "challenge_clarity": {
-      "weight": 0.25,
-      "signals": [
-        "Specific frame challenges identified",
-        "Self-awareness about patterns",
-        "Recognition of stuck points"
-      ]
-    },
-    "goal_alignment": {
-      "weight": 0.25,
-      "signals": [
-        "Goals align with frame mastery outcomes",
-        "Realistic expectations",
-        "Clear success metrics"
-      ]
-    },
-    "coachability": {
-      "weight": 0.25,
-      "signals": [
-        "Openness to feedback",
-        "Willingness to do the work",
-        "No victim mentality",
-        "Takes ownership"
-      ]
-    }
+  "name": "ApexCoachingApplicationBot",
+  "version": "1.0",
+  "source": "The Apex Frame, all four books",
+  "purpose": "Evaluate high ticket Apex Frame coaching applications. The applicant qualifies themself. You do not chase, persuade, or convince. You decide if they belong in the room.",
+  "system_instructions": {
+    "identity": "You are an Apex gatekeeper and strategist trained on The Apex Frame. You guard the coaching container from bad fits, time wasters, and people who will not act.",
+    "loyalty": "You are loyal to the integrity of the coaching container, the coach's mission, and Win Win, not to closing every lead.",
+    "principles": [
+      "Applicants must qualify to us, not the other way around.",
+      "High ticket containers demand decisiveness, financial readiness, and self responsibility.",
+      "You screen out victimhood, endless therapy drift, and people who want to be rescued.",
+      "You respect serious applicants and speak plainly about fit.",
+      "You do not flatter and you do not sell."
+    ],
+    "forbidden_behaviors": [
+      "Trying to persuade or convince them to buy.",
+      "Telling them they are a fit when they are not.",
+      "Softening judgments to avoid hurt feelings.",
+      "Making promises or guarantees of results.",
+      "Giving medical, legal, or tax advice."
+    ]
   },
-  
-  "scoring_rules": {
-    "accept_threshold": 75,
-    "review_threshold": 50,
-    "decline_threshold": 50
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "tenantId": { "type": "string", "description": "Workspace identifier inside FrameLord." },
+      "userId": { "type": "string", "description": "Applicant user id." },
+      "name": { "type": "string" },
+      "email": { "type": "string" },
+      "phone": { "type": "string", "description": "Phone number they will use for the call." },
+      "timezone": { "type": "string", "description": "IANA timezone if available." },
+      "businessModel": { "type": "string", "description": "What they do and who they sell to." },
+      "currentMonthlyRevenue": { "type": "string", "description": "Self reported range or number." },
+      "targetMonthlyRevenue": { "type": "string", "description": "What they want to get to." },
+      "mainFrameProblems": { "type": "string", "description": "Their own description of where their frame collapses: relationships, leadership, offers, sales, etc." },
+      "topBusinessConstraints": { "type": "string", "description": "Real constraints they see: time, team, market, skill gaps." },
+      "decisionMakerStatus": {
+        "type": "string",
+        "enum": ["SOLE_DECISION_MAKER", "JOINT_DECISION_MAKER", "NOT_DECISION_MAKER"],
+        "description": "Their role in saying yes to coaching and payment."
+      },
+      "budgetReadiness": {
+        "type": "string",
+        "enum": ["CAN_PAY_IN_FULL", "CAN_PAY_WITH_FINANCING", "NEED_TO_MOVE_MONEY_FIRST", "NO_ACTIVE_BUDGET"],
+        "description": "Their honest statement about money availability."
+      },
+      "startTimeline": {
+        "type": "string",
+        "enum": ["IMMEDIATELY", "WITHIN_30_DAYS", "WITHIN_90_DAYS", "SOMEDAY_UNSPECIFIED"],
+        "description": "When they say they are ready to begin serious work."
+      },
+      "previousCoachingExperience": { "type": "string", "description": "Past coaching or programs, what worked and what did not." },
+      "biggestRisksOrConcerns": { "type": "string", "description": "What they are afraid of or worried about with this kind of work." },
+      "whyNow": { "type": "string", "description": "Why they are applying now instead of six months ago." },
+      "dealBreakers": { "type": "string", "description": "Anything that would make this coaching not workable for them." },
+      "frameSignalsFromApp": {
+        "type": ["object", "null"],
+        "description": "Optional frame health snapshot from the app if available."
+      }
+    },
+    "required": [
+      "tenantId",
+      "userId",
+      "name",
+      "email",
+      "businessModel",
+      "currentMonthlyRevenue",
+      "targetMonthlyRevenue",
+      "mainFrameProblems",
+      "decisionMakerStatus",
+      "budgetReadiness",
+      "startTimeline",
+      "whyNow"
+    ]
   },
-  
   "output_schema": {
-    "score": "number (0-100)",
-    "recommendation": "ACCEPT | REVIEW | DECLINE",
-    "reasoning": "string - detailed explanation",
-    "strengthIndicators": "string[] - positive signals found",
-    "riskIndicators": "string[] - concerns or red flags",
-    "suggestedNextSteps": "string[] - recommended actions"
-  },
-  
-  "response_format": {
-    "type": "json_object",
-    "strict": true
+    "type": "object",
+    "properties": {
+      "fitScore": {
+        "type": "number",
+        "description": "0 to 100. Overall philosophical and behavioral fit for Apex coaching."
+      },
+      "urgencyScore": {
+        "type": "number",
+        "description": "0 to 100. How acute and time sensitive their situation is."
+      },
+      "moneyReadinessScore": {
+        "type": "number",
+        "description": "0 to 100. Likely ability to pay high ticket without destabilizing themselves."
+      },
+      "decisionPowerScore": {
+        "type": "number",
+        "description": "0 to 100. How much direct control they have over saying yes and paying."
+      },
+      "seriousnessScore": {
+        "type": "number",
+        "description": "0 to 100. How serious they are about acting instead of consuming more ideas."
+      },
+      "victimhoodRiskScore": {
+        "type": "number",
+        "description": "0 to 100. Higher means more victim mindset and Slave Frame risk."
+      },
+      "recommendedOutcome": {
+        "type": "string",
+        "enum": [
+          "ACCEPT_HIGH_TICKET_CALL",
+          "ACCEPT_BUT_POSITION_LOWER_TIER",
+          "HOLD_AND_NURTURE",
+          "REJECT_NOT_A_FIT"
+        ],
+        "description": "Your clear decision about what should happen next."
+      },
+      "flags": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Short bullet style notes about red flags or cautions."
+      },
+      "strengthSignals": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Signals that they are a strong fit: self awareness, upward drive, track record."
+      },
+      "coachBriefing": {
+        "type": "string",
+        "description": "6 to 12 sentence briefing written directly to the human coach. Blunt, non selling summary: where they are, where they want to go, what is blocking them, money and decision readiness, overall vibe."
+      },
+      "callFocus": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "3 to 5 bullet items the coach should focus on during the 45 minute call."
+      }
+    },
+    "required": [
+      "fitScore",
+      "urgencyScore",
+      "moneyReadinessScore",
+      "decisionPowerScore",
+      "seriousnessScore",
+      "recommendedOutcome",
+      "coachBriefing"
+    ]
   }
 }
-

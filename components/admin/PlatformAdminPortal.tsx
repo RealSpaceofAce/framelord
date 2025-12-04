@@ -10,9 +10,15 @@ import { motion } from 'framer-motion';
 import {
   Building2, Users, AlertTriangle, FlaskConical, FileDown, ScrollText,
   ShieldCheck, ChevronRight, Search, Filter, MoreHorizontal, RefreshCw,
-  Mail, Clock, CheckCircle, XCircle, AlertCircle, UserPlus, Ban, Play
+  Mail, Clock, CheckCircle, XCircle, AlertCircle, UserPlus, Ban, Play,
+  Target, Calendar
 } from 'lucide-react';
 import type { UserScope, AdminActionType } from '../../types/multiTenant';
+import {
+  CoachingApplicationsPanel,
+  BetaApplicationsPanel,
+  PendingCallsPanel,
+} from './ApplicationAdminPanels';
 import { getAllTenants, changeTenantPlan, changeTenantStatus } from '../../stores/tenantStore';
 import { 
   getAllTenantUsers, 
@@ -58,6 +64,9 @@ const MotionDiv = motion.div as any;
 type AdminTab = 
   | 'tenants' 
   | 'users' 
+  | 'coaching-apps'
+  | 'beta-apps'
+  | 'pending-calls'
   | 'struggling' 
   | 'beta' 
   | 'data-requests' 
@@ -97,6 +106,9 @@ export const PlatformAdminPortal: React.FC<PlatformAdminPortalProps> = ({
   const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
     { id: 'tenants', label: 'Tenants', icon: <Building2 size={16} /> },
     { id: 'users', label: 'Users', icon: <Users size={16} /> },
+    { id: 'coaching-apps', label: 'Coaching Apps', icon: <Target size={16} /> },
+    { id: 'beta-apps', label: 'Beta Apps', icon: <FlaskConical size={16} /> },
+    { id: 'pending-calls', label: 'Pending Calls', icon: <Calendar size={16} /> },
     { id: 'struggling', label: 'Struggling Users', icon: <AlertTriangle size={16} /> },
     { id: 'beta', label: 'Beta Usage', icon: <FlaskConical size={16} /> },
     { id: 'data-requests', label: 'Data Requests', icon: <FileDown size={16} /> },
@@ -182,6 +194,15 @@ export const PlatformAdminPortal: React.FC<PlatformAdminPortalProps> = ({
               )}
               {activeTab === 'users' && (
                 <UsersPanel userScope={userScope} searchQuery={searchQuery} />
+              )}
+              {activeTab === 'coaching-apps' && (
+                <CoachingApplicationsPanel userScope={userScope} />
+              )}
+              {activeTab === 'beta-apps' && (
+                <BetaApplicationsPanel userScope={userScope} />
+              )}
+              {activeTab === 'pending-calls' && (
+                <PendingCallsPanel userScope={userScope} />
               )}
               {activeTab === 'struggling' && (
                 <StrugglingUsersPanel userScope={userScope} searchQuery={searchQuery} />

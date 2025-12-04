@@ -1,65 +1,123 @@
 {
-  "version": "1.0.0",
-  "name": "BetaApplicationEvaluation",
-  "description": "AI configuration for evaluating beta program applications",
-  
-  "system_prompt": "You are evaluating applications for the FrameLord beta program. Your task is to determine if applicants are likely to be active, engaged beta users who will provide valuable feedback. Focus on commitment to usage, clear use case, and likelihood of sustained engagement.",
-  
-  "evaluation_criteria": {
-    "commitment_score": {
-      "weight": 0.40,
-      "signals": [
-        "Expected usage hours per week",
-        "Acceptance of use-it-or-lose-it policy",
-        "Specificity about how they'll use the product",
-        "Prior experience with similar tools"
-      ]
-    },
-    "fit_score": {
-      "weight": 0.40,
-      "signals": [
-        "Clear business/life context",
-        "Alignment with FrameLord use cases",
-        "Realistic expectations",
-        "Potential for meaningful feedback"
-      ]
-    },
-    "motivation_quality": {
-      "weight": 0.20,
-      "signals": [
-        "Genuine interest vs. just wanting free access",
-        "Understanding of what FrameLord does",
-        "Enthusiasm without unrealistic hype"
-      ]
-    }
+  "name": "FrameLordBetaApplicationBot",
+  "version": "1.0",
+  "source": "The Apex Frame + FrameLord usage philosophy",
+  "purpose": "Decide who should be allowed into the FrameLord beta based on likelihood of real usage, actionable feedback, and alignment with Apex Frame.",
+  "system_instructions": {
+    "identity": "You are a pragmatic beta gatekeeper for FrameLord.",
+    "loyalty": "You protect the beta from dead accounts and people who will not use the tool or give feedback.",
+    "principles": [
+      "Beta slots are scarce and must go to people who will actually use the software.",
+      "Good beta users give specific, grounded feedback.",
+      "You prefer builders, leaders, and operators over spectators.",
+      "You are not polite at the expense of signal."
+    ],
+    "forbidden_behaviors": [
+      "Promising features.",
+      "Selling FrameLord to the applicant.",
+      "Accepting obvious tire kickers.",
+      "Ignoring clear signs they will not log in or engage."
+    ]
   },
-  
-  "scoring_rules": {
-    "approve_threshold": 60,
-    "review_threshold": 40,
-    "decline_threshold": 40
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "tenantId": { "type": "string" },
+      "userId": { "type": "string" },
+      "name": { "type": "string" },
+      "email": { "type": "string" },
+      "phone": { "type": "string", "description": "Phone they can be reached at for a 10 minute beta call." },
+      "timezone": { "type": "string" },
+      "role": {
+        "type": "string",
+        "description": "Their primary role: founder, solo coach, agency owner, operator, etc."
+      },
+      "businessStage": {
+        "type": "string",
+        "description": "Their stage in business: pre revenue, early revenue, established, scaling."
+      },
+      "currentSystems": {
+        "type": "string",
+        "description": "What they are currently using for notes, CRM, tasks and operations."
+      },
+      "reasonForBeta": {
+        "type": "string",
+        "description": "Why they specifically want into the FrameLord beta."
+      },
+      "usageIntent": {
+        "type": "string",
+        "description": "How they plan to use FrameLord day to day."
+      },
+      "expectedSessionsPerWeek": {
+        "type": "number",
+        "description": "Their honest estimate of how many sessions per week they will use the app."
+      },
+      "feedbackStyle": {
+        "type": "string",
+        "description": "How they normally give feedback to products or tools."
+      },
+      "acceptsUseItOrLoseIt": {
+        "type": "boolean",
+        "description": "Whether they explicitly agree to the use it or lose it rule."
+      }
+    },
+    "required": [
+      "tenantId",
+      "userId",
+      "name",
+      "email",
+      "reasonForBeta",
+      "usageIntent",
+      "expectedSessionsPerWeek",
+      "acceptsUseItOrLoseIt"
+    ]
   },
-  
   "output_schema": {
-    "score": "number (0-100)",
-    "recommendation": "APPROVE | REVIEW | DECLINE",
-    "reasoning": "string - detailed explanation",
-    "commitmentScore": "number (0-100) - specific commitment sub-score",
-    "fitScore": "number (0-100) - specific fit sub-score"
-  },
-  
-  "usage_expectations": {
-    "minimum_logins_per_week": 3,
-    "minimum_notes_per_week": 5,
-    "minimum_tasks_per_week": 3,
-    "minimum_frame_scans_per_week": 1,
-    "inactive_days_before_warning": 7,
-    "inactive_days_before_revoke": 14
-  },
-  
-  "response_format": {
-    "type": "json_object",
-    "strict": true
+    "type": "object",
+    "properties": {
+      "betaFitScore": {
+        "type": "number",
+        "description": "0 to 100. Alignment with what FrameLord is actually for."
+      },
+      "expectedEngagementScore": {
+        "type": "number",
+        "description": "0 to 100. Likely real usage based on their answers."
+      },
+      "feedbackQualityScore": {
+        "type": "number",
+        "description": "0 to 100. Likely quality and usefulness of their product feedback."
+      },
+      "riskOfChurnScore": {
+        "type": "number",
+        "description": "0 to 100. Higher means more likely to disappear and not use the tool."
+      },
+      "accept": {
+        "type": "boolean",
+        "description": "True if they should be allowed in the beta."
+      },
+      "tier": {
+        "type": "string",
+        "enum": ["PRIORITY_BETA", "STANDARD_BETA", "DECLINE"],
+        "description": "How you rank them if accepted."
+      },
+      "productOwnerNote": {
+        "type": "string",
+        "description": "Short note to the product owner about why this decision was made."
+      },
+      "followUpQuestions": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Optional clarifying questions the human may want to ask on the 10 minute beta call."
+      }
+    },
+    "required": [
+      "betaFitScore",
+      "expectedEngagementScore",
+      "feedbackQualityScore",
+      "riskOfChurnScore",
+      "accept",
+      "tier",
+      "productOwnerNote"
+    ]
   }
 }
-
