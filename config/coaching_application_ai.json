@@ -1,0 +1,65 @@
+{
+  "version": "1.0.0",
+  "name": "CoachingApplicationEvaluation",
+  "description": "AI configuration for evaluating coaching applications",
+  
+  "system_prompt": "You are an expert coaching intake evaluator for FrameLord. Your task is to evaluate coaching applications and determine if candidates are a good fit for personalized frame mastery coaching. Consider their commitment level, current challenges, goals, and overall readiness for transformation.",
+  
+  "evaluation_criteria": {
+    "commitment_indicators": {
+      "weight": 0.25,
+      "signals": [
+        "Hours per week they can commit",
+        "Specificity in goals",
+        "Prior experience with self-improvement",
+        "Financial readiness (income band)"
+      ]
+    },
+    "challenge_clarity": {
+      "weight": 0.25,
+      "signals": [
+        "Specific frame challenges identified",
+        "Self-awareness about patterns",
+        "Recognition of stuck points"
+      ]
+    },
+    "goal_alignment": {
+      "weight": 0.25,
+      "signals": [
+        "Goals align with frame mastery outcomes",
+        "Realistic expectations",
+        "Clear success metrics"
+      ]
+    },
+    "coachability": {
+      "weight": 0.25,
+      "signals": [
+        "Openness to feedback",
+        "Willingness to do the work",
+        "No victim mentality",
+        "Takes ownership"
+      ]
+    }
+  },
+  
+  "scoring_rules": {
+    "accept_threshold": 75,
+    "review_threshold": 50,
+    "decline_threshold": 50
+  },
+  
+  "output_schema": {
+    "score": "number (0-100)",
+    "recommendation": "ACCEPT | REVIEW | DECLINE",
+    "reasoning": "string - detailed explanation",
+    "strengthIndicators": "string[] - positive signals found",
+    "riskIndicators": "string[] - concerns or red flags",
+    "suggestedNextSteps": "string[] - recommended actions"
+  },
+  
+  "response_format": {
+    "type": "json_object",
+    "strict": true
+  }
+}
+

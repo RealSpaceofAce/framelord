@@ -1,0 +1,65 @@
+{
+  "version": "1.0.0",
+  "name": "BetaApplicationEvaluation",
+  "description": "AI configuration for evaluating beta program applications",
+  
+  "system_prompt": "You are evaluating applications for the FrameLord beta program. Your task is to determine if applicants are likely to be active, engaged beta users who will provide valuable feedback. Focus on commitment to usage, clear use case, and likelihood of sustained engagement.",
+  
+  "evaluation_criteria": {
+    "commitment_score": {
+      "weight": 0.40,
+      "signals": [
+        "Expected usage hours per week",
+        "Acceptance of use-it-or-lose-it policy",
+        "Specificity about how they'll use the product",
+        "Prior experience with similar tools"
+      ]
+    },
+    "fit_score": {
+      "weight": 0.40,
+      "signals": [
+        "Clear business/life context",
+        "Alignment with FrameLord use cases",
+        "Realistic expectations",
+        "Potential for meaningful feedback"
+      ]
+    },
+    "motivation_quality": {
+      "weight": 0.20,
+      "signals": [
+        "Genuine interest vs. just wanting free access",
+        "Understanding of what FrameLord does",
+        "Enthusiasm without unrealistic hype"
+      ]
+    }
+  },
+  
+  "scoring_rules": {
+    "approve_threshold": 60,
+    "review_threshold": 40,
+    "decline_threshold": 40
+  },
+  
+  "output_schema": {
+    "score": "number (0-100)",
+    "recommendation": "APPROVE | REVIEW | DECLINE",
+    "reasoning": "string - detailed explanation",
+    "commitmentScore": "number (0-100) - specific commitment sub-score",
+    "fitScore": "number (0-100) - specific fit sub-score"
+  },
+  
+  "usage_expectations": {
+    "minimum_logins_per_week": 3,
+    "minimum_notes_per_week": 5,
+    "minimum_tasks_per_week": 3,
+    "minimum_frame_scans_per_week": 1,
+    "inactive_days_before_warning": 7,
+    "inactive_days_before_revoke": 14
+  },
+  
+  "response_format": {
+    "type": "json_object",
+    "strict": true
+  }
+}
+
