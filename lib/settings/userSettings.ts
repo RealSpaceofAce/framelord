@@ -7,6 +7,18 @@
 // =============================================================================
 
 /**
+ * Little Lord keyboard shortcut preference.
+ */
+export interface LittleLordShortcutPreference {
+  /** Whether the shortcut is enabled */
+  enabled: boolean;
+  /** Modifier key (meta = Cmd on Mac, Ctrl on Windows in browser context) */
+  modifier: "meta" | "ctrl" | "alt" | "shift";
+  /** Single character key (e.g., "l") */
+  key: string;
+}
+
+/**
  * User-configurable settings, including API key overrides.
  */
 export interface UserSettings {
@@ -14,6 +26,8 @@ export interface UserSettings {
   openaiApiKey?: string;
   /** User's personal Nano Banana API key (overrides app-level key) */
   nanobananaApiKey?: string;
+  /** Little Lord global keyboard shortcut */
+  littleLordShortcut?: LittleLordShortcutPreference;
   // Add other future settings here as needed
 }
 
@@ -68,11 +82,42 @@ export function updateUserSetting<K extends keyof UserSettings>(
  */
 export function clearUserSettings(): void {
   if (typeof window === "undefined") return;
-  
+
   try {
     window.localStorage.removeItem(STORAGE_KEY);
   } catch (err) {
     console.warn("Failed to clear user settings:", err);
   }
+}
+
+// =============================================================================
+// LITTLE LORD SHORTCUT HELPERS
+// =============================================================================
+
+/**
+ * Get the default Little Lord shortcut preference.
+ */
+export function getDefaultLittleLordShortcut(): LittleLordShortcutPreference {
+  return {
+    enabled: true,
+    modifier: "meta", // Command on Mac, will show as Ctrl in browser on Windows
+    key: "l",
+  };
+}
+
+/**
+ * Get the current Little Lord shortcut preference.
+ * Returns default if not configured.
+ */
+export function getLittleLordShortcut(): LittleLordShortcutPreference {
+  const settings = loadUserSettings();
+  return settings.littleLordShortcut || getDefaultLittleLordShortcut();
+}
+
+/**
+ * Update the Little Lord shortcut preference.
+ */
+export function setLittleLordShortcut(pref: LittleLordShortcutPreference): void {
+  updateUserSetting("littleLordShortcut", pref);
 }
 

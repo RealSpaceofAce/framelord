@@ -26,9 +26,18 @@ import {
   Key,
   Info,
   FileText,
+  Keyboard,
+  Command,
+  Crown,
 } from 'lucide-react';
 import { appConfig } from '../../config/appConfig';
-import { loadUserSettings, saveUserSettings } from '../../lib/settings/userSettings';
+import {
+  loadUserSettings,
+  saveUserSettings,
+  getLittleLordShortcut,
+  setLittleLordShortcut,
+  type LittleLordShortcutPreference,
+} from '../../lib/settings/userSettings';
 import { CONTACT_ZERO, getContactZero, updateContact } from '../../services/contactStore';
 import {
   getNotificationSettings,
@@ -84,6 +93,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   // Privacy state
   const [dataSharing, setDataSharing] = useState(false);
   const [analytics, setAnalytics] = useState(true);
+
+  // Little Lord keyboard shortcut state
+  const [llShortcut, setLLShortcut] = useState<LittleLordShortcutPreference>(
+    getLittleLordShortcut()
+  );
+  const [shortcutSaved, setShortcutSaved] = useState(false);
 
   useEffect(() => {
     // Load settings from localStorage and current DOM to avoid sudden theme flips
@@ -603,6 +618,162 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       applyCompactMode(enabled);
                     }}
                   />
+                </div>
+              </div>
+            </SettingCard>
+
+            {/* Keyboard Shortcuts Card */}
+            <SettingCard
+              title="Keyboard Shortcuts"
+              description="Configure keyboard shortcuts for quick access"
+            >
+              <div className="space-y-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Crown size={16} className="text-[#4433FF]" />
+                    <div className="text-sm font-semibold text-white">Little Lord Shortcut</div>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Configure a dedicated keyboard shortcut to open Little Lord instantly. Disable this
+                    if you experience conflicts with other system shortcuts or browser extensions.
+                  </p>
+
+                  <div className="space-y-4">
+                    {/* Enable/Disable Toggle */}
+                    <div className="flex items-center justify-between p-3 bg-[#0E0E0E] rounded-lg border border-[#2A2A2A]">
+                      <div>
+                        <div className="text-sm font-medium text-white">Enable Shortcut</div>
+                        <div className="text-xs text-gray-500">
+                          Allow keyboard shortcut to open Little Lord
+                        </div>
+                      </div>
+                      <ToggleSwitch
+                        enabled={llShortcut.enabled}
+                        onChange={(enabled) => {
+                          const updated = { ...llShortcut, enabled };
+                          setLLShortcut(updated);
+                          setLittleLordShortcut(updated);
+                          setShortcutSaved(true);
+                          setTimeout(() => setShortcutSaved(false), 2000);
+                        }}
+                      />
+                    </div>
+
+                    {/* Modifier Key Selection */}
+                    {llShortcut.enabled && (
+                      <>
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 block">
+                            Modifier Key
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {(['meta', 'ctrl', 'alt', 'shift'] as const).map((mod) => (
+                              <button
+                                key={mod}
+                                onClick={() => {
+                                  const updated = { ...llShortcut, modifier: mod };
+                                  setLLShortcut(updated);
+                                  setLittleLordShortcut(updated);
+                                  setShortcutSaved(true);
+                                  setTimeout(() => setShortcutSaved(false), 2000);
+                                }}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                  llShortcut.modifier === mod
+                                    ? 'bg-[#4433FF] text-white'
+                                    : 'bg-[#1A1A1D] text-gray-400 hover:text-white border border-[#333]'
+                                }`}
+                              >
+                                {mod === 'meta' && 'Cmd/⌘ (Mac)'}
+                                {mod === 'ctrl' && 'Ctrl'}
+                                {mod === 'alt' && 'Alt/⌥'}
+                                {mod === 'shift' && 'Shift/⇧'}
+                              </button>
+                            ))}
+                          </div>
+                          <p className="text-[10px] text-gray-600 mt-1">
+                            Note: "meta" = Command on Mac, shows as Ctrl in browser on Windows
+                          </p>
+                        </div>
+
+                        {/* Key Selection */}
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 block">
+                            Key
+                          </label>
+                          <input
+                            type="text"
+                            value={llShortcut.key}
+                            onChange={(e) => {
+                              const key = e.target.value.toLowerCase().slice(-1);
+                              if (key && /^[a-z]$/.test(key)) {
+                                const updated = { ...llShortcut, key };
+                                setLLShortcut(updated);
+                                setLittleLordShortcut(updated);
+                                setShortcutSaved(true);
+                                setTimeout(() => setShortcutSaved(false), 2000);
+                              }
+                            }}
+                            maxLength={1}
+                            className="w-full bg-[#1A1A1D] border border-[#333] rounded-lg px-4 py-2 text-white text-sm focus:border-[#4433FF] outline-none uppercase"
+                            placeholder="L"
+                          />
+                          <p className="text-[10px] text-gray-600 mt-1">
+                            Single letter only (a-z)
+                          </p>
+                        </div>
+
+                        {/* Preview */}
+                        <div className="p-3 bg-[#0E0E0E] rounded-lg border border-[#2A2A2A]">
+                          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">
+                            Current Shortcut
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="px-3 py-1.5 bg-[#1A1A1D] border border-[#333] rounded text-xs font-mono text-white">
+                              {llShortcut.modifier === 'meta' && '⌘'}
+                              {llShortcut.modifier === 'ctrl' && 'Ctrl'}
+                              {llShortcut.modifier === 'alt' && '⌥'}
+                              {llShortcut.modifier === 'shift' && '⇧'}
+                            </div>
+                            <span className="text-gray-500">+</span>
+                            <div className="px-3 py-1.5 bg-[#1A1A1D] border border-[#333] rounded text-xs font-mono text-white uppercase">
+                              {llShortcut.key}
+                            </div>
+                          </div>
+                          <p className="text-[10px] text-gray-600 mt-2">
+                            Press this combination anywhere in the app to open Little Lord
+                          </p>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Save Status */}
+                    {shortcutSaved && (
+                      <div className="flex items-center gap-2 text-xs text-green-400">
+                        <Check size={14} />
+                        Shortcut saved! Changes take effect immediately.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="h-px bg-[#2A2A2A]" />
+
+                <div className="text-xs text-gray-500">
+                  <p className="mb-2 font-semibold text-gray-400">Other Shortcuts:</p>
+                  <ul className="space-y-1">
+                    <li>
+                      <span className="font-mono bg-[#1A1A1D] px-1.5 py-0.5 rounded text-[10px]">
+                        Cmd+K → LL
+                      </span>{' '}
+                      - Command palette (always active)
+                    </li>
+                    <li>
+                      <span className="font-mono bg-[#1A1A1D] px-1.5 py-0.5 rounded text-[10px]">
+                        Esc
+                      </span>{' '}
+                      - Close Little Lord modal
+                    </li>
+                  </ul>
                 </div>
               </div>
             </SettingCard>

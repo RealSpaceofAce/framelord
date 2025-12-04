@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { 
-  LayoutGrid, Scan, Users, Settings, 
-  TrendingUp, TrendingDown, 
-  Bot, Zap, 
-  Menu, ExternalLink, Shield, Lock, 
+import {
+  LayoutGrid, Scan, Users, Settings,
+  TrendingUp, TrendingDown,
+  Bot, Zap,
+  Menu, ExternalLink, Shield, Lock,
   Plus, MoreHorizontal, X, Folder, ChevronDown,
   Upload, Image as ImageIcon, FileText, ArrowRight, AlertTriangle, Lightbulb,
   CheckCircle, Loader2, Paperclip, Mic, FileCode, Crosshair, Binary, Terminal, Cpu, GitCommit, Briefcase, Camera, Notebook, ArrowLeft, Clock as ClockIcon, User, Calendar
@@ -64,6 +64,7 @@ import {
   getFrameScoreColorClass,
   formatProfileDate,
 } from '../lib/frameScan/frameProfile';
+import { LittleLordProvider } from './littleLord';
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -1404,8 +1405,13 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 text-[#DBDBDB] font-sans flex flex-col lg:flex-row overflow-hidden z-[50] app-neon">
-      <aside className={`
+    <LittleLordProvider
+      tenantId="default_tenant"
+      userId={CONTACT_ZERO.id}
+      showFloatingButton={true}
+    >
+      <div className="fixed inset-0 text-[#DBDBDB] font-sans flex flex-col lg:flex-row overflow-hidden z-[50] app-neon">
+        <aside className={`
           ${isLeftSidebarOpen ? 'w-[280px]' : 'w-0'} bg-[#0E0E0E] border-r border-[#2A2A2A] flex flex-col z-40 transform transition-all duration-300 lg:relative overflow-hidden
           ${isMobileMenuOpen && isLeftSidebarOpen ? 'translate-x-0' : isLeftSidebarOpen ? 'translate-x-0' : 'lg:translate-x-0 -translate-x-full'}
       `}>
@@ -1667,7 +1673,8 @@ export const Dashboard: React.FC = () => {
           </MotionAside>
       )}
       </AnimatePresence>
-    </div>
+      </div>
+    </LittleLordProvider>
   );
 };
 

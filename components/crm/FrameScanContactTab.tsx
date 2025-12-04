@@ -26,12 +26,8 @@ import {
 } from '../../lib/frameScan/frameProfile';
 import { runTextFrameScan, runImageFrameScan, type TextDomainId, type ImageDomainId } from '../../lib/frameScan/frameScanLLM';
 import type { FrameDomainId } from '../../lib/frameScan/frameTypes';
-import {
-  runFramelordForContact,
-  createInitialFramelordMessage,
-  type FramelordMessage,
-} from '../../lib/frameScan/framelordAssistant';
 import { CONTACT_ZERO } from '../../services/contactStore';
+import { LittleLordChat } from '../littleLord';
 
 const MotionDiv = motion.div as any;
 
@@ -103,26 +99,6 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
   // Refresh key for re-fetching data
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Framelord chat state
-  const [framelordMessages, setFramelordMessages] = useState<FramelordMessage[]>([]);
-  const [framelordInput, setFramelordInput] = useState('');
-  const [framelordLoading, setFramelordLoading] = useState(false);
-  const chatScrollRef = useRef<HTMLDivElement>(null);
-
-  // Initialize Framelord messages when contact changes
-  useEffect(() => {
-    const initialMessage = createInitialFramelordMessage(contactId);
-    setFramelordMessages([initialMessage]);
-    setFramelordInput('');
-  }, [contactId]);
-
-  // Scroll chat to bottom when messages change
-  useEffect(() => {
-    if (chatScrollRef.current) {
-      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
-    }
-  }, [framelordMessages]);
-
   // Get reports and compute profile
   const reports = useMemo(() => getReportsForContact(contactId), [contactId, refreshKey]);
   const profile = useMemo(() => computeCumulativeFrameProfileForContact(contactId, reports), [contactId, reports]);
@@ -188,41 +164,6 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
     }
   };
 
-  // Handle Framelord send
-  const handleFramelordSend = async () => {
-    const trimmed = framelordInput.trim();
-    if (!trimmed || framelordLoading) return;
-
-    const userMessage: FramelordMessage = { role: 'user', content: trimmed };
-    const nextMessages = [...framelordMessages, userMessage];
-    setFramelordMessages(nextMessages);
-    setFramelordInput('');
-    setFramelordLoading(true);
-
-    try {
-      const response = await runFramelordForContact(contactId, nextMessages);
-      setFramelordMessages([
-        ...nextMessages,
-        { role: 'assistant', content: response.reply }
-      ]);
-    } catch (err: any) {
-      console.error('Framelord error:', err);
-      setFramelordMessages([
-        ...nextMessages,
-        { role: 'assistant', content: 'I encountered an error processing your request. Please try again.' }
-      ]);
-    } finally {
-      setFramelordLoading(false);
-    }
-  };
-
-  // Handle Enter key in chat input
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleFramelordSend();
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -489,108 +430,16 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
           )}
         </div>
 
-        {/* Framelord Chat Section */}
-        <div className="bg-[#0A0A0A] border border-[#222] rounded-lg overflow-hidden">
-          {/* Header */}
-          <div className="px-4 py-3 border-b border-[#222] bg-[#0E0E0E]">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-[#4433FF]/20 rounded border border-[#4433FF]/30">
-                <Sparkles size={14} className="text-[#4433FF]" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Framelord Assistant</h3>
-                <p className="text-[10px] text-gray-500">
-                  {isContactZero ? 'Self-frame advisor' : `Frame advisor for ${contactName}`}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Messages */}
-          <div 
-            ref={chatScrollRef}
-            className="h-[250px] overflow-y-auto p-4 space-y-4"
-          >
-            {framelordMessages.map((message, index) => (
-              <MotionDiv
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`flex gap-2 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
-              >
-                {/* Avatar */}
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                  message.role === 'assistant' 
-                    ? 'bg-[#4433FF]/20 border border-[#4433FF]/30' 
-                    : 'bg-[#333]'
-                }`}>
-                  {message.role === 'assistant' ? (
-                    <Bot size={14} className="text-[#4433FF]" />
-                  ) : (
-                    <User size={14} className="text-gray-400" />
-                  )}
-                </div>
-
-                {/* Message Bubble */}
-                <div className={`flex-1 ${message.role === 'user' ? 'text-right' : ''}`}>
-                  <div className={`inline-block px-3 py-2 rounded-lg text-sm ${
-                    message.role === 'assistant' 
-                      ? 'bg-[#1A1A1A] text-gray-200 text-left' 
-                      : 'bg-[#4433FF] text-white'
-                  }`}>
-                    <div className="whitespace-pre-wrap">{message.content}</div>
-                  </div>
-                </div>
-              </MotionDiv>
-            ))}
-
-            {/* Loading indicator */}
-            {framelordLoading && (
-              <MotionDiv
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex gap-2"
-              >
-                <div className="w-7 h-7 rounded-full bg-[#4433FF]/20 border border-[#4433FF]/30 flex items-center justify-center">
-                  <Bot size={14} className="text-[#4433FF]" />
-                </div>
-                <div className="flex-1">
-                  <div className="inline-block px-3 py-2 rounded-lg bg-[#1A1A1A]">
-                    <div className="flex items-center gap-2 text-sm text-gray-400">
-                      <Loader2 size={14} className="animate-spin" />
-                      Thinking...
-                    </div>
-                  </div>
-                </div>
-              </MotionDiv>
-            )}
-          </div>
-
-          {/* Input */}
-          <div className="p-3 border-t border-[#222] bg-[#0E0E0E]">
-            <div className="flex gap-2">
-              <textarea
-                value={framelordInput}
-                onChange={(e) => setFramelordInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={isContactZero ? "Ask about your frame..." : `Ask about ${contactName}...`}
-                rows={2}
-                className="flex-1 bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#4433FF] resize-none"
-              />
-              <button
-                onClick={handleFramelordSend}
-                disabled={framelordLoading || !framelordInput.trim()}
-                className="px-3 bg-[#4433FF] text-white rounded hover:bg-[#5544FF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Send size={16} />
-              </button>
-            </div>
-            <p className="text-[9px] text-gray-600 mt-1.5 text-center">
-              Press Enter to send • Shift+Enter for new line
-            </p>
-          </div>
-        </div>
+        {/* Little Lord Chat Section */}
+        <LittleLordChat
+          tenantId="default_tenant"
+          userId={CONTACT_ZERO.id}
+          context={{
+            selectedContactId: contactId,
+          }}
+          height="300px"
+          showHeader={true}
+        />
       </div>
     </div>
   );
