@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { analyzeFrame } from '../services/geminiService';
+import { analyzeFrame } from '../lib/llm/geminiService';
 import { FrameAnalysisResult } from '../types';
 import { Button } from './Button';
 import { Loader2, Zap, AlertTriangle, CheckCircle, UploadCloud, Image as ImageIcon, X, ArrowRight, Shield } from 'lucide-react';

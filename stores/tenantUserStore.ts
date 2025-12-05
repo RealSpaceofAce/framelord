@@ -6,7 +6,8 @@
 // Tenant Contact Zero must always have tenantRole: 'OWNER'.
 // =============================================================================
 
-import type { TenantUser, TenantRole, StaffRole, UserScope } from '../types/multiTenant';
+import type { TenantUser, TenantRole, StaffRole, UserScope, Tenant } from '../types/multiTenant';
+import { isEnterpriseTenant } from '../types/multiTenant';
 import { SUPER_ADMIN_USER_ID } from '../config/appConfig';
 import { getTenantById } from './tenantStore';
 
@@ -353,16 +354,50 @@ export function buildUserScope(userId: string): UserScope | null {
 
 /**
  * Check if user can access Platform Admin
+ * Only platform staff (SUPER_ADMIN, ADMIN) can access
  */
 export function canAccessPlatformAdmin(scope: UserScope): boolean {
   return scope.staffRole === 'SUPER_ADMIN' || scope.staffRole === 'ADMIN';
 }
 
 /**
- * Check if user can access Tenant Admin
+ * Check if user is a tenant owner or manager (has elevated tenant role)
  */
-export function canAccessTenantAdmin(scope: UserScope): boolean {
+export function isTenantOwnerOrManager(scope: UserScope): boolean {
   return scope.tenantRole === 'OWNER' || scope.tenantRole === 'MANAGER';
+}
+
+/**
+ * Check if user can access Tenant Admin
+ * 
+ * IMPORTANT: Tenant Admin is ONLY for enterprise/team accounts that manage
+ * multiple users (subaccounts). Solo users NEVER see Tenant Admin.
+ * 
+ * Requirements:
+ * 1. Must be an enterprise tenant (TEAM or ENTERPRISE plan)
+ * 2. Must have OWNER or MANAGER tenantRole
+ * 3. Must NOT be platform staff (staffRole must be NONE)
+ *    - Platform staff uses Platform Admin, not Tenant Admin
+ * 
+ * @param scope - User scope
+ * @param tenant - Optional tenant object (if not provided, will be fetched)
+ */
+export function canAccessTenantAdmin(scope: UserScope, tenant?: Tenant | null): boolean {
+  // Get tenant if not provided
+  const resolvedTenant = tenant ?? getTenantById(scope.tenantId);
+  
+  // Must have an enterprise tenant
+  if (!isEnterpriseTenant(resolvedTenant)) {
+    return false;
+  }
+  
+  // Platform staff uses Platform Admin, not Tenant Admin
+  if (scope.staffRole !== 'NONE') {
+    return false;
+  }
+  
+  // Must be tenant owner or manager
+  return isTenantOwnerOrManager(scope);
 }
 
 /**
@@ -384,6 +419,15 @@ export function isSuperAdmin(scope: UserScope): boolean {
  */
 export function hasStaffRole(scope: UserScope): boolean {
   return scope.staffRole !== 'NONE';
+}
+
+/**
+ * Check if user should see Tenant Admin link in navigation
+ * Same rules as canAccessTenantAdmin but can be called without tenant object
+ */
+export function shouldShowTenantAdminNav(scope: UserScope): boolean {
+  const tenant = getTenantById(scope.tenantId);
+  return canAccessTenantAdmin(scope, tenant);
 }
 
 // =============================================================================

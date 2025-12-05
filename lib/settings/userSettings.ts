@@ -121,3 +121,6 @@ export function setLittleLordShortcut(pref: LittleLordShortcutPreference): void 
   updateUserSetting("littleLordShortcut", pref);
 }
 
+
+
+

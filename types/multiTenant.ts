@@ -3,6 +3,13 @@
 // =============================================================================
 // All tenant-facing operations must use these types to ensure proper isolation.
 // Contact spine centrality is maintained through tenantContactZeroId.
+//
+// KEY CONCEPTS:
+// - Tenant = organization / enterprise account with multiple users (subaccounts)
+//   Examples: a roofing company, agency, or firm that buys seats for a team
+// - Solo users use the normal account flow and have an implicit tenant, but
+//   they DO NOT use Tenant Admin — only the personal Settings panel
+// - Enterprise tenants (TEAM/ENTERPRISE plan) show Tenant Admin to OWNER/MANAGER
 // =============================================================================
 
 // =============================================================================
@@ -11,14 +18,42 @@
 
 export type TenantStatus = 'TRIAL' | 'ACTIVE' | 'CANCELLED' | 'SUSPENDED';
 
+/**
+ * Plan codes determine whether a tenant is enterprise (multi-user) or solo
+ * - FREE, BETA, PRO = Solo accounts (no Tenant Admin)
+ * - TEAM, ENTERPRISE = Enterprise accounts (Tenant Admin for OWNER/MANAGER)
+ */
+export type TenantPlanCode = 'FREE' | 'BETA' | 'PRO' | 'TEAM' | 'ENTERPRISE';
+
+/**
+ * Tenant represents an organization or account
+ * - Solo users have an implicit tenant but don't see Tenant Admin
+ * - Enterprise tenants (TEAM/ENTERPRISE) have multiple users and use Tenant Admin
+ */
 export interface Tenant {
   tenantId: string;
   name: string;
   createdAt: string;
   status: TenantStatus;
-  planName: string;
-  ownerUserId: string;           // Platform user ID
-  tenantContactZeroId: string;   // Contact ID representing the tenant owner (Contact Zero)
+  planName: string;                // Legacy field - use planCode for logic
+  planCode: TenantPlanCode;        // Determines enterprise vs solo
+  ownerUserId: string;             // Platform user ID
+  tenantContactZeroId: string;     // Contact ID representing the tenant owner (Contact Zero)
+  seatCount?: number;              // For enterprise tenants: number of seats purchased
+}
+
+// =============================================================================
+// ENTERPRISE TENANT HELPERS
+// =============================================================================
+
+/**
+ * Check if a tenant is an enterprise tenant (multi-user, with Tenant Admin)
+ * Enterprise tenants have TEAM or ENTERPRISE plan codes
+ * Solo tenants (FREE, BETA, PRO) do NOT get Tenant Admin
+ */
+export function isEnterpriseTenant(tenant: Tenant | null | undefined): boolean {
+  if (!tenant) return false;
+  return tenant.planCode === 'TEAM' || tenant.planCode === 'ENTERPRISE';
 }
 
 // =============================================================================

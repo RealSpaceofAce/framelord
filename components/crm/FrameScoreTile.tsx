@@ -140,3 +140,6 @@ export const FrameScoreTile: React.FC<FrameScoreTileProps> = ({
 
 export default FrameScoreTile;
 
+
+
+

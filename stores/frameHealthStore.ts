@@ -323,6 +323,26 @@ export function getHealthLevelBgColor(level: FrameHealthLevel): string {
 }
 
 // =============================================================================
+// USAGE ANALYTICS HELPERS
+// =============================================================================
+
+/**
+ * Get all frame health snapshots (Platform Admin usage analytics)
+ */
+export function getAllFrameHealthSnapshots(): FrameHealthSnapshot[] {
+  init();
+  return [...snapshots];
+}
+
+/**
+ * Get all frame health snapshots for a tenant
+ */
+export function getFrameHealthForTenant(tenantId: string): FrameHealthSnapshot[] {
+  init();
+  return snapshots.filter(s => s.tenantId === tenantId);
+}
+
+// =============================================================================
 // RESET (TESTING ONLY)
 // =============================================================================
 

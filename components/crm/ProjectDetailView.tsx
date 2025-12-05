@@ -719,7 +719,6 @@ const TasksTab: React.FC<TasksTabProps> = ({ projectId, sections, onRefresh }) =
       contactId: project.primaryContactId,
       title,
       dueAt: null,
-      status: 'open'
     });
 
     // Link to section

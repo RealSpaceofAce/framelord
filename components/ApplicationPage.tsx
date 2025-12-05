@@ -5,7 +5,7 @@ import { Button } from './Button';
 import { Reveal } from './Reveal';
 import { ThreeParticles } from './ThreeParticles';
 import { ChatMessage } from '../types';
-import { submitApplicationChat } from '../services/geminiService';
+import { submitApplicationChat } from '../lib/llm/geminiService';
 
 const MotionDiv = motion.div as any;
 

@@ -11,7 +11,7 @@ import {
   CheckCircle, Loader2, Paperclip, Mic, FileCode, Crosshair, Binary, Terminal, Cpu, GitCommit, Briefcase, Camera, Notebook, ArrowLeft, Clock as ClockIcon, User, Calendar
 } from 'lucide-react';
 import { SparkBorder } from './SparkSystem';
-import { analyzeFrame } from '../services/geminiService';
+import { analyzeFrame } from '../lib/llm/geminiService';
 import { FrameAnalysisResult } from '../types';
 import { Reveal } from './Reveal';
 import { ContactsView } from './crm/ContactsView';
@@ -28,7 +28,7 @@ import { CalendarView } from './crm/CalendarView';
 import { ActivityView } from './crm/ActivityView';
 import { SettingsView } from './crm/SettingsView';
 import { RetroClockPanel } from './RetroClockPanel';
-import { getContactZero, CONTACT_ZERO, getContactById } from '../services/contactStore';
+import { getContactZero, CONTACT_ZERO, getContactById, getAllContacts } from '../services/contactStore';
 import { getTopicById } from '../services/topicStore';
 import { getAllNotes } from '../services/noteStore';
 import {
@@ -37,13 +37,13 @@ import {
   formatDueTime,
   hasTimeComponent,
 } from '../services/taskStore'; // Calendar integration imports
-import { getInteractionsByAuthorId } from '../services/interactionStore';
+import { getInteractionsByAuthorId, getInteractionsByContactId } from '../services/interactionStore';
 import {
   getFilteredLogEntries,
   markLogEntryRead,
   markAllLogEntriesRead,
   getUnreadCount,
-} from '../services/notificationStore';
+} from '../services/systemLogStore';
 import {
   getTodayEvents,
   formatTime as formatEventTime,
@@ -65,6 +65,7 @@ import {
   formatProfileDate,
 } from '../lib/frameScan/frameProfile';
 import { LittleLordProvider } from './littleLord';
+import { FrameCanvasPage } from './canvas';
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -418,8 +419,15 @@ const EnergyFloor: React.FC = () => (
 const ScanView: React.FC = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanComplete, setScanComplete] = useState(false);
   const [result, setResult] = useState<FrameAnalysisResult | null>(null);
+  const [showContactPicker, setShowContactPicker] = useState(false);
+  const [linkedContactId, setLinkedContactId] = useState<string | null>(null);
+  const [contactSearchTerm, setContactSearchTerm] = useState('');
+  const [cursorPosition, setCursorPosition] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
@@ -429,6 +437,13 @@ const ScanView: React.FC = () => {
   const rotateX = useTransform(mouseY, [-0.5, 0.5], ["3deg", "-3deg"]);
   const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-3deg", "3deg"]);
 
+  // Get contacts for @ mentions
+  const contacts = getAllContacts();
+  const filteredContacts = contacts.filter(c => 
+    c.fullName.toLowerCase().includes(contactSearchTerm.toLowerCase())
+  ).slice(0, 5);
+  const linkedContact = linkedContactId ? contacts.find(c => c.id === linkedContactId) : null;
+
   const handleMouseMove = (e: React.MouseEvent) => {
       if(!ref.current) return;
       const rect = ref.current.getBoundingClientRect();
@@ -436,17 +451,120 @@ const ScanView: React.FC = () => {
       y.set((e.clientY - rect.top) / rect.height - 0.5);
   };
 
+  // Handle @ mentions in textarea
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    const position = e.target.selectionStart || 0;
+    setInput(value);
+    setCursorPosition(position);
+
+    // Check if user just typed @
+    const textBeforeCursor = value.substring(0, position);
+    const atMatch = textBeforeCursor.match(/@(\w*)$/);
+    
+    if (atMatch) {
+      setShowContactPicker(true);
+      setContactSearchTerm(atMatch[1] || '');
+    } else {
+      setShowContactPicker(false);
+    }
+  };
+
+  const handleSelectContact = (contact: any) => {
+    // Replace @searchterm with @ContactName
+    const textBeforeCursor = input.substring(0, cursorPosition);
+    const atMatch = textBeforeCursor.match(/@(\w*)$/);
+    
+    if (atMatch) {
+      const beforeAt = textBeforeCursor.substring(0, atMatch.index);
+      const afterCursor = input.substring(cursorPosition);
+      const newText = `${beforeAt}@${contact.fullName} ${afterCursor}`;
+      setInput(newText);
+      setLinkedContactId(contact.id);
+    }
+    
+    setShowContactPicker(false);
+    textareaRef.current?.focus();
+  };
+
   const handleScan = async () => {
       setLoading(true);
+      setIsScanning(true);
+      setScanComplete(false);
+      
       try {
+          // Simulate scanning animation duration
+          await new Promise(resolve => setTimeout(resolve, 4000));
+          
           const res = await analyzeFrame(input);
           setResult(res);
-      } catch (e) { console.error(e) } 
+          setIsScanning(false);
+          setScanComplete(true);
+          
+          // Hide complete message after 5 seconds
+          setTimeout(() => setScanComplete(false), 5000);
+      } catch (e) { 
+          console.error(e);
+          setIsScanning(false);
+      } 
       finally { setLoading(false); }
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20 relative h-full flex flex-col justify-center">
+       {/* Scanning Animation Overlay */}
+       <AnimatePresence>
+         {isScanning && (
+           <MotionDiv
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             exit={{ opacity: 0 }}
+             className="fixed inset-0 z-[100] pointer-events-none"
+           >
+             {/* Scanning line */}
+             <MotionDiv
+               initial={{ top: 0 }}
+               animate={{ top: ['0%', '100%', '0%'] }}
+               transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+               className="absolute left-0 right-0 h-1"
+               style={{
+                 background: 'linear-gradient(90deg, transparent, #4433FF, #737AFF, #4433FF, transparent)',
+                 boxShadow: '0 0 20px 10px rgba(68, 51, 255, 0.5), 0 0 60px 30px rgba(68, 51, 255, 0.3)',
+               }}
+             />
+             {/* Glow overlay */}
+             <MotionDiv
+               initial={{ opacity: 0 }}
+               animate={{ opacity: [0.05, 0.15, 0.05] }}
+               transition={{ duration: 1, repeat: Infinity }}
+               className="absolute inset-0 bg-[#4433FF]/10"
+             />
+           </MotionDiv>
+         )}
+       </AnimatePresence>
+
+       {/* Scan Complete Message */}
+       <AnimatePresence>
+         {scanComplete && (
+           <MotionDiv
+             initial={{ opacity: 0, y: -20 }}
+             animate={{ opacity: 1, y: 0 }}
+             exit={{ opacity: 0, y: -20 }}
+             className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 bg-[#1E2028] border border-[#4433FF]/30 rounded-xl shadow-2xl"
+           >
+             <div className="flex items-center gap-3">
+               <div className="w-10 h-10 bg-[#4433FF]/20 rounded-full flex items-center justify-center">
+                 <Zap size={20} className="text-[#4433FF]" />
+               </div>
+               <div>
+                 <h3 className="text-white font-medium">Frame Scan Complete</h3>
+                 <p className="text-sm text-gray-400">You'll receive a notification when your detailed analysis is ready.</p>
+               </div>
+             </div>
+           </MotionDiv>
+         )}
+       </AnimatePresence>
+
        <Reveal width="100%">
        <ShootingStarBorder color="blue">
        <SpotlightCard>
@@ -472,13 +590,55 @@ const ScanView: React.FC = () => {
               </div>
           </div>
 
+          {/* Linked Contact Badge */}
+          {linkedContact && (
+            <div className="flex items-center gap-2 mb-4 relative z-10">
+              <span className="text-xs text-gray-500">LINKED TO:</span>
+              <div className="flex items-center gap-2 bg-[#4433FF]/20 px-3 py-1.5 rounded-full">
+                <div className="w-5 h-5 bg-[#4433FF] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                  {linkedContact.fullName.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-sm text-white font-medium">{linkedContact.fullName}</span>
+                <button 
+                  onClick={() => setLinkedContactId(null)}
+                  className="ml-1 text-gray-400 hover:text-white"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="relative z-10 flex-1">
               <textarea
+                  ref={textareaRef}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="PASTE TEXT, OR DROP IMAGE/AUDIO/DOCS HERE TO SCAN..."
+                  onChange={handleInputChange}
+                  placeholder="PASTE TEXT, OR DROP IMAGE/AUDIO/DOCS HERE TO SCAN... Use @ to link a contact for context."
                   className="w-full h-48 bg-[#0A0A1F]/60 border border-[#4433FF]/30 rounded-lg p-6 text-white placeholder-[#737AFF]/50 focus:outline-none focus:border-[#4433FF] transition-all font-mono text-sm resize-none shadow-inner"
               />
+              
+              {/* Contact Picker Dropdown */}
+              {showContactPicker && filteredContacts.length > 0 && (
+                <div className="absolute left-6 top-52 bg-[#1E2028] border border-[#4433FF]/30 rounded-lg shadow-xl z-50 w-64 max-h-48 overflow-auto">
+                  {filteredContacts.map(contact => (
+                    <button
+                      key={contact.id}
+                      onClick={() => handleSelectContact(contact)}
+                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-[#4433FF]/20 transition-colors"
+                    >
+                      <div className="w-8 h-8 bg-[#4433FF]/30 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        {contact.fullName.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="text-sm text-white font-medium">{contact.fullName}</div>
+                        {contact.email && <div className="text-xs text-gray-500">{contact.email}</div>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              
               <div className="absolute bottom-4 right-4 flex gap-2">
                   <input type="file" className="hidden" ref={fileInputRef} />
                   <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 bg-[#4433FF]/20 hover:bg-[#4433FF] border border-[#4433FF] text-white text-xs font-bold px-3 py-1.5 rounded transition-all">
@@ -491,7 +651,7 @@ const ScanView: React.FC = () => {
               <button 
                 onClick={handleScan}
                 disabled={loading}
-                className="relative overflow-hidden group/btn px-12 py-5 bg-[#4433FF] rounded-lg text-white font-display font-bold tracking-[0.15em] text-lg shadow-[0_0_30px_rgba(68,51,255,0.6)] hover:scale-105 transition-all"
+                className="relative overflow-hidden group/btn px-12 py-5 bg-[#4433FF] rounded-lg text-white font-display font-bold tracking-[0.15em] text-lg shadow-[0_0_30px_rgba(68,51,255,0.6)] hover:scale-105 transition-all disabled:opacity-50"
               >
                   <span className="relative z-10 flex items-center gap-3">
                       {loading ? <Loader2 className="animate-spin" /> : <Zap className="fill-white" />} INITIATE SCAN
@@ -555,11 +715,36 @@ const FrameIntegrityWidget: React.FC = () => {
     const user = getContactZero();
     const reports = getContactZeroReports();
     const profile = computeCumulativeFrameProfileForContact(CONTACT_ZERO.id, reports);
+    const allTasks = getAllTasks();
     
-    // Calculate metrics based on actual app data
-    const frameIntegrity = profile.currentFrameScore;
-    const scansCompleted = profile.scansCount;
-    const frameLeaks = Math.max(0, 100 - frameIntegrity);
+    // Calculate metrics based on actual app data - with safe defaults
+    let frameIntegrity = 50;
+    let scansCompleted = 0;
+    let frameLeaks = 0;
+    
+    try {
+        frameIntegrity = profile?.currentFrameScore || 50;
+        scansCompleted = profile?.scansCount || 0;
+        
+        // Frame Leaks: Count of incongruent actions from Contact Zero
+        // This includes: overdue tasks, missed commitments, uncompleted high-priority items
+        const overdueTasks = allTasks.filter(t =>
+          t.contactId === CONTACT_ZERO.id &&
+          t.dueAt &&
+          new Date(t.dueAt) < new Date() &&
+          t.status !== 'done'
+        ).length;
+
+        // Also count from reports: look for low frame scores
+        const lowFrameScoreReports = reports.filter(r =>
+          r.score && r.score.frameScore && r.score.frameScore < 60
+        ).length;
+        
+        // Frame leaks = overdue tasks + low frame score patterns detected
+        frameLeaks = overdueTasks + lowFrameScoreReports;
+    } catch (e) {
+        console.error('FrameIntegrityWidget error:', e);
+    }
     
     return (
         <div className="bg-[#080a08] rounded-xl p-6 relative overflow-hidden h-full" style={{ minHeight: '320px' }}>
@@ -582,8 +767,8 @@ const FrameIntegrityWidget: React.FC = () => {
                             <div className="w-1.5 h-1.5 bg-[#32cd32] rounded-sm" />
                             <span className="text-[10px] text-[#32cd32] font-bold uppercase tracking-wider font-mono">Frame Score</span>
                         </div>
-                        <div className="text-3xl font-display font-bold text-[#32cd32]">{frameIntegrity}/100</div>
-                        <div className="text-[9px] text-[#32cd32]/60 font-mono">[INTEGRITY]</div>
+                        <div className="text-3xl font-display font-bold text-[#32cd32]">{frameIntegrity}</div>
+                        <div className="text-[9px] text-[#32cd32]/60 font-mono">[OUT OF 100]</div>
                     </div>
 
                     {/* Scans Completed */}
@@ -603,7 +788,7 @@ const FrameIntegrityWidget: React.FC = () => {
                             <span className="text-[10px] text-orange-500 font-bold uppercase tracking-wider font-mono">Frame Leaks</span>
                         </div>
                         <div className="text-3xl font-display font-bold text-orange-500">{frameLeaks}</div>
-                        <div className="text-[9px] text-orange-500/60 font-mono">[DETECTED]</div>
+                        <div className="text-[9px] text-orange-500/60 font-mono">[INCONGRUENT]</div>
                     </div>
                 </div>
 
@@ -623,12 +808,143 @@ const FrameIntegrityWidget: React.FC = () => {
     );
 };
 
+// --- REBELS RANKING WIDGET (Connected to Contact Data) ---
+const RebelsRankingWidget: React.FC = () => {
+    const contacts = getAllContacts();
+    const allTasks = getAllTasks();
+    const allNotes = getAllNotes();
+    
+    // Calculate "rebel points" for each contact based on activity
+    // Points come from: tasks completed, notes created, interactions, frame scans
+    const rankedContacts = useMemo(() => {
+        try {
+            return contacts
+                .filter(c => c.id !== CONTACT_ZERO.id) // Exclude Contact Zero
+                .map(contact => {
+                    // Get activity metrics for this contact
+                    const contactTasks = allTasks.filter(t => t.contactId === contact.id);
+                    const completedTasks = contactTasks.filter(t => t.status === 'done').length;
+                    const contactNotes = allNotes.filter(n => n.contactId === contact.id);
+                    const contactInteractions = getInteractionsByContactId(contact.id);
+                    
+                    // Calculate points: 10 per completed task, 5 per note, 3 per interaction
+                    const points = (completedTasks * 10) + (contactNotes.length * 5) + (contactInteractions.length * 3);
+                    
+                    // Calculate streak (consecutive weeks with activity)
+                    const streak = Math.min(Math.floor(points / 30), 52); // Max 52 weeks
+                    
+                    return {
+                        ...contact,
+                        points,
+                        streak,
+                        isNew: false, // TODO: Need to track contact creation date in Contact type
+                    };
+                })
+                .sort((a, b) => b.points - a.points)
+                .slice(0, 5); // Top 5
+        } catch (e) {
+            console.error('RebelsRankingWidget error:', e);
+            return [];
+        }
+    }, [contacts, allTasks, allNotes]);
+
+    const newCount = rankedContacts.filter(c => c.isNew).length;
+
+    return (
+        <div className="bg-[#0E0E0E] rounded-xl p-6 relative overflow-hidden h-full">
+            <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-2 text-blue-500">
+                    <div className="w-2 h-2 bg-blue-500 rounded-sm" />
+                    <h3 className="text-xs font-bold uppercase tracking-widest">Rebels Ranking</h3>
+                </div>
+                {newCount > 0 && (
+                    <div className="text-[9px] bg-[#333] text-orange-500 px-2 py-0.5 rounded font-bold border border-orange-500/30">
+                        {newCount} NEW
+                    </div>
+                )}
+            </div>
+            
+            <div className="space-y-2">
+                {rankedContacts.length === 0 ? (
+                    <div className="text-center py-6 text-gray-500 text-sm">
+                        Add contacts to see rankings
+                    </div>
+                ) : (
+                    rankedContacts.map((contact, idx) => (
+                        <div key={contact.id} className="flex items-center justify-between bg-[#1A1A1D] p-3 rounded border border-[#333]">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-6 h-6 ${idx === 0 ? 'bg-blue-600' : idx === 1 ? 'bg-gray-600' : 'bg-gray-700'} rounded flex items-center justify-center text-xs font-bold text-white`}>
+                                    {idx + 1}
+                                </div>
+                                <div className="w-8 h-8 bg-gray-700 rounded-full overflow-hidden flex items-center justify-center">
+                                    {contact.avatarUrl ? (
+                                        <img src={contact.avatarUrl} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-xs font-bold text-gray-400">
+                                            {contact.fullName.charAt(0).toUpperCase()}
+                                        </span>
+                                    )}
+                                </div>
+                                <div>
+                                    <div className="text-xs font-bold text-white">
+                                        {contact.fullName.toUpperCase()} 
+                                        {contact.isNew && <span className="ml-1 text-orange-500">🆕</span>}
+                                    </div>
+                                    <div className="text-[9px] text-gray-500">
+                                        {contact.streak > 0 ? `${contact.streak} WEEK${contact.streak > 1 ? 'S' : ''} STREAK 🔥` : 'NEW REBEL'}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className={`${idx === 0 ? 'bg-blue-600' : 'bg-gray-700'} text-white text-[10px] font-bold px-2 py-1 rounded`}>
+                                {contact.points} PTS
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
+};
+
 // --- DASHBOARD OVERVIEW (Rich - Binds to Contact Zero) ---
 const DashboardOverview: React.FC = () => {
     const user = getContactZero();
-    const tasksDue = 3;
-    const scansDone = user.frame.lastScanAt ? 5 : 0;
-    const leaks = 100 - user.frame.currentScore;
+    const reports = getContactZeroReports();
+    const profile = computeCumulativeFrameProfileForContact(CONTACT_ZERO.id, reports);
+    const allTasks = getAllTasks();
+    
+    // Calculate actual metrics from Contact Zero's data - with safe defaults
+    let tasksDue = 0;
+    let scansDone = 0;
+    let leaks = 0;
+    
+    try {
+        tasksDue = allTasks.filter(t =>
+          t.contactId === CONTACT_ZERO.id &&
+          t.dueAt &&
+          new Date(t.dueAt) > new Date() &&
+          new Date(t.dueAt) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) &&
+          t.status !== 'done'
+        ).length;
+
+        // Scans completed from actual reports
+        scansDone = profile?.scansCount || 0;
+
+        // Frame leaks: overdue tasks + low frame score patterns
+        const overdueTasks = allTasks.filter(t =>
+          t.contactId === CONTACT_ZERO.id &&
+          t.dueAt &&
+          new Date(t.dueAt) < new Date() &&
+          t.status !== 'done'
+        ).length;
+        const lowFrameScoreReports = reports.filter(r =>
+          r.score && r.score.frameScore && r.score.frameScore < 60
+        ).length;
+        leaks = overdueTasks + lowFrameScoreReports;
+    } catch (e) {
+        console.error('DashboardOverview metrics error:', e);
+    }
+    
     const [chartRange, setChartRange] = useState<'week' | 'month' | 'year'>('week');
     const [selectedDataPoint, setSelectedDataPoint] = useState<SelectedDataPoint | null>(null);
     const selectedContact = getContactZero();
@@ -1171,28 +1487,7 @@ const DashboardOverview: React.FC = () => {
             {/* BOTTOM ROW - Two columns */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <SparkBorder>
-                    <div className="bg-[#0E0E0E] rounded-xl p-6 relative overflow-hidden h-full">
-                        <div className="flex justify-between items-center mb-4">
-                            <div className="flex items-center gap-2 text-blue-500">
-                                <div className="w-2 h-2 bg-blue-500 rounded-sm" />
-                                <h3 className="text-xs font-bold uppercase tracking-widest">Rebels Ranking</h3>
-                            </div>
-                            <div className="text-[9px] bg-[#333] text-orange-500 px-2 py-0.5 rounded font-bold border border-orange-500/30">2 NEW</div>
-                        </div>
-                        <div className="flex items-center justify-between bg-[#1A1A1D] p-3 rounded border border-[#333]">
-                            <div className="flex items-center gap-3">
-                                <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-xs font-bold text-white">1</div>
-                                <div className="w-8 h-8 bg-gray-700 rounded-full overflow-hidden">
-                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Grimson" className="w-full h-full" />
-                                </div>
-                                <div>
-                                    <div className="text-xs font-bold text-white">GRIMSON <span className="text-gray-500">@GRIMSON</span></div>
-                                    <div className="text-[9px] text-gray-500">2 WEEKS STREAK 🔥</div>
-                                </div>
-                            </div>
-                            <div className="bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded">148 POINTS</div>
-                        </div>
-                    </div>
+                    <RebelsRankingWidget />
                 </SparkBorder>
 
                 <SparkBorder>
@@ -1286,7 +1581,7 @@ const FrameScoreTileWidget: React.FC = () => {
 };
 
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'CANVAS';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -1384,6 +1679,9 @@ export const Dashboard: React.FC = () => {
     if (currentView === 'FRAME_DEMO') {
       return 'FRAME REPORT DEMO';
     }
+    if (currentView === 'CANVAS') {
+      return 'FRAME CANVAS';
+    }
     return currentView;
   };
 
@@ -1437,6 +1735,7 @@ export const Dashboard: React.FC = () => {
             <NavItem active={currentView === 'NOTES'} onClick={() => handleNav('NOTES')} icon={<Notebook size={16} />} label="LOG" />
             <NavItem active={currentView === 'SCAN'} onClick={() => handleNav('SCAN')} icon={<Scan size={16} />} label="SCAN" />
             <NavItem active={currentView === 'FRAMESCAN' || currentView === 'FRAMESCAN_REPORT'} onClick={() => handleNav('FRAMESCAN')} icon={<Crosshair size={16} />} label="FRAME SCANS" />
+            <NavItem active={currentView === 'CANVAS'} onClick={() => handleNav('CANVAS')} icon={<LayoutGrid size={16} />} label="CANVAS" />
 
             <div className="h-6" />
 
@@ -1537,7 +1836,7 @@ export const Dashboard: React.FC = () => {
              </div>
          </div>
 
-         <div className={`p-4 md:p-6 overflow-y-auto flex-1 custom-scrollbar ${!isLeftSidebarOpen ? 'max-w-full' : ''}`}>
+         <div className={`p-4 md:p-6 flex-1 ${currentView === 'CANVAS' ? 'flex flex-col min-h-0 overflow-hidden' : 'overflow-y-auto'} custom-scrollbar ${!isLeftSidebarOpen ? 'max-w-full' : ''}`}>
              {currentView === 'OVERVIEW' && <DashboardOverview />}
             {currentView === 'DOSSIER' && (
               <ContactDossierView
@@ -1653,6 +1952,9 @@ export const Dashboard: React.FC = () => {
              )}
              {currentView === 'FRAME_DEMO' && appConfig.enableDevRoutes && (
                <FrameReportDemoPage />
+             )}
+             {currentView === 'CANVAS' && (
+               <FrameCanvasPage />
              )}
          </div>
       </main>

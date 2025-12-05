@@ -4,7 +4,7 @@ import { Send, Terminal, TestTube, CheckCircle, Lock, Microscope } from 'lucide-
 import { Button } from './Button';
 import { Reveal } from './Reveal';
 import { ChatMessage } from '../types';
-import { submitBetaApplicationChat } from '../services/geminiService';
+import { submitBetaApplicationChat } from '../lib/llm/geminiService';
 
 const MotionDiv = motion.div as any;
 

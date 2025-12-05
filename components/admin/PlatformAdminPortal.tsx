@@ -11,7 +11,7 @@ import {
   Building2, Users, AlertTriangle, FlaskConical, FileDown, ScrollText,
   ShieldCheck, ChevronRight, Search, Filter, MoreHorizontal, RefreshCw,
   Mail, Clock, CheckCircle, XCircle, AlertCircle, UserPlus, Ban, Play,
-  Target, Calendar
+  Target, Calendar, BarChart3, Activity, Radio, User
 } from 'lucide-react';
 import type { UserScope, AdminActionType } from '../../types/multiTenant';
 import {
@@ -19,12 +19,20 @@ import {
   BetaApplicationsPanel,
   PendingCallsPanel,
 } from './ApplicationAdminPanels';
+import {
+  UsageAnalyticsPanel,
+  EnterpriseUsagePanel,
+  UserUsagePanel,
+  FrameScoreAnalyticsPanel,
+  BroadcastPanel,
+} from './panels';
 import { getAllTenants, changeTenantPlan, changeTenantStatus } from '../../stores/tenantStore';
 import { 
   getAllTenantUsers, 
   changeStaffRole, 
   getUsersWithStaffRoles,
-  canAccessPlatformAdmin 
+  canAccessPlatformAdmin,
+  isSuperAdmin,
 } from '../../stores/tenantUserStore';
 import { getAllStrugglingUsers, getHealthLevelLabel, getHealthLevelColor } from '../../stores/frameHealthStore';
 import { 
@@ -68,10 +76,14 @@ type AdminTab =
   | 'beta-apps'
   | 'pending-calls'
   | 'struggling' 
-  | 'beta' 
+  | 'usage-analytics'
+  | 'enterprise-usage'
+  | 'user-usage'
+  | 'frame-score-analytics'
   | 'data-requests' 
   | 'logs' 
-  | 'staff-roles';
+  | 'staff-roles'
+  | 'broadcast';
 
 interface PlatformAdminPortalProps {
   userScope: UserScope;
@@ -103,18 +115,27 @@ export const PlatformAdminPortal: React.FC<PlatformAdminPortalProps> = ({
 
   const refresh = () => setRefreshKey(k => k + 1);
 
-  const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
+  // Build tabs based on role - some tabs are Super Admin only
+  const isSuperAdminUser = isSuperAdmin(userScope);
+  
+  const allTabs: { id: AdminTab; label: string; icon: React.ReactNode; superAdminOnly?: boolean }[] = [
     { id: 'tenants', label: 'Tenants', icon: <Building2 size={16} /> },
     { id: 'users', label: 'Users', icon: <Users size={16} /> },
     { id: 'coaching-apps', label: 'Coaching Apps', icon: <Target size={16} /> },
     { id: 'beta-apps', label: 'Beta Apps', icon: <FlaskConical size={16} /> },
     { id: 'pending-calls', label: 'Pending Calls', icon: <Calendar size={16} /> },
     { id: 'struggling', label: 'Struggling Users', icon: <AlertTriangle size={16} /> },
-    { id: 'beta', label: 'Beta Usage', icon: <FlaskConical size={16} /> },
+    { id: 'usage-analytics', label: 'Usage Analytics', icon: <Activity size={16} /> },
+    { id: 'enterprise-usage', label: 'Enterprise Usage', icon: <BarChart3 size={16} /> },
+    { id: 'user-usage', label: 'User Usage', icon: <User size={16} /> },
+    { id: 'frame-score-analytics', label: 'Frame Score Analytics', icon: <Target size={16} /> },
     { id: 'data-requests', label: 'Data Requests', icon: <FileDown size={16} /> },
-    { id: 'logs', label: 'System Logs', icon: <ScrollText size={16} /> },
-    { id: 'staff-roles', label: 'Staff Roles', icon: <ShieldCheck size={16} /> },
+    { id: 'logs', label: 'System Logs', icon: <ScrollText size={16} />, superAdminOnly: true },
+    { id: 'staff-roles', label: 'Staff Roles', icon: <ShieldCheck size={16} />, superAdminOnly: true },
+    { id: 'broadcast', label: 'Broadcast', icon: <Radio size={16} />, superAdminOnly: true },
   ];
+  
+  const tabs = allTabs.filter(tab => !tab.superAdminOnly || isSuperAdminUser);
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
@@ -207,8 +228,23 @@ export const PlatformAdminPortal: React.FC<PlatformAdminPortalProps> = ({
               {activeTab === 'struggling' && (
                 <StrugglingUsersPanel userScope={userScope} searchQuery={searchQuery} />
               )}
-              {activeTab === 'beta' && (
-                <BetaUsagePanel userScope={userScope} searchQuery={searchQuery} />
+              {activeTab === 'usage-analytics' && (
+                <UsageAnalyticsPanel userScope={userScope} />
+              )}
+              {activeTab === 'enterprise-usage' && (
+                <EnterpriseUsagePanel 
+                  userScope={userScope} 
+                  onViewUserUsage={(tenantId) => {
+                    // Navigate to user usage with tenant filter
+                    setActiveTab('user-usage');
+                  }}
+                />
+              )}
+              {activeTab === 'user-usage' && (
+                <UserUsagePanel userScope={userScope} showTenantColumn={true} />
+              )}
+              {activeTab === 'frame-score-analytics' && (
+                <FrameScoreAnalyticsPanel userScope={userScope} />
               )}
               {activeTab === 'data-requests' && (
                 <DataRequestsPanel userScope={userScope} searchQuery={searchQuery} />
@@ -218,6 +254,9 @@ export const PlatformAdminPortal: React.FC<PlatformAdminPortalProps> = ({
               )}
               {activeTab === 'staff-roles' && (
                 <StaffRolesPanel userScope={userScope} searchQuery={searchQuery} />
+              )}
+              {activeTab === 'broadcast' && (
+                <BroadcastPanel userScope={userScope} />
               )}
             </MotionDiv>
           </div>

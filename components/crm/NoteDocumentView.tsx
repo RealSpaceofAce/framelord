@@ -96,10 +96,10 @@ export const NoteDocumentView: React.FC<NoteDocumentViewProps> = ({
   if (!note) return null;
 
   // Auto-open in edit mode if note is empty (newly created from [[link]])
-  const isEmptyNote = !note.content.trim() && note.title;
-  const [isEditing, setIsEditing] = useState(isEmptyNote);
-  const [editContent, setEditContent] = useState(note.content);
-  const [editTitle, setEditTitle] = useState(note.title || '');
+  const isEmptyNote = Boolean(!note.content.trim() && note.title);
+  const [isEditing, setIsEditing] = useState<boolean>(isEmptyNote);
+  const [editContent, setEditContent] = useState<string>(note.content);
+  const [editTitle, setEditTitle] = useState<string>(note.title || '');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [wikilinkState, setWikilinkState] = useState<{
     active: boolean;

@@ -50,7 +50,7 @@ export const NoteGraph: React.FC<NoteGraphProps> = ({
   onSelectContact,
   onSelectTopic,
 }) => {
-  const fgRef = useRef<ForceGraphMethods>();
+  const fgRef = useRef<ForceGraphMethods>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
   

@@ -209,7 +209,9 @@ export interface ChatMessage {
 
 // --- CONTAINERS (Organizing Layers) ---
 
-export interface Group {
+// DEPRECATED - Old Group schema, replaced by new Group interface below
+// Kept for backward compatibility only
+export interface LegacyGroup {
   id: string;
   name: string;
   description: string;

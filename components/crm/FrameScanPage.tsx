@@ -375,3 +375,6 @@ const ReportCard: React.FC<ReportCardProps> = ({
 
 export default FrameScanPage;
 
+
+
+

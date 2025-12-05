@@ -422,6 +422,113 @@ export function getNotificationTypeIcon(type: NotificationType): string {
 }
 
 // =============================================================================
+// BROADCAST NOTIFICATIONS (ADMIN)
+// =============================================================================
+
+export interface BroadcastRequest {
+  scope: 'GLOBAL' | 'TENANT' | 'USER';
+  tenantId: string | null;
+  userId: string | null;
+  title: string;
+  body: string;
+  createdBy: string;
+}
+
+/**
+ * Enqueue a broadcast notification from admin
+ * BACKEND TODO: POST /api/admin/broadcast to actually deliver these
+ */
+export function enqueueBroadcastNotification(
+  request: BroadcastRequest
+): { success: boolean; error?: string; deliveredCount?: number } {
+  initNotifications();
+  
+  try {
+    // Validate request
+    if (!request.title.trim() || !request.body.trim()) {
+      return { success: false, error: 'Title and body are required' };
+    }
+    
+    if (request.scope === 'TENANT' && !request.tenantId) {
+      return { success: false, error: 'Tenant ID required for tenant scope' };
+    }
+    
+    if (request.scope === 'USER' && !request.userId) {
+      return { success: false, error: 'User ID required for user scope' };
+    }
+    
+    // For now, we create notifications locally based on scope
+    // BACKEND TODO: This should POST to /api/admin/broadcast which handles
+    // actual delivery to all recipients, tracks delivery counts, etc.
+    
+    let deliveredCount = 0;
+    
+    if (request.scope === 'GLOBAL') {
+      // Create a single notification that will be visible to all users
+      // BACKEND TODO: Actually fan out to all users
+      const notification: Notification = {
+        id: `broadcast_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        tenantId: 'GLOBAL', // Special marker for global notifications
+        userId: 'ALL',
+        type: 'GENERAL',
+        title: request.title,
+        body: request.body,
+        createdAt: new Date().toISOString(),
+        source: 'ADMIN',
+      };
+      notifications.push(notification);
+      deliveredCount = 1; // Placeholder - backend would return actual count
+    } else if (request.scope === 'TENANT' && request.tenantId) {
+      // Create notification for all users in tenant
+      // BACKEND TODO: Fan out to all tenant users
+      const notification: Notification = {
+        id: `broadcast_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        tenantId: request.tenantId,
+        userId: 'ALL_IN_TENANT',
+        type: 'GENERAL',
+        title: request.title,
+        body: request.body,
+        createdAt: new Date().toISOString(),
+        source: 'ADMIN',
+      };
+      notifications.push(notification);
+      deliveredCount = 1; // Placeholder
+    } else if (request.scope === 'USER' && request.userId && request.tenantId) {
+      // Create notification for specific user
+      const notification: Notification = {
+        id: `broadcast_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        tenantId: request.tenantId,
+        userId: request.userId,
+        type: 'GENERAL',
+        title: request.title,
+        body: request.body,
+        createdAt: new Date().toISOString(),
+        source: 'ADMIN',
+      };
+      notifications.push(notification);
+      deliveredCount = 1;
+    }
+    
+    persistNotifications();
+    
+    console.log('[UserNotificationStore] Broadcast notification created:', {
+      scope: request.scope,
+      title: request.title,
+      createdBy: request.createdBy,
+      deliveredCount,
+    });
+    
+    return { success: true, deliveredCount };
+  } catch (error) {
+    console.error('[UserNotificationStore] Failed to create broadcast:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
+}
+
+// =============================================================================
 // RESET (TESTING ONLY)
 // =============================================================================
 

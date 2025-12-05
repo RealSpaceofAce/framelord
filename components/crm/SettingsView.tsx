@@ -42,7 +42,7 @@ import { CONTACT_ZERO, getContactZero, updateContact } from '../../services/cont
 import {
   getNotificationSettings,
   updateNotificationSettings,
-} from '../../services/notificationStore';
+} from '../../services/systemLogStore';
 
 type SettingsTab = 'profile' | 'billing' | 'appearance' | 'notifications' | 'integrations' | 'privacy' | 'help';
 

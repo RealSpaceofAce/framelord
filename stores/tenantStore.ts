@@ -6,7 +6,7 @@
 // Contact spine centrality is maintained through tenantContactZeroId.
 // =============================================================================
 
-import type { Tenant, TenantStatus } from '../types/multiTenant';
+import type { Tenant, TenantStatus, TenantPlanCode } from '../types/multiTenant';
 
 const STORAGE_KEY = 'framelord_tenants';
 
@@ -75,12 +75,15 @@ export function getTenantByOwnerUserId(ownerUserId: string): Tenant | null {
 /**
  * Create a new tenant
  * BACKEND STUB: This would create tenant in database and set up billing
+ * 
+ * @param planCode - Determines if tenant is enterprise (TEAM/ENTERPRISE) or solo (FREE/BETA/PRO)
  */
 export function createTenant(
   name: string,
   ownerUserId: string,
   tenantContactZeroId: string,
-  planName: string = 'FREE'
+  planCode: TenantPlanCode = 'FREE',
+  seatCount?: number
 ): Tenant {
   init();
   
@@ -89,9 +92,11 @@ export function createTenant(
     name,
     createdAt: new Date().toISOString(),
     status: 'TRIAL',
-    planName,
+    planName: planCode, // Legacy field - keep in sync with planCode
+    planCode,
     ownerUserId,
     tenantContactZeroId,
+    seatCount: seatCount ?? (planCode === 'TEAM' ? 5 : planCode === 'ENTERPRISE' ? 25 : undefined),
   };
   
   tenants = [tenant, ...tenants];
@@ -100,7 +105,7 @@ export function createTenant(
   // BACKEND TODO: Create tenant record in database
   // BACKEND TODO: Set up billing subscription
   // BACKEND TODO: Create audit log entry
-  console.log('[TenantStore] BACKEND STUB: createTenant', tenant.tenantId);
+  console.log('[TenantStore] BACKEND STUB: createTenant', tenant.tenantId, 'planCode:', planCode);
   
   return tenant;
 }
@@ -110,12 +115,17 @@ export function createTenant(
  */
 export function updateTenant(
   tenantId: string,
-  updates: Partial<Pick<Tenant, 'name' | 'planName' | 'status'>>
+  updates: Partial<Pick<Tenant, 'name' | 'planName' | 'planCode' | 'status' | 'seatCount'>>
 ): Tenant | null {
   init();
   
   const index = tenants.findIndex(t => t.tenantId === tenantId);
   if (index < 0) return null;
+  
+  // Keep planName and planCode in sync
+  if (updates.planCode && !updates.planName) {
+    updates.planName = updates.planCode;
+  }
   
   tenants[index] = { ...tenants[index], ...updates };
   persist();
@@ -129,14 +139,20 @@ export function updateTenant(
 /**
  * Change tenant plan (Platform Admin action)
  * BACKEND STUB: This would update billing
+ * 
+ * NOTE: Changing to TEAM or ENTERPRISE makes this an enterprise tenant with Tenant Admin
  */
-export function changeTenantPlan(tenantId: string, newPlan: string): Tenant | null {
+export function changeTenantPlan(tenantId: string, newPlanCode: TenantPlanCode, newSeatCount?: number): Tenant | null {
   // BACKEND TODO: Validate plan exists
   // BACKEND TODO: Update billing subscription
   // BACKEND TODO: Record admin action in audit log
-  console.log('[TenantStore] BACKEND STUB: changeTenantPlan', tenantId, newPlan);
+  console.log('[TenantStore] BACKEND STUB: changeTenantPlan', tenantId, newPlanCode);
   
-  return updateTenant(tenantId, { planName: newPlan });
+  return updateTenant(tenantId, { 
+    planCode: newPlanCode, 
+    planName: newPlanCode,
+    seatCount: newSeatCount ?? (newPlanCode === 'TEAM' ? 5 : newPlanCode === 'ENTERPRISE' ? 25 : undefined),
+  });
 }
 
 /**
@@ -212,16 +228,19 @@ export function searchTenants(query: string): Tenant[] {
 
 /**
  * Create a default tenant for development if none exists
+ * 
+ * @param planCode - Set to TEAM or ENTERPRISE to create an enterprise tenant for testing
  */
 export function ensureDefaultTenant(
   ownerUserId: string,
-  tenantContactZeroId: string
+  tenantContactZeroId: string,
+  planCode: TenantPlanCode = 'FREE'
 ): Tenant {
   init();
   
   let tenant = getTenantByOwnerUserId(ownerUserId);
   if (!tenant) {
-    tenant = createTenant('Default Tenant', ownerUserId, tenantContactZeroId, 'FREE');
+    tenant = createTenant('Default Tenant', ownerUserId, tenantContactZeroId, planCode);
   }
   
   return tenant;

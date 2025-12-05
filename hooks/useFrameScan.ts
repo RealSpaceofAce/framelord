@@ -160,3 +160,6 @@ export function useImageFrameScan(): UseImageFrameScanReturn {
   return { status, result, error, scan, reset };
 }
 
+
+
+

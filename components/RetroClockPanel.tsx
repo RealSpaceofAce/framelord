@@ -74,9 +74,9 @@ export const RetroClockPanel: React.FC<RetroClockPanelProps> = ({ time, userLoca
     }
   };
 
-  // Format temperature
+  // Format temperature (Fahrenheit for US users)
   const getTemperature = () => {
-    return '18°C'; // TODO: Get real temperature from location
+    return '64°F'; // TODO: Get real temperature from location API
   };
 
   // Format timezone

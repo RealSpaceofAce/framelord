@@ -261,12 +261,14 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
     const headerMatch = preserveFormattingMarkers ? null : line.match(/^(#{1,6})\s+(.+)$/);
     if (headerMatch) {
       const level = headerMatch[1].length;
-      const HeaderTag = `h${Math.min(level + 1, 6)}` as keyof JSX.IntrinsicElements;
+      const headerTag = `h${Math.min(level + 1, 6)}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
       const headerContent = renderInlineMarkdown(headerMatch[2]);
       renderedLines.push(
-        <HeaderTag key={`header-${lineIdx}`} className="font-bold text-white mt-4 mb-2 first:mt-0">
-          {headerContent}
-        </HeaderTag>
+        React.createElement(
+          headerTag,
+          { key: `header-${lineIdx}`, className: "font-bold text-white mt-4 mb-2 first:mt-0" },
+          headerContent
+        )
       );
     } else {
       const rendered = renderInlineMarkdown(line);

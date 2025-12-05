@@ -108,3 +108,6 @@ export function getConfiguredProviders(): LlmProviderId[] {
   return (Object.keys(PROVIDER_CONFIG) as LlmProviderId[]).filter(isProviderConfigured);
 }
 
+
+
+

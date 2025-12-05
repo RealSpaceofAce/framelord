@@ -1,22 +1,26 @@
 // =============================================================================
 // TENANT ADMIN PORTAL — /admin
 // =============================================================================
-// Tenant-level admin panel visible to OWNER and MANAGER roles.
-// Manages people, struggling users, beta status, and tenant settings.
+// ENTERPRISE-ONLY admin panel for organizations managing multiple users.
+//
+// KEY RULES:
+// - Only visible to ENTERPRISE tenants (TEAM or ENTERPRISE plan)
+// - Only accessible to OWNER or MANAGER roles
+// - Platform staff (staffRole !== NONE) use Platform Admin instead
+// - Solo users NEVER see this — they use personal Settings/Account only
+//
+// This is the "control room" for enterprise buyers managing their team.
 // =============================================================================
 
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Users, AlertTriangle, FlaskConical, Settings, Search, MoreHorizontal,
-  RefreshCw, UserPlus, Shield, ChevronDown, Mail, Target, Calendar
+  Users, AlertTriangle, Settings, Search, MoreHorizontal,
+  RefreshCw, UserPlus, Shield, ChevronDown, Mail, User, Building2
 } from 'lucide-react';
-import type { UserScope, TenantRole } from '../../types/multiTenant';
-import {
-  CoachingApplicationsPanel,
-  BetaApplicationsPanel,
-  PendingCallsPanel,
-} from './ApplicationAdminPanels';
+import type { UserScope, TenantRole, Tenant } from '../../types/multiTenant';
+import { isEnterpriseTenant } from '../../types/multiTenant';
+import { UserUsagePanel } from './panels';
 import { getTenantById } from '../../stores/tenantStore';
 import { 
   getTenantUsers, 
@@ -36,11 +40,6 @@ import {
   sendManualCoachingNudge,
   getCandidateStatusLabel 
 } from '../../stores/coachingStore';
-import { 
-  getBetaUsersForTenant,
-  getBetaStatusLabel,
-  getUsageStatusLabel 
-} from '../../stores/betaProgramStore';
 import { recordAdminAction } from '../../stores/adminAuditStore';
 
 const MotionDiv = motion.div as any;
@@ -49,7 +48,8 @@ const MotionDiv = motion.div as any;
 // TYPES
 // =============================================================================
 
-type AdminTab = 'people' | 'coaching-apps' | 'beta-apps' | 'pending-calls' | 'struggling' | 'beta' | 'settings';
+// Enterprise tenant admin tabs - team-focused, no platform/personal concerns
+type AdminTab = 'team' | 'user-usage' | 'struggling' | 'team-settings';
 
 interface TenantAdminPortalProps {
   userScope: UserScope;
@@ -62,35 +62,51 @@ interface TenantAdminPortalProps {
 export const TenantAdminPortal: React.FC<TenantAdminPortalProps> = ({
   userScope,
 }) => {
-  const [activeTab, setActiveTab] = useState<AdminTab>('people');
+  const [activeTab, setActiveTab] = useState<AdminTab>('team');
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   const [showInviteModal, setShowInviteModal] = useState(false);
 
-  // Access check
-  if (!canAccessTenantAdmin(userScope)) {
+  // Get tenant first - needed for access check
+  const tenant = getTenantById(userScope.tenantId);
+
+  // Access check - enterprise tenants only, OWNER/MANAGER only, no platform staff
+  if (!canAccessTenantAdmin(userScope, tenant)) {
+    // Check why access was denied for better messaging
+    const isNotEnterprise = !isEnterpriseTenant(tenant);
+    const isPlatformStaff = userScope.staffRole !== 'NONE';
+    
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#0A0A0A]">
-        <div className="text-center p-8">
+        <div className="text-center p-8 max-w-md">
           <Shield size={48} className="text-red-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-white mb-2">Access Denied</h1>
-          <p className="text-gray-400">You do not have permission to access the Tenant Admin portal.</p>
+          <p className="text-gray-400 mb-4">
+            {isNotEnterprise 
+              ? "Tenant Admin is only available for enterprise team accounts. Solo accounts use the personal Settings panel instead."
+              : isPlatformStaff
+              ? "Platform staff should use Platform Admin, not Tenant Admin."
+              : "You do not have permission to access Tenant Admin. Only team owners and managers can access this area."
+            }
+          </p>
+          {isNotEnterprise && (
+            <p className="text-xs text-gray-500">
+              Need to manage a team? Contact support about upgrading to a TEAM or ENTERPRISE plan.
+            </p>
+          )}
         </div>
       </div>
     );
   }
 
-  const tenant = getTenantById(userScope.tenantId);
   const refresh = () => setRefreshKey(k => k + 1);
 
+  // Enterprise team management tabs - no platform concerns, no personal settings overlap
   const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'people', label: 'People', icon: <Users size={16} /> },
-    { id: 'coaching-apps', label: 'Coaching Apps', icon: <Target size={16} /> },
-    { id: 'beta-apps', label: 'Beta Apps', icon: <FlaskConical size={16} /> },
-    { id: 'pending-calls', label: 'Pending Calls', icon: <Calendar size={16} /> },
+    { id: 'team', label: 'Team', icon: <Users size={16} /> },
+    { id: 'user-usage', label: 'User Usage', icon: <User size={16} /> },
     { id: 'struggling', label: 'Struggling Users', icon: <AlertTriangle size={16} /> },
-    { id: 'beta', label: 'Beta Status', icon: <FlaskConical size={16} /> },
-    { id: 'settings', label: 'Settings', icon: <Settings size={16} /> },
+    { id: 'team-settings', label: 'Team Settings', icon: <Building2 size={16} /> },
   ];
 
   return (
@@ -175,26 +191,21 @@ export const TenantAdminPortal: React.FC<TenantAdminPortalProps> = ({
               animate={{ opacity: 1, y: 0 }}
               className="bg-[#0E0E0E] rounded-xl border border-[#2A2A2A] overflow-hidden"
             >
-              {activeTab === 'people' && (
+              {activeTab === 'team' && (
                 <PeoplePanel userScope={userScope} searchQuery={searchQuery} />
               )}
-              {activeTab === 'coaching-apps' && (
-                <CoachingApplicationsPanel userScope={userScope} tenantFilter={userScope.tenantId} />
-              )}
-              {activeTab === 'beta-apps' && (
-                <BetaApplicationsPanel userScope={userScope} tenantFilter={userScope.tenantId} />
-              )}
-              {activeTab === 'pending-calls' && (
-                <PendingCallsPanel userScope={userScope} tenantFilter={userScope.tenantId} />
+              {activeTab === 'user-usage' && (
+                <UserUsagePanel 
+                  userScope={userScope} 
+                  tenantFilter={userScope.tenantId}
+                  showTenantColumn={false}
+                />
               )}
               {activeTab === 'struggling' && (
                 <TenantStrugglingPanel userScope={userScope} searchQuery={searchQuery} />
               )}
-              {activeTab === 'beta' && (
-                <TenantBetaPanel userScope={userScope} searchQuery={searchQuery} />
-              )}
-              {activeTab === 'settings' && (
-                <TenantSettingsPanel userScope={userScope} />
+              {activeTab === 'team-settings' && (
+                <TeamSettingsPanel userScope={userScope} tenant={tenant} />
               )}
             </MotionDiv>
           </div>
@@ -380,106 +391,127 @@ const TenantStrugglingPanel: React.FC<{ userScope: UserScope; searchQuery: strin
 };
 
 // =============================================================================
-// TENANT BETA PANEL
+// TEAM SETTINGS PANEL
 // =============================================================================
+// Organization-level settings only. Does NOT duplicate personal Settings.
+// Personal profile, email, password, notification prefs remain in AccountArea.
 
-const TenantBetaPanel: React.FC<{ userScope: UserScope; searchQuery: string }> = ({
-  userScope,
-  searchQuery,
-}) => {
-  const betaUsers = useMemo(() => {
-    return getBetaUsersForTenant(userScope.tenantId);
-  }, [userScope.tenantId]);
+const TeamSettingsPanel: React.FC<{ 
+  userScope: UserScope; 
+  tenant: Tenant | null;
+}> = ({ userScope, tenant }) => {
+  const [orgName, setOrgName] = useState(tenant?.name || '');
+  const [isSaving, setIsSaving] = useState(false);
+  const teamMembers = getTenantUsers(userScope.tenantId);
+  const activeMembers = teamMembers.filter(m => m.isActive);
 
-  return (
-    <div>
-      <div className="px-4 py-3 border-b border-[#2A2A2A]">
-        <h3 className="text-sm font-bold text-white">Beta Users ({betaUsers.length})</h3>
-      </div>
-      <div className="divide-y divide-[#1A1A1D]">
-        {betaUsers.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
-            <FlaskConical size={32} className="mx-auto mb-2 text-gray-600" />
-            <p>No beta users in your team</p>
-          </div>
-        ) : (
-          betaUsers.map(user => (
-            <div key={user.userId} className="p-4 hover:bg-[#1A1A1D] transition-colors">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-medium text-white">{user.userId}</div>
-                  <div className="text-xs text-gray-500">
-                    Logins: {user.metrics.logins} • Notes: {user.metrics.notesCreated}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2 py-1 rounded border ${
-                    user.betaStatus === 'BETA_ACTIVE' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
-                    user.betaStatus === 'BETA_WARNING' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
-                    'bg-red-500/20 text-red-400 border-red-500/30'
-                  }`}>
-                    {getBetaStatusLabel(user.betaStatus)}
-                  </span>
-                  <span className={`text-xs px-2 py-1 rounded border ${
-                    user.usageStatus === 'HEALTHY' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
-                    user.usageStatus === 'WARNING' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
-                    'bg-red-500/20 text-red-400 border-red-500/30'
-                  }`}>
-                    {getUsageStatusLabel(user.usageStatus)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-};
-
-// =============================================================================
-// TENANT SETTINGS PANEL
-// =============================================================================
-
-const TenantSettingsPanel: React.FC<{ userScope: UserScope }> = ({
-  userScope,
-}) => {
-  const tenant = getTenantById(userScope.tenantId);
+  const handleSaveOrgName = () => {
+    if (!orgName.trim() || orgName === tenant?.name) return;
+    setIsSaving(true);
+    // BACKEND TODO: PATCH /api/tenants/:tenantId { name: orgName }
+    recordAdminAction({
+      actorUserId: userScope.userId,
+      actorStaffRole: userScope.staffRole,
+      scopeTenantId: userScope.tenantId,
+      actionType: 'TENANT_STATUS_CHANGE',
+      metadata: { action: 'rename', oldName: tenant?.name, newName: orgName },
+    });
+    setTimeout(() => setIsSaving(false), 500);
+  };
 
   return (
     <div className="p-6">
-      <h3 className="text-sm font-bold text-white mb-4">Tenant Settings</h3>
-      <div className="space-y-4">
-        <div>
-          <label className="text-xs text-gray-500 uppercase tracking-wider">Tenant Name</label>
-          <div className="text-sm text-white mt-1">{tenant?.name || 'Unknown'}</div>
-        </div>
-        <div>
-          <label className="text-xs text-gray-500 uppercase tracking-wider">Tenant ID</label>
-          <div className="text-sm text-white font-mono mt-1">{tenant?.tenantId || 'Unknown'}</div>
-        </div>
-        <div>
-          <label className="text-xs text-gray-500 uppercase tracking-wider">Plan</label>
-          <div className="text-sm text-white mt-1">{tenant?.planName || 'Unknown'}</div>
-        </div>
-        <div>
-          <label className="text-xs text-gray-500 uppercase tracking-wider">Status</label>
-          <div className="mt-1">
-            <span className={`text-xs px-2 py-1 rounded ${
-              tenant?.status === 'ACTIVE' ? 'bg-green-500/20 text-green-400' :
-              tenant?.status === 'TRIAL' ? 'bg-blue-500/20 text-blue-400' :
-              'bg-gray-500/20 text-gray-400'
-            }`}>
-              {tenant?.status || 'Unknown'}
-            </span>
+      <div className="mb-6">
+        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+          <Building2 size={20} className="text-[#4433FF]" />
+          Team Settings
+        </h3>
+        <p className="text-xs text-gray-500 mt-1">
+          Organization-level settings. For personal account settings, use Your Account in the main menu.
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-6">
+        <div className="bg-[#1A1A1D] rounded-lg p-4 border border-[#2A2A2A]">
+          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Organization</h4>
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Organization Name</label>
+              <div className="flex gap-2">
+                <input type="text" value={orgName} onChange={(e) => setOrgName(e.target.value)}
+                  className="flex-1 px-3 py-2 bg-[#0A0A0A] border border-[#333] rounded-lg text-sm text-white focus:border-[#4433FF] outline-none" />
+                {isTenantOwner(userScope) && orgName !== tenant?.name && (
+                  <button onClick={handleSaveOrgName} disabled={isSaving}
+                    className="px-4 py-2 bg-[#4433FF] text-white rounded-lg text-sm font-medium hover:bg-[#5544FF] disabled:opacity-50">
+                    {isSaving ? 'Saving...' : 'Save'}
+                  </button>
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Organization ID</label>
+              <div className="text-sm text-gray-400 font-mono">{tenant?.tenantId || 'Unknown'}</div>
+            </div>
           </div>
         </div>
-        <div>
-          <label className="text-xs text-gray-500 uppercase tracking-wider">Created</label>
-          <div className="text-sm text-white mt-1">
-            {tenant?.createdAt ? new Date(tenant.createdAt).toLocaleDateString() : 'Unknown'}
+        <div className="bg-[#1A1A1D] rounded-lg p-4 border border-[#2A2A2A]">
+          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Plan & Seats</h4>
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Current Plan</label>
+              <span className="text-sm px-3 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                {tenant?.planCode || tenant?.planName || 'Unknown'}
+              </span>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Team Size</label>
+              <div className="text-sm text-white">
+                {activeMembers.length} active member{activeMembers.length !== 1 ? 's' : ''}
+                {tenant?.seatCount && <span className="text-gray-500 ml-1">of {tenant.seatCount} seats</span>}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Status</label>
+              <span className={`text-xs px-2 py-1 rounded ${
+                tenant?.status === 'ACTIVE' ? 'bg-green-500/20 text-green-400' :
+                tenant?.status === 'TRIAL' ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'
+              }`}>{tenant?.status || 'Unknown'}</span>
+            </div>
           </div>
         </div>
+        <div className="bg-[#1A1A1D] rounded-lg p-4 border border-[#2A2A2A]">
+          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Team Defaults</h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm text-white">Default Little Lord Mode</div>
+                <div className="text-xs text-gray-500">Applied to new team members</div>
+              </div>
+              <span className="text-xs px-2 py-1 bg-[#4433FF]/20 text-[#4433FF] rounded">Standard</span>
+            </div>
+            <div className="text-xs text-gray-500 pt-2 border-t border-[#2A2A2A]">More team defaults coming soon</div>
+          </div>
+        </div>
+        <div className="bg-[#1A1A1D] rounded-lg p-4 border border-[#2A2A2A]">
+          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Account Details</h4>
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Created</label>
+              <div className="text-sm text-white">
+                {tenant?.createdAt ? new Date(tenant.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown'}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Owner</label>
+              <div className="text-sm text-white">{teamMembers.find(m => m.tenantRole === 'OWNER')?.displayName || 'Unknown'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-6 p-4 bg-[#1A1A1D]/50 rounded-lg border border-[#2A2A2A]">
+        <p className="text-xs text-gray-500">
+          <strong className="text-gray-400">Need to change your plan or add more seats?</strong>{' '}
+          Contact support or visit billing. Personal settings are managed in your Account area.
+        </p>
       </div>
     </div>
   );
