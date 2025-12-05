@@ -161,6 +161,57 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', readOnly, onContent
           }
         }, 200);
 
+        // Add diagnostic logging to understand slash menu state
+        setTimeout(() => {
+          if (mounted && editorRef.current) {
+            console.group('[Slash Menu Diagnostics]');
+
+            // Check if paragraph was found and focused
+            const paragraph = editorRef.current.querySelector('affine-paragraph [contenteditable="true"]');
+            console.log('1. Contenteditable paragraph found:', !!paragraph);
+            console.log('2. Paragraph element:', paragraph);
+
+            // Check if it has inline editor
+            if (paragraph) {
+              console.log('3. Has inlineEditor property:', !!(paragraph as any).inlineEditor);
+              console.log('4. InlineEditor object:', (paragraph as any).inlineEditor);
+            }
+
+            // Check current focus
+            console.log('5. Currently focused element:', document.activeElement);
+            console.log('6. Is focused element contenteditable:', document.activeElement?.getAttribute('contenteditable'));
+
+            // Check if slash menu widget exists
+            const slashWidget = editorRef.current.querySelector('affine-slash-menu-widget');
+            console.log('7. Slash menu widget found:', !!slashWidget);
+            console.log('8. Slash menu widget element:', slashWidget);
+
+            // Check pageSpecs
+            console.log('9. Editor has pageSpecs:', !!(editorRef.current as any).pageSpecs);
+            console.log('10. PageSpecs array:', (editorRef.current as any).pageSpecs);
+
+            console.groupEnd();
+          }
+        }, 500);
+
+        // Add keydown listener to verify "/" keypress detection
+        const handleKeydown = (e: KeyboardEvent) => {
+          if (e.key === '/') {
+            console.group('[Slash Menu] "/" key pressed');
+            console.log('  Active element:', document.activeElement?.tagName);
+            console.log('  Active element details:', document.activeElement);
+            console.log('  Contenteditable:', document.activeElement?.getAttribute('contenteditable'));
+            console.log('  Has inlineEditor:', !!(document.activeElement as any)?.inlineEditor);
+            console.log('  Event target:', e.target);
+            console.log('  Event will propagate:', !e.defaultPrevented);
+            console.groupEnd();
+          }
+        };
+        document.addEventListener('keydown', handleKeydown);
+
+        // Store handler for cleanup
+        (container as any)._keydownHandler = handleKeydown;
+
         // Make the editor fill the container
         editor.style.display = 'block';
         editor.style.width = '100%';
@@ -199,6 +250,12 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', readOnly, onContent
 
     return () => {
       mounted = false;
+
+      // Remove keydown listener
+      if (containerRef.current && (containerRef.current as any)._keydownHandler) {
+        document.removeEventListener('keydown', (containerRef.current as any)._keydownHandler);
+      }
+
       if (editorRef.current) {
         try {
           editorRef.current.remove();
