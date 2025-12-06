@@ -101,7 +101,7 @@ export function WikiLinkPopup({
   return (
     <div
       ref={popupRef}
-      className="fixed bg-[#1f1f23] border border-[#27272a] rounded-lg shadow-xl overflow-hidden"
+      className="fixed bg-[#191919] border border-[#27272a] rounded-lg shadow-xl overflow-hidden"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -112,7 +112,7 @@ export function WikiLinkPopup({
       }}
     >
       {/* Header */}
-      <div className="px-3 py-2 border-b border-[#27272a] bg-[#18181b]">
+      <div className="px-3 py-2 border-b border-[#27272a] bg-[#191919]">
         <div className="flex items-center gap-2 text-xs text-[#a1a1aa]">
           <span>🔗</span>
           <span>Link to note</span>
@@ -193,7 +193,7 @@ export function WikiLinkPopup({
       </div>
 
       {/* Footer - keyboard hints */}
-      <div className="px-3 py-2 border-t border-[#27272a] bg-[#18181b] flex items-center gap-4 text-xs text-[#71717a]">
+      <div className="px-3 py-2 border-t border-[#27272a] bg-[#191919] flex items-center gap-4 text-xs text-[#71717a]">
         <div className="flex items-center gap-1">
           <kbd className="px-1.5 py-0.5 bg-[#27272a] rounded text-[10px]">↑↓</kbd>
           <span>Navigate</span>

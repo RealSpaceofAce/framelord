@@ -13,13 +13,13 @@
 .blocksuite-note-editor,
 .blocksuite-editor-wrapper,
 affine-editor-container {
-  /* ===== Background colors — Matches AFFiNE dark theme ===== */
-  --affine-background-primary-color: #1f1f23;
-  --affine-background-secondary-color: #1f1f23;
+  /* ===== Background colors — UNIFIED dark color: #191919 ===== */
+  --affine-background-primary-color: #191919;
+  --affine-background-secondary-color: #191919;
   --affine-background-tertiary-color: #27272a;
-  --affine-background-overlay-panel-color: rgba(24, 24, 27, 0.98);
-  --affine-background-modal-color: #1f1f23;
-  --affine-background-code-block: #1f1f23;
+  --affine-background-overlay-panel-color: rgba(25, 25, 25, 0.98);
+  --affine-background-modal-color: #191919;
+  --affine-background-code-block: #191919;
   --affine-background-error-color: rgba(239, 68, 68, 0.1);
   --affine-background-success-color: rgba(16, 185, 129, 0.1);
   --affine-background-warning-color: rgba(245, 158, 11, 0.1);

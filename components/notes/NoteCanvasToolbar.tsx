@@ -130,7 +130,7 @@ export function NoteCanvasToolbar({
   return (
     <div className="absolute bottom-6 left-6 z-50">
       {/* Main toolbar */}
-      <div className="flex items-center gap-1 bg-[#18181b] border border-[#27272a] rounded-lg shadow-lg p-2">
+      <div className="flex items-center gap-1 bg-[#191919] border border-[#27272a] rounded-lg shadow-lg p-2">
         {/* Tools */}
         <div className="flex items-center gap-1 pr-2 border-r border-[#27272a]">
           {tools.map((tool) => (
@@ -222,7 +222,7 @@ export function NoteCanvasToolbar({
 
       {/* Shape picker menu */}
       {showShapeMenu && (
-        <div className="absolute bottom-full left-0 mb-2 bg-[#18181b] border border-[#27272a] rounded-lg shadow-lg p-2">
+        <div className="absolute bottom-full left-0 mb-2 bg-[#191919] border border-[#27272a] rounded-lg shadow-lg p-2">
           <div className="flex flex-col gap-1">
             {shapes.map((shape) => (
               <button
@@ -240,7 +240,7 @@ export function NoteCanvasToolbar({
 
       {/* Color picker menu */}
       {showColorPicker && (
-        <div className="absolute bottom-full right-16 mb-2 bg-[#18181b] border border-[#27272a] rounded-lg shadow-lg p-3">
+        <div className="absolute bottom-full right-16 mb-2 bg-[#191919] border border-[#27272a] rounded-lg shadow-lg p-3">
           <div className="grid grid-cols-5 gap-2">
             {PRESET_COLORS.map((color) => (
               <button

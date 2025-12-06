@@ -119,7 +119,7 @@ export function BiDirectionalLinks({ noteId, onNavigateToNote }: BiDirectionalLi
               <button
                 key={note.id}
                 onClick={() => onNavigateToNote?.(note.id)}
-                className="w-full flex items-start gap-3 p-3 rounded-lg bg-[#1f1f23] hover:bg-[#27272a] transition-colors text-left"
+                className="w-full flex items-start gap-3 p-3 rounded-lg bg-[#191919] hover:bg-[#27272a] transition-colors text-left"
               >
                 <FileText size={16} className="text-[#6366f1] mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">

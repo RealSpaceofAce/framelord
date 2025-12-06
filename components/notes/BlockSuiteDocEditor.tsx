@@ -60,6 +60,7 @@ function createNoteStoreLinkedDocConfig(currentDocId: string) {
           console.log('[LinkedDocConfig] Collection available:', !!collection);
 
           // Helper function to ensure a doc exists in the collection and insert a linked reference
+          // We need to delete the trigger text (@ or [[) + query before inserting the link
           const insertLinkedReference = (noteId: string, noteTitle: string) => {
             if (!collection) {
               console.error('[LinkedDocConfig] No collection available');
@@ -84,73 +85,86 @@ function createNoteStoreLinkedDocConfig(currentDocId: string) {
               });
             }
 
-            // Get current inline range before any modifications
-            const inlineRange = inlineEditor.getInlineRange();
-            if (!inlineRange) {
-              console.warn('[LinkedDocConfig] No inline range available');
-              return;
-            }
-
-            // Calculate the position where trigger started
-            // The trigger is '@' (1 char after [[ conversion) + query length
-            const triggerLength = 1 + query.length;  // @ + query
-            const triggerStartIndex = Math.max(0, inlineRange.index - triggerLength);
-
-            // Delete the trigger and query text INLINE (without creating new block)
+            // CRITICAL: Delete the trigger text + query BEFORE inserting the link
+            // This prevents duplicates and keeps the link inline
             try {
-              // Access the yText directly for inline manipulation
-              const yText = inlineEditor.yText;
-
-              if (yText) {
-                // SYNCHRONOUS approach: delete trigger text and insert reference in one transaction
-                // This prevents any DOM updates that could cause block-level changes
-
-                // Delete the trigger + query
-                yText.delete(triggerStartIndex, triggerLength);
-
-                // Insert with reference attribute using zero-width space as placeholder
-                // BlockSuite uses ZWSP (\u200B) for inline embeds
-                yText.insert(triggerStartIndex, '\u200B', {
-                  reference: {
-                    type: 'LinkedPage',
-                    pageId: noteId,
-                  },
-                });
-
-                // Add a trailing space for better UX (cursor after the link)
-                yText.insert(triggerStartIndex + 1, ' ');
-
-                // Move cursor after the inserted reference + space
-                setTimeout(() => {
-                  inlineEditor.setInlineRange({ index: triggerStartIndex + 2, length: 0 });
-                }, 0);
-
-                console.log('[LinkedDocConfig] Inserted linked reference via yText to:', noteTitle);
-              } else {
-                // Fallback: use deleteText then insertLinkedNode
-                inlineEditor.deleteText({ index: triggerStartIndex, length: triggerLength });
-                inlineEditor.setInlineRange({ index: triggerStartIndex, length: 0 });
-
-                // Small delay to let deletion complete
-                requestAnimationFrame(() => {
-                  insertLinkedNode({
-                    inlineEditor,
-                    docId: noteId,
-                  });
-                });
-                console.log('[LinkedDocConfig] Used insertLinkedNode fallback');
+              const inlineRange = inlineEditor.getInlineRange?.();
+              if (!inlineRange) {
+                console.error('[LinkedDocConfig] No inline range');
+                return;
               }
-            } catch (e) {
-              console.error('[LinkedDocConfig] Error inserting linked reference:', e);
-              // Ultimate fallback: just insert without deleting
-              try {
+
+              const yText = inlineEditor.yText;
+              const fullText = yText.toString();
+              const cursorIndex = inlineRange.index;
+
+              // Look backwards from cursor to find what trigger was used
+              // Could be @ or [[ (with possible conversion to @)
+              // We need to find and delete: triggerKey + query
+
+              // First check for @query pattern (either direct @ or converted [[)
+              const possibleTriggers = ['@', '[['];
+              let deleteLength = 0;
+              let deleteStart = cursorIndex;
+
+              for (const trigger of possibleTriggers) {
+                const expectedStart = cursorIndex - trigger.length - query.length;
+                if (expectedStart >= 0) {
+                  const textAtPosition = fullText.slice(expectedStart, cursorIndex);
+                  const expectedText = trigger + query;
+
+                  console.log('[LinkedDocConfig] Checking trigger:', trigger, 'expected:', expectedText, 'actual:', textAtPosition);
+
+                  if (textAtPosition === expectedText) {
+                    deleteStart = expectedStart;
+                    deleteLength = expectedText.length;
+                    console.log('[LinkedDocConfig] Found matching trigger pattern');
+                    break;
+                  }
+                }
+              }
+
+              // If we couldn't find an exact match, try to find just the query
+              // (in case trigger was already removed by widget)
+              if (deleteLength === 0 && query.length > 0) {
+                const queryStart = cursorIndex - query.length;
+                if (queryStart >= 0) {
+                  const textAtQuery = fullText.slice(queryStart, cursorIndex);
+                  if (textAtQuery === query) {
+                    deleteStart = queryStart;
+                    deleteLength = query.length;
+                    console.log('[LinkedDocConfig] Found query without trigger:', query);
+                  }
+                }
+              }
+
+              console.log('[LinkedDocConfig] Cursor at:', cursorIndex, 'Delete from:', deleteStart, 'Length:', deleteLength);
+
+              if (deleteLength > 0) {
+                // Delete the trigger + query text
+                inlineEditor.deleteText({ index: deleteStart, length: deleteLength });
+
+                // Set cursor to the deletion point
+                inlineEditor.setInlineRange({ index: deleteStart, length: 0 });
+
+                // Now insert the linked node at the cleaned position
                 insertLinkedNode({
                   inlineEditor,
                   docId: noteId,
                 });
-              } catch (fallbackErr) {
-                console.error('[LinkedDocConfig] Fallback also failed:', fallbackErr);
+
+                console.log('[LinkedDocConfig] ✓ Inserted linked reference to:', noteTitle);
+              } else {
+                // If we can't find what to delete, just insert at cursor
+                // This handles edge cases where the text is already clean
+                console.warn('[LinkedDocConfig] No trigger/query to delete, inserting at cursor');
+                insertLinkedNode({
+                  inlineEditor,
+                  docId: noteId,
+                });
               }
+            } catch (e) {
+              console.error('[LinkedDocConfig] Error inserting linked reference:', e);
             }
           };
 
