@@ -101,7 +101,7 @@ export function WikiLinkPopup({
   return (
     <div
       ref={popupRef}
-      className="fixed bg-[#191919] border border-[#27272a] rounded-lg shadow-xl overflow-hidden"
+      className="fixed bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg shadow-xl overflow-hidden"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -112,7 +112,7 @@ export function WikiLinkPopup({
       }}
     >
       {/* Header */}
-      <div className="px-3 py-2 border-b border-[#27272a] bg-[#191919]">
+      <div className="px-3 py-2 border-b border-[#2A2A2A] bg-[#0A0A0A]">
         <div className="flex items-center gap-2 text-xs text-[#a1a1aa]">
           <span>🔗</span>
           <span>Link to note</span>
@@ -136,8 +136,8 @@ export function WikiLinkPopup({
                   key={note.id}
                   className={`px-3 py-2 cursor-pointer transition-colors ${
                     isSelected
-                      ? 'bg-[#6366f1] bg-opacity-10 border-l-2 border-[#6366f1]'
-                      : 'hover:bg-[#27272a] border-l-2 border-transparent'
+                      ? 'bg-[#4433FF] bg-opacity-10 border-l-2 border-[#4433FF]'
+                      : 'hover:bg-[#1A1A1A] border-l-2 border-transparent'
                   }`}
                   onClick={() => handleSelect(index)}
                   onMouseEnter={() => setSelectedIndex(index)}
@@ -146,7 +146,7 @@ export function WikiLinkPopup({
                     <span className="text-lg">📝</span>
                     <div className="flex-1 min-w-0">
                       <div className={`text-sm font-medium truncate ${
-                        isSelected ? 'text-[#6366f1]' : 'text-[#fafafa]'
+                        isSelected ? 'text-[#4433FF]' : 'text-[#fafafa]'
                       }`}>
                         {title}
                       </div>
@@ -166,7 +166,7 @@ export function WikiLinkPopup({
                 className={`px-3 py-2 cursor-pointer transition-colors ${
                   selectedIndex === filteredNotes.length
                     ? 'bg-[#10b981] bg-opacity-10 border-l-2 border-[#10b981]'
-                    : 'hover:bg-[#27272a] border-l-2 border-transparent'
+                    : 'hover:bg-[#1A1A1A] border-l-2 border-transparent'
                 }`}
                 onClick={() => handleSelect(filteredNotes.length)}
                 onMouseEnter={() => setSelectedIndex(filteredNotes.length)}
@@ -193,17 +193,17 @@ export function WikiLinkPopup({
       </div>
 
       {/* Footer - keyboard hints */}
-      <div className="px-3 py-2 border-t border-[#27272a] bg-[#191919] flex items-center gap-4 text-xs text-[#71717a]">
+      <div className="px-3 py-2 border-t border-[#2A2A2A] bg-[#0A0A0A] flex items-center gap-4 text-xs text-[#71717a]">
         <div className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 bg-[#27272a] rounded text-[10px]">↑↓</kbd>
+          <kbd className="px-1.5 py-0.5 bg-[#1A1A1A] rounded text-[10px]">↑↓</kbd>
           <span>Navigate</span>
         </div>
         <div className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 bg-[#27272a] rounded text-[10px]">Enter</kbd>
+          <kbd className="px-1.5 py-0.5 bg-[#1A1A1A] rounded text-[10px]">Enter</kbd>
           <span>Select</span>
         </div>
         <div className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 bg-[#27272a] rounded text-[10px]">Esc</kbd>
+          <kbd className="px-1.5 py-0.5 bg-[#1A1A1A] rounded text-[10px]">Esc</kbd>
           <span>Close</span>
         </div>
       </div>
