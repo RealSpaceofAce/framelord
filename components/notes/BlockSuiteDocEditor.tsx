@@ -489,8 +489,9 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
     setWikiLinkPopup(prev => ({ ...prev, isOpen: false }));
   };
 
-  // Theme colors - use transparent to blend with parent
-  const bgColor = 'transparent';
+  // Theme colors - use explicit colors as fallback (NOT transparent)
+  // Transparent caused black screen when applyThemeToElement failed
+  const bgColor = theme === 'light' ? '#ffffff' : '#1f1f23';
   const textColor = theme === 'light' ? '#1f2937' : '#fafafa';
   const mutedColor = theme === 'light' ? '#6b7280' : '#71717a';
 
