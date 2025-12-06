@@ -17,7 +17,11 @@ interface BiDirectionalLinksProps {
 
 /**
  * Find notes that link to the given note (backlinks).
- * Looks for [[title]] wikilinks in note content.
+ * Looks for:
+ * 1. [[title]] wikilinks in note content
+ * 2. [[noteId]] ID references in note content
+ * 3. Direct noteId references (from BlockSuite affine-reference format)
+ * 4. The linkedDocIds array (if available)
  */
 function findBacklinks(noteId: string): Note[] {
   const currentNote = getNoteById(noteId);
@@ -26,19 +30,54 @@ function findBacklinks(noteId: string): Note[] {
   const allNotes = getAllNotes();
   const currentTitle = currentNote.title?.toLowerCase() || '';
 
-  // If no title, we can't have meaningful backlinks
-  if (!currentTitle) return [];
-
   const backlinks: Note[] = [];
+  const addedIds = new Set<string>();
 
   for (const note of allNotes) {
     // Skip self
     if (note.id === noteId) continue;
+    if (addedIds.has(note.id)) continue;
 
-    // Check if this note's content contains [[currentTitle]]
     const content = note.content?.toLowerCase() || '';
-    if (content.includes(`[[${currentTitle}]]`)) {
+
+    // Check 1: [[title]] pattern (case-insensitive)
+    if (currentTitle && content.includes(`[[${currentTitle}]]`)) {
       backlinks.push(note);
+      addedIds.add(note.id);
+      continue;
+    }
+
+    // Check 2: [[noteId]] pattern - BlockSuite stores by ID
+    if (content.includes(`[[${noteId.toLowerCase()}]]`) || content.includes(`[[${noteId}]]`)) {
+      backlinks.push(note);
+      addedIds.add(note.id);
+      continue;
+    }
+
+    // Check 3: [link:noteId] pattern from content extraction
+    if (content.includes(`[link:${noteId.toLowerCase()}]`) || content.includes(`[link:${noteId}]`)) {
+      backlinks.push(note);
+      addedIds.add(note.id);
+      continue;
+    }
+
+    // Check 4: [linkedDocs:id1,id2,id3] pattern from content extraction
+    const linkedDocsMatch = note.content?.match(/\[linkedDocs:([^\]]+)\]/);
+    if (linkedDocsMatch) {
+      const linkedIds = linkedDocsMatch[1].split(',');
+      if (linkedIds.includes(noteId)) {
+        backlinks.push(note);
+        addedIds.add(note.id);
+        continue;
+      }
+    }
+
+    // Check 5: linkedDocIds array (if stored as separate field on the note)
+    const linkedDocIds = (note as any).linkedDocIds as string[] | undefined;
+    if (linkedDocIds && linkedDocIds.includes(noteId)) {
+      backlinks.push(note);
+      addedIds.add(note.id);
+      continue;
     }
   }
 

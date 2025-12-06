@@ -246,6 +246,38 @@ function injectThemeIntoShadowRoots(element: HTMLElement, theme: 'light' | 'dark
     .affine-slash-menu-item.active {
       background: var(--affine-hover-color, rgba(99, 102, 241, 0.15)) !important;
     }
+
+    /* CRITICAL: Linked-doc widget and popover visibility */
+    affine-linked-doc-widget,
+    affine-linked-doc-popover,
+    .linked-doc-popover,
+    .blocksuite-portal {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+
+    affine-linked-doc-popover {
+      position: fixed !important;
+      z-index: 2147483647 !important;
+      background: var(--affine-background-modal-color, #191919) !important;
+      border: 1px solid var(--affine-border-color, #27272a) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .linked-doc-popover-item,
+    affine-linked-doc-popover .menu-item {
+      color: var(--affine-text-primary-color, #fafafa) !important;
+      padding: 8px 12px !important;
+      cursor: pointer !important;
+    }
+
+    .linked-doc-popover-item:hover,
+    affine-linked-doc-popover .menu-item:hover {
+      background: var(--affine-hover-color, rgba(99, 102, 241, 0.15)) !important;
+    }
   `;
 
   const themeCSS = `

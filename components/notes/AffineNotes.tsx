@@ -35,8 +35,6 @@ import {
   Grid3X3,
   LayoutGrid,
   List,
-  Sun,
-  Moon,
   Smile,
   Tag,
   Folder,
@@ -169,6 +167,8 @@ export const AffineNotes: React.FC = () => {
   // Drag state
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null);
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+  const [draggedFolderId, setDraggedFolderId] = useState<string | null>(null);
+  const [dragOverFolderIndex, setDragOverFolderIndex] = useState<number | null>(null);
 
   // Right sidebar state
   const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
@@ -182,43 +182,6 @@ export const AffineNotes: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('framelord_collections', JSON.stringify(collections));
   }, [collections]);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyboard = (e: KeyboardEvent) => {
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const modifier = isMac ? e.metaKey : e.ctrlKey;
-
-      // Cmd/Ctrl + K - Quick search (focus search bar)
-      if (modifier && e.key === 'k') {
-        e.preventDefault();
-        const searchInput = document.querySelector('input[type="text"][placeholder="Search"]') as HTMLInputElement;
-        if (searchInput) {
-          searchInput.focus();
-        }
-      }
-
-      // Cmd/Ctrl + N - New note
-      if (modifier && e.key === 'n' && !e.shiftKey) {
-        e.preventDefault();
-        handleNewPage();
-      }
-
-      // Cmd/Ctrl + Shift + N - New journal (today's journal)
-      if (modifier && e.shiftKey && e.key === 'N') {
-        e.preventDefault();
-        const todayJournal = getOrCreateJournalForDate(new Date());
-        setSelectedPageId(todayJournal.id);
-        setSidebarView('journals');
-        setSelectedJournalDate(new Date());
-        setRefreshKey(k => k + 1);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyboard);
-    return () => window.removeEventListener('keydown', handleKeyboard);
-  }, [handleNewPage, setSelectedPageId, setSidebarView, setSelectedJournalDate, setRefreshKey]);
-
   // Get all notes
   const allNotes = useMemo(() => getAllNotes(), [refreshKey]);
   const activeNotes = useMemo(() => allNotes.filter(n => !n.isArchived), [allNotes]);
@@ -356,6 +319,42 @@ export const AffineNotes: React.FC = () => {
     }
   }, [sidebarView, selectedFolderId, selectedCollectionId]);
 
+  // Keyboard shortcuts (must be after handleNewPage is defined)
+  useEffect(() => {
+    const handleKeyboard = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const modifier = isMac ? e.metaKey : e.ctrlKey;
+
+      // Cmd/Ctrl + K - Quick search (focus search bar)
+      if (modifier && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[type="text"][placeholder="Search"]') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+
+      // Cmd/Ctrl + N - New note
+      if (modifier && e.key === 'n' && !e.shiftKey) {
+        e.preventDefault();
+        handleNewPage();
+      }
+
+      // Cmd/Ctrl + Shift + N - New journal (today's journal)
+      if (modifier && e.shiftKey && e.key === 'N') {
+        e.preventDefault();
+        const todayJournal = getOrCreateJournalForDate(new Date());
+        setSelectedPageId(todayJournal.id);
+        setSidebarView('journals');
+        setSelectedJournalDate(new Date());
+        setRefreshKey(k => k + 1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyboard);
+    return () => window.removeEventListener('keydown', handleKeyboard);
+  }, [handleNewPage]);
+
   const handleDeletePage = useCallback((pageId: string) => {
     updateNote(pageId, { isArchived: true });
     setRefreshKey(k => k + 1);
@@ -382,6 +381,33 @@ export const AffineNotes: React.FC = () => {
       updateNote(pageId, { isPinned: !page.isPinned });
       setRefreshKey(k => k + 1);
     }
+  }, []);
+
+  // Navigate to a note, creating it if it doesn't exist (for wiki links)
+  const handleNavigateToNote = useCallback((noteId: string) => {
+    // Check if note exists in our store
+    let note = getNoteById(noteId);
+
+    if (!note) {
+      // Note doesn't exist, create it
+      console.log('[NavigateToNote] Creating new note for wiki link:', noteId);
+      const newNote = createNote({
+        id: noteId,
+        title: 'Untitled', // Title can be set later by the user
+        content: '',
+        authorContactId: 'contact-zero',
+        targetContactId: 'contact-zero',
+        kind: 'note',
+        viewMode: 'doc',
+        blocksuiteDocId: `doc_${noteId}`,
+      });
+      note = newNote;
+      setRefreshKey(k => k + 1);
+    }
+
+    // Navigate to the note
+    setSelectedPageId(noteId);
+    setSidebarView('all');
   }, []);
 
   const handleThemeToggle = useCallback(() => {
@@ -468,6 +494,33 @@ export const AffineNotes: React.FC = () => {
     ));
   }, []);
 
+  // Folder drag handlers for reordering
+  const handleFolderDragStart = useCallback((folderId: string) => {
+    setDraggedFolderId(folderId);
+  }, []);
+
+  const handleFolderDragEnd = useCallback(() => {
+    setDraggedFolderId(null);
+    setDragOverFolderIndex(null);
+  }, []);
+
+  const handleReorderFolders = useCallback((targetIndex: number) => {
+    if (!draggedFolderId) return;
+
+    setFolders(prev => {
+      const sourceIndex = prev.findIndex(f => f.id === draggedFolderId);
+      if (sourceIndex === -1 || sourceIndex === targetIndex) return prev;
+
+      const newFolders = [...prev];
+      const [draggedFolder] = newFolders.splice(sourceIndex, 1);
+      newFolders.splice(targetIndex, 0, draggedFolder);
+      return newFolders;
+    });
+
+    setDraggedFolderId(null);
+    setDragOverFolderIndex(null);
+  }, [draggedFolderId]);
+
   // Journal calendar handlers
   const handleJournalDateSelect = useCallback((date: Date) => {
     setSelectedJournalDate(date);
@@ -506,15 +559,6 @@ export const AffineNotes: React.FC = () => {
               <span className="text-white text-sm font-bold">F</span>
             </div>
             <span className="text-sm font-semibold" style={{ color: colors.text }}>FrameLord</span>
-            <div className="ml-auto">
-              <button
-                onClick={handleThemeToggle}
-                className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-white/10"
-                title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-              >
-                {theme === 'dark' ? <Sun size={14} style={{ color: colors.textMuted }} /> : <Moon size={14} style={{ color: colors.textMuted }} />}
-              </button>
-            </div>
           </div>
 
           {/* Search */}
@@ -545,7 +589,7 @@ export const AffineNotes: React.FC = () => {
               icon={<FileText size={16} />}
               label="All docs"
               isActive={sidebarView === 'all'}
-              onClick={() => { setSidebarView('all'); setMainTab('docs'); }}
+              onClick={() => { setSidebarView('all'); setMainTab('docs'); setSelectedPageId(null); }}
               count={activeNotes.length}
               colors={colors}
             />
@@ -576,13 +620,14 @@ export const AffineNotes: React.FC = () => {
               onAdd={handleCreateFolder}
               colors={colors}
             >
-              {folders.map(folder => (
+              {folders.map((folder, index) => (
                 <FolderItemView
                   key={folder.id}
                   folder={folder}
+                  index={index}
                   allPages={activeNotes}
                   isSelected={sidebarView === 'folder' && selectedFolderId === folder.id}
-                  onSelect={() => { setSidebarView('folder'); setSelectedFolderId(folder.id); setMainTab('docs'); }}
+                  onSelect={() => { setSidebarView('folder'); setSelectedFolderId(folder.id); setMainTab('docs'); setSelectedPageId(null); }}
                   onToggleExpand={() => setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, isExpanded: !f.isExpanded } : f))}
                   onDrop={() => handleDropOnFolder(folder.id)}
                   onDelete={() => handleDeleteFolder(folder.id)}
@@ -590,6 +635,13 @@ export const AffineNotes: React.FC = () => {
                   isDragOver={dragOverFolderId === folder.id}
                   onDragEnter={() => setDragOverFolderId(folder.id)}
                   onDragLeave={() => setDragOverFolderId(null)}
+                  // Folder reordering props
+                  onFolderDragStart={() => handleFolderDragStart(folder.id)}
+                  onFolderDragEnd={handleFolderDragEnd}
+                  onFolderDrop={() => handleReorderFolders(index)}
+                  isDraggedFolder={draggedFolderId === folder.id}
+                  isFolderDropTarget={dragOverFolderIndex === index && draggedFolderId !== folder.id}
+                  onFolderDragEnter={() => setDragOverFolderIndex(index)}
                   colors={colors}
                 />
               ))}
@@ -608,7 +660,7 @@ export const AffineNotes: React.FC = () => {
                 allTags.map(tag => (
                   <button
                     key={tag}
-                    onClick={() => { setSidebarView('tag'); setSelectedTag(tag); setMainTab('tags'); }}
+                    onClick={() => { setSidebarView('tag'); setSelectedTag(tag); setMainTab('tags'); setSelectedPageId(null); }}
                     className="w-full flex items-center gap-2 px-2 py-1 rounded text-sm text-left"
                     style={{
                       background: sidebarView === 'tag' && selectedTag === tag ? colors.active : 'transparent',
@@ -639,7 +691,7 @@ export const AffineNotes: React.FC = () => {
                 collections.map(collection => (
                   <button
                     key={collection.id}
-                    onClick={() => { setSidebarView('collection'); setSelectedCollectionId(collection.id); setMainTab('collections'); }}
+                    onClick={() => { setSidebarView('collection'); setSelectedCollectionId(collection.id); setMainTab('collections'); setSelectedPageId(null); }}
                     className="w-full flex items-center gap-2 px-2 py-1 rounded text-sm text-left group"
                     style={{
                       background: sidebarView === 'collection' && selectedCollectionId === collection.id ? colors.active : 'transparent',
@@ -673,7 +725,7 @@ export const AffineNotes: React.FC = () => {
                 icon={<Trash2 size={16} />}
                 label="Trash"
                 isActive={sidebarView === 'trash'}
-                onClick={() => { setSidebarView('trash'); setMainTab('docs'); }}
+                onClick={() => { setSidebarView('trash'); setMainTab('docs'); setSelectedPageId(null); }}
                 count={trashedNotes.length}
                 colors={colors}
               />
@@ -704,7 +756,7 @@ export const AffineNotes: React.FC = () => {
               journalDates={journalDates}
               onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
               onToggleRightSidebar={() => setRightSidebarOpen(!rightSidebarOpen)}
-              onNavigateToNote={setSelectedPageId}
+              onNavigateToNote={handleNavigateToNote}
               onTitleChange={(title) => { updateNote(selectedPage.id, { title }); setRefreshKey(k => k + 1); }}
               onToggleTheme={handleThemeToggle}
               onToggleFavorite={() => handleToggleFavorite(selectedPage.id)}
@@ -782,7 +834,7 @@ export const AffineNotes: React.FC = () => {
             setRightSidebarOpen(false);
             console.log('Switched to edgeless mode');
           }}
-          onNavigateToNote={setSelectedPageId}
+          onNavigateToNote={handleNavigateToNote}
           onJournalDateSelect={handleJournalDateSelect}
         />
       </div>
@@ -863,6 +915,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ label, isExpand
 
 interface FolderItemViewProps {
   folder: FolderItem;
+  index: number;
   allPages: Note[];
   isSelected: boolean;
   onSelect: () => void;
@@ -873,11 +926,21 @@ interface FolderItemViewProps {
   isDragOver: boolean;
   onDragEnter: () => void;
   onDragLeave: () => void;
+  // Folder reordering
+  onFolderDragStart: () => void;
+  onFolderDragEnd: () => void;
+  onFolderDrop: () => void;
+  isDraggedFolder: boolean;
+  isFolderDropTarget: boolean;
+  onFolderDragEnter: () => void;
   colors: Record<string, string>;
 }
 
 const FolderItemView: React.FC<FolderItemViewProps> = ({
-  folder, allPages, isSelected, onSelect, onToggleExpand, onDrop, onDelete, onRename, isDragOver, onDragEnter, onDragLeave, colors,
+  folder, index, allPages, isSelected, onSelect, onToggleExpand, onDrop, onDelete, onRename,
+  isDragOver, onDragEnter, onDragLeave,
+  onFolderDragStart, onFolderDragEnd, onFolderDrop, isDraggedFolder, isFolderDropTarget, onFolderDragEnter,
+  colors,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(folder.name);
@@ -898,14 +961,58 @@ const FolderItemView: React.FC<FolderItemViewProps> = ({
     setShowMenu(false);
   };
 
+  // Handle folder drag (for reordering)
+  const handleFolderDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('application/x-folder-id', folder.id);
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '0.5';
+    onFolderDragStart();
+  };
+
+  const handleFolderDragEnd = (e: React.DragEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '1';
+    onFolderDragEnd();
+  };
+
+  // Handle drop zone for both notes and folders
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    // Check if it's a folder being dragged
+    if (e.dataTransfer.types.includes('application/x-folder-id')) {
+      onFolderDragEnter();
+    } else {
+      onDragEnter();
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    // Check if it's a folder being dragged (for reordering)
+    if (e.dataTransfer.types.includes('application/x-folder-id')) {
+      onFolderDrop();
+    } else {
+      // It's a note being dropped into folder
+      onDrop();
+    }
+  };
+
   return (
     <div
-      className={`rounded-md transition-all ${isDragOver ? 'ring-2 ring-blue-500 bg-blue-500/10' : ''}`}
-      onDragOver={(e) => { e.preventDefault(); onDragEnter(); }}
+      draggable
+      onDragStart={handleFolderDragStart}
+      onDragEnd={handleFolderDragEnd}
+      className={`rounded-md transition-all ${isDragOver ? 'ring-2 ring-blue-500 bg-blue-500/10' : ''} ${isFolderDropTarget ? 'border-t-2 border-blue-500' : ''} ${isDraggedFolder ? 'opacity-50' : ''}`}
+      onDragOver={handleDragOver}
       onDragLeave={onDragLeave}
-      onDrop={(e) => { e.preventDefault(); onDrop(); }}
+      onDrop={handleDrop}
     >
       <div className="flex items-center gap-1 group">
+        {/* Drag handle for folder reordering */}
+        <div className="opacity-0 group-hover:opacity-100 cursor-grab p-0.5" style={{ color: colors.textMuted }}>
+          <GripVertical size={10} />
+        </div>
         <button onClick={onToggleExpand} className="p-1">
           {folder.isExpanded ? <ChevronDown size={12} style={{ color: colors.textMuted }} /> : <ChevronRight size={12} style={{ color: colors.textMuted }} />}
         </button>
@@ -1035,6 +1142,135 @@ const DocsListView: React.FC<DocsListViewProps> = ({
   onSelectTag, onSelectCollection, onSelectPage, onNewPage, onDeletePage, onRestorePage, onToggleFavorite, onDragStart, onDragEnd,
   sidebarCollapsed, onToggleSidebar, isTrashView, colors,
 }) => {
+  // Show ALL DOCS overview with Collections, Tags, and Documents
+  if (mainTab === 'docs' && sidebarView === 'all' && !isTrashView) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden" style={{ background: colors.bg }}>
+        <div className="flex items-center gap-4 px-4 py-3 border-b" style={{ borderColor: colors.border }}>
+          <button onClick={onToggleSidebar} className="p-1.5 rounded hover:bg-white/10" style={{ color: colors.textMuted }}><PanelLeft size={18} /></button>
+          <TabButton label="Docs" isActive={mainTab === 'docs'} onClick={() => setMainTab('docs')} colors={colors} />
+          <TabButton label="Collections" isActive={mainTab === 'collections'} onClick={() => setMainTab('collections')} colors={colors} />
+          <TabButton label="Tags" isActive={mainTab === 'tags'} onClick={() => setMainTab('tags')} colors={colors} />
+          <div className="flex-1" />
+          <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: colors.hover }}>
+            <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white/10' : ''}`} style={{ color: colors.textMuted }}><LayoutGrid size={16} /></button>
+            <button onClick={() => setViewMode('list')} className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white/10' : ''}`} style={{ color: colors.textMuted }}><List size={16} /></button>
+          </div>
+          <button onClick={onNewPage} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium" style={{ background: colors.accent, color: '#fff' }}>
+            <Plus size={14} /> New doc
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          {/* Collections Section */}
+          {collections.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: colors.textMuted }}>Collections</h2>
+                <button onClick={() => setMainTab('collections')} className="text-xs" style={{ color: colors.accent }}>View all</button>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {collections.slice(0, 4).map(collection => (
+                  <button
+                    key={collection.id}
+                    onClick={() => onSelectCollection(collection.id)}
+                    className="p-3 rounded-lg text-left transition-colors hover:ring-2 hover:ring-blue-500/50"
+                    style={{ background: colors.hover }}
+                  >
+                    <Library size={20} style={{ color: collection.color }} />
+                    <h3 className="mt-2 font-medium text-sm truncate" style={{ color: colors.text }}>{collection.name}</h3>
+                    <p className="text-xs" style={{ color: colors.textMuted }}>{collection.noteIds.length} docs</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tags Section */}
+          {allTags.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: colors.textMuted }}>Tags</h2>
+                <button onClick={() => setMainTab('tags')} className="text-xs" style={{ color: colors.accent }}>View all</button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {allTags.slice(0, 10).map(tag => (
+                  <button
+                    key={tag}
+                    onClick={() => onSelectTag(tag)}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-colors hover:ring-2 hover:ring-blue-500/50"
+                    style={{ background: colors.hover, color: colors.text }}
+                  >
+                    <Hash size={12} />
+                    {tag}
+                  </button>
+                ))}
+                {allTags.length > 10 && (
+                  <button
+                    onClick={() => setMainTab('tags')}
+                    className="px-2.5 py-1 rounded-full text-xs"
+                    style={{ color: colors.accent }}
+                  >
+                    +{allTags.length - 10} more
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Documents Section */}
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: colors.textMuted }}>
+              Documents ({displayedPages.length})
+            </h2>
+            {viewMode === 'list' ? (
+              Object.entries(groupedPages).length > 0 ? (
+                Object.entries(groupedPages).map(([dateLabel, pages]) => (
+                  <div key={dateLabel} className="mb-4">
+                    <div className="flex items-center gap-2 py-2 text-sm" style={{ color: colors.textMuted }}>
+                      {dateLabel} · {pages.length}
+                    </div>
+                    <div className="space-y-0.5">
+                      {pages.map(page => (
+                        <DocListItem
+                          key={page.id}
+                          page={page}
+                          onSelect={() => onSelectPage(page.id)}
+                          onDelete={() => onDeletePage(page.id)}
+                          onToggleFavorite={() => onToggleFavorite(page.id)}
+                          onDragStart={() => onDragStart(page.id)}
+                          onDragEnd={onDragEnd}
+                          isTrash={false}
+                          colors={colors}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <EmptyState isTrash={false} onNewPage={onNewPage} colors={colors} />
+              )
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {displayedPages.map(page => (
+                  <DocGridItem
+                    key={page.id}
+                    page={page}
+                    onSelect={() => onSelectPage(page.id)}
+                    onDelete={() => onDeletePage(page.id)}
+                    onToggleFavorite={() => onToggleFavorite(page.id)}
+                    isTrash={false}
+                    colors={colors}
+                  />
+                ))}
+                {displayedPages.length === 0 && <EmptyState isTrash={false} onNewPage={onNewPage} colors={colors} />}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Show tags overview
   if (mainTab === 'tags' && !selectedTag) {
     return (
@@ -1213,11 +1449,27 @@ interface DocListItemProps {
 const DocListItem: React.FC<DocListItemProps> = ({ page, onSelect, onDelete, onRestore, onToggleFavorite, onDragStart, onDragEnd, isTrash, colors }) => {
   const [showMenu, setShowMenu] = useState(false);
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', page.id);
+    e.dataTransfer.setData('application/x-note-id', page.id);
+    // Add drag image styling
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '0.5';
+    onDragStart();
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '1';
+    onDragEnd();
+  };
+
   return (
     <div
       draggable={!isTrash}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       onClick={onSelect}
       className="group flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/5"
     >
@@ -1652,7 +1904,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
               </div>
               <div className="flex justify-between items-center">
                 <span style={{ color: colors.textMuted }}>Folder</span>
-                <span style={{ color: colors.text }}>{page.folderId || 'Inbox'}</span>
+                <span style={{ color: colors.text }}>{page.folderId ? folders.find(f => f.id === page.folderId)?.name || page.folderId : 'Inbox'}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span style={{ color: colors.textMuted }}>Tags</span>
@@ -1670,12 +1922,16 @@ const PageEditor: React.FC<PageEditorProps> = ({
           )}
 
           {/* Editor Content */}
-          <div className={mode === 'edgeless' ? 'min-h-[600px]' : 'min-h-[300px]'} style={{ background: colors.bg }}>
+          <div
+            className={mode === 'edgeless' ? 'h-[600px] relative' : 'min-h-[300px]'}
+            style={{ background: colors.bg }}
+          >
             <BlockSuiteDocEditor
               docId={page.blocksuiteDocId || `doc_${page.id}`}
               theme={theme}
               mode={mode}
               onContentChange={(content) => { updateNote(page.id, { content: String(content) }); }}
+              onNavigateToNote={onNavigateToNote}
             />
           </div>
 

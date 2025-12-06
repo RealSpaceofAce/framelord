@@ -3,7 +3,7 @@
 // =============================================================================
 // Modern minimal toolbar with tool icons. Appears at bottom-left of canvas.
 // Supports: select, text, shape (rect, circle, triangle, diamond),
-// connector, brush, pan, and zoom controls.
+// connector, brush, pan, zoom controls, color picker, and fullscreen.
 // =============================================================================
 
 import React, { useState, useRef } from 'react';
@@ -21,11 +21,28 @@ import {
   ZoomOut,
   Image as ImageIcon,
   ChevronDown,
+  Palette,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 
 // Tool types
 export type CanvasTool = 'select' | 'text' | 'shape' | 'connector' | 'brush' | 'pan';
 export type ShapeType = 'rect' | 'circle' | 'triangle' | 'diamond';
+
+// Preset colors
+const PRESET_COLORS = [
+  '#ef4444', // Red
+  '#f97316', // Orange
+  '#eab308', // Yellow
+  '#22c55e', // Green
+  '#3b82f6', // Blue
+  '#8b5cf6', // Purple
+  '#ec4899', // Pink
+  '#ffffff', // White
+  '#000000', // Black
+  '#71717a', // Gray
+];
 
 interface ToolbarProps {
   activeTool: CanvasTool;
@@ -34,6 +51,10 @@ interface ToolbarProps {
   onImageUpload?: (file: File) => void;
   zoom: number;
   onZoomChange: (zoom: number) => void;
+  selectedColor?: string;
+  onColorChange?: (color: string) => void;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }
 
 export function NoteCanvasToolbar({
@@ -43,8 +64,13 @@ export function NoteCanvasToolbar({
   onImageUpload,
   zoom,
   onZoomChange,
+  selectedColor = '#3b82f6',
+  onColorChange,
+  isFullscreen = false,
+  onToggleFullscreen,
 }: ToolbarProps) {
   const [showShapeMenu, setShowShapeMenu] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Tool definitions
@@ -147,7 +173,7 @@ export function NoteCanvasToolbar({
         </div>
 
         {/* Zoom controls */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 pr-2 border-r border-[#27272a]">
           <button
             onClick={handleZoomOut}
             className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#27272a] hover:text-white transition-all"
@@ -166,6 +192,32 @@ export function NoteCanvasToolbar({
             <ZoomIn size={18} />
           </button>
         </div>
+
+        {/* Color picker */}
+        <div className="relative flex items-center gap-1 pr-2 border-r border-[#27272a]">
+          <button
+            onClick={() => setShowColorPicker(!showColorPicker)}
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#27272a] hover:text-white transition-all flex items-center gap-1"
+            title="Color"
+          >
+            <Palette size={18} />
+            <div
+              className="w-3 h-3 rounded-sm border border-[#3f3f46]"
+              style={{ backgroundColor: selectedColor }}
+            />
+          </button>
+        </div>
+
+        {/* Fullscreen toggle */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onToggleFullscreen}
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#27272a] hover:text-white transition-all"
+            title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+          >
+            {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+          </button>
+        </div>
       </div>
 
       {/* Shape picker menu */}
@@ -181,6 +233,28 @@ export function NoteCanvasToolbar({
                 {shape.icon}
                 <span>{shape.label}</span>
               </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Color picker menu */}
+      {showColorPicker && (
+        <div className="absolute bottom-full right-16 mb-2 bg-[#18181b] border border-[#27272a] rounded-lg shadow-lg p-3">
+          <div className="grid grid-cols-5 gap-2">
+            {PRESET_COLORS.map((color) => (
+              <button
+                key={color}
+                onClick={() => {
+                  onColorChange?.(color);
+                  setShowColorPicker(false);
+                }}
+                className={`w-6 h-6 rounded-md border-2 transition-all hover:scale-110 ${
+                  selectedColor === color ? 'border-white' : 'border-transparent'
+                }`}
+                style={{ backgroundColor: color }}
+                title={color}
+              />
             ))}
           </div>
         </div>

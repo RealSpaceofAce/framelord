@@ -74,9 +74,9 @@ affine-editor-container {
   /* ===== Line height — Comfortable reading ===== */
   --affine-line-height: 1.7;
 
-  /* ===== Editor sizing ===== */
+  /* ===== Editor sizing — NO side padding, parent provides padding ===== */
   --affine-editor-width: 100%;
-  --affine-editor-side-padding: 48px;
+  --affine-editor-side-padding: 0px;
 
   /* ===== Shadow — Softer shadows ===== */
   --affine-shadow-1: 0 2px 8px rgba(0, 0, 0, 0.25);
@@ -215,21 +215,21 @@ affine-doc-page-block-title,
    PAGE MODE STYLING
    ============================================================================= */
 
-/* Page viewport */
+/* Page viewport - no internal padding (parent container provides padding) */
 .affine-page-viewport,
 affine-page-root {
   background: transparent !important;
-  padding: 24px 0 !important;
+  padding: 0 !important;
   min-height: 100% !important;
 }
 
-/* Doc container - full width, properly aligned with padding */
+/* Doc container - full width, NO internal padding (parent container provides padding) */
 .affine-doc-viewport,
 .doc-container {
   max-width: 100% !important;
   width: 100% !important;
-  margin: 0 auto !important;
-  padding: 0 24px !important;
+  margin: 0 !important;
+  padding: 0 !important;
   box-sizing: border-box !important;
 }
 
@@ -248,8 +248,112 @@ affine-paragraph {
   color: var(--affine-text-primary-color) !important;
   font-size: 16px !important;
   line-height: 1.75 !important;
-  margin-bottom: 4px !important;
+  margin: 0 0 4px 0 !important;
+  padding: 0 !important;
   letter-spacing: -0.01em !important;
+  text-align: left !important;
+}
+
+/* Ensure all text content is left-aligned, not justified */
+.affine-rich-text,
+rich-text,
+[data-v-text],
+.inline-editor,
+[contenteditable="true"],
+.affine-block-children-container {
+  text-align: left !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Page root - no padding/margin for proper alignment */
+affine-page-root,
+.affine-page-root,
+affine-editor-container[data-mode="page"] {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure all editor text starts at left edge (aligned with title, tags, etc.) */
+affine-editor-container[data-mode="page"] .affine-block-children-container,
+affine-editor-container[data-mode="page"] affine-note,
+affine-editor-container[data-mode="page"] .affine-note-block-container {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* =============================================================================
+   CRITICAL: Override ALL BlockSuite internal padding for alignment
+   These target Shadow DOM elements via custom properties and direct selectors
+   ============================================================================= */
+
+/* Reset the side padding CSS variable everywhere */
+affine-editor-container,
+affine-editor-container *,
+.blocksuite-editor-wrapper,
+.blocksuite-editor-wrapper *,
+.blocksuite-note-editor,
+.blocksuite-note-editor *,
+affine-page-root,
+affine-page-root *,
+.affine-page-viewport,
+.affine-page-viewport * {
+  --affine-editor-side-padding: 0px !important;
+}
+
+/* Target the doc title container specifically */
+.affine-doc-page-block-title-container,
+.doc-title-container,
+[data-block-is-title="true"] {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Target the note container at every level */
+.affine-note,
+affine-note,
+.affine-note-block-container,
+[data-block-flavour="affine:note"] {
+  padding: 0 !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Target the block children container which holds paragraphs */
+.affine-block-children-container {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  padding-right: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Target paragraph blocks directly */
+[data-block-flavour="affine:paragraph"],
+.affine-paragraph,
+affine-paragraph,
+.affine-paragraph-block-container {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Override any indent styles that might cause misalignment */
+.affine-paragraph-block-container[data-indent="0"],
+affine-paragraph[data-indent="0"] {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Rich text content - ensure no left margin/padding */
+rich-text,
+.affine-rich-text,
+[data-v-text],
+v-line,
+v-text {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
 }
 
 /* Rich text content */
@@ -500,11 +604,24 @@ affine-editor-container[data-mode="edgeless"] affine-note {
    EDGELESS MODE
    ============================================================================= */
 
-/* Edgeless viewport */
+/* Edgeless viewport - MUST have explicit dimensions for canvas to render */
 .affine-edgeless-viewport,
 affine-edgeless-root,
 .edgeless-container {
   background: var(--affine-background-primary-color) !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 600px !important;
+  position: relative !important;
+  display: block !important;
+}
+
+/* Edgeless editor container needs explicit height */
+affine-editor-container[data-mode="edgeless"] {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 600px !important;
 }
 
 /* Grid background */
@@ -513,6 +630,12 @@ affine-surface {
   background-color: var(--affine-background-primary-color) !important;
   background-image: radial-gradient(circle, var(--affine-edgeless-grid-color) 1px, transparent 1px) !important;
   background-size: 30px 30px !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 600px !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
 }
 
 /* =============================================================================
@@ -982,4 +1105,149 @@ button span {
   height: 100% !important;
   min-height: 400px !important;
   background: #18181b !important;
+}
+
+/* Edgeless mode class for BlockSuiteDocEditor */
+.blocksuite-edgeless-mode,
+affine-editor-container.blocksuite-edgeless-mode {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 600px !important;
+}
+
+.blocksuite-edgeless-mode .affine-edgeless-viewport,
+.blocksuite-edgeless-mode affine-edgeless-root {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 600px !important;
+  position: relative !important;
+}
+
+/* Ensure the surface canvas renders */
+.blocksuite-edgeless-mode affine-surface,
+.blocksuite-edgeless-mode .affine-edgeless-surface-block-container {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 600px !important;
+}
+
+/* =============================================================================
+   LINKED DOC POPOVER VISIBILITY OVERRIDES - MUST BE LAST!
+   These rules MUST come after all other rules to override any hiding.
+   ============================================================================= */
+
+/* CRITICAL: Ensure linked-doc widget and popover are visible */
+affine-linked-doc-widget,
+affine-linked-doc-popover,
+.linked-doc-popover,
+.blocksuite-portal {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+affine-linked-doc-popover {
+  position: fixed !important;
+  z-index: 2147483647 !important; /* Max z-index */
+  background: var(--affine-background-modal-color, #191919) !important;
+  border: 1px solid var(--affine-border-color, #27272a) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Light mode linked-doc popover */
+[data-theme="light"] affine-linked-doc-popover,
+.light affine-linked-doc-popover {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Linked doc menu items */
+.linked-doc-popover-item,
+affine-linked-doc-popover .menu-item {
+  color: var(--affine-text-primary-color, #fafafa) !important;
+  padding: 8px 12px !important;
+  cursor: pointer !important;
+}
+
+.linked-doc-popover-item:hover,
+affine-linked-doc-popover .menu-item:hover {
+  background: var(--affine-hover-color, rgba(99, 102, 241, 0.15)) !important;
+}
+
+/* Light mode menu items */
+[data-theme="light"] .linked-doc-popover-item,
+[data-theme="light"] affine-linked-doc-popover .menu-item {
+  color: #1f2937 !important;
+}
+
+[data-theme="light"] .linked-doc-popover-item:hover,
+[data-theme="light"] affine-linked-doc-popover .menu-item:hover {
+  background: #f3f4f6 !important;
+}
+
+/* =============================================================================
+   EDGELESS MODE SCROLLBAR FIX - Hide unwanted scrollbars in canvas mode
+   ============================================================================= */
+
+/* Hide scrollbars in edgeless/canvas mode */
+affine-editor-container[data-mode="edgeless"],
+affine-editor-container[data-mode="edgeless"] *,
+.blocksuite-edgeless-mode,
+.blocksuite-edgeless-mode *,
+[data-mode="edgeless"],
+[data-mode="edgeless"] * {
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+}
+
+affine-editor-container[data-mode="edgeless"]::-webkit-scrollbar,
+affine-editor-container[data-mode="edgeless"] *::-webkit-scrollbar,
+.blocksuite-edgeless-mode::-webkit-scrollbar,
+.blocksuite-edgeless-mode *::-webkit-scrollbar,
+[data-mode="edgeless"]::-webkit-scrollbar,
+[data-mode="edgeless"] *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* The edgeless viewport and container should fill parent and not scroll */
+.affine-edgeless-viewport,
+affine-edgeless-root,
+affine-editor-container[data-mode="edgeless"] .affine-edgeless-viewport,
+affine-editor-container[data-mode="edgeless"] affine-edgeless-root {
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* Canvas surface should be positioned absolutely to prevent scrolling */
+affine-editor-container[data-mode="edgeless"] affine-surface,
+affine-editor-container[data-mode="edgeless"] .affine-edgeless-surface-block-container {
+  position: absolute !important;
+  inset: 0 !important;
+  overflow: hidden !important;
+}
+
+/* =============================================================================
+   EDGELESS TOOLBAR POSITIONING - Always visible at bottom
+   ============================================================================= */
+
+/* Ensure the edgeless mode container allows for absolutely positioned toolbar */
+[data-mode="edgeless"] {
+  position: relative !important;
+}
+
+/* Canvas toolbar styling - position fixed to stay visible */
+.note-canvas-toolbar {
+  position: fixed !important;
+  bottom: 24px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 99999 !important;
 }
