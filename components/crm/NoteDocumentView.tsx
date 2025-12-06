@@ -33,6 +33,7 @@ import { getContactById, getAllContacts } from '../../services/contactStore';
 import { getTopicsForNote } from '../../services/topicStore';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { WikilinkAutocomplete } from './WikilinkAutocomplete';
+import { BlockSuiteNoteEditor } from '../notes/BlockSuiteNoteEditor';
 
 interface NoteDocumentViewProps {
   noteId: string;
@@ -370,68 +371,8 @@ export const NoteDocumentView: React.FC<NoteDocumentViewProps> = ({
 
         {/* Editor/Viewer */}
         {isEditing ? (
-          <div className="relative min-h-[400px]">
-            {/* Visible markdown rendering overlay */}
-            <div
-              className="absolute inset-0 pointer-events-none z-20 overflow-hidden"
-              style={{
-                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
-                fontSize: '0.875rem',
-                lineHeight: '1.5rem',
-                padding: '1rem',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-              }}
-            >
-              <MarkdownRenderer
-                content={editContent}
-                onLinkClick={(linkText) => {
-                  const target = findNoteByTitle(linkText);
-                  if (target) {
-                    onNavigateNote(target.id);
-                  } else {
-                    const newNote = createNote({
-                      contactId: note.contactId,
-                      authorContactId: note.authorContactId,
-                      content: '',
-                      title: linkText,
-                    });
-                    onNavigateNote(newNote.id);
-                  }
-                }}
-              />
-            </div>
-            {/* Editable textarea */}
-            <textarea
-              ref={textareaRef}
-              value={editContent}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              className="w-full bg-[#0A0A0A] border border-[#1F1F24] rounded-lg resize-none focus:outline-none focus:border-[#4433FF] relative z-10 min-h-[400px]"
-              style={{
-                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
-                fontSize: '0.875rem',
-                lineHeight: '1.5rem',
-                padding: '1rem',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                color: 'transparent',
-                caretColor: 'white',
-                WebkitTextFillColor: 'transparent',
-              }}
-              placeholder="Start writing in markdown... Use # for headers, **bold**, *italic*, [[links]], etc."
-            />
-            {wikilinkState?.active && (
-              <WikilinkAutocomplete
-                query={wikilinkState.query}
-                position={wikilinkState.position}
-                onSelect={handleWikilinkSelect}
-                onCreateNew={handleWikilinkCreateNew}
-                onClose={() => setWikilinkState(null)}
-                currentNoteContactId={note.contactId}
-                currentNoteAuthorId={note.authorContactId}
-              />
-            )}
+          <div className="min-h-[400px]">
+            <BlockSuiteNoteEditor noteId={note.id} readOnly={false} />
           </div>
         ) : (
           <div className="bg-[#0A0A0A] border border-[#1F1F24] rounded-lg p-6 text-sm text-gray-200 leading-relaxed min-h-[400px]">

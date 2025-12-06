@@ -1,0 +1,192 @@
+// =============================================================================
+// NOTE CANVAS TOOLBAR — Floating toolbar for canvas/edgeless mode
+// =============================================================================
+// Modern minimal toolbar with tool icons. Appears at bottom-left of canvas.
+// Supports: select, text, shape (rect, circle, triangle, diamond),
+// connector, brush, pan, and zoom controls.
+// =============================================================================
+
+import React, { useState, useRef } from 'react';
+import {
+  MousePointer2,
+  Type,
+  Square,
+  Circle,
+  Triangle,
+  Diamond,
+  ArrowRight,
+  Pencil,
+  Hand,
+  ZoomIn,
+  ZoomOut,
+  Image as ImageIcon,
+  ChevronDown,
+} from 'lucide-react';
+
+// Tool types
+export type CanvasTool = 'select' | 'text' | 'shape' | 'connector' | 'brush' | 'pan';
+export type ShapeType = 'rect' | 'circle' | 'triangle' | 'diamond';
+
+interface ToolbarProps {
+  activeTool: CanvasTool;
+  onToolChange: (tool: CanvasTool) => void;
+  onShapeCreate?: (shapeType: ShapeType) => void;
+  onImageUpload?: (file: File) => void;
+  zoom: number;
+  onZoomChange: (zoom: number) => void;
+}
+
+export function NoteCanvasToolbar({
+  activeTool,
+  onToolChange,
+  onShapeCreate,
+  onImageUpload,
+  zoom,
+  onZoomChange,
+}: ToolbarProps) {
+  const [showShapeMenu, setShowShapeMenu] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Tool definitions
+  const tools: Array<{ id: CanvasTool; icon: React.ReactNode; label: string }> = [
+    { id: 'select', icon: <MousePointer2 size={18} />, label: 'Select (V)' },
+    { id: 'text', icon: <Type size={18} />, label: 'Text (T)' },
+    { id: 'shape', icon: <Square size={18} />, label: 'Shape (S)' },
+    { id: 'connector', icon: <ArrowRight size={18} />, label: 'Connector (C)' },
+    { id: 'brush', icon: <Pencil size={18} />, label: 'Brush (B)' },
+    { id: 'pan', icon: <Hand size={18} />, label: 'Pan (H)' },
+  ];
+
+  // Shape options
+  const shapes: Array<{ type: ShapeType; icon: React.ReactNode; label: string }> = [
+    { type: 'rect', icon: <Square size={18} />, label: 'Rectangle' },
+    { type: 'circle', icon: <Circle size={18} />, label: 'Circle' },
+    { type: 'triangle', icon: <Triangle size={18} />, label: 'Triangle' },
+    { type: 'diamond', icon: <Diamond size={18} />, label: 'Diamond' },
+  ];
+
+  const handleToolClick = (tool: CanvasTool) => {
+    if (tool === 'shape') {
+      setShowShapeMenu(!showShapeMenu);
+    } else {
+      setShowShapeMenu(false);
+      onToolChange(tool);
+    }
+  };
+
+  const handleShapeSelect = (shapeType: ShapeType) => {
+    setShowShapeMenu(false);
+    onToolChange('shape');
+    onShapeCreate?.(shapeType);
+  };
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onImageUpload) {
+      onImageUpload(file);
+    }
+  };
+
+  const handleZoomIn = () => {
+    const newZoom = Math.min(zoom + 10, 200);
+    onZoomChange(newZoom);
+  };
+
+  const handleZoomOut = () => {
+    const newZoom = Math.max(zoom - 10, 10);
+    onZoomChange(newZoom);
+  };
+
+  return (
+    <div className="absolute bottom-6 left-6 z-50">
+      {/* Main toolbar */}
+      <div className="flex items-center gap-1 bg-[#18181b] border border-[#27272a] rounded-lg shadow-lg p-2">
+        {/* Tools */}
+        <div className="flex items-center gap-1 pr-2 border-r border-[#27272a]">
+          {tools.map((tool) => (
+            <button
+              key={tool.id}
+              onClick={() => handleToolClick(tool.id)}
+              className={`
+                relative p-2 rounded-md transition-all
+                ${activeTool === tool.id
+                  ? 'bg-[#3b82f6] text-white'
+                  : 'text-[#a1a1aa] hover:bg-[#27272a] hover:text-white'
+                }
+              `}
+              title={tool.label}
+            >
+              {tool.icon}
+              {tool.id === 'shape' && (
+                <ChevronDown size={10} className="absolute bottom-0 right-0" />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Image upload */}
+        <div className="flex items-center gap-1 pr-2 border-r border-[#27272a]">
+          <button
+            onClick={handleImageClick}
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#27272a] hover:text-white transition-all"
+            title="Upload Image"
+          >
+            <ImageIcon size={18} />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+        </div>
+
+        {/* Zoom controls */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleZoomOut}
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#27272a] hover:text-white transition-all"
+            title="Zoom Out"
+          >
+            <ZoomOut size={18} />
+          </button>
+          <span className="text-xs text-[#a1a1aa] min-w-[3rem] text-center">
+            {zoom}%
+          </span>
+          <button
+            onClick={handleZoomIn}
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#27272a] hover:text-white transition-all"
+            title="Zoom In"
+          >
+            <ZoomIn size={18} />
+          </button>
+        </div>
+      </div>
+
+      {/* Shape picker menu */}
+      {showShapeMenu && (
+        <div className="absolute bottom-full left-0 mb-2 bg-[#18181b] border border-[#27272a] rounded-lg shadow-lg p-2">
+          <div className="flex flex-col gap-1">
+            {shapes.map((shape) => (
+              <button
+                key={shape.type}
+                onClick={() => handleShapeSelect(shape.type)}
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-[#a1a1aa] hover:bg-[#27272a] hover:text-white transition-all text-sm"
+              >
+                {shape.icon}
+                <span>{shape.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default NoteCanvasToolbar;

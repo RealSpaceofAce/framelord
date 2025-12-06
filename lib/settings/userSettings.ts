@@ -19,6 +19,11 @@ export interface LittleLordShortcutPreference {
 }
 
 /**
+ * Editor theme preference.
+ */
+export type EditorTheme = 'light' | 'dark' | 'system';
+
+/**
  * User-configurable settings, including API key overrides.
  */
 export interface UserSettings {
@@ -28,7 +33,8 @@ export interface UserSettings {
   nanobananaApiKey?: string;
   /** Little Lord global keyboard shortcut */
   littleLordShortcut?: LittleLordShortcutPreference;
-  // Add other future settings here as needed
+  /** Editor theme preference (light/dark/system) */
+  editorTheme?: EditorTheme;
 }
 
 /** LocalStorage key for persisting settings */
@@ -121,6 +127,39 @@ export function setLittleLordShortcut(pref: LittleLordShortcutPreference): void 
   updateUserSetting("littleLordShortcut", pref);
 }
 
+// =============================================================================
+// EDITOR THEME HELPERS
+// =============================================================================
 
+/**
+ * Get the current editor theme preference.
+ * Defaults to 'dark' if not set.
+ */
+export function getEditorTheme(): EditorTheme {
+  const settings = loadUserSettings();
+  return settings.editorTheme || 'dark';
+}
+
+/**
+ * Set the editor theme preference.
+ */
+export function setEditorTheme(theme: EditorTheme): void {
+  updateUserSetting("editorTheme", theme);
+}
+
+/**
+ * Get the resolved theme (handles 'system' preference).
+ * Returns 'light' or 'dark' based on system preference if 'system' is selected.
+ */
+export function getResolvedEditorTheme(): 'light' | 'dark' {
+  const theme = getEditorTheme();
+  if (theme === 'system') {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return 'dark'; // Default to dark on SSR
+  }
+  return theme;
+}
 
 

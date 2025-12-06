@@ -7,17 +7,21 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Doc, DocCollection, Schema } from '@blocksuite/store';
-import { AffineSchemas, PageEditorBlockSpecs } from '@blocksuite/blocks';
+import { AffineSchemas, PageEditorBlockSpecs, EdgelessEditorBlockSpecs } from '@blocksuite/blocks';
 import { AffineEditorContainer } from '@blocksuite/presets';
 import { initializeBlockSuite } from '@/lib/blocksuite/init';
 import { applyThemeToElement } from '@/lib/blocksuite/themes';
+import { WikiLinkPopup } from './WikiLinkPopup';
+import { getAllNotes, createNote } from '@/services/noteStore';
+import { Note } from '@/types';
 
-// Import base theme CSS
+// Import our theme CSS
 import '@/lib/blocksuite/theme.css';
 
 interface Props {
   docId: string;
   theme?: 'light' | 'dark';
+  mode?: 'page' | 'edgeless';
   readOnly?: boolean;
   onContentChange?: (serialized: unknown) => void;
 }
@@ -36,11 +40,24 @@ function extractPlainTextFromDoc(doc: Doc): string {
   return text.trim();
 }
 
-export function BlockSuiteDocEditor({ docId, theme = 'dark', readOnly, onContentChange }: Props) {
+export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', readOnly, onContentChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<AffineEditorContainer | null>(null);
   const collectionRef = useRef<DocCollection | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Wiki link popup state
+  const [wikiLinkPopup, setWikiLinkPopup] = useState<{
+    isOpen: boolean;
+    position: { x: number; y: number };
+    searchQuery: string;
+    bracketStartPos: number | null;
+  }>({
+    isOpen: false,
+    position: { x: 0, y: 0 },
+    searchQuery: '',
+    bracketStartPos: null,
+  });
 
   // Initialize editor
   useEffect(() => {
@@ -63,6 +80,11 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', readOnly, onContent
         // Create document collection
         const collection = new DocCollection({ schema });
         collection.meta.initialize();
+
+        // CRITICAL: Start the collection (from official BlockSuite example)
+        // This starts internal processes that may be required for widgets to work
+        collection.start();
+
         collectionRef.current = collection;
 
         // Create or retrieve document
@@ -80,10 +102,20 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', readOnly, onContent
           if (!rootId) {
             // Initialize document structure
             const pageBlockId = doc.addBlock('affine:page', {});
+
+            // Add surface block for edgeless mode support
+            doc.addBlock('affine:surface', {}, pageBlockId);
+
             const noteBlockId = doc.addBlock('affine:note', {}, pageBlockId);
             doc.addBlock('affine:paragraph', {}, noteBlockId);
           } else {
-            // Document exists - ensure it has at least one paragraph
+            // Document exists - ensure it has surface block for edgeless mode
+            const surfaces = doc.getBlocksByFlavour('affine:surface');
+            if (surfaces.length === 0 && doc.root) {
+              doc.addBlock('affine:surface', {}, doc.root.id);
+            }
+
+            // Ensure it has at least one paragraph
             const paragraphs = doc.getBlocksByFlavour('affine:paragraph');
             if (paragraphs.length === 0) {
               const notes = doc.getBlocksByFlavour('affine:note');
@@ -106,12 +138,25 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', readOnly, onContent
           });
         }
 
-        // Create editor - set pageSpecs BEFORE doc for slash menu to work
+        // Create editor with appropriate block specs
+        // IMPORTANT: Always set BOTH specs so mode switching works properly
         const editor = new AffineEditorContainer();
-        editor.pageSpecs = PageEditorBlockSpecs;
+        editor.pageSpecs = PageEditorBlockSpecs;  // REQUIRED for page mode and slash menu
+        editor.edgelessSpecs = EdgelessEditorBlockSpecs;  // REQUIRED for edgeless mode
         editor.doc = doc;
-        editor.mode = 'page';
-        editor.autofocus = true;
+
+        // Set initial mode
+        if (mode === 'edgeless') {
+          editor.mode = 'edgeless';
+          console.log('[BlockSuiteDocEditor] Using edgeless mode with EdgelessEditorBlockSpecs');
+        } else {
+          editor.mode = 'page';
+          console.log('[BlockSuiteDocEditor] Using page mode with PageEditorBlockSpecs');
+        }
+
+        // Enable autofocus - this triggers proper focus on the inline editor
+        // which is REQUIRED for the slash menu dispatcher to be "active"
+        (editor as any).autofocus = true;
 
         if (readOnly) {
           try {
@@ -127,116 +172,204 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', readOnly, onContent
         container.innerHTML = '';
         container.appendChild(editor);
 
-        // Focus the editor after mounting
-        setTimeout(() => {
-          if (mounted && editorRef.current) {
-            try {
-              // Find the contenteditable paragraph (where slash menu can work)
-              const paragraph = editorRef.current.querySelector('affine-paragraph [contenteditable="true"]');
+        // CRITICAL: Apply theme to editor element (sets background color and CSS vars)
+        // Without this, the editor has transparent background causing black screen
+        applyThemeToElement(editor, theme);
 
-              if (paragraph) {
-                // Focus the contenteditable element
-                (paragraph as HTMLElement).focus();
+        // NOTE: Do NOT manually focus elements - let autofocus=true handle it!
+        // Manual focus manipulation was interfering with BlockSuite's internal focus handling.
+        // The test component works WITHOUT any manual focus logic.
 
-                // Set cursor to end of content
-                const range = document.createRange();
-                const selection = window.getSelection();
-                range.selectNodeContents(paragraph);
-                range.collapse(false); // Collapse to end
-                selection?.removeAllRanges();
-                selection?.addRange(range);
-
-                console.log('[BlockSuiteDocEditor] ✓ Focused contenteditable paragraph');
-              } else {
-                // Fallback: try the page root
-                const pageRoot = editorRef.current.querySelector('affine-page-root');
-                if (pageRoot) {
-                  (pageRoot as HTMLElement).focus();
-                  console.warn('[BlockSuiteDocEditor] ⚠ Used fallback: focused page-root instead of paragraph');
+        // Set up MutationObserver to detect when slash menu appears (like the test)
+        const slashMenuObserver = new MutationObserver((mutations) => {
+          for (const mutation of mutations) {
+            for (const node of mutation.addedNodes) {
+              if (node instanceof HTMLElement) {
+                if (node.tagName?.toLowerCase().includes('slash') ||
+                    node.className?.includes('slash') ||
+                    node.className?.includes('Slash')) {
+                  console.log('[BlockSuiteDocEditor] ====================================');
+                  console.log('[BlockSuiteDocEditor] SLASH MENU DETECTED IN DOM!');
+                  console.log('[BlockSuiteDocEditor] Element:', node.tagName, node.className);
+                  console.log('[BlockSuiteDocEditor] ====================================');
+                }
+                const slashEls = node.querySelectorAll('[class*="slash"], [class*="Slash"], affine-slash-menu');
+                if (slashEls.length > 0) {
+                  console.log('[BlockSuiteDocEditor] SLASH MENU CHILDREN DETECTED!', slashEls.length);
                 }
               }
-            } catch (err) {
-              console.error('[BlockSuiteDocEditor] Focus error:', err);
             }
           }
-        }, 200);
+        });
+        slashMenuObserver.observe(document.body, { childList: true, subtree: true });
+        (container as any)._slashMenuObserver = slashMenuObserver;
 
-        // Add diagnostic logging to understand slash menu state
+        // Diagnostic logging after editor is mounted (same timing as test)
         setTimeout(() => {
           if (mounted && editorRef.current) {
-            console.group('[Slash Menu Diagnostics]');
+            console.log('[BlockSuiteDocEditor] ====================================');
+            console.log('[BlockSuiteDocEditor] DIAGNOSTICS');
+            console.log('[BlockSuiteDocEditor] ====================================');
+            console.log('[BlockSuiteDocEditor] Editor mode:', editorRef.current.mode);
+            console.log('[BlockSuiteDocEditor] Active element:', document.activeElement);
+            console.log('[BlockSuiteDocEditor] Active element tagName:', document.activeElement?.tagName);
 
-            // Check if paragraph was found and focused
-            const paragraph = editorRef.current.querySelector('affine-paragraph [contenteditable="true"]');
-            console.log('1. Contenteditable paragraph found:', !!paragraph);
-            console.log('2. Paragraph element:', paragraph);
-
-            // Check if it has inline editor
-            if (paragraph) {
-              console.log('3. Has inlineEditor property:', !!(paragraph as any).inlineEditor);
-              console.log('4. InlineEditor object:', (paragraph as any).inlineEditor);
+            // Check std and dispatcher (CRITICAL - same as test)
+            const std = (editorRef.current as any).std;
+            console.log('[BlockSuiteDocEditor] Editor std:', std);
+            if (std) {
+              console.log('[BlockSuiteDocEditor] std.host:', std.host);
+              const eventDispatcher = std.event;
+              console.log('[BlockSuiteDocEditor] Event dispatcher:', eventDispatcher);
+              console.log('[BlockSuiteDocEditor] Dispatcher.active:', eventDispatcher?.active);
+              console.log('[BlockSuiteDocEditor] Dispatcher._active:', eventDispatcher?._active);
             }
 
-            // Check current focus
-            console.log('5. Currently focused element:', document.activeElement);
-            console.log('6. Is focused element contenteditable:', document.activeElement?.getAttribute('contenteditable'));
-
-            // Check if slash menu widget exists
+            // Check for slash widget
             const slashWidget = editorRef.current.querySelector('affine-slash-menu-widget');
-            console.log('7. Slash menu widget found:', !!slashWidget);
-            console.log('8. Slash menu widget element:', slashWidget);
+            console.log('[BlockSuiteDocEditor] Slash widget found:', !!slashWidget);
+            if (slashWidget) {
+              console.log('[BlockSuiteDocEditor] Slash widget connected:', slashWidget.isConnected);
+            }
 
-            // Check pageSpecs
-            console.log('9. Editor has pageSpecs:', !!(editorRef.current as any).pageSpecs);
-            console.log('10. PageSpecs array:', (editorRef.current as any).pageSpecs);
+            // Check for inline editor
+            const inlineEditorEl = editorRef.current.querySelector('.inline-editor');
+            console.log('[BlockSuiteDocEditor] .inline-editor found:', !!inlineEditorEl);
+            if (inlineEditorEl) {
+              console.log('[BlockSuiteDocEditor] .inline-editor has inlineEditor:', !!(inlineEditorEl as any).inlineEditor);
+            }
 
-            console.groupEnd();
+            console.log('[BlockSuiteDocEditor] ====================================');
           }
-        }, 500);
+        }, 1000);
 
-        // Add keydown listener to verify "/" keypress detection
+        // Comprehensive event logging for slash key diagnosis
         const handleKeydown = (e: KeyboardEvent) => {
           if (e.key === '/') {
-            console.group('[Slash Menu] "/" key pressed');
-            console.log('  Active element:', document.activeElement?.tagName);
-            console.log('  Active element details:', document.activeElement);
-            console.log('  Contenteditable:', document.activeElement?.getAttribute('contenteditable'));
-            console.log('  Has inlineEditor:', !!(document.activeElement as any)?.inlineEditor);
-            console.log('  Event target:', e.target);
-            console.log('  Event will propagate:', !e.defaultPrevented);
-            console.groupEnd();
+            console.log('[SLASH DEBUG] keydown - key:', e.key, 'target:', (e.target as HTMLElement)?.tagName);
+
+            // Check for slash menu popup after a short delay
+            setTimeout(() => {
+              // Search for any slash menu elements
+              const slashMenus = document.querySelectorAll('[class*="slash"], [class*="Slash"], affine-slash-menu, .affine-slash-menu');
+              console.log('[SLASH DEBUG] Slash menu elements after keydown:', slashMenus.length);
+              slashMenus.forEach((el, i) => {
+                const styles = window.getComputedStyle(el);
+                console.log(`[SLASH DEBUG] Menu ${i}:`, {
+                  tag: el.tagName,
+                  display: styles.display,
+                  visibility: styles.visibility,
+                  opacity: styles.opacity,
+                  height: styles.height,
+                  zIndex: styles.zIndex,
+                });
+              });
+
+              // Also check for any popup/overlay elements
+              const popups = document.querySelectorAll('[class*="popup"], [class*="overlay"], [class*="menu"], [class*="suggestion"]');
+              console.log('[SLASH DEBUG] Popup/overlay elements:', popups.length);
+            }, 200);
           }
         };
-        document.addEventListener('keydown', handleKeydown);
+        const handleKeypress = (e: KeyboardEvent) => {
+          if (e.key === '/') {
+            console.log('[SLASH DEBUG] keypress - key:', e.key);
+          }
+        };
+        const handleInput = (e: Event) => {
+          const inputEvent = e as InputEvent;
+          if (inputEvent.data === '/') {
+            console.log('[SLASH DEBUG] input - data:', inputEvent.data, 'inputType:', inputEvent.inputType);
+          }
+        };
+        const handleBeforeInput = (e: Event) => {
+          const inputEvent = e as InputEvent;
+          if (inputEvent.data === '/') {
+            console.log('[SLASH DEBUG] beforeinput - data:', inputEvent.data, 'inputType:', inputEvent.inputType);
+          }
+        };
 
-        // Store handler for cleanup
-        (container as any)._keydownHandler = handleKeydown;
+        document.addEventListener('keydown', handleKeydown, true);
+        document.addEventListener('keypress', handleKeypress, true);
+        editor.addEventListener('input', handleInput, true);
+        editor.addEventListener('beforeinput', handleBeforeInput, true);
 
-        // Make the editor fill the container
+        // Wiki link [[ detection
+        const handleWikiLinkInput = (e: Event) => {
+          const inputEvent = e as InputEvent;
+
+          // Check if user typed '['
+          if (inputEvent.data === '[') {
+            // Get the current selection and text content
+            const selection = document.getSelection();
+            if (!selection || !selection.rangeCount) return;
+
+            const range = selection.getRangeAt(0);
+            const textNode = range.startContainer;
+
+            // Check if the previous character is also '['
+            if (textNode.nodeType === Node.TEXT_NODE) {
+              const textContent = textNode.textContent || '';
+              const cursorPos = range.startOffset;
+
+              // Check if we just typed the second '[' (first one is at cursorPos - 2 because we just typed one)
+              if (cursorPos >= 2 && textContent[cursorPos - 2] === '[') {
+                // Get cursor position on screen
+                const rect = range.getBoundingClientRect();
+
+                setWikiLinkPopup({
+                  isOpen: true,
+                  position: { x: rect.left, y: rect.bottom + 8 },
+                  searchQuery: '',
+                  bracketStartPos: cursorPos - 1, // Position of first '['
+                });
+
+                console.log('[WikiLink] Detected [[, opening popup');
+              }
+            }
+          }
+
+          // If popup is open, update search query as user types
+          if (wikiLinkPopup.isOpen) {
+            const selection = document.getSelection();
+            if (!selection || !selection.rangeCount) return;
+
+            const range = selection.getRangeAt(0);
+            const textNode = range.startContainer;
+
+            if (textNode.nodeType === Node.TEXT_NODE && wikiLinkPopup.bracketStartPos !== null) {
+              const textContent = textNode.textContent || '';
+              const cursorPos = range.startOffset;
+
+              // Extract text between [[ and cursor
+              const query = textContent.slice(wikiLinkPopup.bracketStartPos + 1, cursorPos);
+
+              setWikiLinkPopup(prev => ({
+                ...prev,
+                searchQuery: query,
+              }));
+            }
+          }
+        };
+
+        editor.addEventListener('input', handleWikiLinkInput, true);
+
+        // Store handlers for cleanup
+        (container as any)._handlers = {
+          handleKeydown,
+          handleKeypress,
+          handleInput,
+          handleBeforeInput,
+          handleWikiLinkInput,
+        };
+
+        // Basic styling to fill container
         editor.style.display = 'block';
         editor.style.width = '100%';
         editor.style.height = '100%';
         editor.style.minHeight = '100%';
-
-        // Set data-mode attribute to help CSS selectors target page mode
-        editor.setAttribute('data-mode', 'page');
-
-        // Apply theme styling directly to the editor
-        applyThemeToElement(editor, theme);
-
-        // Re-apply theme after shadow roots are created
-        setTimeout(() => {
-          if (mounted && editorRef.current) {
-            applyThemeToElement(editorRef.current, theme);
-          }
-        }, 100);
-
-        // And again after a longer delay for any lazy-loaded components
-        setTimeout(() => {
-          if (mounted && editorRef.current) {
-            applyThemeToElement(editorRef.current, theme);
-          }
-        }, 500);
+        editor.setAttribute('data-mode', mode);
+        editor.setAttribute('data-theme', theme);
 
         console.log('[BlockSuiteDocEditor] ✓ Initialized');
 
@@ -251,9 +384,23 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', readOnly, onContent
     return () => {
       mounted = false;
 
-      // Remove keydown listener
-      if (containerRef.current && (containerRef.current as any)._keydownHandler) {
-        document.removeEventListener('keydown', (containerRef.current as any)._keydownHandler);
+      // Disconnect MutationObserver
+      if (containerRef.current && (containerRef.current as any)._slashMenuObserver) {
+        (containerRef.current as any)._slashMenuObserver.disconnect();
+      }
+
+      // Remove event listeners
+      if (containerRef.current && (containerRef.current as any)._handlers) {
+        const h = (containerRef.current as any)._handlers;
+        document.removeEventListener('keydown', h.handleKeydown, true);
+        document.removeEventListener('keypress', h.handleKeypress, true);
+        if (editorRef.current) {
+          editorRef.current.removeEventListener('input', h.handleInput, true);
+          editorRef.current.removeEventListener('beforeinput', h.handleBeforeInput, true);
+          if (h.handleWikiLinkInput) {
+            editorRef.current.removeEventListener('input', h.handleWikiLinkInput, true);
+          }
+        }
       }
 
       if (editorRef.current) {
@@ -266,17 +413,84 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', readOnly, onContent
       }
       collectionRef.current = null;
     };
-  }, [docId, readOnly]);
+  }, [docId, mode, readOnly]);
 
-  // Re-apply theme when it changes
+  // Update editor mode when mode prop changes
+  useEffect(() => {
+    if (editorRef.current && mode) {
+      console.log('[BlockSuiteDocEditor] Switching mode to:', mode);
+      editorRef.current.mode = mode;
+      editorRef.current.setAttribute('data-mode', mode);
+    }
+  }, [mode]);
+
+  // Re-apply theme when theme prop changes
   useEffect(() => {
     if (editorRef.current) {
+      editorRef.current.setAttribute('data-theme', theme);
+      // Re-apply full theme including background color and CSS vars
       applyThemeToElement(editorRef.current, theme);
     }
   }, [theme]);
 
-  // Theme colors
-  const bgColor = theme === 'light' ? '#ffffff' : '#1f1f23';
+  // Wiki link handlers
+  const handleNoteSelect = (note: Note) => {
+    console.log('[WikiLink] Selected note:', note.title);
+
+    // Insert [[Note Title]] at cursor position
+    const selection = document.getSelection();
+    if (!selection || !selection.rangeCount) {
+      setWikiLinkPopup(prev => ({ ...prev, isOpen: false }));
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    const textNode = range.startContainer;
+
+    if (textNode.nodeType === Node.TEXT_NODE && wikiLinkPopup.bracketStartPos !== null) {
+      const textContent = textNode.textContent || '';
+      const cursorPos = range.startOffset;
+
+      // Replace [[ with [[Note Title]]
+      const beforeBracket = textContent.slice(0, wikiLinkPopup.bracketStartPos);
+      const afterCursor = textContent.slice(cursorPos);
+      const noteTitle = note.title || 'Untitled';
+
+      textNode.textContent = `${beforeBracket}[[${noteTitle}]]${afterCursor}`;
+
+      // Move cursor after the inserted text
+      const newPos = beforeBracket.length + noteTitle.length + 4; // 4 for [[ and ]]
+      range.setStart(textNode, newPos);
+      range.setEnd(textNode, newPos);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+
+    // Close popup
+    setWikiLinkPopup(prev => ({ ...prev, isOpen: false }));
+  };
+
+  const handleNoteCreate = (title: string) => {
+    console.log('[WikiLink] Creating new note:', title);
+
+    // Create the note
+    const newNote = createNote({
+      title,
+      content: '',
+      kind: 'note',
+      isInbox: true,
+    });
+
+    // Insert the link
+    handleNoteSelect(newNote);
+  };
+
+  const handleWikiLinkClose = () => {
+    setWikiLinkPopup(prev => ({ ...prev, isOpen: false }));
+  };
+
+  // Theme colors - use transparent to blend with parent
+  const bgColor = 'transparent';
   const textColor = theme === 'light' ? '#1f2937' : '#fafafa';
   const mutedColor = theme === 'light' ? '#6b7280' : '#71717a';
 
@@ -305,16 +519,30 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', readOnly, onContent
     );
   }
 
-  // Simple full-height container - let BlockSuite handle all the styling
+  // Simple full-height container
   return (
-    <div
-      ref={containerRef}
-      className="h-full w-full"
-      style={{
-        background: bgColor,
-        minHeight: '100%',
-      }}
-    />
+    <>
+      <div
+        ref={containerRef}
+        className="h-full w-full"
+        data-theme={theme}
+        style={{
+          background: bgColor,
+          minHeight: '100%',
+        }}
+      />
+
+      {/* Wiki link popup */}
+      <WikiLinkPopup
+        isOpen={wikiLinkPopup.isOpen}
+        position={wikiLinkPopup.position}
+        searchQuery={wikiLinkPopup.searchQuery}
+        notes={getAllNotes()}
+        onSelect={handleNoteSelect}
+        onCreate={handleNoteCreate}
+        onClose={handleWikiLinkClose}
+      />
+    </>
   );
 }
 

@@ -68,20 +68,61 @@ export interface NoteEntry {
   createdAt: string;              // ISO timestamp
 }
 
+// Note classification type
+export type NoteKind = 'log' | 'note' | 'system';
+
+// Note view mode
+export type NoteViewMode = 'doc' | 'canvas';
+
 export interface Note {
+  // Core identification
   id: string;
-  contactId: string;              // REQUIRED — who the note is ABOUT (legacy, kept for backward compatibility)
-  authorContactId: string;        // REQUIRED — who WROTE the note (always CONTACT_ZERO)
-  targetContactId?: string;       // Optional — explicit target contact for this note
-  mentionedContactIds?: string[];  // Optional — contacts mentioned via @mention in the note
-  title?: string;                 // Optional title for backlinking / Obsidian-style links
-  content: string;                // Legacy field - kept for backward compatibility
-  entries: NoteEntry[];           // Bullet-based entries with embedded content
-  attachments?: NoteAttachment[]; // Direct attachments on the note (in addition to entry attachments)
-  isPinned: boolean;              // Whether note is pinned to top
+  title: string | null;           // null for untitled notes
+
+  // BlockSuite document (unified storage for text AND canvas)
+  blocksuiteDocId?: string;       // BlockSuite Doc ID (optional during migration)
+  blocksuiteSerialized?: unknown; // Optional serialized snapshot for backup
+
+  // Timestamps
   createdAt: string;              // ISO timestamp
-  updatedAt?: string | null;
-  tags?: string[];
+  updatedAt: string;              // ISO timestamp (now required)
+
+  // Authorship (Contact Zero centrality)
+  authorContactId: string;        // ALWAYS Contact Zero for user-created notes
+
+  // Contact associations
+  targetContactIds: string[];     // Contacts mentioned or attached to this note
+
+  // Note classification
+  kind: NoteKind;                 // log = daily journal, note = general, system = auto-generated
+  dateKey: string | null;         // 'YYYY-MM-DD' for log entries, null otherwise
+
+  // Organization
+  folderId: string | null;        // PARA folder or custom folder
+  isInbox: boolean;               // Quick capture inbox
+  topics: string[];               // Topic IDs (from [[Topic]] syntax)
+  tags: string[];                 // User tags
+
+  // Display preferences
+  preferredView: NoteViewMode;    // Last used view mode
+  isPinnedHome: boolean;          // Pin to home (deprecated, keep for migration)
+  isPinned: boolean;              // Pin within view
+  icon?: string;                  // Emoji icon for the note
+
+  // Archive
+  isArchived: boolean;
+
+  // Sync tracking
+  sync_version: number;           // Incremented on each update for conflict resolution
+  last_synced_at?: string;        // ISO timestamp of last successful sync
+
+  // Legacy fields (for backwards compatibility during migration)
+  content?: string;               // OLD plain text content
+  entries?: NoteEntry[];          // OLD bullet entries
+  attachments?: NoteAttachment[]; // OLD direct attachments
+  contactId?: string;             // OLD single contact link (who note is ABOUT)
+  targetContactId?: string;       // OLD explicit target contact
+  mentionedContactIds?: string[]; // OLD contacts mentioned via @mention
 }
 
 /**
@@ -92,6 +133,36 @@ export interface NoteLink {
   sourceNoteId: string;
   targetNoteId: string;
 }
+
+// --- FOLDER (PARA-STYLE ORGANIZATION) ---
+
+/**
+ * Folder - PARA-style organization for notes
+ * Default folders: Projects, Areas, Resources, Archive
+ */
+export interface Folder {
+  id: string;
+  name: string;
+  parentId: string | null;        // For nested folders
+  createdAt: string;              // ISO timestamp
+  updatedAt: string;              // ISO timestamp
+  order: number;                  // Display order
+  color?: string;                 // Optional color tag
+  icon?: string;                  // Optional icon
+}
+
+/**
+ * Default folder IDs (constants)
+ * These folders are created automatically and cannot be deleted
+ */
+export const DEFAULT_FOLDERS = {
+  PROJECTS: 'folder-projects',
+  AREAS: 'folder-areas',
+  RESOURCES: 'folder-resources',
+  ARCHIVE: 'folder-archive',
+} as const;
+
+export type DefaultFolderId = typeof DEFAULT_FOLDERS[keyof typeof DEFAULT_FOLDERS];
 
 // --- DAILY NOTES & STANDALONE PAGES (OBSIDIAN-STYLE) ---
 

@@ -107,6 +107,13 @@ export const RetroClockPanel: React.FC<RetroClockPanelProps> = ({ time, userLoca
     const draw = () => {
       const width = canvas.width;
       const height = canvas.height;
+
+      // Skip drawing if canvas has no dimensions yet
+      if (width <= 0 || height <= 0) {
+        frameId = requestAnimationFrame(draw);
+        return;
+      }
+
       const imageData = ctx.createImageData(width, height);
       const data = imageData.data;
 

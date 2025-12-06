@@ -9,8 +9,10 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+// TEMPORARILY DISABLED StrictMode to test BlockSuite slash menu
+// StrictMode causes double-mount which can break BlockSuite initialization
 root.render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <App />
-  </React.StrictMode>
+  // </React.StrictMode>
 );

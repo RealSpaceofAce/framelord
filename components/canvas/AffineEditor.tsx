@@ -9,9 +9,10 @@ import type { CanvasNode } from '../../stores/canvasStore';
 import { Doc, DocCollection, Schema } from '@blocksuite/store';
 import { AffineSchemas } from '@blocksuite/blocks';
 import { AffineEditorContainer } from '@blocksuite/presets';
+import { initializeBlockSuite } from '@/lib/blocksuite/init';
 
-// Import BlockSuite styles (trying different path)
-// import '@blocksuite/blocks/dist/blocks.css'; // This might work or might not exist
+// Import theme CSS
+import '@/lib/blocksuite/theme.css';
 
 interface AffineEditorProps {
   node: CanvasNode;
@@ -46,6 +47,9 @@ export const AffineEditor = forwardRef<
     const initEditor = async () => {
       try {
         console.log('[AFFiNE] Initializing editor...');
+
+        // Initialize BlockSuite effects (shared, only runs once globally)
+        initializeBlockSuite();
 
         // Create schema
         const schema = new Schema();

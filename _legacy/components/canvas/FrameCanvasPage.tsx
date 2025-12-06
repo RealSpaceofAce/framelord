@@ -18,6 +18,8 @@ import {
   Calendar,
   Layers,
   Sparkles,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import {
   getThreads,
@@ -27,7 +29,7 @@ import {
   getThreadCount,
   type CanvasThread,
 } from '../../stores/canvasStore';
-import { FrameCanvas } from './FrameCanvas';
+import { BlockSuiteEdgelessCanvas } from './BlockSuiteEdgelessCanvas';
 
 const MotionDiv = motion.div as any;
 
@@ -42,7 +44,9 @@ export const FrameCanvasPage: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   // Load threads on mount
   useEffect(() => {
@@ -124,20 +128,61 @@ export const FrameCanvasPage: React.FC = () => {
 
   const handleScanCanvas = useCallback(async () => {
     if (!activeThread || isScanning) return;
-    
+
     setIsScanning(true);
     setScanComplete(false);
-    
+
     // BACKEND TODO: POST /api/canvas/scan with thread data
     console.log('[FrameCanvas] Scanning canvas:', activeThread.id);
-    
+
     await new Promise(resolve => setTimeout(resolve, 4000));
-    
+
     setIsScanning(false);
     setScanComplete(true);
-    
+
     setTimeout(() => setScanComplete(false), 5000);
   }, [activeThread, isScanning]);
+
+  const toggleFullscreen = useCallback(async () => {
+    if (!canvasContainerRef.current) return;
+
+    try {
+      if (!isFullscreen) {
+        // Enter fullscreen
+        if (canvasContainerRef.current.requestFullscreen) {
+          await canvasContainerRef.current.requestFullscreen();
+        } else if ((canvasContainerRef.current as any).webkitRequestFullscreen) {
+          await (canvasContainerRef.current as any).webkitRequestFullscreen();
+        }
+        setIsFullscreen(true);
+      } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        }
+        setIsFullscreen(false);
+      }
+    } catch (error) {
+      console.error('Fullscreen error:', error);
+    }
+  }, [isFullscreen]);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -365,24 +410,31 @@ export const FrameCanvasPage: React.FC = () => {
                   )}
                 </div>
 
-                <button
-                  onClick={handleScanCanvas}
-                  disabled={isScanning}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-indigo-500 hover:to-purple-500 transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/25"
-                >
-                  <Sparkles size={16} className={isScanning ? 'animate-pulse' : ''} />
-                  {isScanning ? 'Scanning...' : 'Scan Canvas'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={toggleFullscreen}
+                    className="p-2 text-gray-400 hover:text-white hover:bg-[#2A2D35] rounded-lg transition-colors"
+                    title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+                  >
+                    {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                  </button>
+
+                  <button
+                    onClick={handleScanCanvas}
+                    disabled={isScanning}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-indigo-500 hover:to-purple-500 transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/25"
+                  >
+                    <Sparkles size={16} className={isScanning ? 'animate-pulse' : ''} />
+                    {isScanning ? 'Scanning...' : 'Scan Canvas'}
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Canvas Area - Give Excalidraw maximum space */}
-            <div className="flex-1 min-h-0 flex">
+            {/* Canvas Area */}
+            <div ref={canvasContainerRef} className="flex-1 min-h-0 flex" style={{ minHeight: isFullscreen ? '100vh' : '600px' }}>
               {activeThread ? (
-                <FrameCanvas
-                  thread={activeThread}
-                  onCanvasChange={handleCanvasChange}
-                />
+                <BlockSuiteEdgelessCanvas canvasId={activeThread.id} />
               ) : (
                 <div className="flex items-center justify-center h-full w-full bg-[#12141A]">
                   <div className="text-center">

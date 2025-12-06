@@ -120,3 +120,16 @@ export {
   markPublicScanUsed,
   resetPublicScanFlag,
 } from "./publicScanGate";
+
+// Export note-specific scanning
+export {
+  scanNoteText,
+  extractTextFromBlockSuiteDoc,
+} from "./noteTextScan";
+
+export {
+  scanNoteCanvas,
+  scanNoteCanvasImage,
+  captureCanvasSnapshot,
+  extractTextFromCanvas,
+} from "./noteCanvasScan";

@@ -65,7 +65,9 @@ import {
   formatProfileDate,
 } from '../lib/frameScan/frameProfile';
 import { LittleLordProvider } from './littleLord';
-import { FrameCanvasPage } from './canvas';
+// FrameCanvasPage removed - canvas functionality now integrated into Notes (see REFACTOR_PLAN.md)
+import { AffineNotes } from './notes';
+import { BlockSuiteSlashTest } from './debug/BlockSuiteSlashTest';
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -906,6 +908,18 @@ const RebelsRankingWidget: React.FC = () => {
     );
 };
 
+// Helper to get folder display name
+const getFolderDisplayName = (folderId: string): string => {
+  switch (folderId) {
+    case 'inbox': return 'Inbox';
+    case DEFAULT_FOLDERS.PROJECTS: return 'Projects';
+    case DEFAULT_FOLDERS.AREAS: return 'Areas';
+    case DEFAULT_FOLDERS.RESOURCES: return 'Resources';
+    case DEFAULT_FOLDERS.ARCHIVE: return 'Archive';
+    default: return folderId;
+  }
+};
+
 // --- DASHBOARD OVERVIEW (Rich - Binds to Contact Zero) ---
 const DashboardOverview: React.FC = () => {
     const user = getContactZero();
@@ -1581,7 +1595,7 @@ const FrameScoreTileWidget: React.FC = () => {
 };
 
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'CANVAS';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'DAILY_LOG' | 'INBOX' | 'FOLDER' | 'NOTE_DETAIL' | 'BLOCKSUITE_TEST';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -1607,6 +1621,16 @@ export const Dashboard: React.FC = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   // ==========================================================================
+  // SELECTED FOLDER STATE (for PARA folder views)
+  // ==========================================================================
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+
+  // ==========================================================================
+  // SELECTED NOTE STATE (for Note detail view)
+  // ==========================================================================
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+
+  // ==========================================================================
   // SELECTED FRAMESCAN REPORT STATE (for FrameScan report detail view)
   // ==========================================================================
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -1620,6 +1644,24 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // BlockSuite test: Check for ?bstest param or Ctrl+Shift+B shortcut
+  useEffect(() => {
+    // Check URL param on mount
+    if (window.location.search.includes('bstest')) {
+      setCurrentView('BLOCKSUITE_TEST');
+    }
+
+    // Add keyboard shortcut: Ctrl+Shift+B to toggle test view
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'B') {
+        e.preventDefault();
+        setCurrentView(prev => prev === 'BLOCKSUITE_TEST' ? 'OVERVIEW' : 'BLOCKSUITE_TEST');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Only show the right sidebar on Overview
@@ -1679,9 +1721,6 @@ export const Dashboard: React.FC = () => {
     if (currentView === 'FRAME_DEMO') {
       return 'FRAME REPORT DEMO';
     }
-    if (currentView === 'CANVAS') {
-      return 'FRAME CANVAS';
-    }
     return currentView;
   };
 
@@ -1732,10 +1771,9 @@ export const Dashboard: React.FC = () => {
               icon={<Crosshair size={16} />} 
               label="CONTACT ZERO" 
             />
-            <NavItem active={currentView === 'NOTES'} onClick={() => handleNav('NOTES')} icon={<Notebook size={16} />} label="LOG" />
+            <NavItem active={currentView === 'NOTES'} onClick={() => handleNav('NOTES')} icon={<Notebook size={16} />} label="NOTES" />
             <NavItem active={currentView === 'SCAN'} onClick={() => handleNav('SCAN')} icon={<Scan size={16} />} label="SCAN" />
             <NavItem active={currentView === 'FRAMESCAN' || currentView === 'FRAMESCAN_REPORT'} onClick={() => handleNav('FRAMESCAN')} icon={<Crosshair size={16} />} label="FRAME SCANS" />
-            <NavItem active={currentView === 'CANVAS'} onClick={() => handleNav('CANVAS')} icon={<LayoutGrid size={16} />} label="CANVAS" />
 
             <div className="h-6" />
 
@@ -1836,7 +1874,7 @@ export const Dashboard: React.FC = () => {
              </div>
          </div>
 
-         <div className={`p-4 md:p-6 flex-1 ${currentView === 'CANVAS' ? 'flex flex-col min-h-0 overflow-hidden' : 'overflow-y-auto'} custom-scrollbar ${!isLeftSidebarOpen ? 'max-w-full' : ''}`}>
+         <div className={`p-4 md:p-6 flex-1 overflow-y-auto custom-scrollbar ${!isLeftSidebarOpen ? 'max-w-full' : ''}`}>
              {currentView === 'OVERVIEW' && <DashboardOverview />}
             {currentView === 'DOSSIER' && (
               <ContactDossierView
@@ -1860,15 +1898,8 @@ export const Dashboard: React.FC = () => {
                />
              )}
              {currentView === 'SCAN' && <ScanView />}
-            {currentView === 'NOTES' && (
-               <NotesView 
-                 selectedContactId={selectedContactId}
-                 setSelectedContactId={setSelectedContactId}
-                 onNavigateToDossier={() => setCurrentView('DOSSIER')}
-                 onNavigateToTasks={() => setCurrentView('TASKS')}
-                 onNavigateToTopic={handleNavigateToTopic}
-               />
-            )}
+            {/* AFFiNE-style Notes - single unified view */}
+            {currentView === 'NOTES' && <AffineNotes />}
             {currentView === 'CONTACTS' && (
                <ContactsView 
                  selectedContactId={selectedContactId}
@@ -1953,8 +1984,8 @@ export const Dashboard: React.FC = () => {
              {currentView === 'FRAME_DEMO' && appConfig.enableDevRoutes && (
                <FrameReportDemoPage />
              )}
-             {currentView === 'CANVAS' && (
-               <FrameCanvasPage />
+             {currentView === 'BLOCKSUITE_TEST' && (
+               <BlockSuiteSlashTest />
              )}
          </div>
       </main>

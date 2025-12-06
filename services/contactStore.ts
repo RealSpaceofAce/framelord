@@ -269,6 +269,46 @@ export const getActiveContacts = (): Contact[] => {
 };
 
 /**
+ * Search contacts by name, email, or company.
+ * Returns contacts matching the query string (case-insensitive).
+ * @param query - Search query string
+ * @param limit - Maximum number of results (default 10)
+ * @param excludeSelf - Whether to exclude Contact Zero (default true)
+ * @returns Array of matching contacts
+ */
+export const searchContacts = (
+  query: string,
+  limit = 10,
+  excludeSelf = true
+): Contact[] => {
+  if (!query || query.trim().length === 0) {
+    return [];
+  }
+
+  const q = query.toLowerCase().trim();
+
+  let results = CONTACTS.filter(c => {
+    if (excludeSelf && c.id === CONTACT_ZERO.id) return false;
+    if (c.status !== 'active') return false;
+
+    const nameMatch = c.fullName.toLowerCase().includes(q);
+    const emailMatch = c.email?.toLowerCase().includes(q) || false;
+    const companyMatch = c.company?.toLowerCase().includes(q) || false;
+
+    return nameMatch || emailMatch || companyMatch;
+  });
+
+  // Sort by relevance: exact name starts first, then partial matches
+  results.sort((a, b) => {
+    const aNameStarts = a.fullName.toLowerCase().startsWith(q) ? 0 : 1;
+    const bNameStarts = b.fullName.toLowerCase().startsWith(q) ? 0 : 1;
+    return aNameStarts - bNameStarts;
+  });
+
+  return results.slice(0, limit);
+};
+
+/**
  * Create a new contact.
  * @param input - Contact creation parameters.
  * @returns The newly created contact.
