@@ -529,16 +529,16 @@ export const AffineNotes: React.FC = () => {
     setSelectedPageId(journal.id);
   }, []);
 
-  // Theme colors - BRAND PALETTE: Darker blacks, #4433FF accent
+  // Theme colors - BRAND PALETTE: Pure black #000000, blue #0043ff accent
   const colors = useMemo(() => ({
-    bg: theme === 'light' ? '#ffffff' : '#0A0A0A',
-    sidebar: theme === 'light' ? '#fbfbfb' : '#0E0E0E',
-    border: theme === 'light' ? '#e8e8e8' : '#2A2A2A',
-    text: theme === 'light' ? '#1f1f1f' : '#e8e8e8',
-    textMuted: theme === 'light' ? '#8e8e8e' : '#6e6e6e',
-    hover: theme === 'light' ? '#f0f0f0' : '#1A1A1A',
-    active: theme === 'light' ? '#e8f4ff' : '#4433FF20',
-    accent: '#4433FF',
+    bg: theme === 'light' ? '#ffffff' : '#000000',
+    sidebar: theme === 'light' ? '#fbfbfb' : '#000000',
+    border: theme === 'light' ? '#e8e8e8' : '#1c1c1c',
+    text: theme === 'light' ? '#1f1f1f' : '#ffffff',
+    textMuted: theme === 'light' ? '#8e8e8e' : '#888888',
+    hover: theme === 'light' ? '#f0f0f0' : '#111111',
+    active: theme === 'light' ? '#e8f4ff' : '#0043ff20',
+    accent: '#0043ff',
   }), [theme]);
 
   // ==========================================================================

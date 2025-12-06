@@ -13,55 +13,55 @@
 .blocksuite-note-editor,
 .blocksuite-editor-wrapper,
 affine-editor-container {
-  /* ===== Background colors — BRAND PALETTE: #0A0A0A (near-black) ===== */
-  --affine-background-primary-color: #0A0A0A;
-  --affine-background-secondary-color: #0E0E0E;
-  --affine-background-tertiary-color: #1A1A1A;
-  --affine-background-overlay-panel-color: rgba(10, 10, 10, 0.98);
-  --affine-background-modal-color: #0A0A0A;
-  --affine-background-code-block: #0E0E0E;
+  /* ===== Background colors — BRAND PALETTE: #000000 (pure black) ===== */
+  --affine-background-primary-color: #000000;
+  --affine-background-secondary-color: #000000;
+  --affine-background-tertiary-color: #111111;
+  --affine-background-overlay-panel-color: rgba(0, 0, 0, 0.98);
+  --affine-background-modal-color: #000000;
+  --affine-background-code-block: #0a0a0a;
   --affine-background-error-color: rgba(239, 68, 68, 0.1);
   --affine-background-success-color: rgba(16, 185, 129, 0.1);
   --affine-background-warning-color: rgba(245, 158, 11, 0.1);
   --affine-background-processing-color: rgba(99, 102, 241, 0.1);
 
   /* ===== Text colors — High contrast for readability ===== */
-  --affine-text-primary-color: #e8e8e8;
+  --affine-text-primary-color: #ffffff;
   --affine-text-secondary-color: #a1a1aa;
   --affine-text-disable-color: #52525b;
-  --affine-text-emphasis-color: #4433FF;
-  --affine-edgeless-text-color: #fafafa;
+  --affine-text-emphasis-color: #0043ff;
+  --affine-edgeless-text-color: #ffffff;
   --affine-placeholder-color: #52525b;
-  --affine-quote-color: #a78bfa;
-  --affine-code-color: #22d3ee;
+  --affine-quote-color: #6a82fc;
+  --affine-code-color: #0099ff;
 
   /* ===== Border colors — Brand palette ===== */
-  --affine-border-color: #2A2A2A;
-  --affine-divider-color: #2A2A2A;
+  --affine-border-color: #1c1c1c;
+  --affine-divider-color: #1c1c1c;
 
-  /* ===== Brand colors — #4433FF accent ===== */
-  --affine-primary-color: #4433FF;
-  --affine-secondary-color: #6655FF;
-  --affine-brand-color: #4433FF;
+  /* ===== Brand colors — #0043ff accent (bright blue) ===== */
+  --affine-primary-color: #0043ff;
+  --affine-secondary-color: #0099ff;
+  --affine-brand-color: #0043ff;
   --affine-success-color: #10b981;
   --affine-warning-color: #f59e0b;
   --affine-error-color: #ef4444;
 
   /* ===== Interactive colors ===== */
-  --affine-hover-color: rgba(68, 51, 255, 0.08);
-  --affine-hover-color-filled: rgba(68, 51, 255, 0.15);
+  --affine-hover-color: rgba(0, 67, 255, 0.08);
+  --affine-hover-color-filled: rgba(0, 67, 255, 0.15);
   --affine-icon-color: #a1a1aa;
   --affine-icon-secondary: #71717a;
-  --affine-tooltip-background: #1A1A1A;
-  --affine-tooltip-color: #fafafa;
+  --affine-tooltip-background: #111111;
+  --affine-tooltip-color: #ffffff;
 
-  /* ===== Link colors ===== */
-  --affine-link-color: #6655FF;
-  --affine-link-visited-color: #8877FF;
+  /* ===== Link colors — WHITE for visibility in dark mode ===== */
+  --affine-link-color: #ffffff;
+  --affine-link-visited-color: #cccccc;
 
   /* ===== Selection ===== */
-  --affine-selected-color: rgba(68, 51, 255, 0.2);
-  --affine-block-selected-color: rgba(68, 51, 255, 0.08);
+  --affine-selected-color: rgba(0, 67, 255, 0.2);
+  --affine-block-selected-color: rgba(0, 67, 255, 0.08);
 
   /* ===== White/Black ===== */
   --affine-white: #ffffff;
@@ -87,7 +87,7 @@ affine-editor-container {
   --affine-border-radius: 8px;
 
   /* ===== Grid (edgeless) ===== */
-  --affine-edgeless-grid-color: rgba(68, 51, 255, 0.25);
+  --affine-edgeless-grid-color: rgba(0, 67, 255, 0.2);
 }
 
 /* =============================================================================
@@ -125,19 +125,19 @@ affine-editor-container {
   --affine-divider-color: #e5e7eb;
 
   /* ===== Interactive colors ===== */
-  --affine-hover-color: rgba(68, 51, 255, 0.08);
-  --affine-hover-color-filled: rgba(68, 51, 255, 0.15);
+  --affine-hover-color: rgba(0, 67, 255, 0.08);
+  --affine-hover-color-filled: rgba(0, 67, 255, 0.15);
   --affine-icon-color: #6b7280;
   --affine-icon-secondary: #9ca3af;
   --affine-tooltip-background: #1f2937;
   --affine-tooltip-color: #ffffff;
 
   /* ===== Link colors ===== */
-  --affine-link-color: #4433FF;
-  --affine-link-visited-color: #6655FF;
+  --affine-link-color: #0043ff;
+  --affine-link-visited-color: #0033cc;
 
   /* ===== Grid (edgeless) — Light mode ===== */
-  --affine-edgeless-grid-color: rgba(68, 51, 255, 0.15);
+  --affine-edgeless-grid-color: rgba(0, 67, 255, 0.15);
 }
 
 /* In EDGELESS mode with light theme: note blocks should have light card styling */
@@ -521,6 +521,49 @@ a:hover,
 .affine-link:hover {
   color: var(--affine-primary-color) !important;
   text-decoration: underline !important;
+}
+
+/* =============================================================================
+   WIKI LINKS / LINKED DOC REFERENCES — WHITE text for visibility
+   ============================================================================= */
+
+/* Linked doc references (wiki links [[note]]) - must be visible WHITE */
+affine-reference,
+.affine-reference,
+[data-reference],
+[data-linked-page],
+.linked-doc-reference,
+.reference-node {
+  color: #ffffff !important;
+  text-decoration: underline !important;
+  text-decoration-style: dotted !important;
+  text-underline-offset: 2px !important;
+  cursor: pointer !important;
+}
+
+affine-reference:hover,
+.affine-reference:hover,
+[data-reference]:hover,
+[data-linked-page]:hover,
+.linked-doc-reference:hover,
+.reference-node:hover {
+  color: #0043ff !important;
+  text-decoration-style: solid !important;
+}
+
+/* Light mode - linked references use brand blue */
+[data-theme="light"] affine-reference,
+[data-theme="light"] .affine-reference,
+[data-theme="light"] [data-reference],
+[data-theme="light"] [data-linked-page] {
+  color: #0043ff !important;
+}
+
+[data-theme="light"] affine-reference:hover,
+[data-theme="light"] .affine-reference:hover,
+[data-theme="light"] [data-reference]:hover,
+[data-theme="light"] [data-linked-page]:hover {
+  color: #0033cc !important;
 }
 
 /* =============================================================================

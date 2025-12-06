@@ -130,9 +130,9 @@ export function NoteCanvasToolbar({
   return (
     <div className="absolute bottom-6 left-6 z-50">
       {/* Main toolbar */}
-      <div className="flex items-center gap-1 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg shadow-lg p-2">
+      <div className="flex items-center gap-1 bg-[#000000] border border-[#1c1c1c] rounded-lg shadow-lg p-2">
         {/* Tools */}
-        <div className="flex items-center gap-1 pr-2 border-r border-[#2A2A2A]">
+        <div className="flex items-center gap-1 pr-2 border-r border-[#1c1c1c]">
           {tools.map((tool) => (
             <button
               key={tool.id}
@@ -140,8 +140,8 @@ export function NoteCanvasToolbar({
               className={`
                 relative p-2 rounded-md transition-all
                 ${activeTool === tool.id
-                  ? 'bg-[#4433FF] text-white'
-                  : 'text-[#a1a1aa] hover:bg-[#1A1A1A] hover:text-white'
+                  ? 'bg-[#0043ff] text-white'
+                  : 'text-[#a1a1aa] hover:bg-[#111111] hover:text-white'
                 }
               `}
               title={tool.label}
@@ -155,10 +155,10 @@ export function NoteCanvasToolbar({
         </div>
 
         {/* Image upload */}
-        <div className="flex items-center gap-1 pr-2 border-r border-[#2A2A2A]">
+        <div className="flex items-center gap-1 pr-2 border-r border-[#1c1c1c]">
           <button
             onClick={handleImageClick}
-            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#1A1A1A] hover:text-white transition-all"
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#111111] hover:text-white transition-all"
             title="Upload Image"
           >
             <ImageIcon size={18} />
@@ -173,10 +173,10 @@ export function NoteCanvasToolbar({
         </div>
 
         {/* Zoom controls */}
-        <div className="flex items-center gap-1 pr-2 border-r border-[#2A2A2A]">
+        <div className="flex items-center gap-1 pr-2 border-r border-[#1c1c1c]">
           <button
             onClick={handleZoomOut}
-            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#1A1A1A] hover:text-white transition-all"
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#111111] hover:text-white transition-all"
             title="Zoom Out"
           >
             <ZoomOut size={18} />
@@ -186,7 +186,7 @@ export function NoteCanvasToolbar({
           </span>
           <button
             onClick={handleZoomIn}
-            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#1A1A1A] hover:text-white transition-all"
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#111111] hover:text-white transition-all"
             title="Zoom In"
           >
             <ZoomIn size={18} />
@@ -194,10 +194,10 @@ export function NoteCanvasToolbar({
         </div>
 
         {/* Color picker */}
-        <div className="relative flex items-center gap-1 pr-2 border-r border-[#2A2A2A]">
+        <div className="relative flex items-center gap-1 pr-2 border-r border-[#1c1c1c]">
           <button
             onClick={() => setShowColorPicker(!showColorPicker)}
-            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#1A1A1A] hover:text-white transition-all flex items-center gap-1"
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#111111] hover:text-white transition-all flex items-center gap-1"
             title="Color"
           >
             <Palette size={18} />
@@ -212,7 +212,7 @@ export function NoteCanvasToolbar({
         <div className="flex items-center gap-1">
           <button
             onClick={onToggleFullscreen}
-            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#1A1A1A] hover:text-white transition-all"
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#111111] hover:text-white transition-all"
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           >
             {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
@@ -222,13 +222,13 @@ export function NoteCanvasToolbar({
 
       {/* Shape picker menu */}
       {showShapeMenu && (
-        <div className="absolute bottom-full left-0 mb-2 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg shadow-lg p-2">
+        <div className="absolute bottom-full left-0 mb-2 bg-[#000000] border border-[#1c1c1c] rounded-lg shadow-lg p-2">
           <div className="flex flex-col gap-1">
             {shapes.map((shape) => (
               <button
                 key={shape.type}
                 onClick={() => handleShapeSelect(shape.type)}
-                className="flex items-center gap-2 px-3 py-2 rounded-md text-[#a1a1aa] hover:bg-[#1A1A1A] hover:text-white transition-all text-sm"
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-[#a1a1aa] hover:bg-[#111111] hover:text-white transition-all text-sm"
               >
                 {shape.icon}
                 <span>{shape.label}</span>
@@ -240,7 +240,7 @@ export function NoteCanvasToolbar({
 
       {/* Color picker menu */}
       {showColorPicker && (
-        <div className="absolute bottom-full right-16 mb-2 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg shadow-lg p-3">
+        <div className="absolute bottom-full right-16 mb-2 bg-[#000000] border border-[#1c1c1c] rounded-lg shadow-lg p-3">
           <div className="grid grid-cols-5 gap-2">
             {PRESET_COLORS.map((color) => (
               <button

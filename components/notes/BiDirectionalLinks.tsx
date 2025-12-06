@@ -99,11 +99,11 @@ export function BiDirectionalLinks({ noteId, onNavigateToNote }: BiDirectionalLi
         <div className="flex items-center gap-2 text-sm text-[#a1a1aa]">
           <Link size={14} />
           <span>Bi-Directional Links</span>
-          <span className="text-xs bg-[#1A1A1A] px-1.5 py-0.5 rounded">
+          <span className="text-xs bg-[#111111] px-1.5 py-0.5 rounded">
             {backlinks.length}
           </span>
         </div>
-        <span className="text-xs text-[#4433FF] group-hover:text-white transition-colors">
+        <span className="text-xs text-[#0043ff] group-hover:text-white transition-colors">
           {isExpanded ? 'Hide' : 'Show'}
         </span>
       </button>
@@ -119,9 +119,9 @@ export function BiDirectionalLinks({ noteId, onNavigateToNote }: BiDirectionalLi
               <button
                 key={note.id}
                 onClick={() => onNavigateToNote?.(note.id)}
-                className="w-full flex items-start gap-3 p-3 rounded-lg bg-[#0E0E0E] hover:bg-[#1A1A1A] transition-colors text-left"
+                className="w-full flex items-start gap-3 p-3 rounded-lg bg-[#0a0a0a] hover:bg-[#111111] transition-colors text-left"
               >
-                <FileText size={16} className="text-[#4433FF] mt-0.5 shrink-0" />
+                <FileText size={16} className="text-[#0043ff] mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <div className="text-sm text-white font-medium truncate">
                     {note.title || 'Untitled'}

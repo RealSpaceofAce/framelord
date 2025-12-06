@@ -969,7 +969,7 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
   }, [theme]);
 
   // CRITICAL: Use #0A0A0A for dark mode (matches brand palette)
-  const bgColor = theme === 'light' ? '#ffffff' : '#0A0A0A';
+  const bgColor = theme === 'light' ? '#ffffff' : '#000000';
   const textColor = theme === 'light' ? '#1f2937' : '#fafafa';
   const mutedColor = theme === 'light' ? '#6b7280' : '#71717a';
 

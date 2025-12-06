@@ -301,8 +301,8 @@ export function BlockSuiteCanvasEditor({ docId, theme = 'dark', onContentChange 
     }
   }, [getViewport]);
 
-  // Theme-based colors - UNIFIED: #0A0A0A for dark mode (brand palette)
-  const bgColor = theme === 'light' ? '#f9fafb' : '#0A0A0A';
+  // Theme-based colors - BRAND: #000000 for dark mode (pure black)
+  const bgColor = theme === 'light' ? '#f9fafb' : '#000000';
   const textColor = theme === 'light' ? '#1f2937' : '#fafafa';
   const mutedColor = theme === 'light' ? '#6b7280' : '#71717a';
 
