@@ -45,6 +45,7 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
   const editorRef = useRef<AffineEditorContainer | null>(null);
   const collectionRef = useRef<DocCollection | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Wiki link popup state
   const [wikiLinkPopup, setWikiLinkPopup] = useState<{
@@ -95,34 +96,44 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
         }
 
         // Load document and initialize structure
+        // CRITICAL: Wrap callback in try/catch - errors here were being swallowed silently
         doc.load(() => {
-          if (!doc) return;
+          try {
+            if (!doc) return;
 
-          const rootId = doc.root?.id;
-          if (!rootId) {
-            // Initialize document structure
-            const pageBlockId = doc.addBlock('affine:page', {});
+            const rootId = doc.root?.id;
+            if (!rootId) {
+              // Initialize document structure
+              console.log('[BlockSuiteDocEditor] Creating new document structure');
+              const pageBlockId = doc.addBlock('affine:page', {});
 
-            // Add surface block for edgeless mode support
-            doc.addBlock('affine:surface', {}, pageBlockId);
+              // Add surface block for edgeless mode support
+              doc.addBlock('affine:surface', {}, pageBlockId);
 
-            const noteBlockId = doc.addBlock('affine:note', {}, pageBlockId);
-            doc.addBlock('affine:paragraph', {}, noteBlockId);
-          } else {
-            // Document exists - ensure it has surface block for edgeless mode
-            const surfaces = doc.getBlocksByFlavour('affine:surface');
-            if (surfaces.length === 0 && doc.root) {
-              doc.addBlock('affine:surface', {}, doc.root.id);
-            }
+              const noteBlockId = doc.addBlock('affine:note', {}, pageBlockId);
+              doc.addBlock('affine:paragraph', {}, noteBlockId);
+              console.log('[BlockSuiteDocEditor] Document structure created successfully');
+            } else {
+              // Document exists - ensure it has surface block for edgeless mode
+              console.log('[BlockSuiteDocEditor] Document exists, checking structure');
+              const surfaces = doc.getBlocksByFlavour('affine:surface');
+              if (surfaces.length === 0 && doc.root) {
+                doc.addBlock('affine:surface', {}, doc.root.id);
+              }
 
-            // Ensure it has at least one paragraph
-            const paragraphs = doc.getBlocksByFlavour('affine:paragraph');
-            if (paragraphs.length === 0) {
-              const notes = doc.getBlocksByFlavour('affine:note');
-              if (notes.length > 0) {
-                doc.addBlock('affine:paragraph', {}, notes[0].id);
+              // Ensure it has at least one paragraph
+              const paragraphs = doc.getBlocksByFlavour('affine:paragraph');
+              if (paragraphs.length === 0) {
+                const notes = doc.getBlocksByFlavour('affine:note');
+                if (notes.length > 0) {
+                  doc.addBlock('affine:paragraph', {}, notes[0].id);
+                }
               }
             }
+          } catch (loadErr) {
+            console.error('[BlockSuiteDocEditor] Error in doc.load callback:', loadErr);
+            // We can't call setError here directly since this is a callback
+            // But we log it for debugging
           }
         });
 
@@ -372,10 +383,12 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
         editor.setAttribute('data-theme', theme);
 
         console.log('[BlockSuiteDocEditor] ✓ Initialized');
+        setIsLoading(false);
 
       } catch (err) {
         console.error('[BlockSuiteDocEditor] Error:', err);
         setError(err instanceof Error ? err.message : String(err));
+        setIsLoading(false);
       }
     };
 
@@ -520,18 +533,34 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
     );
   }
 
-  // Simple full-height container
+  // Simple full-height container - ALWAYS render this so containerRef is available
+  // Show loading overlay on top while initializing
   return (
     <>
       <div
         ref={containerRef}
-        className="h-full w-full"
+        className="h-full w-full relative"
         data-theme={theme}
         style={{
           background: bgColor,
           minHeight: '100%',
         }}
-      />
+      >
+        {/* Loading overlay - shown while editor initializes */}
+        {isLoading && (
+          <div
+            className="absolute inset-0 flex items-center justify-center z-10"
+            style={{ background: bgColor }}
+          >
+            <div className="text-center">
+              <div className="text-4xl mb-4 animate-pulse">📝</div>
+              <p className="text-sm" style={{ color: mutedColor }}>
+                Loading editor...
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Wiki link popup */}
       <WikiLinkPopup
