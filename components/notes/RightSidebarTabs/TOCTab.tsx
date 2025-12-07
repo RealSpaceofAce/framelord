@@ -58,6 +58,7 @@ export const TOCTab: React.FC<TOCTabProps> = ({
           Table of Contents
         </h3>
         <button
+          onClick={() => alert('Coming soon')}
           className="p-1.5 rounded transition-colors"
           style={{ color: colors.textMuted }}
           title="TOC Settings"
@@ -82,6 +83,7 @@ export const TOCTab: React.FC<TOCTabProps> = ({
             {headings.map((heading, index) => (
               <button
                 key={heading.id}
+                onClick={() => alert('Jumping to headings is coming soon!')}
                 className="w-full text-left px-2 py-1.5 rounded text-xs transition-colors hover:bg-white/5"
                 style={{
                   paddingLeft: `${(heading.level - 1) * 12 + 8}px`,

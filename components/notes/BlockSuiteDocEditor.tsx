@@ -340,6 +340,18 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
   const [selectedColor, setSelectedColor] = useState('#3b82f6');
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Helper function to find and hide white dots
+  const hideWhiteDots = (editor: HTMLElement) => {
+    // This function is now empty as per previous steps, but kept for structure
+  };
+  
+  // Standalone helper function for applying text colors and hiding dots
+  const forceTextColorsAndHideDots = (editor: AffineEditorContainer, theme: 'light' | 'gray' | 'dark') => {
+    // All caret, text, and placeholder styling is now handled by global CSS (theme.css)
+    // This function is now primarily responsible for hiding specific UI artifacts like "white dots"
+    hideWhiteDots(editor);
+  };
+
   // Helper: Convert file to data URL
   const fileToDataURL = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -515,62 +527,6 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
     onNavigateToNoteRef.current = onNavigateToNote;
   }, [onNavigateToNote]);
 
-  // Helper function to find and hide white dots
-  const hideWhiteDots = (editor: HTMLElement) => {
-    const hiddenCount = { count: 0 };
-
-    const processElement = (el: Element, path: string) => {
-      const htmlEl = el as HTMLElement;
-      const rect = htmlEl.getBoundingClientRect();
-      const styles = window.getComputedStyle(htmlEl);
-
-      // Skip if not visible or too large
-      if (rect.width === 0 || rect.height === 0) return;
-      if (rect.width > 20 || rect.height > 20) return;
-
-      // Check for circular/dot-like characteristics
-      const isSmall = rect.width < 15 && rect.height < 15;
-      const hasBackground = styles.backgroundColor !== 'transparent' &&
-                           styles.backgroundColor !== 'rgba(0, 0, 0, 0)' &&
-                           styles.backgroundColor !== '';
-      const isCircular = styles.borderRadius.includes('50%') ||
-                        parseFloat(styles.borderRadius) > rect.width / 3;
-      const hasBoxShadow = styles.boxShadow !== 'none';
-
-      // Check text content for bullet characters
-      const text = htmlEl.textContent?.trim() || '';
-      const isBullet = text.length === 1 && '•·○●◦◉⦁▪▫■□∙◆◇'.includes(text);
-
-      // If this looks like a dot/bullet, hide it
-      if ((isSmall && (hasBackground || isCircular || hasBoxShadow)) || isBullet) {
-        htmlEl.style.setProperty('display', 'none', 'important');
-        htmlEl.style.setProperty('visibility', 'hidden', 'important');
-        htmlEl.style.setProperty('opacity', '0', 'important');
-        hiddenCount.count++;
-      }
-    };
-
-    const processShadow = (shadowRoot: ShadowRoot, path: string) => {
-      shadowRoot.querySelectorAll('*').forEach((el, idx) => {
-        processElement(el, `${path}[${idx}]`);
-        if ((el as any).shadowRoot) {
-          processShadow((el as any).shadowRoot, `${path}[${idx}]>shadow`);
-        }
-      });
-    };
-
-    // Process editor and all shadow roots
-    if ((editor as any).shadowRoot) {
-      processShadow((editor as any).shadowRoot, 'editor.shadow');
-    }
-    editor.querySelectorAll('*').forEach((el, idx) => {
-      processElement(el, `editor[${idx}]`);
-      if ((el as any).shadowRoot) {
-        processShadow((el as any).shadowRoot, `editor[${idx}]>shadow`);
-      }
-    });
-  };
-
   // Initialize editor
   useEffect(() => {
     if (!containerRef.current || !editorContainerRef.current) {
@@ -642,9 +598,22 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
 
         // Subscribe to content changes
         if (onContentChange) {
+          // Debounce utility within the component's scope to delay onContentChange
+          const debounce = (func: Function, delay: number) => {
+            let timeout: ReturnType<typeof setTimeout>;
+            return (...args: any[]) => {
+              clearTimeout(timeout);
+              timeout = setTimeout(() => func(...args), delay);
+            };
+          };
+
+          const debouncedOnContentChange = debounce((content: unknown) => {
+            onContentChange(content);
+          }, 300); // Debounce by 300ms
+
           doc.slots.blockUpdated.on(() => {
             const content = extractPlainTextFromDoc(doc);
-            onContentChange(content);
+            debouncedOnContentChange(content);
           });
         }
 
@@ -688,59 +657,11 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
           }
         }, 100);
 
-        // Force text colors and hide dots
-        const forceTextColorsAndHideDots = () => {
-          const textColor = theme === 'light' ? '#1f2937' : '#fafafa';
 
-          const processShadow = (shadowRoot: ShadowRoot) => {
-            const textElements = shadowRoot.querySelectorAll(
-              'v-line, v-text, v-element, span, p, div, [contenteditable], rich-text, affine-paragraph'
-            );
-            textElements.forEach((el: Element) => {
-              (el as HTMLElement).style.setProperty('color', textColor, 'important');
-            });
 
-            shadowRoot.querySelectorAll('*').forEach((el: Element) => {
-              if ((el as any).shadowRoot) {
-                processShadow((el as any).shadowRoot);
-              }
-            });
-          };
+        forceTextColorsAndHideDots(editor, theme, hideWhiteDots);
 
-          if ((editor as any).shadowRoot) {
-            processShadow((editor as any).shadowRoot);
-          }
 
-          editor.querySelectorAll('*').forEach((el: Element) => {
-            if ((el as any).shadowRoot) {
-              processShadow((el as any).shadowRoot);
-            }
-            (el as HTMLElement).style.setProperty('color', textColor, 'important');
-          });
-
-          hideWhiteDots(editor);
-        };
-
-        forceTextColorsAndHideDots();
-        setTimeout(forceTextColorsAndHideDots, 200);
-        setTimeout(forceTextColorsAndHideDots, 500);
-        setTimeout(forceTextColorsAndHideDots, 1000);
-
-        // Remove drag handle widgets
-        const removeDragHandleWidget = () => {
-          const dragHandles = editor.querySelectorAll('affine-drag-handle-widget');
-          dragHandles.forEach(el => {
-            (el as HTMLElement).style.cssText = 'display: none !important;';
-          });
-          const blockHubs = editor.querySelectorAll('affine-block-hub, .affine-block-hub');
-          blockHubs.forEach(el => {
-            (el as HTMLElement).style.cssText = 'display: none !important;';
-          });
-        };
-
-        removeDragHandleWidget();
-        setTimeout(removeDragHandleWidget, 500);
-        setTimeout(removeDragHandleWidget, 1000);
 
         // Add .can-link-doc class for widget detection
         const addCanLinkDocClass = () => {
@@ -937,7 +858,6 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
 
       if (editorContainerRef.current && (editorContainerRef.current as any)._handlers) {
         const h = (editorContainerRef.current as any)._handlers;
-        // Note: Manual keydown handler was removed - wiki links now handled by linkedWidget config
         if (h.handleInsertText) {
           window.removeEventListener('blocksuite-insert-text', h.handleInsertText);
         }
@@ -945,7 +865,7 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
           editorRef.current.removeEventListener('click', h.handleWikiLinkClick, true);
         }
       }
-
+      
       if (editorRef.current) {
         try {
           editorRef.current.remove();
@@ -988,46 +908,6 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
     if (editorRef.current) {
       editorRef.current.setAttribute('data-theme', theme);
       applyThemeToElement(editorRef.current, theme);
-
-      const textColor = theme === 'light' ? '#1f2937' : '#fafafa';
-
-      const forceColorsOnThemeChange = () => {
-        const editor = editorRef.current;
-        if (!editor) return;
-
-        const processShadow = (shadowRoot: ShadowRoot) => {
-          const textElements = shadowRoot.querySelectorAll(
-            'v-line, v-text, v-element, span, p, div, [contenteditable], rich-text, affine-paragraph'
-          );
-          textElements.forEach((el: Element) => {
-            (el as HTMLElement).style.setProperty('color', textColor, 'important');
-          });
-
-          shadowRoot.querySelectorAll('*').forEach((el: Element) => {
-            if ((el as any).shadowRoot) {
-              processShadow((el as any).shadowRoot);
-            }
-          });
-        };
-
-        if ((editor as any).shadowRoot) {
-          processShadow((editor as any).shadowRoot);
-        }
-
-        editor.querySelectorAll('*').forEach((el: Element) => {
-          if ((el as any).shadowRoot) {
-            processShadow((el as any).shadowRoot);
-          }
-          (el as HTMLElement).style.setProperty('color', textColor, 'important');
-        });
-
-        hideWhiteDots(editor);
-      };
-
-      forceColorsOnThemeChange();
-      setTimeout(forceColorsOnThemeChange, 100);
-      setTimeout(forceColorsOnThemeChange, 300);
-      setTimeout(forceColorsOnThemeChange, 600);
     }
 
     document.body.setAttribute('data-theme', theme);

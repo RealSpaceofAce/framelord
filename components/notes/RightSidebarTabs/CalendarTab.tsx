@@ -244,6 +244,7 @@ export const CalendarTab: React.FC<CalendarTabProps> = ({
       {/* Template Card */}
       <div className="px-4 py-3 border-b" style={{ borderColor: colors.border }}>
         <button
+          onClick={() => alert('Coming soon')}
           className="w-full p-3 rounded-lg text-left transition-colors hover:bg-white/5"
           style={{ background: colors.hover }}
         >

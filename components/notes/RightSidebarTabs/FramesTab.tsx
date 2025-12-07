@@ -93,6 +93,7 @@ export const FramesTab: React.FC<FramesTabProps> = ({
           All frames
         </h3>
         <button
+          onClick={() => alert('Coming soon')}
           className="p-1.5 rounded transition-colors"
           style={{ color: colors.textMuted }}
           title="Frame Settings"

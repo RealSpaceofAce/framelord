@@ -110,13 +110,11 @@
 
 /* Light Mode */
 .light-mode {
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F5F5F5;
-  --bg-tertiary: #E5E5E5;
-  --border-color: #D1D5DB;
-  --text-primary: #111827;
-  --text-secondary: #6B7280;
-  --accent-color: #4433FF;
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.75rem;
+  --spacing-lg: 1rem;
+  --spacing-xl: 1.25rem;
 }
 
 .light-mode body {
@@ -195,10 +193,22 @@
 .compact-mode .text-lg {
   font-size: 1rem !important;
 }
-
-
-
-
-
-
-
+/* FORCE CURSOR VISIBILITY */
+affine-editor-container,
+affine-editor-container .ProseMirror,
+affine-editor-container [contenteditable="true"] {
+    caret-color: #ffffff !important;
+}
+/*
+  =============================================================================
+   CRITICAL WIKI-LINK INLINE FIX
+  =============================================================================
+  This ensures that not only the wiki-link but its direct custom-element 
+  wrappers (`v-line`, `v-text`) are also forced to be inline elements, 
+  preventing them from creating new lines in a paragraph.
+  =============================================================================
+*/
+[contenteditable] v-line,
+[contenteditable] v-text {
+  display: inline !important;
+}

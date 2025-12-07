@@ -29,10 +29,10 @@ affine-editor-container {
   --affine-text-primary-color: #ffffff;
   --affine-text-secondary-color: #a1a1aa;
   --affine-text-disable-color: #52525b;
-  --affine-caret-color: #ffffff;
+  --affine-caret-color: var(--affine-primary-color);
   --affine-text-emphasis-color: #0043ff;
   --affine-edgeless-text-color: #ffffff;
-  --affine-placeholder-color: #52525b;
+  --affine-placeholder-color: #71717a;
   --affine-quote-color: #6a82fc;
   --affine-code-color: #0099ff;
 
@@ -47,6 +47,7 @@ affine-editor-container {
   --affine-success-color: #10b981;
   --affine-warning-color: #f59e0b;
   --affine-error-color: #ef4444;
+  --affine-accent-color-selected: rgba(0, 67, 255, 0.6); /* Slightly darker blue for selected state */
 
   /* ===== Interactive colors ===== */
   --affine-hover-color: rgba(0, 67, 255, 0.08);
@@ -115,7 +116,7 @@ affine-editor-container {
   --affine-text-primary-color: #1f2937;
   --affine-text-secondary-color: #6b7280;
   --affine-text-disable-color: #9ca3af;
-  --affine-caret-color: #1f2937;
+  --affine-caret-color: var(--affine-primary-color);
   --affine-text-emphasis-color: #6366f1;
   --affine-edgeless-text-color: #1f2937;
   --affine-placeholder-color: #9ca3af;
@@ -137,6 +138,7 @@ affine-editor-container {
   /* ===== Link colors ===== */
   --affine-link-color: #0043ff;
   --affine-link-visited-color: #0033cc;
+  --affine-accent-color-selected: rgba(0, 67, 255, 0.6); /* Consistent selected state color for light theme */
 
   /* ===== Grid (edgeless) — Light mode ===== */
   --affine-edgeless-grid-color: rgba(0, 67, 255, 0.15);
@@ -167,7 +169,6 @@ affine-editor-container {
   width: 100%;
   height: 100%;
   min-height: 100%;
-  caret-color: var(--affine-caret-color, var(--affine-text-primary-color));
   /* Use CSS variable for background so it picks up theme colors */
   background: var(--affine-background-primary-color);
   color: var(--affine-text-primary-color);
@@ -370,19 +371,15 @@ rich-text,
 .inline-editor,
 [contenteditable="true"] {
   color: var(--affine-text-primary-color) !important;
-  caret-color: var(--affine-primary-color) !important;
+  caret-color: var(--affine-caret-color) !important; /* Consolidated cursor color */
   outline: none !important;
-  /* Ensure cursor is visible and properly styled */
   caret-shape: bar;
-  /* Important: position relative for proper cursor rendering */
   position: relative;
 }
 
 /* Ensure focus state shows cursor clearly with high visibility */
 .inline-editor:focus,
 [contenteditable="true"]:focus {
-  caret-color: var(--affine-primary-color) !important;
-  /* Force cursor visibility */
   cursor: text !important;
 }
 
@@ -397,19 +394,6 @@ affine-editor-container:empty::before,
   content: '';
   display: block;
   min-height: 100px;
-}
-
-/* Cursor visibility for all themes */
-.inline-editor,
-[contenteditable="true"],
-.affine-paragraph-rich-text-wrapper {
-  caret-color: currentColor !important;
-}
-
-/* Dark mode cursor */
-[data-theme="dark"] .inline-editor,
-[data-theme="dark"] [contenteditable="true"] {
-  caret-color: #ffffff !important;
 }
 
 /* Placeholder text */
@@ -1094,18 +1078,46 @@ affine-page-root *:focus-visible {
 }
 
 /* =============================================================================
-   DRAG HANDLE
+   DRAG HANDLE / BLOCK INDICATOR (Pill)
    ============================================================================= */
 
 affine-drag-handle-widget,
 .affine-drag-handle {
-  color: var(--affine-icon-secondary) !important;
-  opacity: 0 !important;
-  transition: opacity 0.2s ease !important;
+  position: absolute;
+  left: -28px; /* Position to the left of the block */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px; /* Thin pill */
+  height: 20px; /* Pill height */
+  border-radius: 2px; /* Rounded corners for pill shape */
+  background-color: var(--affine-primary-color); /* Accent color */
+  opacity: 0; /* Hidden by default */
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  pointer-events: none; /* Do not interfere with mouse events */
+  z-index: 10;
 }
 
-.affine-block-children-container:hover affine-drag-handle-widget {
+/* Show on hover of the block children container (paragraph) */
+.affine-block-children-container:hover affine-drag-handle-widget,
+.affine-block-children-container:hover .affine-drag-handle,
+/* Show on focus of the contenteditable element (when typing) */
+.affine-block-children-container:focus-within affine-drag-handle-widget,
+.affine-block-children-container:focus-within .affine-drag-handle,
+[contenteditable="true"]:focus-within + affine-drag-handle-widget { /* Fallback for direct focus */
   opacity: 1 !important;
+}
+
+/* Adjust color when the block is selected */
+.affine-block-children-container.is-selected affine-drag-handle-widget,
+.affine-block-children-container.is-selected .affine-drag-handle,
+.affine-block-children-container[data-selected="true"] affine-drag-handle-widget,
+.affine-block-children-container[data-selected="true"] .affine-drag-handle {
+  background-color: var(--affine-accent-color-selected); /* A distinct color for selection */
+}
+
+/* Ensure parent has relative positioning for absolute child */
+.affine-block-children-container {
+  position: relative;
 }
 
 /* =============================================================================

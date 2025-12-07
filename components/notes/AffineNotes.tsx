@@ -716,10 +716,10 @@ export const AffineNotes: React.FC = () => {
                 <div className="px-2 py-2 text-xs" style={{ color: colors.textMuted }}>No collections yet</div>
               ) : (
                 collections.map(collection => (
-                  <button
+                  <div
                     key={collection.id}
                     onClick={() => { setSidebarView('collection'); setSelectedCollectionId(collection.id); setMainTab('collections'); setSelectedPageId(null); }}
-                    className="w-full flex items-center gap-2 px-2 py-1 rounded text-sm text-left group"
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded text-sm text-left group cursor-pointer"
                     style={{
                       background: sidebarView === 'collection' && selectedCollectionId === collection.id ? colors.active : 'transparent',
                       color: colors.text,
@@ -736,7 +736,7 @@ export const AffineNotes: React.FC = () => {
                     >
                       <X size={12} style={{ color: colors.textMuted }} />
                     </button>
-                  </button>
+                  </div>
                 ))
               )}
             </CollapsibleSection>

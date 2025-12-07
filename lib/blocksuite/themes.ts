@@ -172,7 +172,7 @@ export const darkTheme: EditorThemeVariables = {
   '--affine-text-primary-color': '#ffffff',
   '--affine-text-secondary-color': '#a1a1aa',
   '--affine-text-disable-color': '#52525b',
-  '--affine-placeholder-color': '#52525b',
+  '--affine-placeholder-color': '#71717a',
 
   // Brand — Blue accent #0043ff (for UI elements, selections, and links)
   '--affine-primary-color': '#0043ff',

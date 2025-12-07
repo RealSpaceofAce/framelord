@@ -1094,10 +1094,9 @@ const DashboardOverview: React.FC = () => {
                                     <div className="w-2 h-2 rounded-full bg-blue-500" />
                                     <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Scans Completed</h3>
                                 </div>
-                                <div className="text-5xl font-display font-bold text-white">{scansDone}</div>
-                            </div>
-                            <Settings size={16} className="text-gray-700" />
-                        </div>
+                                                            <div className="text-5xl font-display font-bold text-white">{scansDone}</div>
+                                                        </div>
+                                                        <Settings size={16} className="text-gray-700" onClick={() => alert('Coming soon')} />                        </div>
                         <div className="flex items-center justify-between mt-4">
                             <span className="text-xs text-gray-600">WEEKLY SCOPE</span>
                             <TrendingUp size={20} className="text-blue-500" />
@@ -1115,7 +1114,7 @@ const DashboardOverview: React.FC = () => {
                                 </div>
                                 <div className="text-5xl font-display font-bold text-white">{leaks}</div>
                             </div>
-                            <Settings size={16} className="text-gray-700" />
+                            <Settings size={16} className="text-gray-700" onClick={() => alert('Coming soon')} />
                         </div>
                         <div className="flex items-center justify-between mt-4">
                             <span className="text-xs text-gray-600">IN VALIDATION TRAPS</span>
@@ -1134,7 +1133,7 @@ const DashboardOverview: React.FC = () => {
                                 </div>
                                 <div className="text-5xl font-display font-bold text-white">{tasksDue}</div>
                             </div>
-                            <Settings size={16} className="text-gray-700" />
+                            <Settings size={16} className="text-gray-700" onClick={() => alert('Coming soon')} />
                         </div>
                         <div className="flex items-center justify-between mt-4">
                             <span className="text-xs text-gray-600">4 WEEKS 🔥 STREAK</span>
