@@ -1,9 +1,7 @@
 // =============================================================================
 // NOTES COMPONENTS — Export barrel
 // =============================================================================
+// NOTE: BlockSuite components moved to _legacy/blocksuite for v1 markdown migration
 
-// Main AFFiNE-style notes module (use this)
+// Main notes module (use this)
 export { AffineNotes } from './AffineNotes';
-
-// Core BlockSuite editor (used internally)
-export { BlockSuiteDocEditor } from './BlockSuiteDocEditor';

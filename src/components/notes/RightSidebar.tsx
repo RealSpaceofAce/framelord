@@ -1,13 +1,12 @@
 // =============================================================================
 // RIGHT SIDEBAR — Tabbed interface for Notes (AFFiNE-style)
 // =============================================================================
-// Complete redesign with 6 tabs:
+// Complete redesign with 5 tabs:
 // 1. AI (✨) - LittleLord chat
 // 2. TOC (📋) - Table of Contents
 // 3. Calendar (📅) - Journal calendar + entries
 // 4. Outline (☰) - Document outline
-// 5. Frames (🔲) - Edgeless frames/presentation
-// 6. Comments (💬) - Document comments
+// 5. Comments (💬) - Document comments
 //
 // IMPORTANT: NO gray overlay, sidebar sits alongside content
 // =============================================================================
@@ -20,14 +19,12 @@ import {
   List,
   Calendar,
   Menu,
-  Grid3X3,
   MessageCircle,
 } from 'lucide-react';
 import { AITab } from './RightSidebarTabs/AITab';
 import { TOCTab } from './RightSidebarTabs/TOCTab';
 import { CalendarTab } from './RightSidebarTabs/CalendarTab';
 import { OutlineTab } from './RightSidebarTabs/OutlineTab';
-import { FramesTab } from './RightSidebarTabs/FramesTab';
 import { CommentsTab } from './RightSidebarTabs/CommentsTab';
 
 const MotionDiv = motion.div as any;
@@ -36,7 +33,7 @@ const MotionDiv = motion.div as any;
 // TYPES
 // =============================================================================
 
-export type RightSidebarTab = 'ai' | 'toc' | 'calendar' | 'outline' | 'frames' | 'comments';
+export type RightSidebarTab = 'ai' | 'toc' | 'calendar' | 'outline' | 'comments';
 
 export interface RightSidebarProps {
   /** Whether sidebar is open */
@@ -67,8 +64,6 @@ export interface RightSidebarProps {
   onInsert?: (text: string) => void;
   /** Callback when new note created */
   onNoteCreated?: (noteId: string) => void;
-  /** Callback to switch to edgeless mode */
-  onSwitchToEdgeless?: () => void;
   /** Callback to navigate to a note */
   onNavigateToNote?: (noteId: string) => void;
   /** Callback when journal date selected */
@@ -91,7 +86,6 @@ const TABS: TabDefinition[] = [
   { id: 'toc', icon: <List size={16} />, label: 'TOC', title: 'Table of Contents' },
   { id: 'calendar', icon: <Calendar size={16} />, label: 'Calendar', title: 'Calendar & Journals' },
   { id: 'outline', icon: <Menu size={16} />, label: 'Outline', title: 'Document Outline' },
-  { id: 'frames', icon: <Grid3X3 size={16} />, label: 'Frames', title: 'Edgeless Frames' },
   { id: 'comments', icon: <MessageCircle size={16} />, label: 'Comments', title: 'Comments' },
 ];
 
@@ -113,7 +107,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   userId,
   onInsert,
   onNoteCreated,
-  onSwitchToEdgeless,
   onNavigateToNote,
   onJournalDateSelect,
 }) => {
@@ -175,7 +168,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             userId={userId}
             onInsert={onInsert}
             onNoteCreated={onNoteCreated}
-            onSwitchToEdgeless={onSwitchToEdgeless}
           />
         )}
         {activeTab === 'toc' && (
@@ -197,12 +189,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         {activeTab === 'outline' && (
           <OutlineTab
             noteContent={noteContent}
-            theme={theme}
-            colors={colors}
-          />
-        )}
-        {activeTab === 'frames' && (
-          <FramesTab
             theme={theme}
             colors={colors}
           />

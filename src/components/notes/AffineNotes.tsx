@@ -48,7 +48,7 @@ import {
   ScanLine,
   Loader2,
 } from 'lucide-react';
-import { BlockSuiteDocEditor } from './BlockSuiteDocEditor';
+import { MarkdownNoteEditor } from './MarkdownNoteEditor';
 import { BiDirectionalLinks } from './BiDirectionalLinks';
 import { RightSidebar, type RightSidebarTab } from './RightSidebar';
 import { NotesSettings } from './NotesSettings';
@@ -850,17 +850,6 @@ export const AffineNotes: React.FC = () => {
             setRefreshKey(k => k + 1);
             setSelectedPageId(noteId);
           }}
-          onSwitchToEdgeless={() => {
-            if (!selectedPage) return;
-
-            // Switch the current note to edgeless mode
-            updateNote(selectedPage.id, { preferredView: 'canvas' });
-            setRefreshKey(k => k + 1);
-
-            // Close right sidebar and show edgeless mode
-            setRightSidebarOpen(false);
-            console.log('Switched to edgeless mode');
-          }}
           onNavigateToNote={handleNavigateToNote}
           onJournalDateSelect={handleJournalDateSelect}
         />
@@ -1649,7 +1638,6 @@ const PageEditor: React.FC<PageEditorProps> = ({
   page, theme, colors, sidebarCollapsed, collections, folders, journalDates = [], onToggleSidebar, onToggleRightSidebar, onNavigateToNote, onTitleChange,
   onToggleTheme, onToggleFavorite, onAddToCollection, onJournalDateChange, onClose, onRefresh,
 }) => {
-  const [mode, setMode] = useState<'page' | 'edgeless'>('page');
   const [title, setTitle] = useState(page.title || '');
   const [showInfo, setShowInfo] = useState(false);
   const [icon, setIcon] = useState(page.icon || '');
@@ -1755,11 +1743,8 @@ const PageEditor: React.FC<PageEditorProps> = ({
       <div className="flex items-center gap-2 px-4 py-2 border-b" style={{ borderColor: colors.border }}>
         <button onClick={onToggleSidebar} className="p-1.5 rounded hover:bg-white/10" style={{ color: colors.textMuted }}><PanelLeft size={16} /></button>
         <div className="flex items-center gap-0.5 p-0.5 rounded-md" style={{ background: colors.hover }}>
-          <button onClick={() => setMode('page')} className={`p-1.5 rounded ${mode === 'page' ? 'bg-white/10' : ''}`} title="Page mode">
-            <FileText size={14} style={{ color: mode === 'page' ? colors.accent : colors.textMuted }} />
-          </button>
-          <button onClick={() => setMode('edgeless')} className={`p-1.5 rounded ${mode === 'edgeless' ? 'bg-white/10' : ''}`} title="Edgeless mode">
-            <GitBranch size={14} style={{ color: mode === 'edgeless' ? colors.accent : colors.textMuted }} />
+          <button className="p-1.5 rounded bg-white/10" title="Page mode">
+            <FileText size={14} style={{ color: colors.accent }} />
           </button>
         </div>
 
@@ -1943,7 +1928,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
               </div>
               <div className="flex justify-between items-center">
                 <span style={{ color: colors.textMuted }}>View mode</span>
-                <span style={{ color: colors.text }}>{mode === 'page' ? 'Page' : 'Edgeless'}</span>
+                <span style={{ color: colors.text }}>Page</span>
               </div>
               <div className="flex justify-between items-center">
                 <span style={{ color: colors.textMuted }}>Favorited</span>
@@ -1953,21 +1938,18 @@ const PageEditor: React.FC<PageEditorProps> = ({
           )}
 
           {/* Editor Content */}
-          <div
-            className={mode === 'edgeless' ? 'h-[600px] relative' : 'min-h-[300px]'}
-            style={{ background: colors.bg }}
-          >
-            <BlockSuiteDocEditor
-              docId={page.blocksuiteDocId || `doc_${page.id}`}
+          <div className="min-h-[300px]" style={{ background: colors.bg }}>
+            <MarkdownNoteEditor
+              content={page.content || ''}
               theme={theme}
-              mode={mode}
-              onContentChange={(content) => { updateNote(page.id, { content: String(content) }); }}
+              onContentChange={(content) => { updateNote(page.id, { content }); }}
               onNavigateToNote={onNavigateToNote}
+              placeholder="Start writing..."
             />
           </div>
 
           {/* Start buttons for empty pages */}
-          {isEmpty && mode === 'page' && (
+          {isEmpty && (
             <div className="mt-8 flex items-center gap-2">
               <span className="text-sm" style={{ color: colors.textMuted }}>Start</span>
               <button
@@ -1991,13 +1973,6 @@ const PageEditor: React.FC<PageEditorProps> = ({
                 style={{ background: colors.hover, color: colors.text }}
               >
                 Template <BookTemplate size={14} />
-              </button>
-              <button
-                onClick={() => setMode('edgeless')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors hover:opacity-80"
-                style={{ background: colors.hover, color: colors.text }}
-              >
-                Edgeless <GitBranch size={14} />
               </button>
             </div>
           )}

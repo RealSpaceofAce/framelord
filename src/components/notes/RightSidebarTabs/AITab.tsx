@@ -17,7 +17,6 @@ import {
   User,
   Plus,
   FileText,
-  GitBranch,
   Copy,
   Check,
   ChevronDown,
@@ -46,7 +45,6 @@ export interface AITabProps {
   userId?: string;
   onInsert?: (text: string) => void;
   onNoteCreated?: (noteId: string) => void;
-  onSwitchToEdgeless?: () => void;
 }
 
 // =============================================================================
@@ -74,7 +72,6 @@ export const AITab: React.FC<AITabProps> = ({
   userId = CONTACT_ZERO.id,
   onInsert,
   onNoteCreated,
-  onSwitchToEdgeless,
 }) => {
   const [messages, setMessages] = useState<LittleLordMessage[]>([]);
   const [input, setInput] = useState('');
@@ -203,12 +200,6 @@ export const AITab: React.FC<AITabProps> = ({
     }
   };
 
-  const handleAddToEdgeless = () => {
-    if (onSwitchToEdgeless && lastAssistantMessage) {
-      onSwitchToEdgeless();
-    }
-  };
-
   const displayName = getLittleLordDisplayName();
 
   return (
@@ -318,13 +309,6 @@ export const AITab: React.FC<AITabProps> = ({
             label="Insert"
             onClick={handleInsert}
             disabled={!onInsert}
-            colors={colors}
-          />
-          <ActionButton
-            icon={<GitBranch size={12} />}
-            label="Edgeless"
-            onClick={handleAddToEdgeless}
-            disabled={!onSwitchToEdgeless}
             colors={colors}
           />
           <ActionButton

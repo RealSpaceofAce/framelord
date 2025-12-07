@@ -12,10 +12,6 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@blocksuite/blocks": "^0.19.5",
-    "@blocksuite/inline": "^0.19.5",
-    "@blocksuite/presets": "^0.19.5",
-    "@blocksuite/store": "^0.19.5",
     "@excalidraw/excalidraw": "^0.18.0",
     "@google/genai": "^1.30.0",
     "@tiptap/extension-color": "^3.12.1",

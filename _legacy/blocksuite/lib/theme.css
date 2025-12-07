@@ -1,0 +1,1523 @@
+/* =============================================================================
+   BLOCKSUITE THEME — FrameLord Edition (Dark + Light)
+   =============================================================================
+   BlockSuite uses Shadow DOM, so we use CSS custom properties that penetrate.
+   ============================================================================= */
+
+/* =============================================================================
+   CSS CUSTOM PROPERTIES — Dark Mode (Default)
+   ============================================================================= */
+
+:root,
+.blocksuite-container,
+.blocksuite-note-editor,
+.blocksuite-editor-wrapper,
+affine-editor-container {
+  /* ===== Background colors — BRAND PALETTE: #000000 (pure black) ===== */
+  --affine-background-primary-color: #000000;
+  --affine-background-secondary-color: #000000;
+  --affine-background-tertiary-color: #0a0a0a; /* Changed from #111111 - closer to pure black */
+  --affine-background-overlay-panel-color: rgba(0, 0, 0, 0.98);
+  --affine-background-modal-color: #000000;
+  --affine-background-code-block: #050505; /* Changed from #0a0a0a - even closer to pure black */
+  --affine-background-error-color: rgba(239, 68, 68, 0.1);
+  --affine-background-success-color: rgba(16, 185, 129, 0.1);
+  --affine-background-warning-color: rgba(245, 158, 11, 0.1);
+  --affine-background-processing-color: rgba(99, 102, 241, 0.1);
+
+  /* ===== Text colors — High contrast for readability ===== */
+  --affine-text-primary-color: #ffffff;
+  --affine-text-secondary-color: #a1a1aa;
+  --affine-text-disable-color: #52525b;
+  --affine-caret-color: var(--affine-primary-color);
+  --affine-text-emphasis-color: #0043ff;
+  --affine-edgeless-text-color: #ffffff;
+  --affine-placeholder-color: #71717a;
+  --affine-quote-color: #6a82fc;
+  --affine-code-color: #0099ff;
+
+  /* ===== Border colors — Brand palette ===== */
+  --affine-border-color: #1c1c1c;
+  --affine-divider-color: #1c1c1c;
+
+  /* ===== Brand colors — #0043ff accent (bright blue) ===== */
+  --affine-primary-color: #0043ff;
+  --affine-secondary-color: #0099ff;
+  --affine-brand-color: #0043ff;
+  --affine-success-color: #10b981;
+  --affine-warning-color: #f59e0b;
+  --affine-error-color: #ef4444;
+  --affine-accent-color-selected: rgba(0, 67, 255, 0.6); /* Slightly darker blue for selected state */
+
+  /* ===== Interactive colors ===== */
+  --affine-hover-color: rgba(0, 67, 255, 0.08);
+  --affine-hover-color-filled: rgba(0, 67, 255, 0.15);
+  --affine-icon-color: #a1a1aa;
+  --affine-icon-secondary: #71717a;
+  --affine-tooltip-background: #0a0a0a; /* Changed from #111111 - closer to pure black */
+  --affine-tooltip-color: #ffffff;
+
+  /* ===== Link colors — BLUE for links (separate from regular text) ===== */
+  --affine-link-color: #0043ff;
+  --affine-link-visited-color: #0033cc;
+
+  /* ===== Selection ===== */
+  --affine-selected-color: rgba(0, 67, 255, 0.2);
+  --affine-block-selected-color: rgba(0, 67, 255, 0.08);
+
+  /* ===== White/Black ===== */
+  --affine-white: #ffffff;
+  --affine-black: #000000;
+
+  /* ===== Font — Modern system stack ===== */
+  --affine-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --affine-font-code-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+
+  /* ===== Line height — Comfortable reading ===== */
+  --affine-line-height: 1.7;
+
+  /* ===== Editor sizing — NO side padding, parent provides padding ===== */
+  --affine-editor-width: 100%;
+  --affine-editor-side-padding: 0px;
+
+  /* ===== Shadow — Softer shadows ===== */
+  --affine-shadow-1: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --affine-shadow-2: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --affine-shadow-3: 0 8px 32px rgba(0, 0, 0, 0.45);
+
+  /* ===== Radius — Slightly rounded ===== */
+  --affine-border-radius: 8px;
+
+  /* ===== Grid (edgeless) ===== */
+  --affine-edgeless-grid-color: rgba(0, 67, 255, 0.2);
+}
+
+/* =============================================================================
+   CSS CUSTOM PROPERTIES — Light Mode Overrides
+   ============================================================================= */
+
+[data-theme="light"],
+[data-theme="light"] .blocksuite-container,
+[data-theme="light"] .blocksuite-note-editor,
+[data-theme="light"] affine-editor-container {
+  /* ===== Background colors — Light theme ===== */
+  --affine-background-primary-color: #ffffff;
+  --affine-background-secondary-color: #f9fafb;
+  --affine-background-tertiary-color: #f3f4f6;
+  --affine-background-overlay-panel-color: rgba(255, 255, 255, 0.98);
+  --affine-background-modal-color: #ffffff;
+  --affine-background-code-block: #f3f4f6;
+  --affine-background-error-color: rgba(239, 68, 68, 0.1);
+  --affine-background-success-color: rgba(16, 185, 129, 0.1);
+  --affine-background-warning-color: rgba(245, 158, 11, 0.1);
+  --affine-background-processing-color: rgba(99, 102, 241, 0.1);
+
+  /* ===== Text colors — Dark text for light backgrounds ===== */
+  --affine-text-primary-color: #1f2937;
+  --affine-text-secondary-color: #6b7280;
+  --affine-text-disable-color: #9ca3af;
+  --affine-caret-color: var(--affine-primary-color);
+  --affine-text-emphasis-color: #6366f1;
+  --affine-edgeless-text-color: #1f2937;
+  --affine-placeholder-color: #9ca3af;
+  --affine-quote-color: #8b5cf6;
+  --affine-code-color: #0891b2;
+
+  /* ===== Border colors — Light theme borders ===== */
+  --affine-border-color: #e5e7eb;
+  --affine-divider-color: #e5e7eb;
+
+  /* ===== Interactive colors ===== */
+  --affine-hover-color: rgba(0, 67, 255, 0.08);
+  --affine-hover-color-filled: rgba(0, 67, 255, 0.15);
+  --affine-icon-color: #6b7280;
+  --affine-icon-secondary: #9ca3af;
+  --affine-tooltip-background: #1f2937;
+  --affine-tooltip-color: #ffffff;
+
+  /* ===== Link colors ===== */
+  --affine-link-color: #0043ff;
+  --affine-link-visited-color: #0033cc;
+  --affine-accent-color-selected: rgba(0, 67, 255, 0.6); /* Consistent selected state color for light theme */
+
+  /* ===== Grid (edgeless) — Light mode ===== */
+  --affine-edgeless-grid-color: rgba(0, 67, 255, 0.15);
+}
+
+/* In EDGELESS mode with light theme: note blocks should have light card styling */
+[data-theme="light"] .affine-edgeless-viewport .affine-note-block-container,
+[data-theme="light"] .affine-edgeless-viewport affine-note,
+[data-theme="light"] affine-edgeless-root .affine-note-block-container,
+[data-theme="light"] affine-edgeless-root affine-note,
+[data-theme="light"] affine-editor-container[data-mode="edgeless"] .affine-note-block-container,
+[data-theme="light"] affine-editor-container[data-mode="edgeless"] affine-note {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(229, 231, 235, 0.8) !important;
+  border-radius: 12px !important;
+  padding: 24px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* =============================================================================
+   CONTAINER STYLING
+   ============================================================================= */
+
+.blocksuite-container,
+.blocksuite-note-editor,
+.blocksuite-editor-wrapper {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  /* Use CSS variable for background so it picks up theme colors */
+  background: var(--affine-background-primary-color);
+  color: var(--affine-text-primary-color);
+  font-family: var(--affine-font-family);
+}
+
+/* AffineEditorContainer */
+affine-editor-container {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  /* Background is set via JavaScript applyThemeToElement - DO NOT use !important here */
+  background: var(--affine-background-primary-color);
+  color: var(--affine-text-primary-color) !important;
+  font-family: var(--affine-font-family) !important;
+  line-height: var(--affine-line-height) !important;
+}
+
+/* =============================================================================
+   HIDE BLOCKSUITE'S BUILT-IN TITLE — We use our own header bar
+   ============================================================================= */
+
+.affine-doc-page-block-title,
+.doc-title-container,
+[data-block-is-title="true"],
+.affine-page-root-block-title,
+affine-doc-page-block-title,
+.affine-default-page-block-title-container {
+  display: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Editor wrapper specific styles */
+.blocksuite-editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.blocksuite-editor-wrapper affine-editor-container {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* =============================================================================
+   PAGE MODE STYLING
+   ============================================================================= */
+
+/* Page viewport - no internal padding (parent container provides padding) */
+.affine-page-viewport,
+affine-page-root {
+  background: transparent !important;
+  padding: 0 !important;
+  min-height: 100% !important;
+}
+
+/* Doc container - full width, NO internal padding (parent container provides padding) */
+.affine-doc-viewport,
+.doc-container {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure note blocks in page mode have proper width and padding */
+affine-editor-container[data-mode="page"] .affine-note-block-container,
+affine-editor-container[data-mode="page"] affine-note {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Paragraphs and text */
+.affine-paragraph-block-container,
+affine-paragraph {
+  color: var(--affine-text-primary-color) !important;
+  font-size: 16px !important;
+  line-height: 1.75 !important;
+  margin: 0 0 4px 0 !important;
+  padding: 0 !important;
+  letter-spacing: -0.01em !important;
+  text-align: left !important;
+}
+
+/* Ensure all text content is left-aligned, not justified */
+.affine-rich-text,
+rich-text,
+[data-v-text],
+.inline-editor,
+[contenteditable="true"],
+.affine-block-children-container {
+  text-align: left !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Page root - no padding/margin for proper alignment */
+affine-page-root,
+.affine-page-root,
+affine-editor-container[data-mode="page"] {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure all editor text starts at left edge (aligned with title, tags, etc.) */
+affine-editor-container[data-mode="page"] .affine-block-children-container,
+affine-editor-container[data-mode="page"] affine-note,
+affine-editor-container[data-mode="page"] .affine-note-block-container {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* =============================================================================
+   CRITICAL: Override ALL BlockSuite internal padding for alignment
+   These target Shadow DOM elements via custom properties and direct selectors
+   ============================================================================= */
+
+/* Reset the side padding CSS variable everywhere */
+affine-editor-container,
+affine-editor-container *,
+.blocksuite-editor-wrapper,
+.blocksuite-editor-wrapper *,
+.blocksuite-note-editor,
+.blocksuite-note-editor *,
+affine-page-root,
+affine-page-root *,
+.affine-page-viewport,
+.affine-page-viewport * {
+  --affine-editor-side-padding: 0px !important;
+}
+
+/* Target the doc title container specifically */
+.affine-doc-page-block-title-container,
+.doc-title-container,
+[data-block-is-title="true"] {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Target the note container at every level */
+.affine-note,
+affine-note,
+.affine-note-block-container,
+[data-block-flavour="affine:note"] {
+  padding: 0 !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Target the block children container which holds paragraphs */
+.affine-block-children-container {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  padding-right: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Target paragraph blocks directly */
+[data-block-flavour="affine:paragraph"],
+.affine-paragraph,
+affine-paragraph,
+.affine-paragraph-block-container {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Override any indent styles that might cause misalignment */
+.affine-paragraph-block-container[data-indent="0"],
+affine-paragraph[data-indent="0"] {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Rich text content - ensure no left margin/padding */
+rich-text,
+.affine-rich-text,
+[data-v-text],
+v-line,
+v-text {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* Rich text content */
+.affine-rich-text,
+rich-text,
+[data-v-text] {
+  color: var(--affine-text-primary-color) !important;
+}
+
+/* Inline editor (contenteditable) - ENHANCED CURSOR VISIBILITY */
+.inline-editor,
+[contenteditable="true"] {
+  color: var(--affine-text-primary-color) !important;
+  caret-color: var(--affine-caret-color) !important; /* Consolidated cursor color */
+  outline: none !important;
+  caret-shape: bar;
+  position: relative;
+}
+
+/* Ensure focus state shows cursor clearly with high visibility */
+.inline-editor:focus,
+[contenteditable="true"]:focus {
+  cursor: text !important;
+}
+
+/* Make empty paragraphs show cursor (min-height ensures clickable area) */
+.affine-paragraph-block-container {
+  min-height: 1.75em;
+}
+
+/* Ensure the editor has a minimum clickable area when empty */
+affine-editor-container:empty::before,
+.blocksuite-container:empty::before {
+  content: '';
+  display: block;
+  min-height: 100px;
+}
+
+/* Placeholder text */
+[data-placeholder]::before,
+.affine-paragraph-placeholder::before {
+  color: var(--affine-placeholder-color) !important;
+  font-style: italic !important;
+}
+
+/* Placeholder styling for all modes */
+.affine-paragraph-rich-text-wrapper::placeholder,
+[contenteditable="true"]:empty::before {
+  color: var(--affine-placeholder-color, #71717a) !important;
+  opacity: 1 !important;
+}
+
+/* Hide placeholder underlines and lines */
+[data-placeholder]::after,
+.affine-paragraph-placeholder::after,
+.inline-editor::after,
+[contenteditable="true"]::after {
+  display: none !important;
+  border: none !important;
+}
+
+/* Remove any bottom borders on paragraphs */
+.affine-paragraph-block-container,
+affine-paragraph,
+.affine-block-children-container {
+  border-bottom: none !important;
+}
+
+/* =============================================================================
+   HEADINGS
+   ============================================================================= */
+
+[data-block-type="h1"],
+affine-paragraph[data-block-type="h1"] {
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  margin-top: 32px !important;
+  margin-bottom: 16px !important;
+  color: var(--affine-text-primary-color) !important;
+}
+
+[data-block-type="h2"],
+affine-paragraph[data-block-type="h2"] {
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-top: 28px !important;
+  margin-bottom: 14px !important;
+  color: var(--affine-text-primary-color) !important;
+}
+
+[data-block-type="h3"],
+affine-paragraph[data-block-type="h3"] {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-top: 24px !important;
+  margin-bottom: 12px !important;
+  color: var(--affine-text-primary-color) !important;
+}
+
+/* =============================================================================
+   LISTS — Only show bullets when user explicitly creates a list
+   ============================================================================= */
+
+affine-list,
+.affine-list-block-container {
+  color: var(--affine-text-primary-color) !important;
+}
+
+.list-block-prefix,
+affine-list::before {
+  color: var(--affine-primary-color) !important;
+}
+
+/* =============================================================================
+   HIDE DEFAULT BULLET/PLACEHOLDER INDICATORS
+   BlockSuite may show visual indicators (dots, circles) for empty blocks.
+   Hide these unless user explicitly creates a list.
+   ============================================================================= */
+
+/* Hide any bullet-like indicators on empty paragraphs */
+affine-paragraph:empty::before,
+affine-paragraph:empty::after,
+.affine-paragraph-block-container:empty::before,
+.affine-paragraph-block-container:empty::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Hide drag handle dots/circles when block is empty or not hovered */
+affine-drag-handle-widget,
+.affine-drag-handle,
+.block-hub-menu-container,
+.affine-block-hub {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Only show drag handle on explicit hover of a non-empty block */
+.affine-block-children-container:hover:not(:empty) affine-drag-handle-widget,
+.affine-block-children-container:hover:not(:empty) .affine-drag-handle {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Hide the block hub (plus button that appears on left) */
+.affine-block-hub,
+affine-block-hub,
+.block-hub-menu-container {
+  display: none !important;
+}
+
+/* Remove any left gutter/margin for list-like appearance on paragraphs */
+affine-paragraph,
+.affine-paragraph-block-container,
+[data-block-flavour="affine:paragraph"] {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* Ensure no bullet pseudo-elements on any block type */
+affine-note::before,
+affine-note::after,
+.affine-note-block-container::before,
+.affine-note-block-container::after,
+.affine-block-children-container::before,
+.affine-block-children-container::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* =============================================================================
+   HIDE ALL BLOCKSUITE VISUAL PLACEHOLDER INDICATORS
+   These include dots, circles, and other empty-state UI elements
+   ============================================================================= */
+
+/* Hide add-block widget (the + circle that appears on empty lines) */
+.affine-add-block-widget,
+affine-add-block-widget,
+.add-block-widget,
+.block-add-button,
+.affine-block-hub-menu,
+.affine-drag-indicator,
+.affine-paragraph-placeholder,
+.paragraph-placeholder,
+[data-widget-id],
+.widget-container {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Hide any circular UI indicators */
+.affine-note-block-container circle,
+affine-note circle,
+.affine-block-children-container circle,
+affine-paragraph circle {
+  display: none !important;
+}
+
+/* Hide SVG elements that might render circles/dots */
+affine-editor-container svg.placeholder-icon,
+affine-editor-container .placeholder-indicator,
+affine-editor-container .empty-indicator {
+  display: none !important;
+}
+
+/* Hide the inline toolbar/widget when empty */
+.inline-toolbar-widget,
+affine-inline-toolbar-widget {
+  display: none !important;
+}
+
+/* Reset any ::marker pseudo-elements */
+affine-paragraph::marker,
+.affine-paragraph-block-container::marker,
+affine-note::marker,
+.affine-note-block-container::marker {
+  content: none !important;
+  display: none !important;
+}
+
+/* Force hide list-style for non-list blocks */
+affine-paragraph,
+.affine-paragraph-block-container {
+  list-style: none !important;
+  list-style-type: none !important;
+}
+
+/* =============================================================================
+   CODE
+   ============================================================================= */
+
+/* Code blocks */
+affine-code,
+.affine-code-block-container {
+  background: var(--affine-background-code-block) !important;
+  border: 1px solid var(--affine-border-color) !important;
+  border-radius: var(--affine-border-radius) !important;
+  font-family: var(--affine-font-code-family) !important;
+  padding: 16px !important;
+  margin: 16px 0 !important;
+  overflow-x: auto !important;
+}
+
+/* Inline code */
+code {
+  background: rgba(99, 102, 241, 0.15) !important;
+  color: var(--affine-code-color) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-family: var(--affine-font-code-family) !important;
+  font-size: 0.9em !important;
+}
+
+/* =============================================================================
+   QUOTES
+   ============================================================================= */
+
+[data-block-type="quote"],
+blockquote {
+  border-left: 4px solid var(--affine-primary-color) !important;
+  padding-left: 16px !important;
+  color: var(--affine-text-secondary-color) !important;
+  font-style: italic !important;
+  margin: 16px 0 !important;
+}
+
+/* =============================================================================
+   LINKS
+   ============================================================================= */
+
+a,
+.affine-link {
+  color: var(--affine-link-color) !important;
+  text-decoration: none !important;
+  transition: color 0.2s ease !important;
+}
+
+a:hover,
+.affine-link:hover {
+  color: var(--affine-primary-color) !important;
+  text-decoration: underline !important;
+}
+
+/* =============================================================================
+   WIKI LINKS / LINKED DOC REFERENCES — WHITE text for visibility
+   ============================================================================= */
+
+/* Linked doc references (wiki links [[note]]) - WHITE text, NO highlighting whatsoever */
+affine-reference,
+.affine-reference,
+[data-reference],
+[data-linked-page],
+.linked-doc-reference,
+.reference-node,
+affine-reference *,
+.affine-reference *,
+[data-reference] *,
+[data-linked-page] *,
+.linked-doc-reference *,
+.reference-node * {
+  color: #ffffff !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+affine-reference:hover,
+.affine-reference:hover,
+[data-reference]:hover,
+[data-linked-page]:hover,
+.linked-doc-reference:hover,
+.reference-node:hover,
+affine-reference:hover *,
+.affine-reference:hover *,
+[data-reference]:hover *,
+[data-linked-page]:hover * {
+  color: #cccccc !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  text-decoration: none !important;
+}
+
+/* Light mode - linked references use dark text */
+[data-theme="light"] affine-reference,
+[data-theme="light"] .affine-reference,
+[data-theme="light"] [data-reference],
+[data-theme="light"] [data-linked-page] {
+  color: #1f1f1f !important;
+  background: transparent !important;
+}
+
+[data-theme="light"] affine-reference:hover,
+[data-theme="light"] .affine-reference:hover,
+[data-theme="light"] [data-reference]:hover,
+[data-theme="light"] [data-linked-page]:hover {
+  color: #0043ff !important;
+  background: transparent !important;
+}
+
+/* =============================================================================
+   TEXT COLOR FIX — Ensure text is white in dark mode, NOT blue
+   ============================================================================= */
+
+/* Ensure text is white in dark mode, NOT blue */
+[data-theme="dark"] .affine-paragraph-rich-text-wrapper,
+[data-theme="dark"] .affine-paragraph-block-container,
+[data-theme="dark"] [contenteditable="true"],
+[data-theme="dark"] .inline-editor {
+  color: #ffffff !important;
+}
+
+/* Links should be the only blue text */
+[data-theme="dark"] a,
+[data-theme="dark"] .affine-reference,
+[data-theme="dark"] [data-link] {
+  color: #0043ff !important;
+}
+
+/* Regular text must be white */
+[data-theme="dark"] p,
+[data-theme="dark"] span:not(.affine-reference):not([data-link]) {
+  color: #ffffff !important;
+}
+
+/* =============================================================================
+   DIVIDERS
+   ============================================================================= */
+
+affine-divider,
+hr {
+  border: none !important;
+  border-top: 1px solid var(--affine-divider-color) !important;
+  margin: 24px 0 !important;
+}
+
+/* =============================================================================
+   NOTE BLOCKS — Page mode vs Edgeless mode styling
+   ============================================================================= */
+
+/* In PAGE mode: note blocks should be transparent/invisible - NO BOXES */
+.affine-page-viewport .affine-note-block-container,
+.affine-page-viewport affine-note,
+affine-page-root .affine-note-block-container,
+affine-page-root affine-note,
+affine-editor-container[data-mode="page"] .affine-note-block-container,
+affine-editor-container[data-mode="page"] affine-note,
+/* Catch-all for any note block in non-edgeless context */
+.affine-note-block-container,
+affine-note {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  outline: none !important;
+}
+
+/* Remove ALL focus outlines and borders in page mode */
+.affine-note-block-container:focus,
+.affine-note-block-container:focus-within,
+.affine-note-block-container:focus-visible,
+affine-note:focus,
+affine-note:focus-within,
+affine-note:focus-visible,
+.affine-block-children-container:focus,
+.affine-block-children-container:focus-within,
+[data-block-id]:focus,
+[data-block-id]:focus-within,
+[data-block-id]:focus-visible {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove the selected/active note block styling */
+.affine-note-block-container.selected,
+.affine-note-block-container[data-selected="true"],
+affine-note.selected,
+affine-note[data-selected="true"] {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* In EDGELESS mode: note blocks should have visible card styling - DARK background */
+.affine-edgeless-viewport .affine-note-block-container,
+.affine-edgeless-viewport affine-note,
+affine-edgeless-root .affine-note-block-container,
+affine-edgeless-root affine-note,
+affine-editor-container[data-mode="edgeless"] .affine-note-block-container,
+affine-editor-container[data-mode="edgeless"] affine-note {
+  background: #0a0a0a !important;
+  border: 1px solid #1c1c1c !important;
+  border-radius: 12px !important;
+  padding: 24px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* =============================================================================
+   EDGELESS MODE
+   ============================================================================= */
+
+/* Edgeless viewport - MUST have explicit dimensions for canvas to render */
+.affine-edgeless-viewport,
+affine-edgeless-root,
+.edgeless-container {
+  background: #000000 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 600px !important;
+  position: relative !important;
+  display: block !important;
+  overflow: hidden !important;
+}
+
+/* Edgeless editor container needs explicit height - NO scrollbars */
+affine-editor-container[data-mode="edgeless"] {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 600px !important;
+  background: #000000 !important;
+  overflow: hidden !important;
+}
+
+/* Grid background - pure black with subtle blue grid */
+.affine-edgeless-surface-block-container,
+affine-surface {
+  background-color: #000000 !important;
+  background-image: radial-gradient(circle, rgba(0, 67, 255, 0.15) 1px, transparent 1px) !important;
+  background-size: 30px 30px !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 600px !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  overflow: hidden !important;
+}
+
+/* =============================================================================
+   TOOLBARS
+   ============================================================================= */
+
+/* Ensure format bar is visible and properly positioned */
+.affine-toolbar,
+.format-bar,
+affine-format-bar-widget,
+.affine-format-bar,
+.affine-format-bar-widget,
+.affine-rich-text-toolbar,
+.affine-inline-toolbar,
+format-bar-widget,
+rich-text-toolbar {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 999999 !important;
+  position: fixed !important;
+  pointer-events: auto !important;
+}
+
+/* Format bar styling */
+affine-format-bar-widget {
+  background: var(--affine-background-modal-color, #000000) !important;
+  border: 1px solid var(--affine-border-color, #1c1c1c) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+  padding: 4px !important;
+}
+
+/* Additional format bar styling for compatibility */
+.affine-toolbar,
+.format-bar,
+.affine-format-bar,
+.affine-format-bar-widget,
+.affine-rich-text-toolbar,
+.affine-inline-toolbar,
+format-bar-widget,
+rich-text-toolbar {
+  background: var(--affine-background-modal-color) !important;
+  border: 1px solid var(--affine-border-color) !important;
+  border-radius: var(--affine-border-radius) !important;
+  box-shadow: var(--affine-shadow-2) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+/* Format bar inner container */
+affine-format-bar-widget > *,
+.affine-format-bar-widget > *,
+format-bar-widget > *,
+rich-text-toolbar > * {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 8px !important;
+}
+
+/* Format bar container wrapper - ensure proper stacking */
+.format-bar-container,
+.toolbar-container,
+affine-format-bar-widget::part(container),
+.affine-format-bar-container {
+  z-index: 999999 !important;
+  position: fixed !important;
+  pointer-events: auto !important;
+}
+
+/* Toolbar buttons */
+.affine-toolbar-button,
+.format-bar-button,
+[data-toolbar-button],
+affine-format-bar-widget button,
+affine-format-bar-widget icon-button {
+  color: var(--affine-icon-color) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 8px !important;
+  border-radius: 6px !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.affine-toolbar-button:hover,
+.format-bar-button:hover,
+[data-toolbar-button]:hover,
+affine-format-bar-widget button:hover,
+affine-format-bar-widget icon-button:hover {
+  background: var(--affine-hover-color) !important;
+  color: var(--affine-text-primary-color) !important;
+}
+
+.affine-toolbar-button.active,
+[data-toolbar-button][data-active="true"],
+affine-format-bar-widget button.active,
+affine-format-bar-widget icon-button[data-active="true"] {
+  background: var(--affine-hover-color-filled) !important;
+  color: var(--affine-primary-color) !important;
+}
+
+/* Light mode toolbar styling */
+[data-theme="light"] .affine-toolbar,
+[data-theme="light"] .format-bar,
+[data-theme="light"] affine-format-bar-widget,
+[data-theme="light"] .affine-format-bar-widget,
+affine-editor-container[data-theme="light"] .affine-toolbar,
+affine-editor-container[data-theme="light"] affine-format-bar-widget {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .affine-toolbar-button,
+[data-theme="light"] .format-bar-button,
+[data-theme="light"] affine-format-bar-widget button,
+affine-editor-container[data-theme="light"] .affine-toolbar-button,
+affine-editor-container[data-theme="light"] affine-format-bar-widget button {
+  color: #6b7280 !important;
+}
+
+[data-theme="light"] .affine-toolbar-button:hover,
+[data-theme="light"] .format-bar-button:hover,
+[data-theme="light"] affine-format-bar-widget button:hover,
+affine-editor-container[data-theme="light"] .affine-toolbar-button:hover,
+affine-editor-container[data-theme="light"] affine-format-bar-widget button:hover {
+  background: #f3f4f6 !important;
+  color: #1f2937 !important;
+}
+
+[data-theme="light"] .affine-toolbar-button.active,
+[data-theme="light"] affine-format-bar-widget button.active,
+affine-editor-container[data-theme="light"] .affine-toolbar-button.active,
+affine-editor-container[data-theme="light"] affine-format-bar-widget button.active {
+  background: rgba(99, 102, 241, 0.15) !important;
+  color: #6366f1 !important;
+}
+
+/* Edgeless toolbar */
+.edgeless-toolbar-container,
+.affine-edgeless-toolbar,
+edgeless-toolbar {
+  background: var(--affine-background-modal-color) !important;
+  border: 1px solid var(--affine-border-color) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--affine-shadow-2) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+/* =============================================================================
+   POPUPS, MENUS, PANELS
+   ============================================================================= */
+
+.affine-panel,
+.affine-popover,
+[role="menu"],
+[role="dialog"],
+[role="tooltip"],
+.popup-container {
+  background: var(--affine-background-modal-color) !important;
+  border: 1px solid var(--affine-border-color) !important;
+  border-radius: var(--affine-border-radius) !important;
+  box-shadow: var(--affine-shadow-2) !important;
+  color: var(--affine-text-primary-color) !important;
+}
+
+/* Menu items */
+.menu-item,
+[role="menuitem"] {
+  color: var(--affine-text-primary-color) !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  transition: background 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+.menu-item:hover,
+[role="menuitem"]:hover {
+  background: var(--affine-hover-color) !important;
+}
+
+/* Light mode menu text visibility */
+[data-theme="light"] .affine-panel,
+[data-theme="light"] .affine-popover,
+[data-theme="light"] [role="menu"],
+[data-theme="light"] [role="dialog"],
+[data-theme="light"] .popup-container,
+affine-editor-container[data-theme="light"] .affine-panel,
+affine-editor-container[data-theme="light"] .affine-popover {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  color: #1f2937 !important;
+}
+
+[data-theme="light"] .menu-item,
+[data-theme="light"] [role="menuitem"],
+affine-editor-container[data-theme="light"] .menu-item,
+affine-editor-container[data-theme="light"] [role="menuitem"] {
+  color: #1f2937 !important;
+}
+
+[data-theme="light"] .menu-item:hover,
+[data-theme="light"] [role="menuitem"]:hover,
+affine-editor-container[data-theme="light"] .menu-item:hover,
+affine-editor-container[data-theme="light"] [role="menuitem"]:hover {
+  background: #f3f4f6 !important;
+}
+
+/* =============================================================================
+   SLASH MENU
+   ============================================================================= */
+
+.affine-slash-menu,
+affine-slash-menu {
+  background: var(--affine-background-modal-color) !important;
+  border: 1px solid var(--affine-border-color) !important;
+  border-radius: var(--affine-border-radius) !important;
+  box-shadow: var(--affine-shadow-2) !important;
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+.affine-slash-menu-item {
+  color: var(--affine-text-primary-color) !important;
+  padding: 8px 12px !important;
+}
+
+.affine-slash-menu-item:hover,
+.affine-slash-menu-item.active {
+  background: var(--affine-hover-color) !important;
+}
+
+/* Slash menu light mode overrides - COMPLETE LIGHT MODE STYLING */
+[data-theme="light"] .affine-slash-menu,
+[data-theme="light"] affine-slash-menu,
+.light .affine-slash-menu,
+[data-theme="light"] .slash-menu,
+affine-editor-container[data-theme="light"] .affine-slash-menu {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  color: #1f2937 !important;
+}
+
+[data-theme="light"] .affine-slash-menu-item,
+.light .affine-slash-menu-item,
+[data-theme="light"] .slash-menu-item,
+affine-editor-container[data-theme="light"] .affine-slash-menu-item {
+  color: #1f2937 !important;
+  background: transparent !important;
+}
+
+[data-theme="light"] .affine-slash-menu-item:hover,
+[data-theme="light"] .affine-slash-menu-item.active,
+.light .affine-slash-menu-item:hover,
+.light .affine-slash-menu-item.active,
+[data-theme="light"] .slash-menu-item:hover,
+affine-editor-container[data-theme="light"] .affine-slash-menu-item:hover,
+affine-editor-container[data-theme="light"] .affine-slash-menu-item.active {
+  background: #f3f4f6 !important;
+  color: #1f2937 !important;
+}
+
+[data-theme="light"] .affine-slash-menu-item-icon,
+.light .affine-slash-menu-item-icon,
+[data-theme="light"] .slash-menu-item-icon,
+affine-editor-container[data-theme="light"] .affine-slash-menu-item-icon {
+  color: #6b7280 !important;
+  opacity: 1 !important;
+}
+
+/* Slash menu text and labels in light mode */
+[data-theme="light"] .affine-slash-menu-item-text,
+[data-theme="light"] .affine-slash-menu-item-label,
+affine-editor-container[data-theme="light"] .affine-slash-menu-item-text,
+affine-editor-container[data-theme="light"] .affine-slash-menu-item-label {
+  color: #1f2937 !important;
+}
+
+[data-theme="light"] .affine-slash-menu-item-description,
+affine-editor-container[data-theme="light"] .affine-slash-menu-item-description {
+  color: #6b7280 !important;
+}
+
+/* =============================================================================
+   COLOR PANELS
+   ============================================================================= */
+
+edgeless-color-panel,
+.color-picker-panel {
+  background: var(--affine-background-modal-color) !important;
+  border: 1px solid var(--affine-border-color) !important;
+  border-radius: var(--affine-border-radius) !important;
+  box-shadow: var(--affine-shadow-2) !important;
+  z-index: 99999 !important;
+}
+
+.color-unit,
+[data-color] {
+  border: 2px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+}
+
+.color-unit:hover {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  transform: scale(1.1) !important;
+}
+
+/* =============================================================================
+   SELECTION & FOCUS
+   ============================================================================= */
+
+.affine-block-selection,
+[data-block-selected="true"] {
+  background: var(--affine-block-selected-color) !important;
+  border-radius: 4px !important;
+}
+
+.affine-edgeless-selected-rect {
+  border: 2px solid var(--affine-primary-color) !important;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.4) !important;
+}
+
+/* Only show focus outline on buttons and inputs, NOT on editor content */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--affine-primary-color) !important;
+  outline-offset: 2px !important;
+}
+
+/* Remove focus outlines from editor content */
+affine-editor-container *:focus-visible,
+.affine-page-viewport *:focus-visible,
+affine-page-root *:focus-visible {
+  outline: none !important;
+}
+
+/* =============================================================================
+   DRAG HANDLE / BLOCK INDICATOR — HIDDEN BY DEFAULT
+   Only show on hover of blocks with actual content
+   ============================================================================= */
+
+affine-drag-handle-widget,
+.affine-drag-handle {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Ensure parent has relative positioning for absolute child */
+.affine-block-children-container {
+  position: relative;
+}
+
+/* =============================================================================
+   SCROLLBARS
+   ============================================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+/* =============================================================================
+   ZOOM CONTROLS
+   ============================================================================= */
+
+.affine-edgeless-zoom-toolbar {
+  background: var(--affine-background-modal-color) !important;
+  border: 1px solid var(--affine-border-color) !important;
+  border-radius: var(--affine-border-radius) !important;
+  box-shadow: var(--affine-shadow-1) !important;
+}
+
+/* =============================================================================
+   ERROR & LOADING STATES
+   ============================================================================= */
+
+.blocksuite-error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  background: var(--affine-background-primary-color);
+  color: var(--affine-text-secondary-color);
+}
+
+.blocksuite-error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+  text-align: center;
+  max-width: 400px;
+}
+
+.blocksuite-error-content svg {
+  color: var(--affine-text-disable-color);
+  opacity: 0.6;
+}
+
+.blocksuite-error-content h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--affine-text-primary-color);
+  margin: 0;
+}
+
+.blocksuite-error-content p {
+  font-size: 14px;
+  color: var(--affine-text-secondary-color);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.blocksuite-error-content button {
+  padding: 10px 20px;
+  background: var(--affine-primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.blocksuite-error-content button:hover {
+  background: #5558e8;
+  transform: translateY(-1px);
+}
+
+/* =============================================================================
+   EMOJI & ICON STYLING - FULL OPACITY
+   ============================================================================= */
+
+/* Ensure all emoji icons are fully opaque and visible */
+.emoji,
+[data-emoji],
+span[role="img"],
+.icon-emoji,
+button > span {
+  opacity: 1 !important;
+}
+
+/* Emoji in buttons should never be grayed out */
+button span {
+  opacity: 1 !important;
+}
+
+/* =============================================================================
+   CANVAS EDITOR SPECIFIC
+   ============================================================================= */
+
+.blocksuite-canvas-editor {
+  --affine-background-primary-color: #000000; /* Changed from #18181b - pure black */
+  --affine-text-primary-color: #fafafa;
+  --affine-primary-color: #0043ff; /* Changed from #6366f1 - brand blue */
+  --affine-edgeless-grid-color: rgba(0, 67, 255, 0.2); /* Changed to brand blue */
+}
+
+.blocksuite-canvas-editor affine-editor-container {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 400px !important;
+  background: #000000 !important; /* Changed from #18181b - pure black */
+}
+
+/* Edgeless mode class for BlockSuiteDocEditor */
+.blocksuite-edgeless-mode,
+affine-editor-container.blocksuite-edgeless-mode {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 600px !important;
+}
+
+.blocksuite-edgeless-mode .affine-edgeless-viewport,
+.blocksuite-edgeless-mode affine-edgeless-root {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 600px !important;
+  position: relative !important;
+}
+
+/* Ensure the surface canvas renders */
+.blocksuite-edgeless-mode affine-surface,
+.blocksuite-edgeless-mode .affine-edgeless-surface-block-container {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 600px !important;
+}
+
+/* =============================================================================
+   LINKED DOC POPOVER VISIBILITY OVERRIDES - MUST BE LAST!
+   These rules MUST come after all other rules to override any hiding.
+   ============================================================================= */
+
+/* CRITICAL: Ensure linked-doc widget and popover are visible */
+affine-linked-doc-widget,
+affine-linked-doc-popover,
+.linked-doc-popover,
+.blocksuite-portal {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Wiki link popover positioning - default below, smart positioning */
+affine-linked-doc-popover {
+  position: fixed !important;
+  z-index: 2147483647 !important; /* Max z-index */
+  transform: none !important; /* Remove any transform that might cause jumping */
+  background: var(--affine-background-modal-color, #000000) !important;
+  border: 1px solid var(--affine-border-color, #1c1c1c) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Light mode linked-doc popover */
+[data-theme="light"] affine-linked-doc-popover,
+.light affine-linked-doc-popover {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Linked doc menu items */
+.linked-doc-popover-item,
+affine-linked-doc-popover .menu-item {
+  color: var(--affine-text-primary-color, #fafafa) !important;
+  padding: 8px 12px !important;
+  cursor: pointer !important;
+}
+
+.linked-doc-popover-item:hover,
+affine-linked-doc-popover .menu-item:hover {
+  background: var(--affine-hover-color, rgba(99, 102, 241, 0.15)) !important;
+}
+
+/* Light mode menu items */
+[data-theme="light"] .linked-doc-popover-item,
+[data-theme="light"] affine-linked-doc-popover .menu-item {
+  color: #1f2937 !important;
+}
+
+[data-theme="light"] .linked-doc-popover-item:hover,
+[data-theme="light"] affine-linked-doc-popover .menu-item:hover {
+  background: #f3f4f6 !important;
+}
+
+/* =============================================================================
+   WIKI LINK INLINE BEHAVIOR
+   ============================================================================= */
+
+/* Ensure inline display for linked references */
+affine-reference,
+.affine-reference,
+[data-reference],
+.reference-node {
+  display: inline !important;
+  white-space: nowrap !important;
+  vertical-align: baseline !important;
+}
+
+/* Prevent line breaks around wiki links in paragraphs */
+.affine-paragraph-rich-text-wrapper affine-reference,
+.inline-editor affine-reference,
+rich-text affine-reference,
+[contenteditable] affine-reference {
+  display: inline !important;
+  margin: 0 2px !important;
+  line-height: inherit !important;
+}
+
+/* Ensure wiki links stay inline in all contexts */
+.affine-rich-text affine-reference,
+v-line affine-reference,
+v-text affine-reference {
+  display: inline !important;
+  white-space: nowrap !important;
+}
+
+/* =============================================================================
+   EDGELESS MODE SCROLLBAR FIX - Hide unwanted scrollbars in canvas mode
+   ============================================================================= */
+
+/* Hide scrollbars in edgeless/canvas mode */
+affine-editor-container[data-mode="edgeless"],
+affine-editor-container[data-mode="edgeless"] *,
+.blocksuite-edgeless-mode,
+.blocksuite-edgeless-mode *,
+[data-mode="edgeless"],
+[data-mode="edgeless"] * {
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+}
+
+affine-editor-container[data-mode="edgeless"]::-webkit-scrollbar,
+affine-editor-container[data-mode="edgeless"] *::-webkit-scrollbar,
+.blocksuite-edgeless-mode::-webkit-scrollbar,
+.blocksuite-edgeless-mode *::-webkit-scrollbar,
+[data-mode="edgeless"]::-webkit-scrollbar,
+[data-mode="edgeless"] *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* The edgeless viewport and container should fill parent and not scroll */
+.affine-edgeless-viewport,
+affine-edgeless-root,
+affine-editor-container[data-mode="edgeless"] .affine-edgeless-viewport,
+affine-editor-container[data-mode="edgeless"] affine-edgeless-root {
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* Canvas surface should be positioned absolutely to prevent scrolling */
+affine-editor-container[data-mode="edgeless"] affine-surface,
+affine-editor-container[data-mode="edgeless"] .affine-edgeless-surface-block-container {
+  position: absolute !important;
+  inset: 0 !important;
+  overflow: hidden !important;
+}
+
+/* =============================================================================
+   EDGELESS TOOLBAR POSITIONING - Always visible at bottom
+   ============================================================================= */
+
+/* Ensure the edgeless mode container allows for absolutely positioned toolbar */
+[data-mode="edgeless"] {
+  position: relative !important;
+}
+
+/* Canvas toolbar styling - position fixed to stay visible */
+.note-canvas-toolbar {
+  position: fixed !important;
+  bottom: 24px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 99999 !important;
+}

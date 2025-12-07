@@ -67,7 +67,6 @@ import {
 import { LittleLordProvider } from './littleLord';
 // FrameCanvasPage removed - canvas functionality now integrated into Notes (see REFACTOR_PLAN.md)
 import { AffineNotes } from './notes';
-import { BlockSuiteSlashTest } from './debug/BlockSuiteSlashTest';
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -1982,9 +1981,6 @@ export const Dashboard: React.FC = () => {
              )}
              {currentView === 'FRAME_DEMO' && appConfig.enableDevRoutes && (
                <FrameReportDemoPage />
-             )}
-             {currentView === 'BLOCKSUITE_TEST' && (
-               <BlockSuiteSlashTest />
              )}
          </div>
       </main>
