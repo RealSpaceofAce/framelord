@@ -29,6 +29,7 @@ affine-editor-container {
   --affine-text-primary-color: #ffffff;
   --affine-text-secondary-color: #a1a1aa;
   --affine-text-disable-color: #52525b;
+  --affine-caret-color: #ffffff;
   --affine-text-emphasis-color: #0043ff;
   --affine-edgeless-text-color: #ffffff;
   --affine-placeholder-color: #52525b;
@@ -114,6 +115,7 @@ affine-editor-container {
   --affine-text-primary-color: #1f2937;
   --affine-text-secondary-color: #6b7280;
   --affine-text-disable-color: #9ca3af;
+  --affine-caret-color: #1f2937;
   --affine-text-emphasis-color: #6366f1;
   --affine-edgeless-text-color: #1f2937;
   --affine-placeholder-color: #9ca3af;
@@ -165,6 +167,7 @@ affine-editor-container {
   width: 100%;
   height: 100%;
   min-height: 100%;
+  caret-color: var(--affine-caret-color, var(--affine-text-primary-color));
   /* Use CSS variable for background so it picks up theme colors */
   background: var(--affine-background-primary-color);
   color: var(--affine-text-primary-color);
