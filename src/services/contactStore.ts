@@ -2,11 +2,22 @@
 // CONTACT STORE — In-memory data source for Contacts
 // =============================================================================
 
-import { Contact, ContactZero, RelationshipDomain } from '../types';
+import { Contact, ContactZero, RelationshipDomain, EngagementEvent } from '../types';
+
+// =============================================================================
+// HELPER: Ensure contact has CRM linkage fields
+// =============================================================================
+
+const ensureContactCRMFields = (contact: Partial<Contact>): Contact => ({
+  ...contact,
+  mentionedInNotes: contact.mentionedInNotes || [],
+  engagementEvents: contact.engagementEvents || [],
+  linkedTopics: contact.linkedTopics || [],
+} as Contact);
 
 // --- CONTACT ZERO (The User) ---
 
-export const CONTACT_ZERO: ContactZero = {
+export const CONTACT_ZERO: ContactZero = ensureContactCRMFields({
   id: 'contact_zero',
   fullName: 'Grimson',
   avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Grimson&backgroundColor=4433ff',
@@ -26,7 +37,7 @@ export const CONTACT_ZERO: ContactZero = {
   company: 'FrameLord',
   title: 'Founder & CEO',
   location: 'San Francisco, CA',
-};
+}) as ContactZero;
 
 // --- INTERNAL CONTACTS ARRAY ---
 
@@ -56,6 +67,9 @@ let CONTACTS: Contact[] = [
     title: 'VP of Engineering',
     location: 'New York, NY',
     linkedinUrl: 'https://linkedin.com/in/sarahchen',
+    mentionedInNotes: [],
+    engagementEvents: [],
+    linkedTopics: [],
   },
   {
     id: 'c_marcus_johnson',
@@ -77,6 +91,9 @@ let CONTACTS: Contact[] = [
     company: 'Acme Corp',
     title: 'CTO',
     location: 'Austin, TX',
+    mentionedInNotes: [],
+    engagementEvents: [],
+    linkedTopics: [],
   },
   {
     id: 'c_elena_rodriguez',
@@ -95,6 +112,9 @@ let CONTACTS: Contact[] = [
     lastContactAt: '2025-11-22T15:00:00Z',
     nextActionAt: '2025-12-03T14:00:00Z',
     tags: ['co-founder', 'needs-attention'],
+    mentionedInNotes: [],
+    engagementEvents: [],
+    linkedTopics: [],
   },
 
   // Personal contacts
@@ -115,6 +135,9 @@ let CONTACTS: Contact[] = [
     lastContactAt: '2025-11-28T19:30:00Z',
     nextActionAt: null,
     tags: ['college', 'inner-circle'],
+    mentionedInNotes: [],
+    engagementEvents: [],
+    linkedTopics: [],
   },
   {
     id: 'c_lisa_park',
@@ -133,6 +156,9 @@ let CONTACTS: Contact[] = [
     lastContactAt: '2025-12-01T12:00:00Z',
     nextActionAt: '2025-12-15T18:00:00Z',
     tags: ['sister', 'family'],
+    mentionedInNotes: [],
+    engagementEvents: [],
+    linkedTopics: [],
   },
 
   // Hybrid contacts
@@ -153,6 +179,9 @@ let CONTACTS: Contact[] = [
     lastContactAt: '2025-11-25T16:00:00Z',
     nextActionAt: '2025-12-08T10:00:00Z',
     tags: ['angel', 'board-member', 'needs-frame-work'],
+    mentionedInNotes: [],
+    engagementEvents: [],
+    linkedTopics: [],
   },
   {
     id: 'c_amanda_torres',
@@ -171,6 +200,9 @@ let CONTACTS: Contact[] = [
     lastContactAt: '2025-10-20T09:00:00Z',
     nextActionAt: null,
     tags: ['designer', 'freelance'],
+    mentionedInNotes: [],
+    engagementEvents: [],
+    linkedTopics: [],
   },
 
   // Testing/blocked
@@ -190,6 +222,9 @@ let CONTACTS: Contact[] = [
     lastContactAt: null,
     nextActionAt: null,
     tags: ['test'],
+    mentionedInNotes: [],
+    engagementEvents: [],
+    linkedTopics: [],
   },
   {
     id: 'c_blocked_user',
@@ -207,6 +242,9 @@ let CONTACTS: Contact[] = [
     lastContactAt: '2025-09-01T08:00:00Z',
     nextActionAt: null,
     tags: ['spam', 'do-not-contact'],
+    mentionedInNotes: [],
+    engagementEvents: [],
+    linkedTopics: [],
   },
 ];
 
@@ -349,6 +387,10 @@ export const createContact = (input: {
     location: input.location?.trim() || undefined,
     linkedinUrl: input.linkedinUrl?.trim() || undefined,
     xHandle: input.xHandle?.trim() || undefined,
+    // CRM linkage fields
+    mentionedInNotes: [],
+    engagementEvents: [],
+    linkedTopics: [],
   };
 
   CONTACTS.push(newContact);
@@ -401,6 +443,201 @@ export const archiveContact = (contactId: string): void => {
   };
 
   updateContact(updatedContact);
+};
+
+// =============================================================================
+// @ MENTION HELPERS
+// =============================================================================
+
+/**
+ * Search contacts by name only (for @ mentions).
+ * @param query - Search query string
+ * @param limit - Maximum number of results (default 8)
+ * @returns Array of matching contacts
+ */
+export const searchContactsByName = (query: string, limit = 8): Contact[] => {
+  if (!query || query.trim().length === 0) {
+    return [];
+  }
+
+  const q = query.toLowerCase().trim();
+
+  let results = CONTACTS.filter(c => {
+    if (c.id === CONTACT_ZERO.id) return false; // Exclude self
+    if (c.status !== 'active') return false;
+    return c.fullName.toLowerCase().includes(q);
+  });
+
+  // Sort by relevance: exact name starts first
+  results.sort((a, b) => {
+    const aStarts = a.fullName.toLowerCase().startsWith(q) ? 0 : 1;
+    const bStarts = b.fullName.toLowerCase().startsWith(q) ? 0 : 1;
+    return aStarts - bStarts;
+  });
+
+  return results.slice(0, limit);
+};
+
+/**
+ * Find a contact by exact name match (case-insensitive).
+ * @param name - The exact name to find
+ * @returns The contact if found, undefined otherwise
+ */
+export const findContactByName = (name: string): Contact | undefined => {
+  if (!name || name.trim().length === 0) return undefined;
+  const normalizedName = name.trim().toLowerCase();
+  return CONTACTS.find(
+    c => c.fullName.toLowerCase() === normalizedName && c.id !== CONTACT_ZERO.id
+  );
+};
+
+/**
+ * Create a contact from an @ mention.
+ * @param name - The display name for the new contact
+ * @returns The newly created contact
+ */
+export const createContactFromMention = (name: string): Contact => {
+  // Check for existing contact with same name
+  const existing = findContactByName(name);
+  if (existing) {
+    console.warn(`Contact "${name}" already exists, returning existing`);
+    return existing;
+  }
+
+  return createContact({
+    fullName: name.trim(),
+    relationshipDomain: 'business', // Default domain
+    relationshipRole: 'contact',
+    tags: ['from-mention'],
+  });
+};
+
+/**
+ * Get all notes that mention a specific contact.
+ * Uses the contact's mentionedInNotes array for fast lookup.
+ * @param contactId - The contact ID to search for
+ * @returns Array of notes that mention this contact
+ */
+export const getNotesForContact = (contactId: string): Array<{ id: string; title: string; content: string; updatedAt: string }> => {
+  const contact = getContactById(contactId);
+  if (!contact) return [];
+
+  try {
+    const { getNoteById } = require('./noteStore');
+    return (contact.mentionedInNotes || [])
+      .map((noteId: string) => getNoteById(noteId))
+      .filter(Boolean)
+      .map((note: { id: string; title?: string; content?: string; updatedAt: string }) => ({
+        id: note.id,
+        title: note.title || 'Untitled',
+        content: note.content || '',
+        updatedAt: note.updatedAt,
+      }));
+  } catch (e) {
+    console.error('Error fetching notes for contact:', e);
+    return [];
+  }
+};
+
+// =============================================================================
+// CRM LINKAGE SYNC FUNCTIONS
+// =============================================================================
+
+/**
+ * Add a note mention to a contact's record.
+ * Also adds an engagement event to the timeline.
+ * @param contactId - The contact being mentioned
+ * @param noteId - The note containing the mention
+ * @param noteTitle - Title of the note (for timeline description)
+ */
+export const addNoteMentionToContact = (
+  contactId: string,
+  noteId: string,
+  noteTitle?: string
+): void => {
+  const contact = getContactById(contactId);
+  if (!contact || contact.id === CONTACT_ZERO.id) return;
+
+  // Ensure CRM fields exist
+  if (!contact.mentionedInNotes) contact.mentionedInNotes = [];
+  if (!contact.engagementEvents) contact.engagementEvents = [];
+
+  // Add noteId to mentionedInNotes if not already present
+  if (!contact.mentionedInNotes.includes(noteId)) {
+    contact.mentionedInNotes.push(noteId);
+
+    // Add engagement event
+    const event: EngagementEvent = {
+      id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: 'note-mention',
+      noteId,
+      timestamp: new Date().toISOString(),
+      description: `Mentioned in note: ${noteTitle || 'Untitled'}`,
+    };
+    contact.engagementEvents.push(event);
+
+    updateContact(contact);
+  }
+};
+
+/**
+ * Remove a note mention from a contact's record.
+ * @param contactId - The contact
+ * @param noteId - The note to remove
+ */
+export const removeNoteMentionFromContact = (
+  contactId: string,
+  noteId: string
+): void => {
+  const contact = getContactById(contactId);
+  if (!contact) return;
+
+  if (contact.mentionedInNotes) {
+    contact.mentionedInNotes = contact.mentionedInNotes.filter(id => id !== noteId);
+    updateContact(contact);
+  }
+};
+
+/**
+ * Add a topic to a contact's linked topics.
+ * @param contactId - The contact
+ * @param topicId - The topic to link
+ */
+export const addTopicToContact = (contactId: string, topicId: string): void => {
+  const contact = getContactById(contactId);
+  if (!contact || contact.id === CONTACT_ZERO.id) return;
+
+  if (!contact.linkedTopics) contact.linkedTopics = [];
+  if (!contact.linkedTopics.includes(topicId)) {
+    contact.linkedTopics.push(topicId);
+    updateContact(contact);
+  }
+};
+
+/**
+ * Get engagement timeline for a contact.
+ * @param contactId - The contact ID
+ * @returns Sorted array of engagement events (newest first)
+ */
+export const getContactTimeline = (contactId: string): EngagementEvent[] => {
+  const contact = getContactById(contactId);
+  if (!contact) return [];
+
+  return [...(contact.engagementEvents || [])].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+};
+
+/**
+ * Get all contacts mentioned in notes with a specific topic.
+ * @param topicId - The topic ID
+ * @returns Array of contacts co-mentioned with this topic
+ */
+export const getContactsForTopic = (topicId: string): Contact[] => {
+  return CONTACTS.filter(contact =>
+    contact.id !== CONTACT_ZERO.id &&
+    contact.linkedTopics?.includes(topicId)
+  );
 };
 
 // --- LEGACY EXPORT (for backward compatibility) ---

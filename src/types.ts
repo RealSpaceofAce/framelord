@@ -18,10 +18,24 @@ export interface ContactFrameMetrics {
 export type RelationshipDomain = 'business' | 'personal' | 'hybrid';
 export type ContactStatus = 'active' | 'dormant' | 'blocked' | 'testing' | 'archived';
 
+/** Engagement event types for contact timeline */
+export type EngagementEventType = 'note-mention' | 'interaction' | 'task-created' | 'contact-created';
+
+/** Engagement event for contact timeline */
+export interface EngagementEvent {
+  id: string;
+  type: EngagementEventType;
+  noteId?: string;                // For note-mention events
+  interactionId?: string;         // For interaction events
+  taskId?: string;                // For task events
+  timestamp: string;              // ISO timestamp
+  description?: string;           // Human-readable description
+}
+
 export interface Contact {
   id: string;
   fullName: string;
-  /** 
+  /**
    * Avatar URL can be either:
    * - An external URL (http/https), or
    * - A Data URL (data:image/...) from file upload
@@ -42,6 +56,10 @@ export interface Contact {
   location?: string;
   linkedinUrl?: string;
   xHandle?: string;               // X / Twitter handle
+  // CRM Linkage - @mention system
+  mentionedInNotes: string[];     // Note IDs where this contact is @mentioned
+  engagementEvents: EngagementEvent[]; // Timeline of engagement events
+  linkedTopics: string[];         // Topic IDs associated with this contact
 }
 
 /** Contact Zero is the user's own record */
@@ -100,8 +118,9 @@ export interface Note {
   // Organization
   folderId: string | null;        // PARA folder or custom folder
   isInbox: boolean;               // Quick capture inbox
-  topics: string[];               // Topic IDs (from [[Topic]] syntax)
+  topics: string[];               // Topic IDs (from #hashtag syntax)
   tags: string[];                 // User tags
+  mentions: string[];             // Contact IDs mentioned via @mention
 
   // Display preferences
   preferredView: NoteViewMode;    // Last used view mode
@@ -197,12 +216,17 @@ export interface NotePage {
   updatedAt?: string | null;
 }
 
-// --- TOPIC (OBSIDIAN-STYLE [[TOPIC]] LINKS) ---
+// --- TOPIC (HASHTAG SYSTEM) ---
 
 export interface Topic {
   id: string;
   label: string;                  // Human-facing name, e.g. "Sales"
   slug: string;                   // Normalized key, e.g. "sales"
+  createdAt: string;              // ISO timestamp
+  updatedAt: string;              // ISO timestamp
+  // CRM Linkage
+  noteIds: string[];              // Notes that use this topic
+  contactIds: string[];           // Contacts frequently co-mentioned with this topic
 }
 
 export interface NoteTopic {

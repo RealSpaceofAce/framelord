@@ -1,13 +1,16 @@
 // =============================================================================
-// MARKDOWN NOTE EDITOR — Simple Tiptap-based editor for notes
+// MARKDOWN NOTE EDITOR — Tiptap-based editor with wiki links and @mentions
 // =============================================================================
-// Clean, minimal markdown editor replacing BlockSuite for v1
+// Features:
 // - Rich text editing with Tiptap
+// - Obsidian-style [[wiki links]] with [[ trigger
+// - @mentions for contacts with @ trigger
+// - Backlinks section at bottom
 // - Theme-aware styling
-// - Auto-save on blur
+// - Auto-save on change
 // =============================================================================
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -32,12 +35,33 @@ import {
   Undo,
   Redo,
 } from 'lucide-react';
+import { WikiLinkNode } from './extensions/WikiLinkNode';
+import { WikiLinkSuggestion } from './WikiLinkSuggestion';
+import { ContactMentionNode } from './extensions/ContactMentionNode';
+import { ContactMentionSuggestion } from './ContactMentionSuggestion';
+import { TopicMentionNode } from './extensions/TopicMentionNode';
+import { TopicMentionSuggestion } from './TopicMentionSuggestion';
+import { Backlinks } from './Backlinks';
+import {
+  findNoteByTitle,
+  createNoteFromWikiLink,
+  getNoteById,
+} from '../../services/noteStore';
+import {
+  createContactFromMention,
+} from '../../services/contactStore';
+import {
+  createTopicFromHashtag,
+} from '../../services/topicStore';
+import type { Note, Contact, Topic } from '../../types';
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
 export interface MarkdownNoteEditorProps {
+  /** Note ID (for backlinks) */
+  noteId?: string;
   /** Initial content (HTML) */
   content: string;
   /** Called when content changes */
@@ -46,8 +70,12 @@ export interface MarkdownNoteEditorProps {
   theme: 'light' | 'gray' | 'dark';
   /** Placeholder text */
   placeholder?: string;
-  /** Optional callback when navigating to a linked note */
+  /** Callback when navigating to a linked note */
   onNavigateToNote?: (noteId: string) => void;
+  /** Callback when navigating to a contact */
+  onNavigateToContact?: (contactId: string) => void;
+  /** Whether to show backlinks section */
+  showBacklinks?: boolean;
 }
 
 // =============================================================================
@@ -59,6 +87,7 @@ const getThemeColors = (theme: 'light' | 'gray' | 'dark') => {
     case 'light':
       return {
         bg: '#ffffff',
+        sidebar: '#f9fafb',
         text: '#1f2937',
         textMuted: '#6b7280',
         border: '#e5e7eb',
@@ -70,6 +99,7 @@ const getThemeColors = (theme: 'light' | 'gray' | 'dark') => {
     case 'gray':
       return {
         bg: '#1f2023',
+        sidebar: '#17181c',
         text: '#e5e7eb',
         textMuted: '#9ca3af',
         border: '#2d2f36',
@@ -82,6 +112,7 @@ const getThemeColors = (theme: 'light' | 'gray' | 'dark') => {
     default:
       return {
         bg: '#0f0f10',
+        sidebar: '#0a0a0b',
         text: '#f3f4f6',
         textMuted: '#9ca3af',
         border: '#1f2023',
@@ -98,13 +129,35 @@ const getThemeColors = (theme: 'light' | 'gray' | 'dark') => {
 // =============================================================================
 
 export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
+  noteId,
   content,
   onContentChange,
   theme,
   placeholder = 'Start writing...',
   onNavigateToNote,
+  onNavigateToContact,
+  showBacklinks = true,
 }) => {
   const colors = getThemeColors(theme);
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  // Wiki link suggestion state
+  const [suggestionOpen, setSuggestionOpen] = useState(false);
+  const [suggestionQuery, setSuggestionQuery] = useState('');
+  const [suggestionPosition, setSuggestionPosition] = useState<{ top: number; left: number } | null>(null);
+  const [triggerStart, setTriggerStart] = useState<number | null>(null);
+
+  // Contact mention suggestion state
+  const [mentionOpen, setMentionOpen] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionPosition, setMentionPosition] = useState<{ top: number; left: number } | null>(null);
+  const [mentionTriggerStart, setMentionTriggerStart] = useState<number | null>(null);
+
+  // Topic hashtag suggestion state
+  const [topicOpen, setTopicOpen] = useState(false);
+  const [topicQuery, setTopicQuery] = useState('');
+  const [topicPosition, setTopicPosition] = useState<{ top: number; left: number } | null>(null);
+  const [topicTriggerStart, setTopicTriggerStart] = useState<number | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -128,29 +181,373 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
       Highlight.configure({
         multicolor: true,
       }),
+      WikiLinkNode.configure({
+        onNavigate: (title: string, noteId?: string) => {
+          // First try to use provided noteId, otherwise find by title
+          if (noteId && onNavigateToNote) {
+            onNavigateToNote(noteId);
+          } else if (title) {
+            const note = findNoteByTitle(title);
+            if (note && onNavigateToNote) {
+              onNavigateToNote(note.id);
+            }
+          }
+        },
+      }),
+      ContactMentionNode.configure({
+        onNavigate: (contactId: string) => {
+          if (contactId && onNavigateToContact) {
+            onNavigateToContact(contactId);
+          }
+        },
+      }),
+      TopicMentionNode.configure({
+        onNavigate: (topicId: string) => {
+          // Topic navigation - can be implemented later
+          console.log('Navigate to topic:', topicId);
+        },
+      }),
     ],
     content,
     editorProps: {
       attributes: {
         class: 'prose prose-sm max-w-none focus:outline-none min-h-[200px] px-1',
       },
+      handleKeyDown: (view, event) => {
+        // Handle [[ trigger for wiki links
+        if (event.key === '[') {
+          const { state } = view;
+          const { selection } = state;
+          const { $from } = selection;
+          const textBefore = $from.parent.textContent.slice(0, $from.parentOffset);
+
+          // Check if previous char is also [
+          if (textBefore.endsWith('[')) {
+            // Get cursor position for popup
+            const coords = view.coordsAtPos($from.pos);
+            setSuggestionPosition({
+              top: coords.bottom + 4,
+              left: coords.left,
+            });
+            setTriggerStart($from.pos - 1); // Include the first [
+            setSuggestionQuery('');
+            setSuggestionOpen(true);
+            return false; // Let the [ be inserted
+          }
+        }
+
+        // Handle @ trigger for contact mentions
+        if (event.key === '@') {
+          const { state } = view;
+          const { selection } = state;
+          const { $from } = selection;
+          const textBefore = $from.parent.textContent.slice(0, $from.parentOffset);
+
+          // Only trigger at start of word (after space, newline, or at start)
+          const lastChar = textBefore.slice(-1);
+          if (textBefore.length === 0 || lastChar === ' ' || lastChar === '\n') {
+            // Get cursor position for popup
+            const coords = view.coordsAtPos($from.pos);
+            setMentionPosition({
+              top: coords.bottom + 4,
+              left: coords.left,
+            });
+            setMentionTriggerStart($from.pos); // Position before @
+            setMentionQuery('');
+            setMentionOpen(true);
+            return false; // Let the @ be inserted
+          }
+        }
+
+        // Handle # trigger for topic hashtags
+        if (event.key === '#') {
+          const { state } = view;
+          const { selection } = state;
+          const { $from } = selection;
+          const textBefore = $from.parent.textContent.slice(0, $from.parentOffset);
+
+          // Only trigger at start of word (after space, newline, or at start)
+          const lastChar = textBefore.slice(-1);
+          if (textBefore.length === 0 || lastChar === ' ' || lastChar === '\n') {
+            // Get cursor position for popup
+            const coords = view.coordsAtPos($from.pos);
+            setTopicPosition({
+              top: coords.bottom + 4,
+              left: coords.left,
+            });
+            setTopicTriggerStart($from.pos); // Position before #
+            setTopicQuery('');
+            setTopicOpen(true);
+            return false; // Let the # be inserted
+          }
+        }
+
+        // Handle typing while wiki suggestion is open
+        if (suggestionOpen && triggerStart !== null) {
+          if (event.key === 'Escape') {
+            closeSuggestion();
+            return true;
+          }
+          if (event.key === 'Backspace') {
+            const { state } = view;
+            const { selection } = state;
+            const { $from } = selection;
+
+            // If we're back to the trigger position, close
+            if ($from.pos <= triggerStart + 2) {
+              closeSuggestion();
+            }
+          }
+        }
+
+        // Handle typing while mention suggestion is open
+        if (mentionOpen && mentionTriggerStart !== null) {
+          if (event.key === 'Escape') {
+            closeMention();
+            return true;
+          }
+          if (event.key === 'Backspace') {
+            const { state } = view;
+            const { selection } = state;
+            const { $from } = selection;
+
+            // If we're back to the trigger position, close
+            if ($from.pos <= mentionTriggerStart + 1) {
+              closeMention();
+            }
+          }
+        }
+
+        // Handle typing while topic suggestion is open
+        if (topicOpen && topicTriggerStart !== null) {
+          if (event.key === 'Escape') {
+            closeTopic();
+            return true;
+          }
+          if (event.key === 'Backspace') {
+            const { state } = view;
+            const { selection } = state;
+            const { $from } = selection;
+
+            // If we're back to the trigger position, close
+            if ($from.pos <= topicTriggerStart + 1) {
+              closeTopic();
+            }
+          }
+        }
+
+        return false;
+      },
     },
     onUpdate: ({ editor }) => {
-      onContentChange(editor.getHTML());
+      const html = editor.getHTML();
+      onContentChange(html);
+
+      // Update wiki link suggestion query if popup is open
+      if (suggestionOpen && triggerStart !== null) {
+        const { state } = editor;
+        const { selection } = state;
+        const { $from } = selection;
+        const textAfterTrigger = $from.parent.textContent.slice(
+          triggerStart - $from.start() + 2, // Skip [[
+          $from.parentOffset
+        );
+        setSuggestionQuery(textAfterTrigger);
+      }
+
+      // Update mention suggestion query if popup is open
+      if (mentionOpen && mentionTriggerStart !== null) {
+        const { state } = editor;
+        const { selection } = state;
+        const { $from } = selection;
+        const textAfterTrigger = $from.parent.textContent.slice(
+          mentionTriggerStart - $from.start() + 1, // Skip @
+          $from.parentOffset
+        );
+        setMentionQuery(textAfterTrigger);
+      }
+
+      // Update topic suggestion query if popup is open
+      if (topicOpen && topicTriggerStart !== null) {
+        const { state } = editor;
+        const { selection } = state;
+        const { $from } = selection;
+        const textAfterTrigger = $from.parent.textContent.slice(
+          topicTriggerStart - $from.start() + 1, // Skip #
+          $from.parentOffset
+        );
+        setTopicQuery(textAfterTrigger);
+      }
     },
   });
 
-  // Sync content when it changes externally (e.g., switching notes)
+  // Close suggestion popup
+  const closeSuggestion = useCallback(() => {
+    setSuggestionOpen(false);
+    setSuggestionQuery('');
+    setSuggestionPosition(null);
+    setTriggerStart(null);
+  }, []);
+
+  // Handle wiki link selection
+  const handleSelectNote = useCallback(
+    (note: Note) => {
+      if (!editor || triggerStart === null) return;
+
+      const noteTitle = note.title || 'Untitled';
+
+      // Delete the [[ trigger text and insert a WikiLinkNode
+      editor
+        .chain()
+        .focus()
+        .command(({ tr, state }) => {
+          const { selection } = state;
+          const { $from } = selection;
+          const currentPos = $from.pos;
+
+          // Delete from triggerStart to current position (removes [[ and any typed text)
+          tr.delete(triggerStart, currentPos);
+
+          // Create and insert the WikiLinkNode
+          const wikiLinkNode = state.schema.nodes.wikiLinkNode.create({
+            title: noteTitle,
+            noteId: note.id,
+          });
+          tr.insert(triggerStart, wikiLinkNode);
+
+          return true;
+        })
+        .run();
+
+      closeSuggestion();
+    },
+    [editor, triggerStart, closeSuggestion]
+  );
+
+  // Handle creating new note from wiki link
+  const handleCreateNote = useCallback(
+    (title: string) => {
+      const newNote = createNoteFromWikiLink(title);
+      handleSelectNote(newNote);
+    },
+    [handleSelectNote]
+  );
+
+  // Close mention popup
+  const closeMention = useCallback(() => {
+    setMentionOpen(false);
+    setMentionQuery('');
+    setMentionPosition(null);
+    setMentionTriggerStart(null);
+  }, []);
+
+  // Handle contact mention selection
+  const handleSelectContact = useCallback(
+    (contact: Contact) => {
+      if (!editor || mentionTriggerStart === null) return;
+
+      const contactName = contact.fullName || 'Unknown';
+
+      // Delete the @ trigger text and insert a ContactMentionNode
+      editor
+        .chain()
+        .focus()
+        .command(({ tr, state }) => {
+          const { selection } = state;
+          const { $from } = selection;
+          const currentPos = $from.pos;
+
+          // Delete from mentionTriggerStart to current position (removes @ and any typed text)
+          tr.delete(mentionTriggerStart, currentPos);
+
+          // Create and insert the ContactMentionNode
+          const mentionNode = state.schema.nodes.contactMentionNode.create({
+            contactId: contact.id,
+            name: contactName,
+          });
+          tr.insert(mentionTriggerStart, mentionNode);
+
+          return true;
+        })
+        .run();
+
+      closeMention();
+    },
+    [editor, mentionTriggerStart, closeMention]
+  );
+
+  // Handle creating new contact from mention
+  const handleCreateContact = useCallback(
+    (name: string) => {
+      const newContact = createContactFromMention(name);
+      handleSelectContact(newContact);
+    },
+    [handleSelectContact]
+  );
+
+  // Close topic popup
+  const closeTopic = useCallback(() => {
+    setTopicOpen(false);
+    setTopicQuery('');
+    setTopicPosition(null);
+    setTopicTriggerStart(null);
+  }, []);
+
+  // Handle topic selection
+  const handleSelectTopic = useCallback(
+    (topic: Topic) => {
+      if (!editor || topicTriggerStart === null) return;
+
+      // Delete the # trigger text and insert a TopicMentionNode
+      editor
+        .chain()
+        .focus()
+        .command(({ tr, state }) => {
+          const { selection } = state;
+          const { $from } = selection;
+          const currentPos = $from.pos;
+
+          // Delete from topicTriggerStart to current position (removes # and any typed text)
+          tr.delete(topicTriggerStart, currentPos);
+
+          // Create and insert the TopicMentionNode
+          const topicNode = state.schema.nodes.topicMentionNode.create({
+            topicId: topic.id,
+            label: topic.label,
+          });
+          tr.insert(topicTriggerStart, topicNode);
+
+          return true;
+        })
+        .run();
+
+      closeTopic();
+    },
+    [editor, topicTriggerStart, closeTopic]
+  );
+
+  // Handle creating new topic from hashtag
+  const handleCreateTopic = useCallback(
+    (label: string) => {
+      const newTopic = createTopicFromHashtag(label);
+      handleSelectTopic(newTopic);
+    },
+    [handleSelectTopic]
+  );
+
+  // Sync content when it changes externally
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
       editor.commands.setContent(content || '');
     }
   }, [content, editor]);
 
-  // Handle link clicks for wiki-links
-  const handleClick = useCallback(
+  // Handle clicks on regular links (note:// protocol)
+  const handleEditorClick = useCallback(
     (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+
+      // Regular link handling for note:// protocol
       if (target.tagName === 'A') {
         const href = target.getAttribute('href');
         if (href?.startsWith('note://')) {
@@ -164,12 +561,12 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
   );
 
   useEffect(() => {
-    const editorElement = document.querySelector('.ProseMirror');
+    const editorElement = editorRef.current?.querySelector('.ProseMirror');
     if (editorElement) {
-      editorElement.addEventListener('click', handleClick as EventListener);
-      return () => editorElement.removeEventListener('click', handleClick as EventListener);
+      editorElement.addEventListener('click', handleEditorClick as EventListener);
+      return () => editorElement.removeEventListener('click', handleEditorClick as EventListener);
     }
-  }, [handleClick, editor]);
+  }, [handleEditorClick, editor]);
 
   if (!editor) {
     return (
@@ -207,7 +604,7 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
   );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" ref={editorRef}>
       {/* Toolbar */}
       <div
         className="flex items-center gap-0.5 px-2 py-1.5 border-b sticky top-0 z-10 flex-wrap"
@@ -328,7 +725,49 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
       {/* Editor Content */}
       <div className="flex-1 overflow-y-auto p-4">
         <EditorContent editor={editor} />
+
+        {/* Backlinks Section */}
+        {showBacklinks && noteId && (
+          <Backlinks
+            noteId={noteId}
+            colors={colors}
+            onNavigateToNote={onNavigateToNote || (() => {})}
+          />
+        )}
       </div>
+
+      {/* Wiki Link Suggestion Popup */}
+      <WikiLinkSuggestion
+        isOpen={suggestionOpen}
+        query={suggestionQuery}
+        position={suggestionPosition}
+        colors={colors}
+        onSelect={handleSelectNote}
+        onCreate={handleCreateNote}
+        onClose={closeSuggestion}
+      />
+
+      {/* Contact Mention Suggestion Popup */}
+      <ContactMentionSuggestion
+        isOpen={mentionOpen}
+        query={mentionQuery}
+        position={mentionPosition}
+        colors={colors}
+        onSelect={handleSelectContact}
+        onCreate={handleCreateContact}
+        onClose={closeMention}
+      />
+
+      {/* Topic Hashtag Suggestion Popup */}
+      <TopicMentionSuggestion
+        isOpen={topicOpen}
+        query={topicQuery}
+        position={topicPosition}
+        colors={colors}
+        onSelect={handleSelectTopic}
+        onCreate={handleCreateTopic}
+        onClose={closeTopic}
+      />
 
       {/* Dynamic Styles */}
       <style>{`
@@ -478,6 +917,108 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
           border: none;
           border-top: 1px solid ${colors.border};
           margin: 1em 0;
+        }
+
+        /* Wiki link node styling - icon on LEFT like Affine */
+        .ProseMirror .wikilink {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          cursor: pointer;
+          vertical-align: baseline;
+          user-select: none;
+        }
+
+        .ProseMirror .wikilink-icon {
+          flex-shrink: 0;
+          width: 12px;
+          height: 12px;
+          opacity: 0.5;
+          color: ${colors.textMuted};
+          transition: opacity 0.15s;
+        }
+
+        .ProseMirror .wikilink-text {
+          color: ${colors.text};
+          text-decoration: none;
+          transition: text-decoration 0.15s;
+        }
+
+        .ProseMirror .wikilink:hover .wikilink-icon {
+          opacity: 0.8;
+        }
+
+        .ProseMirror .wikilink:hover .wikilink-text {
+          text-decoration: underline;
+          text-decoration-color: ${colors.textMuted};
+        }
+
+        /* Contact mention node styling - icon on LEFT like wiki links */
+        .ProseMirror .contact-mention {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          cursor: pointer;
+          vertical-align: baseline;
+          user-select: none;
+        }
+
+        .ProseMirror .mention-icon {
+          flex-shrink: 0;
+          width: 12px;
+          height: 12px;
+          opacity: 0.5;
+          color: ${colors.textMuted};
+          transition: opacity 0.15s;
+        }
+
+        .ProseMirror .mention-text {
+          color: ${colors.text};
+          text-decoration: none;
+          transition: text-decoration 0.15s;
+        }
+
+        .ProseMirror .contact-mention:hover .mention-icon {
+          opacity: 0.8;
+        }
+
+        .ProseMirror .contact-mention:hover .mention-text {
+          text-decoration: underline;
+          text-decoration-color: ${colors.textMuted};
+        }
+
+        /* Topic mention node styling - icon on LEFT like wiki links */
+        .ProseMirror .topic-mention {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          cursor: pointer;
+          vertical-align: baseline;
+          user-select: none;
+        }
+
+        .ProseMirror .topic-mention .mention-icon {
+          flex-shrink: 0;
+          width: 12px;
+          height: 12px;
+          opacity: 0.5;
+          color: ${colors.accent};
+          transition: opacity 0.15s;
+        }
+
+        .ProseMirror .topic-mention .mention-text {
+          color: ${colors.accent};
+          text-decoration: none;
+          transition: text-decoration 0.15s;
+        }
+
+        .ProseMirror .topic-mention:hover .mention-icon {
+          opacity: 0.8;
+        }
+
+        .ProseMirror .topic-mention:hover .mention-text {
+          text-decoration: underline;
+          text-decoration-color: ${colors.accent};
         }
       `}</style>
     </div>

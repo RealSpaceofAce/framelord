@@ -8,8 +8,22 @@
 // =============================================================================
 
 import { Note, NoteLink, NoteKind, NoteViewMode } from '../types';
-import { CONTACT_ZERO } from './contactStore';
-import { getOrCreateTopic, linkNoteToTopic } from './topicStore';
+import {
+  CONTACT_ZERO,
+  addNoteMentionToContact,
+  removeNoteMentionFromContact,
+  addTopicToContact,
+  getContactById,
+} from './contactStore';
+import {
+  getOrCreateTopic,
+  linkNoteToTopic,
+  addNoteToTopic,
+  removeNoteFromTopic,
+  getTopicById,
+  createTopicFromHashtag,
+  addContactToTopic,
+} from './topicStore';
 
 // =============================================================================
 // MIGRATION HELPERS
@@ -217,6 +231,7 @@ const ensureNoteForLink = (
     isInbox: false,
     topics: [],
     tags: [],
+    mentions: [], // CRM: Contact IDs mentioned in this note
 
     // Display preferences
     preferredView: 'doc',
@@ -427,6 +442,7 @@ export const createNote = (params: {
     isInbox: params.isInbox ?? false,
     topics: [],
     tags: params.tags || [],
+    mentions: [], // CRM: Contact IDs mentioned in this note
 
     // Display preferences
     preferredView: params.preferredView || 'doc',
@@ -564,6 +580,57 @@ export const getBacklinkedNotes = (noteId: string): Note[] => {
 
 /** Raw links (useful for UI badges) */
 export const getNoteLinks = (): NoteLink[] => [...NOTE_LINKS];
+
+/** Backlink info with context snippet */
+export interface BacklinkInfo {
+  noteId: string;
+  noteTitle: string;
+  snippet: string;
+}
+
+/** Get backlinks with context snippets for a given note */
+export const getBacklinksWithContext = (noteId: string): BacklinkInfo[] => {
+  const note = getNoteById(noteId);
+  if (!note) return [];
+
+  const noteTitle = note.title || '';
+  const backlinkedNotes = getBacklinkedNotes(noteId);
+
+  return backlinkedNotes.map(backNote => {
+    const content = backNote.content || '';
+    // Find the [[link]] in the content and extract surrounding context
+    const linkPattern = new RegExp(`\\[\\[${noteTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]\\]`, 'gi');
+    const match = linkPattern.exec(content);
+
+    let snippet = '';
+    if (match) {
+      const start = Math.max(0, match.index - 40);
+      const end = Math.min(content.length, match.index + match[0].length + 40);
+      snippet = (start > 0 ? '...' : '') + content.slice(start, end).trim() + (end < content.length ? '...' : '');
+    }
+
+    return {
+      noteId: backNote.id,
+      noteTitle: backNote.title || 'Untitled',
+      snippet,
+    };
+  });
+};
+
+/** Create a note from a wiki link if it doesn't exist */
+export const createNoteFromWikiLink = (title: string): Note => {
+  // Check if note already exists
+  const existing = findNoteByTitle(title);
+  if (existing) return existing;
+
+  // Create new note
+  return createNote({
+    title: title.trim(),
+    content: '',
+    kind: 'note',
+    folderId: 'inbox',
+  });
+};
 
 /** Get all notes for autocomplete (filtered by search query) */
 export const searchNotesByTitle = (query: string, limit: number = 10): Note[] => {
@@ -1229,4 +1296,302 @@ export const importNotesFromJSON = (
   }
 
   return importedNotes;
+};
+
+// =============================================================================
+// CRM MENTION & TOPIC SYNC FUNCTIONS
+// =============================================================================
+
+/**
+ * Add a contact mention to a note
+ * Updates both the note's mentions array and the contact's mentionedInNotes array
+ * @param noteId - The note to add the mention to
+ * @param contactId - The contact being mentioned
+ */
+export const addMentionToNote = (noteId: string, contactId: string): void => {
+  const note = MOCK_NOTES.find(n => n.id === noteId);
+  if (!note) return;
+
+  // Initialize mentions array if needed
+  if (!note.mentions) {
+    note.mentions = [];
+  }
+
+  // Add to note's mentions if not already present
+  if (!note.mentions.includes(contactId)) {
+    note.mentions.push(contactId);
+    note.updatedAt = new Date().toISOString();
+    note.sync_version = (note.sync_version || 0) + 1;
+  }
+
+  // Sync to contact store (bidirectional link)
+  addNoteMentionToContact(contactId, noteId, note.title || undefined);
+};
+
+/**
+ * Remove a contact mention from a note
+ * Updates both the note's mentions array and the contact's mentionedInNotes array
+ * @param noteId - The note to remove the mention from
+ * @param contactId - The contact to remove
+ */
+export const removeMentionFromNote = (noteId: string, contactId: string): void => {
+  const note = MOCK_NOTES.find(n => n.id === noteId);
+  if (!note || !note.mentions) return;
+
+  const index = note.mentions.indexOf(contactId);
+  if (index !== -1) {
+    note.mentions.splice(index, 1);
+    note.updatedAt = new Date().toISOString();
+    note.sync_version = (note.sync_version || 0) + 1;
+  }
+
+  // Sync to contact store (remove bidirectional link)
+  removeNoteMentionFromContact(contactId, noteId);
+};
+
+/**
+ * Get all notes that mention a specific contact
+ * @param contactId - The contact to search for
+ */
+export const getNotesWithMention = (contactId: string): Note[] => {
+  return MOCK_NOTES
+    .filter(note => note.mentions?.includes(contactId))
+    .filter(note => !note.isArchived)
+    .sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+};
+
+/**
+ * Add a topic to a note (from hashtag)
+ * Updates both the note's topics array and the topic's noteIds array
+ * @param noteId - The note to add the topic to
+ * @param topicId - The topic ID to add
+ */
+export const addTopicToNoteById = (noteId: string, topicId: string): void => {
+  const note = MOCK_NOTES.find(n => n.id === noteId);
+  if (!note) return;
+
+  // Initialize topics array if needed
+  if (!note.topics) {
+    note.topics = [];
+  }
+
+  // Add to note's topics if not already present
+  if (!note.topics.includes(topicId)) {
+    note.topics.push(topicId);
+    note.updatedAt = new Date().toISOString();
+    note.sync_version = (note.sync_version || 0) + 1;
+  }
+
+  // Sync to topic store (bidirectional link)
+  addNoteToTopic(topicId, noteId);
+};
+
+/**
+ * Add a topic to a note by label (creates topic if needed)
+ * @param noteId - The note to add the topic to
+ * @param label - The topic label (from #hashtag)
+ * @returns The topic that was added/found
+ */
+export const addTopicToNoteByLabel = (noteId: string, label: string): { topicId: string; label: string } | null => {
+  const note = MOCK_NOTES.find(n => n.id === noteId);
+  if (!note) return null;
+
+  // Get or create the topic
+  const topic = createTopicFromHashtag(label);
+
+  // Add to note's topics
+  if (!note.topics) {
+    note.topics = [];
+  }
+
+  if (!note.topics.includes(topic.id)) {
+    note.topics.push(topic.id);
+    note.updatedAt = new Date().toISOString();
+    note.sync_version = (note.sync_version || 0) + 1;
+  }
+
+  // Sync to topic store
+  addNoteToTopic(topic.id, noteId);
+
+  return { topicId: topic.id, label: topic.label };
+};
+
+/**
+ * Remove a topic from a note
+ * Updates both the note's topics array and the topic's noteIds array
+ * @param noteId - The note to remove the topic from
+ * @param topicId - The topic ID to remove
+ */
+export const removeTopicFromNote = (noteId: string, topicId: string): void => {
+  const note = MOCK_NOTES.find(n => n.id === noteId);
+  if (!note || !note.topics) return;
+
+  const index = note.topics.indexOf(topicId);
+  if (index !== -1) {
+    note.topics.splice(index, 1);
+    note.updatedAt = new Date().toISOString();
+    note.sync_version = (note.sync_version || 0) + 1;
+  }
+
+  // Sync to topic store (remove bidirectional link)
+  removeNoteFromTopic(topicId, noteId);
+};
+
+/**
+ * Get all notes with a specific topic
+ * @param topicId - The topic to search for
+ */
+export const getNotesWithTopic = (topicId: string): Note[] => {
+  return MOCK_NOTES
+    .filter(note => note.topics?.includes(topicId))
+    .filter(note => !note.isArchived)
+    .sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+};
+
+/**
+ * Sync all mentions and topics for a note
+ * Call this when loading a note to ensure CRM linkages are correct
+ * @param noteId - The note to sync
+ */
+export const syncNoteCRMLinkages = (noteId: string): void => {
+  const note = MOCK_NOTES.find(n => n.id === noteId);
+  if (!note) return;
+
+  // Sync all mentions to contacts
+  if (note.mentions && note.mentions.length > 0) {
+    for (const contactId of note.mentions) {
+      addNoteMentionToContact(contactId, noteId, note.title || undefined);
+    }
+  }
+
+  // Sync all topics
+  if (note.topics && note.topics.length > 0) {
+    for (const topicId of note.topics) {
+      addNoteToTopic(topicId, noteId);
+
+      // Also link mentioned contacts to topics
+      if (note.mentions) {
+        for (const contactId of note.mentions) {
+          addContactToTopic(topicId, contactId);
+          addTopicToContact(contactId, topicId);
+        }
+      }
+    }
+  }
+};
+
+/**
+ * Get mentions and topics summary for a note
+ * Useful for UI display
+ * @param noteId - The note to get summary for
+ */
+export const getNoteCRMSummary = (noteId: string): {
+  mentions: Array<{ contactId: string; name: string }>;
+  topics: Array<{ topicId: string; label: string }>;
+} => {
+  const note = MOCK_NOTES.find(n => n.id === noteId);
+  if (!note) {
+    return { mentions: [], topics: [] };
+  }
+
+  const mentions: Array<{ contactId: string; name: string }> = [];
+  const topics: Array<{ topicId: string; label: string }> = [];
+
+  // Get contact names for mentions
+  if (note.mentions) {
+    for (const contactId of note.mentions) {
+      const contact = getContactById(contactId);
+      if (contact) {
+        mentions.push({
+          contactId: contact.id,
+          name: contact.fullName,
+        });
+      }
+    }
+  }
+
+  // Get topic labels
+  if (note.topics) {
+    for (const topicId of note.topics) {
+      const topic = getTopicById(topicId);
+      if (topic) {
+        topics.push({
+          topicId: topic.id,
+          label: topic.label,
+        });
+      }
+    }
+  }
+
+  return { mentions, topics };
+};
+
+/**
+ * Batch update mentions for a note
+ * Replaces all existing mentions with new ones
+ * @param noteId - The note to update
+ * @param contactIds - New list of contact IDs
+ */
+export const setNoteMentions = (noteId: string, contactIds: string[]): void => {
+  const note = MOCK_NOTES.find(n => n.id === noteId);
+  if (!note) return;
+
+  const oldMentions = note.mentions || [];
+  const newMentions = [...new Set(contactIds)]; // Deduplicate
+
+  // Remove old mentions that are not in new list
+  for (const oldId of oldMentions) {
+    if (!newMentions.includes(oldId)) {
+      removeNoteMentionFromContact(oldId, noteId);
+    }
+  }
+
+  // Add new mentions that are not in old list
+  for (const newId of newMentions) {
+    if (!oldMentions.includes(newId)) {
+      addNoteMentionToContact(newId, noteId, note.title || undefined);
+    }
+  }
+
+  // Update note
+  note.mentions = newMentions;
+  note.updatedAt = new Date().toISOString();
+  note.sync_version = (note.sync_version || 0) + 1;
+};
+
+/**
+ * Batch update topics for a note
+ * Replaces all existing topics with new ones
+ * @param noteId - The note to update
+ * @param topicIds - New list of topic IDs
+ */
+export const setNoteTopics = (noteId: string, topicIds: string[]): void => {
+  const note = MOCK_NOTES.find(n => n.id === noteId);
+  if (!note) return;
+
+  const oldTopics = note.topics || [];
+  const newTopics = [...new Set(topicIds)]; // Deduplicate
+
+  // Remove old topics that are not in new list
+  for (const oldId of oldTopics) {
+    if (!newTopics.includes(oldId)) {
+      removeNoteFromTopic(oldId, noteId);
+    }
+  }
+
+  // Add new topics that are not in old list
+  for (const newId of newTopics) {
+    if (!oldTopics.includes(newId)) {
+      addNoteToTopic(newId, noteId);
+    }
+  }
+
+  // Update note
+  note.topics = newTopics;
+  note.updatedAt = new Date().toISOString();
+  note.sync_version = (note.sync_version || 0) + 1;
 };

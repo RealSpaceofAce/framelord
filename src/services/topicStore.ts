@@ -1,16 +1,35 @@
 // =============================================================================
-// TOPIC STORE — In-memory data source for Topics (Obsidian-style [[Topic]] links)
+// TOPIC STORE — In-memory data source for Hashtag Topics
 // =============================================================================
-// Topics are first-class objects tied to notes, contacts, and Contact Zero.
-// Notes link to topics via NOTE_TOPICS join table.
+// Topics are lightweight tags created via #hashtag syntax in notes.
+// They link notes and contacts together for organization and discovery.
 // =============================================================================
 
 import { Topic, NoteTopic, Note } from '../types';
 import { getNotesByContactId, getNotesByAuthorId, getAllNotes } from './noteStore';
 
+// =============================================================================
+// HELPER: Ensure topic has CRM linkage fields
+// =============================================================================
+
+const ensureTopicCRMFields = (topic: Partial<Topic>): Topic => ({
+  ...topic,
+  createdAt: topic.createdAt || new Date().toISOString(),
+  updatedAt: topic.updatedAt || new Date().toISOString(),
+  noteIds: topic.noteIds || [],
+  contactIds: topic.contactIds || [],
+} as Topic);
+
 // --- IN-MEMORY STORES ---
 
-let TOPICS: Topic[] = [];
+let TOPICS: Topic[] = [
+  // Sample topics with CRM linkage
+  ensureTopicCRMFields({ id: 'topic-sales', label: 'Sales', slug: 'sales' }),
+  ensureTopicCRMFields({ id: 'topic-marketing', label: 'Marketing', slug: 'marketing' }),
+  ensureTopicCRMFields({ id: 'topic-engineering', label: 'Engineering', slug: 'engineering' }),
+  ensureTopicCRMFields({ id: 'topic-product', label: 'Product', slug: 'product' }),
+  ensureTopicCRMFields({ id: 'topic-ideas', label: 'Ideas', slug: 'ideas' }),
+];
 let NOTE_TOPICS: NoteTopic[] = [];
 
 // --- HELPER: Normalize slug ---
@@ -51,11 +70,16 @@ export const getOrCreateTopic = (label: string): Topic => {
     return existing;
   }
 
-  // Create new topic
+  // Create new topic with CRM fields
+  const now = new Date().toISOString();
   const newTopic: Topic = {
     id: generateTopicId(),
     label: trimmedLabel,
     slug,
+    createdAt: now,
+    updatedAt: now,
+    noteIds: [],
+    contactIds: [],
   };
 
   TOPICS.push(newTopic);
@@ -166,10 +190,128 @@ export const getNoteCountForTopic = (topicId: string): number => {
  * Get unique contacts for a topic (from notes about those contacts).
  */
 export const getContactIdsForTopic = (topicId: string): string[] => {
+  const topic = getTopicById(topicId);
+  if (topic?.contactIds?.length) {
+    return [...topic.contactIds];
+  }
+  // Fallback to legacy method
   const notes = getNotesForTopic(topicId);
   const contactIds = new Set<string>();
-  notes.forEach(n => contactIds.add(n.contactId));
+  notes.forEach(n => {
+    if (n.contactId) contactIds.add(n.contactId);
+  });
   return Array.from(contactIds);
+};
+
+// =============================================================================
+// HASHTAG SEARCH FUNCTIONS
+// =============================================================================
+
+/**
+ * Search topics by label (for # autocomplete).
+ * @param query - Search query
+ * @param limit - Maximum results
+ */
+export const searchTopicsByLabel = (query: string, limit = 8): Topic[] => {
+  if (!query || query.trim().length === 0) return [];
+
+  const q = query.toLowerCase().trim();
+
+  let results = TOPICS.filter(t =>
+    t.label.toLowerCase().includes(q)
+  );
+
+  // Sort by relevance: starts with query first
+  results.sort((a, b) => {
+    const aStarts = a.label.toLowerCase().startsWith(q) ? 0 : 1;
+    const bStarts = b.label.toLowerCase().startsWith(q) ? 0 : 1;
+    return aStarts - bStarts;
+  });
+
+  return results.slice(0, limit);
+};
+
+/**
+ * Find a topic by exact label match (case-insensitive).
+ */
+export const findTopicByLabel = (label: string): Topic | undefined => {
+  const normalizedLabel = label.trim().toLowerCase();
+  return TOPICS.find(t => t.label.toLowerCase() === normalizedLabel);
+};
+
+/**
+ * Create a topic from a hashtag if it doesn't exist.
+ * @param label - The hashtag label (without #)
+ * @returns The topic (existing or new)
+ */
+export const createTopicFromHashtag = (label: string): Topic => {
+  const existing = findTopicByLabel(label);
+  if (existing) return existing;
+
+  const topic = getOrCreateTopic(label);
+  return ensureTopicCRMFields(topic);
+};
+
+// =============================================================================
+// CRM LINKAGE SYNC FUNCTIONS
+// =============================================================================
+
+/**
+ * Add a note to a topic's noteIds.
+ * @param topicId - The topic
+ * @param noteId - The note to add
+ */
+export const addNoteToTopic = (topicId: string, noteId: string): void => {
+  const topic = getTopicById(topicId);
+  if (!topic) return;
+
+  if (!topic.noteIds) topic.noteIds = [];
+  if (!topic.noteIds.includes(noteId)) {
+    topic.noteIds.push(noteId);
+    topic.updatedAt = new Date().toISOString();
+  }
+};
+
+/**
+ * Remove a note from a topic's noteIds.
+ * @param topicId - The topic
+ * @param noteId - The note to remove
+ */
+export const removeNoteFromTopic = (topicId: string, noteId: string): void => {
+  const topic = getTopicById(topicId);
+  if (!topic || !topic.noteIds) return;
+
+  topic.noteIds = topic.noteIds.filter(id => id !== noteId);
+  topic.updatedAt = new Date().toISOString();
+};
+
+/**
+ * Add a contact to a topic's contactIds.
+ * @param topicId - The topic
+ * @param contactId - The contact to add
+ */
+export const addContactToTopic = (topicId: string, contactId: string): void => {
+  const topic = getTopicById(topicId);
+  if (!topic) return;
+
+  if (!topic.contactIds) topic.contactIds = [];
+  if (!topic.contactIds.includes(contactId)) {
+    topic.contactIds.push(contactId);
+    topic.updatedAt = new Date().toISOString();
+  }
+};
+
+/**
+ * Sync topic-contact relationships based on note mentions.
+ * @param topicId - The topic to sync
+ * @param contactIds - All contact IDs mentioned in notes with this topic
+ */
+export const syncTopicContacts = (topicId: string, contactIds: string[]): void => {
+  const topic = getTopicById(topicId);
+  if (!topic) return;
+
+  topic.contactIds = [...new Set(contactIds)];
+  topic.updatedAt = new Date().toISOString();
 };
 
 

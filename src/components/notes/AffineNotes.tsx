@@ -1625,6 +1625,7 @@ interface PageEditorProps {
   onToggleSidebar: () => void;
   onToggleRightSidebar: () => void;
   onNavigateToNote: (noteId: string) => void;
+  onNavigateToContact?: (contactId: string) => void;
   onTitleChange: (title: string) => void;
   onToggleTheme: () => void;
   onToggleFavorite: () => void;
@@ -1635,7 +1636,7 @@ interface PageEditorProps {
 }
 
 const PageEditor: React.FC<PageEditorProps> = ({
-  page, theme, colors, sidebarCollapsed, collections, folders, journalDates = [], onToggleSidebar, onToggleRightSidebar, onNavigateToNote, onTitleChange,
+  page, theme, colors, sidebarCollapsed, collections, folders, journalDates = [], onToggleSidebar, onToggleRightSidebar, onNavigateToNote, onNavigateToContact, onTitleChange,
   onToggleTheme, onToggleFavorite, onAddToCollection, onJournalDateChange, onClose, onRefresh,
 }) => {
   const [title, setTitle] = useState(page.title || '');
@@ -1940,11 +1941,14 @@ const PageEditor: React.FC<PageEditorProps> = ({
           {/* Editor Content */}
           <div className="min-h-[300px]" style={{ background: colors.bg }}>
             <MarkdownNoteEditor
+              noteId={page.id}
               content={page.content || ''}
               theme={theme}
               onContentChange={(content) => { updateNote(page.id, { content }); }}
               onNavigateToNote={onNavigateToNote}
+              onNavigateToContact={onNavigateToContact}
               placeholder="Start writing..."
+              showBacklinks={true}
             />
           </div>
 
