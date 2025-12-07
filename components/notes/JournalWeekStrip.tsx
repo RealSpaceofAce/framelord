@@ -18,7 +18,7 @@ interface JournalWeekStripProps {
   onPrevWeek: () => void;
   onNextWeek: () => void;
   onToday: () => void;
-  theme: 'light' | 'dark';
+  theme: 'light' | 'gray' | 'dark';
   colors: Record<string, string>;
   journalDates?: string[]; // Optional: dates that have journal entries (YYYY-MM-DD)
 }

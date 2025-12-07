@@ -141,7 +141,7 @@ export function NoteCanvasToolbar({
                 relative p-2 rounded-md transition-all
                 ${activeTool === tool.id
                   ? 'bg-[#0043ff] text-white'
-                  : 'text-[#a1a1aa] hover:bg-[#111111] hover:text-white'
+                  : 'text-[#a1a1aa] hover:bg-[#0a0a0a] hover:text-white'
                 }
               `}
               title={tool.label}
@@ -158,7 +158,7 @@ export function NoteCanvasToolbar({
         <div className="flex items-center gap-1 pr-2 border-r border-[#1c1c1c]">
           <button
             onClick={handleImageClick}
-            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#111111] hover:text-white transition-all"
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#0a0a0a] hover:text-white transition-all"
             title="Upload Image"
           >
             <ImageIcon size={18} />
@@ -176,7 +176,7 @@ export function NoteCanvasToolbar({
         <div className="flex items-center gap-1 pr-2 border-r border-[#1c1c1c]">
           <button
             onClick={handleZoomOut}
-            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#111111] hover:text-white transition-all"
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#0a0a0a] hover:text-white transition-all"
             title="Zoom Out"
           >
             <ZoomOut size={18} />
@@ -186,7 +186,7 @@ export function NoteCanvasToolbar({
           </span>
           <button
             onClick={handleZoomIn}
-            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#111111] hover:text-white transition-all"
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#0a0a0a] hover:text-white transition-all"
             title="Zoom In"
           >
             <ZoomIn size={18} />
@@ -197,7 +197,7 @@ export function NoteCanvasToolbar({
         <div className="relative flex items-center gap-1 pr-2 border-r border-[#1c1c1c]">
           <button
             onClick={() => setShowColorPicker(!showColorPicker)}
-            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#111111] hover:text-white transition-all flex items-center gap-1"
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#0a0a0a] hover:text-white transition-all flex items-center gap-1"
             title="Color"
           >
             <Palette size={18} />
@@ -212,7 +212,7 @@ export function NoteCanvasToolbar({
         <div className="flex items-center gap-1">
           <button
             onClick={onToggleFullscreen}
-            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#111111] hover:text-white transition-all"
+            className="p-2 rounded-md text-[#a1a1aa] hover:bg-[#0a0a0a] hover:text-white transition-all"
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           >
             {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
@@ -228,7 +228,7 @@ export function NoteCanvasToolbar({
               <button
                 key={shape.type}
                 onClick={() => handleShapeSelect(shape.type)}
-                className="flex items-center gap-2 px-3 py-2 rounded-md text-[#a1a1aa] hover:bg-[#111111] hover:text-white transition-all text-sm"
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-[#a1a1aa] hover:bg-[#0a0a0a] hover:text-white transition-all text-sm"
               >
                 {shape.icon}
                 <span>{shape.label}</span>

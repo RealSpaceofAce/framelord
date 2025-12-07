@@ -40,7 +40,7 @@ const MotionDiv = motion.div as any;
 export interface AITabProps {
   noteId?: string;
   noteContent?: string;
-  theme: 'light' | 'dark';
+  theme: 'light' | 'gray' | 'dark';
   colors: Record<string, string>;
   tenantId?: string;
   userId?: string;

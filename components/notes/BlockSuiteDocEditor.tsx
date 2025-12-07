@@ -176,7 +176,13 @@ function createNoteStoreLinkedDocConfig(currentDocId: string) {
               name: note.title || 'Untitled',
               icon: LinkedDocIcon,
               action: () => {
+                // CRITICAL: Save cursor position BEFORE abort() which might move it
+                const savedRange = inlineEditor.getInlineRange?.();
                 abort();
+                // Restore cursor position after abort
+                if (savedRange) {
+                  inlineEditor.setInlineRange(savedRange);
+                }
                 insertLinkedReference(note.id, note.title || 'Untitled');
               },
             })),
@@ -198,7 +204,13 @@ function createNoteStoreLinkedDocConfig(currentDocId: string) {
                 name: `New "${displayName}" page`,
                 icon: NewDocIcon,
                 action: () => {
+                  // CRITICAL: Save cursor position BEFORE abort() which might move it
+                  const savedRange = inlineEditor.getInlineRange?.();
                   abort();
+                  // Restore cursor position after abort
+                  if (savedRange) {
+                    inlineEditor.setInlineRange(savedRange);
+                  }
                   // Create a new note in our store
                   const newNote = createNote({
                     title: query || 'Untitled',
@@ -218,7 +230,13 @@ function createNoteStoreLinkedDocConfig(currentDocId: string) {
                 name: `New "${displayName}" edgeless`,
                 icon: html`<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3h14v14H3V3zm1 1v12h12V4H4z"/></svg>`,
                 action: () => {
+                  // CRITICAL: Save cursor position BEFORE abort() which might move it
+                  const savedRange = inlineEditor.getInlineRange?.();
                   abort();
+                  // Restore cursor position after abort
+                  if (savedRange) {
+                    inlineEditor.setInlineRange(savedRange);
+                  }
                   // Create a new edgeless note in our store
                   const newNote = createNote({
                     title: query || 'Untitled',
@@ -251,7 +269,7 @@ import '@/lib/blocksuite/theme.css';
 
 interface Props {
   docId: string;
-  theme?: 'light' | 'dark';
+  theme?: 'light' | 'gray' | 'dark';
   mode?: 'page' | 'edgeless';
   readOnly?: boolean;
   onContentChange?: (serialized: unknown) => void;
@@ -322,30 +340,160 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
   const [selectedColor, setSelectedColor] = useState('#3b82f6');
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Canvas toolbar handlers
+  // Helper: Convert file to data URL
+  const fileToDataURL = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Helper: Get viewport for zoom/pan operations
+  const getViewport = useCallback(() => {
+    if (!editorRef.current) return null;
+    try {
+      const host = editorRef.current.host;
+      if (!host || !host.std) return null;
+      // Cast to any to avoid TypeScript issues with BlockSuite internal APIs
+      const edgelessService = (host.std as any).get('affine:page');
+      return edgelessService?.viewport || null;
+    } catch (e) {
+      console.warn('[Canvas] Could not get viewport:', e);
+      return null;
+    }
+  }, []);
+
+  // Helper: Get tool controller for tool switching
+  const getToolController = useCallback(() => {
+    if (!editorRef.current) return null;
+    try {
+      const host = editorRef.current.host;
+      if (!host || !host.std) return null;
+      // Cast to any to avoid TypeScript issues with BlockSuite internal APIs
+      const rootService = (host.std as any).get('affine:page');
+      return rootService?.tool || null;
+    } catch (e) {
+      console.warn('[Canvas] Could not get tool controller:', e);
+      return null;
+    }
+  }, []);
+
+  // Canvas toolbar handlers - WIRED TO BLOCKSUITE API
   const handleToolChange = useCallback((tool: CanvasTool) => {
     setActiveTool(tool);
-    console.log('[Canvas] Tool changed to:', tool);
-  }, []);
+
+    const toolController = getToolController();
+    if (!toolController || !toolController.setTool) {
+      console.warn('[Canvas] Tool controller not available');
+      return;
+    }
+
+    console.log('[Canvas] Switching to tool:', tool);
+
+    try {
+      switch (tool) {
+        case 'select':
+          toolController.setTool({ type: 'default' });
+          break;
+        case 'text':
+          toolController.setTool({ type: 'text' });
+          break;
+        case 'shape':
+          // Default to rect - specific shape will be set via handleShapeCreate
+          toolController.setTool({ type: 'shape', shapeType: 'rect' });
+          break;
+        case 'connector':
+          toolController.setTool({ type: 'connector', mode: 'straight' });
+          break;
+        case 'brush':
+          toolController.setTool({ type: 'brush' });
+          break;
+        case 'pan':
+          toolController.setTool({ type: 'pan' });
+          break;
+      }
+    } catch (e) {
+      console.error('[Canvas] Error setting tool:', e);
+    }
+  }, [getToolController]);
 
   const handleShapeCreate = useCallback((shapeType: ShapeType) => {
-    console.log('[Canvas] Creating shape:', shapeType);
-    // TODO: Wire up to BlockSuite surface API
-  }, []);
+    const toolController = getToolController();
+    if (!toolController || !toolController.setTool) {
+      console.warn('[Canvas] Tool controller not available for shape');
+      return;
+    }
 
-  const handleImageUpload = useCallback((file: File) => {
+    console.log('[Canvas] Setting shape type:', shapeType);
+
+    try {
+      toolController.setTool({ type: 'shape', shapeType });
+      setActiveTool('shape');
+    } catch (e) {
+      console.error('[Canvas] Error setting shape type:', e);
+    }
+  }, [getToolController]);
+
+  const handleImageUpload = useCallback(async (file: File) => {
+    if (!editorRef.current) return;
+
     console.log('[Canvas] Uploading image:', file.name);
-    // TODO: Wire up to BlockSuite image upload API
-  }, []);
+
+    try {
+      // Convert file to data URL
+      const dataUrl = await fileToDataURL(file);
+
+      // Get the document
+      const editor = editorRef.current;
+      const doc = editor.doc;
+
+      if (doc) {
+        // Find the surface block
+        const surfaces = doc.getBlocksByFlavour('affine:surface');
+        if (surfaces.length > 0) {
+          const surface = surfaces[0];
+
+          // Get viewport center for positioning
+          const viewport = getViewport();
+          const centerX = viewport?.centerX || 400;
+          const centerY = viewport?.centerY || 300;
+
+          // Create image block on canvas at center
+          doc.addBlock('affine:image', {
+            sourceId: dataUrl,
+            xywh: `[${centerX - 100},${centerY - 100},200,200]`,
+          }, surface.id);
+
+          console.log('[Canvas] Image uploaded to canvas');
+        } else {
+          console.warn('[Canvas] No surface block found');
+        }
+      }
+    } catch (e) {
+      console.error('[Canvas] Failed to upload image:', e);
+    }
+  }, [getViewport]);
 
   const handleZoomChange = useCallback((newZoom: number) => {
     setZoom(newZoom);
-    console.log('[Canvas] Zoom changed to:', newZoom);
-  }, []);
+
+    const viewport = getViewport();
+    if (viewport && viewport.setZoom) {
+      // Convert percentage to zoom factor (100% = 1.0)
+      const zoomFactor = newZoom / 100;
+      viewport.setZoom(zoomFactor);
+      console.log('[Canvas] Zoom set to:', zoomFactor);
+    } else {
+      console.log('[Canvas] Zoom UI updated to:', newZoom);
+    }
+  }, [getViewport]);
 
   const handleColorChange = useCallback((color: string) => {
     setSelectedColor(color);
     console.log('[Canvas] Color changed to:', color);
+    // Note: Color will be applied when creating new shapes
   }, []);
 
   const handleToggleFullscreen = useCallback(() => {
@@ -528,6 +676,18 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
         // Apply theme
         applyThemeToElement(editor, theme);
 
+        // Focus the editor to show cursor
+        setTimeout(() => {
+          if (editor.host) {
+            editor.host.focus();
+            // Also try to focus the first paragraph
+            const paragraph = editor.host.querySelector('[data-block-id] [contenteditable="true"]');
+            if (paragraph instanceof HTMLElement) {
+              paragraph.focus();
+            }
+          }
+        }, 100);
+
         // Force text colors and hide dots
         const forceTextColorsAndHideDots = () => {
           const textColor = theme === 'light' ? '#1f2937' : '#fafafa';
@@ -615,96 +775,9 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
         setTimeout(addCanLinkDocClass, 500);
         setTimeout(addCanLinkDocClass, 1000);
 
-        // Keydown handler for @ and [[ manual triggering
-        const handleKeydown = (e: KeyboardEvent) => {
-          // @ key or [ key - MANUALLY TRIGGER linked-doc widget
-          if (e.key === '@' || e.key === '[') {
-            console.log('[LinkedDoc MANUAL] Trigger key detected:', e.key);
-
-            (async () => {
-              await new Promise(resolve => requestAnimationFrame(resolve));
-              await new Promise(resolve => requestAnimationFrame(resolve));
-              await new Promise(resolve => setTimeout(resolve, 100));
-
-              const widget = document.querySelector('affine-linked-doc-widget') as any;
-              if (!widget) {
-                console.log('[LinkedDoc MANUAL] No widget found');
-                return;
-              }
-
-              let inlineEditor = null;
-              try {
-                inlineEditor = widget._getInlineEditor?.();
-                console.log('[LinkedDoc MANUAL] Selection-based lookup result:', !!inlineEditor);
-              } catch (err) {
-                console.log('[LinkedDoc MANUAL] Selection-based lookup error:', err);
-              }
-
-              // Fallback: Walk up from activeElement
-              if (!inlineEditor) {
-                console.log('[LinkedDoc MANUAL] Trying DOM traversal fallback...');
-                let element: Element | null = document.activeElement;
-
-                while (element) {
-                  if ((element as any).inlineEditor) {
-                    inlineEditor = (element as any).inlineEditor;
-                    console.log('[LinkedDoc MANUAL] Found inlineEditor via DOM traversal on:', element.tagName);
-                    break;
-                  }
-
-                  const root = element.getRootNode();
-                  if (root instanceof ShadowRoot) {
-                    element = root.host;
-                  } else if (element.parentElement) {
-                    element = element.parentElement;
-                  } else {
-                    break;
-                  }
-                }
-              }
-
-              if (!inlineEditor) {
-                console.log('[LinkedDoc MANUAL] Could not find inline editor');
-                return;
-              }
-
-              // For '[' key, verify complete '[[' trigger
-              if (e.key === '[') {
-                const inlineRange = inlineEditor.getInlineRange?.();
-                if (inlineRange) {
-                  try {
-                    const textPoint = inlineEditor.getTextPoint?.(inlineRange.index);
-                    if (textPoint) {
-                      const [textNode, offset] = textPoint;
-                      const textBefore = textNode.textContent?.slice(0, offset) || '';
-                      if (!textBefore.endsWith('[[')) {
-                        console.log('[LinkedDoc MANUAL] Waiting for complete [[ trigger');
-                        return;
-                      }
-                    }
-                  } catch (textErr) {
-                    console.log('[LinkedDoc MANUAL] Could not verify [[ trigger, proceeding anyway');
-                  }
-                }
-              }
-
-              // Manually show widget
-              try {
-                const triggerKey = e.key === '@' ? '@' : '[[';
-                widget._inlineEditor = inlineEditor;
-                widget._triggerKey = triggerKey;
-                widget._startRange = inlineEditor.getInlineRange?.() ?? null;
-                widget.show?.('desktop');
-
-                console.log('[LinkedDoc MANUAL] SUCCESS! Widget shown');
-              } catch (err) {
-                console.error('[LinkedDoc MANUAL] Error showing widget:', err);
-              }
-            })();
-          }
-        };
-
-        document.addEventListener('keydown', handleKeydown, true);
+        // NOTE: Manual keydown handler REMOVED - the linkedWidget.getMenus config
+        // handles wiki link triggering automatically via triggerKeys: ['@', '[[']
+        // Having both causes duplicate menus to appear.
 
         // Wiki link click handler
         const handleWikiLinkClick = (e: MouseEvent) => {
@@ -786,7 +859,6 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
 
         // Store handlers for cleanup
         (editorContainer as any)._handlers = {
-          handleKeydown,
           handleWikiLinkClick,
           handleInsertText,
         };
@@ -865,7 +937,7 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
 
       if (editorContainerRef.current && (editorContainerRef.current as any)._handlers) {
         const h = (editorContainerRef.current as any)._handlers;
-        document.removeEventListener('keydown', h.handleKeydown, true);
+        // Note: Manual keydown handler was removed - wiki links now handled by linkedWidget config
         if (h.handleInsertText) {
           window.removeEventListener('blocksuite-insert-text', h.handleInsertText);
         }

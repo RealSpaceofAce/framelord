@@ -36,7 +36,7 @@ export interface CommentsTabProps {
   noteId?: string;
   currentUserId?: string;
   currentUserName?: string;
-  theme: 'light' | 'dark';
+  theme: 'light' | 'gray' | 'dark';
   colors: Record<string, string>;
   onAddComment?: (content: string, selection?: any) => void;
 }

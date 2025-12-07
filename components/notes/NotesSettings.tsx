@@ -10,7 +10,7 @@
 // =============================================================================
 
 import React, { useState, useEffect } from 'react';
-import { X, Monitor, Sun, Moon, ChevronDown } from 'lucide-react';
+import { X, Monitor, Sun, Moon, Circle, ChevronDown } from 'lucide-react';
 
 // =============================================================================
 // TYPES
@@ -19,11 +19,11 @@ import { X, Monitor, Sun, Moon, ChevronDown } from 'lucide-react';
 interface NotesSettingsProps {
   isOpen: boolean;
   onClose: () => void;
-  onThemeChange?: (theme: 'light' | 'dark' | 'system') => void;
+  onThemeChange?: (theme: 'light' | 'gray' | 'dark' | 'system') => void;
 }
 
 type SettingsTab = 'appearance' | 'editor' | 'shortcuts' | 'preference' | 'properties';
-type ColorMode = 'system' | 'light' | 'dark';
+type ColorMode = 'system' | 'light' | 'gray' | 'dark';
 type FontSize = 'small' | 'normal' | 'large';
 type DefaultMode = 'page' | 'edgeless';
 type StartupView = 'all' | 'journals' | 'last';
@@ -128,9 +128,9 @@ export const NotesSettings: React.FC<NotesSettingsProps> = ({ isOpen, onClose, o
   useEffect(() => {
     if (onThemeChange) {
       const resolvedTheme = settings.colorMode === 'system'
-        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'gray' : 'light')
         : settings.colorMode;
-      onThemeChange(resolvedTheme as 'light' | 'dark');
+      onThemeChange(resolvedTheme as 'light' | 'gray' | 'dark');
     }
   }, [settings.colorMode, onThemeChange]);
 
@@ -199,7 +199,7 @@ export const NotesSettings: React.FC<NotesSettingsProps> = ({ isOpen, onClose, o
                     Color mode
                   </label>
                   <div className="flex gap-3">
-                    {(['system', 'light', 'dark'] as ColorMode[]).map(mode => (
+                    {(['system', 'light', 'gray', 'dark'] as ColorMode[]).map(mode => (
                       <button
                         key={mode}
                         onClick={() => updateSetting('colorMode', mode)}
@@ -211,6 +211,7 @@ export const NotesSettings: React.FC<NotesSettingsProps> = ({ isOpen, onClose, o
                       >
                         {mode === 'system' && <Monitor size={16} />}
                         {mode === 'light' && <Sun size={16} />}
+                        {mode === 'gray' && <Circle size={16} />}
                         {mode === 'dark' && <Moon size={16} />}
                         <span className="capitalize">{mode}</span>
                       </button>

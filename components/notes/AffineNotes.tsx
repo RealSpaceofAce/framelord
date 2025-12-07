@@ -129,7 +129,7 @@ export const AffineNotes: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>(getResolvedEditorTheme());
+  const [theme, setTheme] = useState<'light' | 'gray' | 'dark'>(getResolvedEditorTheme());
   const [showSettings, setShowSettings] = useState(false);
 
   // Folder state with localStorage persistence
@@ -411,7 +411,7 @@ export const AffineNotes: React.FC = () => {
   }, []);
 
   const handleThemeToggle = useCallback(() => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
+    const newTheme = theme === 'light' ? 'gray' : theme === 'gray' ? 'dark' : 'light';
     setTheme(newTheme);
     setEditorTheme(newTheme);
   }, [theme]);
@@ -530,16 +530,43 @@ export const AffineNotes: React.FC = () => {
   }, []);
 
   // Theme colors - BRAND PALETTE: Pure black #000000, blue #0043ff accent
-  const colors = useMemo(() => ({
-    bg: theme === 'light' ? '#ffffff' : '#000000',
-    sidebar: theme === 'light' ? '#fbfbfb' : '#000000',
-    border: theme === 'light' ? '#e8e8e8' : '#1c1c1c',
-    text: theme === 'light' ? '#1f1f1f' : '#ffffff',
-    textMuted: theme === 'light' ? '#8e8e8e' : '#888888',
-    hover: theme === 'light' ? '#f0f0f0' : '#111111',
-    active: theme === 'light' ? '#e8f4ff' : '#0043ff20',
-    accent: '#0043ff',
-  }), [theme]);
+  // IMPORTANT: All dark mode backgrounds should be #000000 or nearly invisible variants
+  const colors = useMemo(() => {
+    if (theme === 'light') {
+      return {
+        bg: '#ffffff',
+        sidebar: '#fbfbfb',
+        border: '#e8e8e8',
+        text: '#1f1f1f',
+        textMuted: '#8e8e8e',
+        hover: '#f0f0f0',
+        active: '#e8f4ff',
+        accent: '#0043ff',
+      };
+    } else if (theme === 'gray') {
+      return {
+        bg: '#1f1f23',
+        sidebar: '#1f1f23',
+        border: '#3f3f46',
+        text: '#fafafa',
+        textMuted: '#a1a1aa',
+        hover: '#27272a',
+        active: '#6366f120',
+        accent: '#6366f1',
+      };
+    } else {
+      return {
+        bg: '#000000',
+        sidebar: '#000000',
+        border: '#1c1c1c',
+        text: '#ffffff',
+        textMuted: '#888888',
+        hover: '#0a0a0a',
+        active: '#0043ff20',
+        accent: '#0043ff',
+      };
+    }
+  }, [theme]);
 
   // ==========================================================================
   // RENDER
@@ -555,7 +582,7 @@ export const AffineNotes: React.FC = () => {
         >
           {/* Workspace Header */}
           <div className="p-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: colors.accent }}>
               <span className="text-white text-sm font-bold">F</span>
             </div>
             <span className="text-sm font-semibold" style={{ color: colors.text }}>FrameLord</span>
@@ -844,8 +871,12 @@ export const AffineNotes: React.FC = () => {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         onThemeChange={(newTheme) => {
-          setTheme(newTheme);
-          setEditorTheme(newTheme);
+          // Resolve 'system' to actual theme
+          const resolvedTheme = newTheme === 'system'
+            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'gray' : 'light')
+            : newTheme;
+          setTheme(resolvedTheme);
+          setEditorTheme(newTheme); // Store the preference (can be 'system')
         }}
       />
     </div>
@@ -1596,7 +1627,7 @@ const EmptyState: React.FC<{ isTrash: boolean; onNewPage: () => void; colors: Re
 
 interface PageEditorProps {
   page: Note;
-  theme: 'light' | 'dark';
+  theme: 'light' | 'gray' | 'dark';
   colors: Record<string, string>;
   sidebarCollapsed: boolean;
   collections: Collection[];

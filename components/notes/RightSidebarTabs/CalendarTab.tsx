@@ -19,7 +19,7 @@ import { getJournalDates, getOrCreateJournalForDate, getAllNotes } from '../../.
 
 export interface CalendarTabProps {
   journalDates?: string[];
-  theme: 'light' | 'dark';
+  theme: 'light' | 'gray' | 'dark';
   colors: Record<string, string>;
   onDateSelect?: (date: Date) => void;
   onNavigateToNote?: (noteId: string) => void;

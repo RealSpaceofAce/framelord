@@ -1,8 +1,11 @@
 // =============================================================================
-// BLOCKSUITE THEME DEFINITIONS — Light and Dark themes
+// BLOCKSUITE THEME DEFINITIONS — Light, Gray, and Dark themes
 // =============================================================================
 // CSS custom properties for BlockSuite editor theming.
-// These are applied directly to the editor element.
+//
+// IMPORTANT: CSS custom properties (variables) naturally cascade INTO Shadow DOM.
+// This is the correct way to theme BlockSuite - no Shadow DOM injection needed.
+// Simply set variables on the element or :root and they will be inherited.
 // =============================================================================
 
 export interface EditorThemeVariables {
@@ -46,6 +49,10 @@ export interface EditorThemeVariables {
   // Grid (for canvas mode)
   '--affine-edgeless-grid-color': string;
   '--affine-edgeless-text-color': string;
+
+  // CRITICAL: Override border variables used by BlockSuite
+  '--affine-black-10': string;
+  '--affine-black-30': string;
 }
 
 /**
@@ -92,260 +99,150 @@ export const lightTheme: EditorThemeVariables = {
   // Grid
   '--affine-edgeless-grid-color': 'rgba(99, 102, 241, 0.1)',
   '--affine-edgeless-text-color': '#1f2937',
+
+  // Border overrides - transparent to hide note borders
+  '--affine-black-10': 'transparent',
+  '--affine-black-30': 'transparent',
 };
 
 /**
- * Dark theme — Matches AFFiNE dark mode exactly
+ * Gray theme — AFFiNE-style gray theme with #1f1f23 backgrounds
  */
-export const darkTheme: EditorThemeVariables = {
-  // Background — Matches AFFiNE dark theme
+export const grayTheme: EditorThemeVariables = {
+  // Background — Grayish backgrounds like AFFiNE default dark
   '--affine-background-primary-color': '#1f1f23',
-  '--affine-background-secondary-color': '#1f1f23',
-  '--affine-background-tertiary-color': '#27272a',
-  '--affine-background-overlay-panel-color': 'rgba(24, 24, 27, 0.98)',
+  '--affine-background-secondary-color': '#27272a',
+  '--affine-background-tertiary-color': '#303033',
+  '--affine-background-overlay-panel-color': 'rgba(31, 31, 35, 0.98)',
   '--affine-background-modal-color': '#1f1f23',
-  '--affine-background-code-block': '#1f1f23',
+  '--affine-background-code-block': '#27272a',
 
   // Text — High contrast for readability
   '--affine-text-primary-color': '#fafafa',
   '--affine-text-secondary-color': '#a1a1aa',
   '--affine-text-disable-color': '#52525b',
-  '--affine-placeholder-color': '#52525b',
+  '--affine-placeholder-color': '#71717a',
 
   // Brand — Indigo accent
   '--affine-primary-color': '#6366f1',
   '--affine-brand-color': '#6366f1',
 
-  // Borders — Subtle dark
-  '--affine-border-color': '#27272a',
-  '--affine-divider-color': '#27272a',
+  // Borders — Gray borders
+  '--affine-border-color': '#3f3f46',
+  '--affine-divider-color': '#3f3f46',
 
-  // Hover — Dark indigo tints
-  '--affine-hover-color': 'rgba(99, 102, 241, 0.08)',
+  // Hover — Indigo tints
+  '--affine-hover-color': 'rgba(99, 102, 241, 0.1)',
   '--affine-hover-color-filled': 'rgba(99, 102, 241, 0.15)',
 
   // Icons — Gray tones
   '--affine-icon-color': '#a1a1aa',
   '--affine-icon-secondary': '#71717a',
 
-  // Links — Light indigo
+  // Links — Indigo for visibility
   '--affine-link-color': '#818cf8',
 
-  // Selection
+  // Selection — Indigo
   '--affine-selected-color': 'rgba(99, 102, 241, 0.2)',
-  '--affine-block-selected-color': 'rgba(99, 102, 241, 0.08)',
+  '--affine-block-selected-color': 'rgba(99, 102, 241, 0.1)',
 
-  // Grid
+  // Grid — Indigo
   '--affine-edgeless-grid-color': 'rgba(99, 102, 241, 0.15)',
   '--affine-edgeless-text-color': '#fafafa',
+
+  // Border overrides
+  '--affine-black-10': 'transparent',
+  '--affine-black-30': 'transparent',
+};
+
+/**
+ * Dark theme — FRAMELORD Brand: Pure black #000000, blue #0043ff
+ * CRITICAL: Regular text is WHITE (#ffffff), only LINKS are BLUE (#0043ff)
+ */
+export const darkTheme: EditorThemeVariables = {
+  // Background — PURE BLACK (brand palette)
+  '--affine-background-primary-color': '#000000',
+  '--affine-background-secondary-color': '#000000',
+  '--affine-background-tertiary-color': '#0a0a0a',
+  '--affine-background-overlay-panel-color': 'rgba(0, 0, 0, 0.98)',
+  '--affine-background-modal-color': '#000000',
+  '--affine-background-code-block': '#050505',
+
+  // Text — High contrast for readability (WHITE for regular text)
+  '--affine-text-primary-color': '#ffffff',
+  '--affine-text-secondary-color': '#a1a1aa',
+  '--affine-text-disable-color': '#52525b',
+  '--affine-placeholder-color': '#52525b',
+
+  // Brand — Blue accent #0043ff (for UI elements, selections, and links)
+  '--affine-primary-color': '#0043ff',
+  '--affine-brand-color': '#0043ff',
+
+  // Borders — Brand palette
+  '--affine-border-color': '#1c1c1c',
+  '--affine-divider-color': '#1c1c1c',
+
+  // Hover — Blue tints
+  '--affine-hover-color': 'rgba(0, 67, 255, 0.08)',
+  '--affine-hover-color-filled': 'rgba(0, 67, 255, 0.15)',
+
+  // Icons — Gray tones
+  '--affine-icon-color': '#a1a1aa',
+  '--affine-icon-secondary': '#71717a',
+
+  // Links — BLUE for links (separate from regular text)
+  '--affine-link-color': '#0043ff',
+
+  // Selection — Blue
+  '--affine-selected-color': 'rgba(0, 67, 255, 0.2)',
+  '--affine-block-selected-color': 'rgba(0, 67, 255, 0.08)',
+
+  // Grid — Blue
+  '--affine-edgeless-grid-color': 'rgba(0, 67, 255, 0.15)',
+  '--affine-edgeless-text-color': '#ffffff',
+
+  // Border overrides
+  '--affine-black-10': 'transparent',
+  '--affine-black-30': 'transparent',
 };
 
 /**
  * Get theme variables by name.
  */
-export function getThemeVariables(theme: 'light' | 'dark'): EditorThemeVariables {
-  return theme === 'light' ? lightTheme : darkTheme;
+export function getThemeVariables(theme: 'light' | 'gray' | 'dark'): EditorThemeVariables {
+  if (theme === 'light') return lightTheme;
+  if (theme === 'gray') return grayTheme;
+  return darkTheme;
 }
 
 /**
- * Apply theme variables to an element and its shadow roots.
+ * Apply theme variables to an element.
+ *
+ * CSS custom properties naturally cascade into Shadow DOM,
+ * so we just set them on the element directly.
  */
 export function applyThemeToElement(
   element: HTMLElement,
-  theme: 'light' | 'dark'
+  theme: 'light' | 'gray' | 'dark'
 ): void {
   const variables = getThemeVariables(theme);
 
-  // Apply to the element itself
+  // Apply all CSS variables to the element
   Object.entries(variables).forEach(([key, value]) => {
     element.style.setProperty(key, value);
   });
 
-  // Also set the background directly
+  // Also apply to document root for maximum coverage
+  // CSS variables cascade from :root into all Shadow DOMs
+  Object.entries(variables).forEach(([key, value]) => {
+    document.documentElement.style.setProperty(key, value);
+  });
+
+  // Set the background and text color directly on the element
   element.style.background = variables['--affine-background-primary-color'];
   element.style.color = variables['--affine-text-primary-color'];
 
-  // Set data attribute for theme (helps with CSS selectors)
+  // Set data attribute for theme (helps with CSS selectors if needed)
   element.setAttribute('data-theme', theme);
-
-  // Inject theme into shadow roots
-  injectThemeIntoShadowRoots(element, theme);
-}
-
-/**
- * Inject theme CSS variables into shadow roots recursively.
- */
-function injectThemeIntoShadowRoots(element: HTMLElement, theme: 'light' | 'dark'): void {
-  const variables = getThemeVariables(theme);
-
-  // Build CSS variable declarations
-  const cssVars = Object.entries(variables)
-    .map(([key, value]) => `${key}: ${value};`)
-    .join('\n  ');
-
-  // Border removal CSS for page mode - this is the critical fix
-  // BlockSuite uses --affine-black-10 for note borders, so we override it
-  const borderRemovalCSS = `
-    /* Override the border color variable used by BlockSuite */
-    :host, * {
-      --affine-black-10: transparent !important;
-      --affine-black-30: transparent !important;
-    }
-
-    /* Remove note block borders in page mode */
-    .affine-note-block-container,
-    affine-note,
-    [class*="note-block"],
-    [class*="note-container"],
-    .note-background {
-      background: transparent !important;
-      border: none !important;
-      border-color: transparent !important;
-      border-width: 0 !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      outline: none !important;
-    }
-
-    /* Target any element with inline border styles */
-    [style*="border"] {
-      border: none !important;
-      border-color: transparent !important;
-    }
-
-    /* Hide BlockSuite's built-in title - we have our own header */
-    .affine-doc-page-block-title,
-    .doc-title-container,
-    [data-block-is-title="true"],
-    .affine-page-root-block-title,
-    affine-page-root .affine-doc-page-block-title {
-      display: none !important;
-    }
-
-    /* Slash menu styling - ensure it's visible */
-    .affine-slash-menu,
-    affine-slash-menu,
-    inner-slash-menu {
-      background: var(--affine-background-modal-color, #1f1f23) !important;
-      border: 1px solid var(--affine-border-color, #27272a) !important;
-      border-radius: 8px !important;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
-      z-index: 999999 !important;
-    }
-
-    .slash-menu-item,
-    .affine-slash-menu-item {
-      color: var(--affine-text-primary-color, #fafafa) !important;
-      padding: 8px 12px !important;
-      cursor: pointer !important;
-    }
-
-    .slash-menu-item:hover,
-    .affine-slash-menu-item:hover,
-    .slash-menu-item.active,
-    .affine-slash-menu-item.active {
-      background: var(--affine-hover-color, rgba(99, 102, 241, 0.15)) !important;
-    }
-
-    /* CRITICAL: Linked-doc widget and popover visibility */
-    affine-linked-doc-widget,
-    affine-linked-doc-popover,
-    .linked-doc-popover,
-    .blocksuite-portal {
-      display: block !important;
-      visibility: visible !important;
-      opacity: 1 !important;
-      pointer-events: auto !important;
-    }
-
-    affine-linked-doc-popover {
-      position: fixed !important;
-      z-index: 2147483647 !important;
-      background: var(--affine-background-modal-color, #191919) !important;
-      border: 1px solid var(--affine-border-color, #27272a) !important;
-      border-radius: 8px !important;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-    }
-
-    .linked-doc-popover-item,
-    affine-linked-doc-popover .menu-item {
-      color: var(--affine-text-primary-color, #fafafa) !important;
-      padding: 8px 12px !important;
-      cursor: pointer !important;
-    }
-
-    .linked-doc-popover-item:hover,
-    affine-linked-doc-popover .menu-item:hover {
-      background: var(--affine-hover-color, rgba(99, 102, 241, 0.15)) !important;
-    }
-  `;
-
-  const themeCSS = `
-    :host, * {
-      ${cssVars}
-    }
-    ${borderRemovalCSS}
-  `;
-
-  // Function to inject into a shadow root
-  const injectIntoShadow = (shadowRoot: ShadowRoot) => {
-    // Check if we already injected
-    const existingStyle = shadowRoot.querySelector('#framelord-theme');
-    if (existingStyle) {
-      existingStyle.textContent = themeCSS;
-      return;
-    }
-
-    const style = document.createElement('style');
-    style.id = 'framelord-theme';
-    style.textContent = themeCSS;
-    shadowRoot.appendChild(style);
-  };
-
-  // Check the element itself
-  if (element.shadowRoot) {
-    injectIntoShadow(element.shadowRoot);
-  }
-
-  // Check all descendants
-  const walker = document.createTreeWalker(
-    element,
-    NodeFilter.SHOW_ELEMENT,
-    null
-  );
-
-  let node: Node | null = walker.currentNode;
-  while (node) {
-    if (node instanceof HTMLElement && node.shadowRoot) {
-      injectIntoShadow(node.shadowRoot);
-      // Also recurse into the shadow root's children
-      injectThemeIntoShadowRoots(node.shadowRoot as unknown as HTMLElement, theme);
-    }
-    node = walker.nextNode();
-  }
-
-  // Set up a mutation observer to catch dynamically added shadow roots
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      for (const addedNode of mutation.addedNodes) {
-        if (addedNode instanceof HTMLElement) {
-          if (addedNode.shadowRoot) {
-            injectIntoShadow(addedNode.shadowRoot);
-          }
-          // Check children too
-          const descendants = addedNode.querySelectorAll('*');
-          descendants.forEach((desc) => {
-            if (desc instanceof HTMLElement && desc.shadowRoot) {
-              injectIntoShadow(desc.shadowRoot);
-            }
-          });
-        }
-      }
-    }
-  });
-
-  observer.observe(element, { childList: true, subtree: true });
-
-  // Store observer reference for cleanup (optional)
-  (element as any).__themeObserver = observer;
+  document.documentElement.setAttribute('data-theme', theme);
 }

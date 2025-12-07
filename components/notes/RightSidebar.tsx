@@ -48,7 +48,7 @@ export interface RightSidebarProps {
   /** Close handler */
   onClose: () => void;
   /** Theme */
-  theme: 'light' | 'dark';
+  theme: 'light' | 'gray' | 'dark';
   /** Theme colors */
   colors: Record<string, string>;
 

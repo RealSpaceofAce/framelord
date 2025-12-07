@@ -188,7 +188,7 @@ const ThingsDueWidget: React.FC = () => {
     items.sort((a, b) => a.sortTime - b.sortTime);
 
     return (
-        <div className="h-[240px] shrink-0 border-b border-[#2A2A2A] overflow-y-auto p-4 space-y-3">
+        <div className="h-[240px] shrink-0 border-b border-[#1c1c1c] overflow-y-auto p-4 space-y-3">
             <div className="flex items-center gap-2 mb-2">
                 <Calendar size={14} className="text-[#4433FF]" />
                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
@@ -205,12 +205,12 @@ const ThingsDueWidget: React.FC = () => {
                 items.map((item) => (
                     <div
                         key={item.id}
-                        className="flex gap-2 items-start p-2 rounded border border-[#222] bg-[#0E0E0E] hover:border-[#333] transition-colors"
+                        className="flex gap-2 items-start p-2 rounded border border-[#1c1c1c] bg-[#000000] hover:border-[#333] transition-colors"
                     >
                         {/* Type indicator */}
                         <div
                             className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
-                                item.type === 'event' ? 'bg-blue-500' : 'bg-green-500'
+                                item.type === 'event' ? 'bg-blue-500' : 'bg-purple-500'
                             }`}
                         />
                         <div className="flex-1 min-w-0">
@@ -227,7 +227,7 @@ const ThingsDueWidget: React.FC = () => {
                             className={`text-[8px] px-1.5 py-0.5 rounded font-bold uppercase ${
                                 item.type === 'event'
                                     ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                    : 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                    : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                             }`}
                         >
                             {item.type === 'event' ? 'Cal' : 'Task'}
@@ -329,8 +329,8 @@ const NotificationWidget: React.FC = () => {
                         onClick={() => handleMarkRead(entry.id)}
                         className={`flex gap-3 items-start p-3 rounded border transition-colors cursor-pointer ${
                             entry.isRead
-                                ? 'bg-[#0E0E0E] border-[#222] hover:border-[#333]'
-                                : 'bg-[#1A1A1D] border-[#333] hover:' + getSeverityBorder(entry.severity)
+                                ? 'bg-[#000000] border-[#1c1c1c] hover:border-[#333]'
+                                : 'bg-[#000000] border-[#1c1c1c] hover:' + getSeverityBorder(entry.severity)
                         }`}
                     >
                         <div
@@ -363,7 +363,7 @@ const ShootingStarBorder: React.FC<{ children: React.ReactNode, color?: string, 
     return (
         <div className={`relative group rounded-xl p-[1px] overflow-hidden ${className}`}>
             <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-${color === 'blue' ? 'blue-500' : 'white'}/50 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000`} style={{ background: `linear-gradient(90deg, transparent, ${color === 'blue' ? '#4433FF' : '#FFF'}, transparent)`}} />
-            <div className="relative bg-[#0E0E0E] rounded-xl h-full">
+            <div className="relative bg-[#000000] border border-[#1c1c1c] rounded-xl h-full">
                 {children}
             </div>
         </div>
@@ -585,7 +585,7 @@ const ScanView: React.FC = () => {
               </div>
               <div className="flex items-center gap-4 text-xs font-mono text-[#737AFF]">
                   <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${loading ? 'bg-[#4433FF] animate-ping' : 'bg-green-500'}`} />
+                      <div className={`w-2 h-2 rounded-full ${loading ? 'bg-[#4433FF] animate-ping' : 'bg-[#0043ff]'}`} />
                       {loading ? 'ANALYZING...' : 'SYSTEM READY'}
                   </div>
                   <span className="bg-[#4433FF]/20 px-2 py-1 rounded text-[#4433FF] font-bold">V.2.0.4</span>
@@ -749,14 +749,14 @@ const FrameIntegrityWidget: React.FC = () => {
     }
     
     return (
-        <div className="bg-[#080a08] rounded-xl p-6 relative overflow-hidden h-full" style={{ minHeight: '320px' }}>
+        <div className="bg-[#000000] rounded-xl p-6 relative overflow-hidden h-full border border-[#1c1c1c]" style={{ minHeight: '320px' }}>
             {/* Header */}
             <div className="flex justify-between items-center mb-5">
                 <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-[#32cd32] rounded-sm animate-pulse" />
-                    <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-[#32cd32] font-mono">Frame Integrity</h3>
+                    <div className="w-2 h-2 bg-[#0043ff] rounded-sm animate-pulse" />
+                    <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-[#0043ff] font-mono">Frame Integrity</h3>
                 </div>
-                <div className="text-[10px] text-[#32cd32] font-bold border border-[#32cd32] px-3 py-1 rounded font-mono">ONLINE</div>
+                <div className="text-[10px] text-[#0043ff] font-bold border border-[#0043ff] px-3 py-1 rounded font-mono">ONLINE</div>
             </div>
 
             {/* Main Content - Stats on left, Robot on right */}
@@ -764,27 +764,27 @@ const FrameIntegrityWidget: React.FC = () => {
                 {/* Left: Stats Stack */}
                 <div className="space-y-3 w-[140px] flex-shrink-0">
                     {/* Frame Score */}
-                    <div className="p-3 border border-[#32cd32]/50 bg-[#0a0d0a] rounded">
+                    <div className="p-3 border border-[#0043ff]/50 bg-[#000000] rounded">
                         <div className="flex items-center gap-1.5 mb-1">
-                            <div className="w-1.5 h-1.5 bg-[#32cd32] rounded-sm" />
-                            <span className="text-[10px] text-[#32cd32] font-bold uppercase tracking-wider font-mono">Frame Score</span>
+                            <div className="w-1.5 h-1.5 bg-[#0043ff] rounded-sm" />
+                            <span className="text-[10px] text-[#0043ff] font-bold uppercase tracking-wider font-mono">Frame Score</span>
                         </div>
-                        <div className="text-3xl font-display font-bold text-[#32cd32]">{frameIntegrity}</div>
-                        <div className="text-[9px] text-[#32cd32]/60 font-mono">[OUT OF 100]</div>
+                        <div className="text-3xl font-display font-bold text-[#0043ff]">{frameIntegrity}</div>
+                        <div className="text-[9px] text-[#0043ff]/60 font-mono">[OUT OF 100]</div>
                     </div>
 
                     {/* Scans Completed */}
-                    <div className="p-3 border border-[#32cd32]/50 bg-[#0a0d0a] rounded">
+                    <div className="p-3 border border-[#0043ff]/50 bg-[#000000] rounded">
                         <div className="flex items-center gap-1.5 mb-1">
-                            <div className="w-1.5 h-1.5 bg-[#32cd32] rounded-sm" />
-                            <span className="text-[10px] text-[#32cd32] font-bold uppercase tracking-wider font-mono">Scans Done</span>
+                            <div className="w-1.5 h-1.5 bg-[#0043ff] rounded-sm" />
+                            <span className="text-[10px] text-[#0043ff] font-bold uppercase tracking-wider font-mono">Scans Done</span>
                         </div>
-                        <div className="text-3xl font-display font-bold text-[#32cd32]">{scansCompleted}</div>
-                        <div className="text-[9px] text-[#32cd32]/60 font-mono">[COMPLETED]</div>
+                        <div className="text-3xl font-display font-bold text-[#0043ff]">{scansCompleted}</div>
+                        <div className="text-[9px] text-[#0043ff]/60 font-mono">[COMPLETED]</div>
                     </div>
 
                     {/* Frame Leaks */}
-                    <div className="p-3 border border-orange-500/50 bg-[#0a0d0a] rounded">
+                    <div className="p-3 border border-orange-500/50 bg-[#000000] rounded">
                         <div className="flex items-center gap-1.5 mb-1">
                             <div className="w-1.5 h-1.5 bg-orange-500 rounded-sm" />
                             <span className="text-[10px] text-orange-500 font-bold uppercase tracking-wider font-mono">Frame Leaks</span>
@@ -853,7 +853,7 @@ const RebelsRankingWidget: React.FC = () => {
     const newCount = rankedContacts.filter(c => c.isNew).length;
 
     return (
-        <div className="bg-[#0E0E0E] rounded-xl p-6 relative overflow-hidden h-full">
+        <div className="bg-[#000000] border border-[#1c1c1c] rounded-xl p-6 relative overflow-hidden h-full">
             <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-2 text-blue-500">
                     <div className="w-2 h-2 bg-blue-500 rounded-sm" />
@@ -873,7 +873,7 @@ const RebelsRankingWidget: React.FC = () => {
                     </div>
                 ) : (
                     rankedContacts.map((contact, idx) => (
-                        <div key={contact.id} className="flex items-center justify-between bg-[#1A1A1D] p-3 rounded border border-[#333]">
+                        <div key={contact.id} className="flex items-center justify-between bg-[#000000] p-3 rounded border border-[#1c1c1c]">
                             <div className="flex items-center gap-3">
                                 <div className={`w-6 h-6 ${idx === 0 ? 'bg-blue-600' : idx === 1 ? 'bg-gray-600' : 'bg-gray-700'} rounded flex items-center justify-center text-xs font-bold text-white`}>
                                     {idx + 1}
@@ -1087,11 +1087,11 @@ const DashboardOverview: React.FC = () => {
             {/* KPI ROW */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <SparkBorder className="h-full" color="blue">
-                    <div className="bg-[#0E0E0E] p-6 rounded-xl h-full flex flex-col justify-between group hover:bg-[#121212] transition-colors">
+                    <div className="bg-[#000000] p-6 rounded-xl h-full flex flex-col justify-between group hover:bg-[#111111] transition-colors border border-[#1c1c1c]">
                         <div className="flex justify-between items-start">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-2 h-2 rounded-full bg-green-500" />
+                                    <div className="w-2 h-2 rounded-full bg-blue-500" />
                                     <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Scans Completed</h3>
                                 </div>
                                 <div className="text-5xl font-display font-bold text-white">{scansDone}</div>
@@ -1100,13 +1100,13 @@ const DashboardOverview: React.FC = () => {
                         </div>
                         <div className="flex items-center justify-between mt-4">
                             <span className="text-xs text-gray-600">WEEKLY SCOPE</span>
-                            <TrendingUp size={20} className="text-green-500" />
+                            <TrendingUp size={20} className="text-blue-500" />
                         </div>
                     </div>
                 </SparkBorder>
 
                 <SparkBorder className="h-full">
-                    <div className="bg-[#0E0E0E] p-6 rounded-xl h-full flex flex-col justify-between group hover:bg-[#121212] transition-colors">
+                    <div className="bg-[#000000] p-6 rounded-xl h-full flex flex-col justify-between group hover:bg-[#111111] transition-colors border border-[#1c1c1c]">
                         <div className="flex justify-between items-start">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
@@ -1125,7 +1125,7 @@ const DashboardOverview: React.FC = () => {
                 </SparkBorder>
 
                 <SparkBorder className="h-full">
-                    <div className="bg-[#0E0E0E] p-6 rounded-xl h-full flex flex-col justify-between group hover:bg-[#121212] transition-colors">
+                    <div className="bg-[#000000] p-6 rounded-xl h-full flex flex-col justify-between group hover:bg-[#111111] transition-colors border border-[#1c1c1c]">
                         <div className="flex justify-between items-start">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
@@ -1145,7 +1145,7 @@ const DashboardOverview: React.FC = () => {
 
             {/* CHART SECTION */}
             <SparkBorder className="flex-1 min-h-[300px]" color="blue">
-                <div className="bg-[#0E0E0E] rounded-xl p-6 h-full flex flex-col relative overflow-hidden">
+                <div className="bg-[#000000] border border-[#1c1c1c] rounded-xl p-6 h-full flex flex-col relative overflow-hidden">
                     <div className="flex justify-between items-center mb-6 relative z-10">
                         <div className="flex gap-4">
                             {(['week','month','year'] as const).map(range => (
@@ -1164,7 +1164,7 @@ const DashboardOverview: React.FC = () => {
                         </div>
                         <div className="flex gap-6 text-[10px] font-bold uppercase tracking-wider">
                             <div className="flex items-center gap-2 text-blue-500"><div className="w-2 h-2 rotate-45 bg-blue-500" /> Scans</div>
-                            <div className="flex items-center gap-2 text-green-500"><div className="w-2 h-2 rotate-45 bg-green-500" /> Actions</div>
+                            <div className="flex items-center gap-2 text-purple-500"><div className="w-2 h-2 rotate-45 bg-purple-500" /> Actions</div>
                             <div className="flex items-center gap-2 text-orange-500"><div className="w-2 h-2 rotate-45 bg-orange-500" /> Score</div>
                         </div>
                     </div>
@@ -1439,7 +1439,7 @@ const DashboardOverview: React.FC = () => {
                                 transition={{ duration: 0.3, ease: "easeInOut" }}
                                 className="overflow-hidden"
                             >
-                                <div className="bg-[#1A1A1D] border border-[#333] rounded-lg p-4 relative">
+                                <div className="bg-[#000000] border border-[#1c1c1c] rounded-lg p-4 relative">
                                     <button
                                         onClick={() => setSelectedDataPoint(null)}
                                         className="absolute top-2 right-2 text-gray-500 hover:text-white transition-colors"
@@ -1461,10 +1461,10 @@ const DashboardOverview: React.FC = () => {
                                         </div>
                                         <div className="flex flex-col gap-1">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rotate-45 bg-green-500" />
+                                                <div className="w-2 h-2 rotate-45 bg-purple-500" />
                                                 <span className="text-[9px] text-gray-500 uppercase tracking-wider">Actions</span>
                                             </div>
-                                            <div className="text-2xl font-display font-bold text-green-400">
+                                            <div className="text-2xl font-display font-bold text-purple-400">
                                                 {selectedDataPoint.actions}
                                             </div>
                                         </div>
@@ -1487,7 +1487,7 @@ const DashboardOverview: React.FC = () => {
 
             {/* CASES / WORKLOAD SECTION */}
             <SparkBorder>
-                <div className="bg-[#0E0E0E] rounded-xl p-6 relative overflow-hidden">
+                <div className="bg-[#000000] border border-[#1c1c1c] rounded-xl p-6 relative overflow-hidden">
                     <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center gap-2 text-orange-500">
                             <Briefcase size={16} />
@@ -1522,7 +1522,7 @@ const FrameScoreTileWidget: React.FC = () => {
     const scoreLabel = getFrameScoreLabel(profile.currentFrameScore);
 
     return (
-        <div className="bg-[#0E0E0E] rounded-xl p-6 relative overflow-hidden h-full flex flex-col">
+        <div className="bg-[#000000] border border-[#1c1c1c] rounded-xl p-6 relative overflow-hidden h-full flex flex-col">
             <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-2 text-[#4433FF]">
                     <Crosshair size={16} />
@@ -1543,7 +1543,7 @@ const FrameScoreTileWidget: React.FC = () => {
                     <div className="flex items-center gap-2 mt-1">
                         {trend && (
                             <span className={`flex items-center gap-0.5 text-xs ${
-                                trend.direction === 'up' ? 'text-green-400' :
+                                trend.direction === 'up' ? 'text-blue-400' :
                                 trend.direction === 'down' ? 'text-red-400' : 'text-gray-500'
                             }`}>
                                 {trend.direction === 'up' ? <TrendingUp size={12} /> :
@@ -1569,7 +1569,7 @@ const FrameScoreTileWidget: React.FC = () => {
                         />
                         <circle
                             className={`${
-                                profile.currentFrameScore >= 65 ? 'stroke-green-500' :
+                                profile.currentFrameScore >= 65 ? 'stroke-blue-500' :
                                 profile.currentFrameScore >= 45 ? 'stroke-yellow-500' :
                                 'stroke-red-500'
                             }`}
@@ -1749,10 +1749,10 @@ export const Dashboard: React.FC = () => {
     >
       <div className="fixed inset-0 text-[#DBDBDB] font-sans flex flex-col lg:flex-row overflow-hidden z-[50] app-neon">
         <aside className={`
-          ${isLeftSidebarOpen ? 'w-[280px]' : 'w-0'} bg-[#0E0E0E] border-r border-[#2A2A2A] flex flex-col z-40 transform transition-all duration-300 lg:relative overflow-hidden
+          ${isLeftSidebarOpen ? 'w-[280px]' : 'w-0'} bg-[#000000] border-r border-[#1c1c1c] flex flex-col z-40 transform transition-all duration-300 lg:relative overflow-hidden
           ${isMobileMenuOpen && isLeftSidebarOpen ? 'translate-x-0' : isLeftSidebarOpen ? 'translate-x-0' : 'lg:translate-x-0 -translate-x-full'}
       `}>
-        <div className="hidden lg:flex h-16 items-center px-6 border-b border-[#2A2A2A]">
+        <div className="hidden lg:flex h-16 items-center px-6 border-b border-[#1c1c1c]">
             <Zap size={20} className="text-[#4433FF] mr-3" />
             <div className="leading-tight">
                 <h1 className="font-display font-bold text-white text-sm tracking-wider">FRAMELORD</h1>
@@ -1806,7 +1806,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Account Owner (Contact Zero) - Always Displayed */}
-        <div className="p-4 bg-[#18181A] border-t border-[#2A2A2A] space-y-2">
+        <div className="p-4 bg-[#000000] border-t border-[#1c1c1c] space-y-2">
           {/* Contact Zero Info - Always shows account owner */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded flex items-center justify-center overflow-hidden bg-[#4433FF]">
@@ -1829,7 +1829,7 @@ export const Dashboard: React.FC = () => {
             className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
               currentView === 'SETTINGS'
                 ? 'bg-[#4433FF]/20 text-[#4433FF]'
-                : 'text-gray-500 hover:text-white hover:bg-[#1A1A1D]'
+                : 'text-gray-500 hover:text-white hover:bg-[#111111]'
             }`}
           >
             <Settings size={14} />
@@ -1839,11 +1839,11 @@ export const Dashboard: React.FC = () => {
       </aside>
 
       <main className="flex-1 flex flex-col overflow-hidden relative transition-all duration-300">
-         <div className="hidden lg:flex h-16 border-b border-[#2A2A2A] items-center justify-between px-8 shrink-0 glass-card">
+         <div className="hidden lg:flex h-16 border-b border-[#1c1c1c] items-center justify-between px-8 shrink-0 glass-card">
              <div className="flex items-center gap-2">
                  <button
                    onClick={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
-                   className="p-2 rounded hover:bg-[#1A1A1D] text-gray-500 hover:text-white transition-colors"
+                   className="p-2 rounded hover:bg-[#111111] text-gray-500 hover:text-white transition-colors"
                    title="Toggle navigation"
                  >
                    {isLeftSidebarOpen ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
@@ -1865,7 +1865,7 @@ export const Dashboard: React.FC = () => {
                  {currentView === 'OVERVIEW' && (
                    <button
                       onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
-                      className="p-1.5 hover:bg-[#1A1A1D] rounded text-gray-500 hover:text-white transition-colors"
+                      className="p-1.5 hover:bg-[#111111] rounded text-gray-500 hover:text-white transition-colors"
                       title="Toggle Sidebar"
                    >
                        {isRightSidebarOpen ? <ArrowRight size={16} /> : <ArrowLeft size={16} />}
@@ -1996,9 +1996,9 @@ export const Dashboard: React.FC = () => {
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 300, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
-            className="hidden xl:flex glass-card border-l border-[#2A2A2A] flex-col shrink-0 z-40 overflow-hidden relative"
+            className="hidden xl:flex glass-card border-l border-[#1c1c1c] flex-col shrink-0 z-40 overflow-hidden relative"
           >
-              <div className="h-[400px] shrink-0 border-b border-[#2A2A2A]">
+              <div className="h-[400px] shrink-0 border-b border-[#1c1c1c]">
                 <ClockWidget time={time} />
               </div>
               <ThingsDueWidget />
@@ -2016,7 +2016,7 @@ const NavItem: React.FC<{ active?: boolean, icon: React.ReactNode, label: string
         onClick={onClick}
         className={`
             flex items-center justify-between px-3 py-2 cursor-pointer transition-all duration-200 rounded group
-            ${active ? 'text-white bg-[#1A1A1D]' : 'text-gray-500 hover:text-gray-300 hover:bg-[#121212]'}
+            ${active ? 'text-white bg-[#111111]' : 'text-gray-500 hover:text-gray-300 hover:bg-[#111111]'}
             ${isSubItem ? 'pl-8 text-xs' : 'text-xs'}
         `}
     >

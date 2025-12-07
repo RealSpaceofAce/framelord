@@ -42,38 +42,6 @@ export const RetroClockPanel: React.FC<RetroClockPanelProps> = ({ time, userLoca
     }
   };
 
-  // Format day of week
-  const getDayOfWeek = () => {
-    const options: Intl.DateTimeFormatOptions = {
-      weekday: 'long',
-      timeZone: userLocation?.timezone || undefined,
-    };
-    try {
-      return new Intl.DateTimeFormat('en-US', options).format(time).toUpperCase();
-    } catch {
-      return new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(time).toUpperCase();
-    }
-  };
-
-  // Format full date
-  const getFullDate = () => {
-    const options: Intl.DateTimeFormatOptions = {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-      timeZone: userLocation?.timezone || undefined,
-    };
-    try {
-      return new Intl.DateTimeFormat('en-US', options).format(time).toUpperCase();
-    } catch {
-      return new Intl.DateTimeFormat('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      }).format(time).toUpperCase();
-    }
-  };
-
   // Format temperature (Fahrenheit for US users)
   const getTemperature = () => {
     return '64°F'; // TODO: Get real temperature from location API
@@ -136,11 +104,39 @@ export const RetroClockPanel: React.FC<RetroClockPanelProps> = ({ time, userLoca
     };
   }, []);
 
+  // Format day of week
+  const getDayOfWeek = () => {
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      timeZone: userLocation?.timezone || undefined,
+    };
+    try {
+      return new Intl.DateTimeFormat('en-US', options).format(time).toUpperCase();
+    } catch {
+      return new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(time).toUpperCase();
+    }
+  };
+
+  // Format full date
+  const getFullDate = () => {
+    const options: Intl.DateTimeFormatOptions = {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      timeZone: userLocation?.timezone || undefined,
+    };
+    try {
+      return new Intl.DateTimeFormat('en-US', options).format(time).toUpperCase();
+    } catch {
+      return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(time).toUpperCase();
+    }
+  };
+
   const { hour, minute, period } = getTimeParts();
-  const dayOfWeek = getDayOfWeek();
-  const fullDate = getFullDate();
   const temperature = getTemperature();
   const timezone = getTimezone();
+  const dayOfWeek = getDayOfWeek();
+  const fullDate = getFullDate();
   const locationText = userLocation
     ? `${userLocation.city.toUpperCase()}, ${userLocation.country.toUpperCase()}`
     : 'BUENOS AIRES, ARGENTINA';
@@ -160,15 +156,15 @@ export const RetroClockPanel: React.FC<RetroClockPanelProps> = ({ time, userLoca
       />
 
       {/* Content layer - on top of static */}
-      <div className="relative z-10">
-        {/* Top row: Day of week and Date */}
-        <div className="flex items-start justify-between mb-6 text-[10px] font-mono tracking-wider text-gray-400">
+      <div className="relative z-10 flex flex-col h-full">
+        {/* Top row: Day and Date with black background */}
+        <div className="flex items-start justify-between mb-4 text-[10px] font-mono tracking-wider text-gray-400 bg-[#0b0f1a] py-1">
           <div>{dayOfWeek}</div>
           <div>{fullDate}</div>
         </div>
 
-        {/* Center: Large GIF with overlaid time */}
-        <div className="flex flex-col items-center justify-center mb-6">
+        {/* Center: Large GIF with overlaid time - vertically centered */}
+        <div className="flex flex-col items-center justify-center mb-4 flex-1">
           <div className="relative" style={{ width: GIF_SIZE, height: GIF_SIZE }}>
             {/* Retro PC GIF layer */}
             <img

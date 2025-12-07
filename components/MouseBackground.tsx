@@ -34,12 +34,11 @@ export const MouseBackground: React.FC = () => {
   const flashX = useTransform(smoothX, x => x - 500); // 1000px width / 2
   const flashY = useTransform(smoothY, y => y - 500);
 
-  // Minimal Color Changes: Cycle grid color subtly between palette shades
-  // Palette: primary: #4433FF, accent: #6A82FC
+  // Minimal Color Changes: Cycle grid color subtly using brand blue #0043ff
   const gridColor = useTransform(
-    time, 
-    [0, 5000, 10000], 
-    ["rgba(68, 51, 255, 0.2)", "rgba(106, 130, 252, 0.2)", "rgba(68, 51, 255, 0.2)"]
+    time,
+    [0, 5000, 10000],
+    ["rgba(0, 67, 255, 0.15)", "rgba(0, 67, 255, 0.2)", "rgba(0, 67, 255, 0.15)"]
   );
   
   const gridBackgroundImage = useMotionTemplate`linear-gradient(${gridColor} 1px, transparent 1px), linear-gradient(90deg, ${gridColor} 1px, transparent 1px)`;
@@ -179,7 +178,8 @@ export const MouseBackground: React.FC = () => {
 
       draw() {
         if (!ctx) return;
-        ctx.fillStyle = `rgba(115, 122, 255, ${this.opacity})`;
+        // Brand blue #0043ff = rgb(0, 67, 255)
+        ctx.fillStyle = `rgba(0, 67, 255, ${this.opacity})`;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
@@ -218,12 +218,11 @@ export const MouseBackground: React.FC = () => {
 
   return (
     <>
-      {/* BACKGROUND LAYER: The Void & Grid */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-fl-black">
-        
-        {/* Deep Atmospheric Glows */}
-        <div className="absolute top-[-20%] right-[-10%] w-[80vw] h-[80vw] bg-fl-deepPurple/10 blur-[150px] rounded-full mix-blend-screen" />
-        <div className="absolute bottom-[-20%] left-[-10%] w-[80vw] h-[80vw] bg-fl-primary/5 blur-[150px] rounded-full mix-blend-screen" />
+      {/* BACKGROUND LAYER: Pure Black Void - Blue only appears on mouse */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none" style={{ backgroundColor: '#000000' }}>
+
+        {/* REMOVED: Deep Atmospheric Glows - background should be pure black */}
+        {/* Blue only appears where mouse light exposes it */}
 
         {/* Floating Digital Dust Particles (2D Layer) */}
         <canvas 
@@ -248,21 +247,23 @@ export const MouseBackground: React.FC = () => {
           }}
         />
 
-        {/* Primary Glow Follower */}
+        {/* Primary Glow Follower - Brand blue #0043ff */}
         <motion.div
-          className="absolute w-[800px] h-[800px] bg-fl-primary/15 rounded-full blur-[100px] mix-blend-screen opacity-60 z-[3]"
+          className="absolute w-[800px] h-[800px] rounded-full blur-[100px] mix-blend-screen opacity-50 z-[3]"
           style={{
             x: glowX,
             y: glowY,
+            backgroundColor: 'rgba(0, 67, 255, 0.2)',
           }}
         />
-        
-        {/* Secondary Lagging Glow */}
+
+        {/* Secondary Lagging Glow - Brand blue #0043ff */}
         <motion.div
-          className="absolute w-[600px] h-[600px] bg-fl-accent/20 rounded-full blur-[80px] mix-blend-screen z-[3]"
+          className="absolute w-[600px] h-[600px] rounded-full blur-[80px] mix-blend-screen z-[3]"
           style={{
             x: lagGlowX,
             y: lagGlowY,
+            backgroundColor: 'rgba(0, 67, 255, 0.15)',
           }}
         />
         

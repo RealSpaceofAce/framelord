@@ -25,7 +25,7 @@ export interface Frame {
 
 export interface FramesTabProps {
   noteId?: string;
-  theme: 'light' | 'dark';
+  theme: 'light' | 'gray' | 'dark';
   colors: Record<string, string>;
   onNavigateToFrame?: (frameId: string) => void;
   onStartPresentation?: () => void;

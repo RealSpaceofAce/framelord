@@ -135,8 +135,8 @@ export function BlockSuiteEdgelessCanvas({ canvasId }: Props) {
         width: '100%',
         height: '100%',
         minHeight: '400px',
-        background: '#18181b',
-        backgroundImage: 'radial-gradient(circle, rgba(99, 102, 241, 0.2) 1px, transparent 1px)',
+        background: '#000000',
+        backgroundImage: 'radial-gradient(circle, rgba(0, 67, 255, 0.15) 1px, transparent 1px)',
         backgroundSize: '30px 30px',
       }}
     />
@@ -145,49 +145,49 @@ export function BlockSuiteEdgelessCanvas({ canvasId }: Props) {
 
 /**
  * Apply dark theme styles directly to the editor element.
- * Uses softer zinc-based colors for a modern look.
+ * Uses FrameLord brand palette: Pure black #000000, blue #0043ff
  */
 function applyDarkThemeStyles(editor: AffineEditorContainer) {
   const style = editor.style;
 
-  // Background colors - soft zinc palette
-  style.setProperty('--affine-background-primary-color', '#18181b');
-  style.setProperty('--affine-background-secondary-color', '#1f1f23');
-  style.setProperty('--affine-background-tertiary-color', '#27272a');
-  style.setProperty('--affine-background-overlay-panel-color', 'rgba(24, 24, 27, 0.98)');
-  style.setProperty('--affine-background-modal-color', '#1f1f23');
+  // Background colors - PURE BLACK (brand palette)
+  style.setProperty('--affine-background-primary-color', '#000000');
+  style.setProperty('--affine-background-secondary-color', '#000000');
+  style.setProperty('--affine-background-tertiary-color', '#0a0a0a');
+  style.setProperty('--affine-background-overlay-panel-color', 'rgba(0, 0, 0, 0.98)');
+  style.setProperty('--affine-background-modal-color', '#000000');
 
   // Text colors - high contrast
-  style.setProperty('--affine-text-primary-color', '#fafafa');
+  style.setProperty('--affine-text-primary-color', '#ffffff');
   style.setProperty('--affine-text-secondary-color', '#a1a1aa');
-  style.setProperty('--affine-edgeless-text-color', '#fafafa');
+  style.setProperty('--affine-edgeless-text-color', '#ffffff');
   style.setProperty('--affine-placeholder-color', '#52525b');
 
-  // Border colors - subtle
-  style.setProperty('--affine-border-color', '#27272a');
-  style.setProperty('--affine-divider-color', '#27272a');
+  // Border colors - brand palette
+  style.setProperty('--affine-border-color', '#1c1c1c');
+  style.setProperty('--affine-divider-color', '#1c1c1c');
 
-  // Brand colors
-  style.setProperty('--affine-primary-color', '#6366f1');
-  style.setProperty('--affine-brand-color', '#6366f1');
+  // Brand colors - blue #0043ff
+  style.setProperty('--affine-primary-color', '#0043ff');
+  style.setProperty('--affine-brand-color', '#0043ff');
 
-  // Grid - softer
-  style.setProperty('--affine-edgeless-grid-color', 'rgba(99, 102, 241, 0.2)');
+  // Grid - blue tint
+  style.setProperty('--affine-edgeless-grid-color', 'rgba(0, 67, 255, 0.15)');
 
   // Direct styling
-  style.background = '#18181b';
-  style.color = '#fafafa';
+  style.background = '#000000';
+  style.color = '#ffffff';
 }
 
 // Add component styles
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
-  /* BlockSuite Canvas Editor Styles - Soft zinc palette */
+  /* BlockSuite Canvas Editor Styles - FrameLord brand palette */
   .blocksuite-canvas-editor {
-    --affine-background-primary-color: #18181b;
-    --affine-text-primary-color: #fafafa;
-    --affine-primary-color: #6366f1;
-    --affine-edgeless-grid-color: rgba(99, 102, 241, 0.2);
+    --affine-background-primary-color: #000000;
+    --affine-text-primary-color: #ffffff;
+    --affine-primary-color: #0043ff;
+    --affine-edgeless-grid-color: rgba(0, 67, 255, 0.15);
   }
 
   .blocksuite-canvas-editor affine-editor-container {
@@ -195,7 +195,7 @@ styleSheet.textContent = `
     width: 100% !important;
     height: 100% !important;
     min-height: 400px !important;
-    background: #18181b !important;
+    background: #000000 !important;
   }
 
   /* Error state styling */

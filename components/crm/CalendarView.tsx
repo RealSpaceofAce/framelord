@@ -142,8 +142,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   // Status badge styles
   const statusBadge = (status: Task['status']) => {
     const styles = {
-      open: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-      done: 'bg-green-500/20 text-green-400 border-green-500/30',
+      open: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+      done: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
       blocked: 'bg-red-500/20 text-red-400 border-red-500/30',
     };
     return styles[status];
@@ -227,9 +227,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   </span>
                   {taskCount > 0 && (
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                      isSelected 
-                        ? 'bg-[#4433FF] text-white' 
-                        : 'bg-cyan-500/20 text-cyan-400'
+                      isSelected
+                        ? 'bg-[#0043ff] text-white'
+                        : 'bg-blue-500/20 text-blue-400'
                     }`}>
                       {taskCount}
                     </span>
@@ -246,7 +246,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         {/* Day Header */}
         <div className="p-6 border-b border-[#2A2A2A]">
           <div className="flex items-center gap-2 mb-1">
-            <CheckSquare size={16} className="text-cyan-500" />
+            <CheckSquare size={16} className="text-blue-500" />
             <h2 className="font-display font-bold text-white text-sm">
               Tasks for {formatSelectedDate(selectedDate)}
             </h2>
@@ -280,14 +280,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     className={`bg-[#1A1A1D] border rounded-lg p-4 transition-colors ${
                       task.status === 'done'
                         ? 'border-[#333] opacity-60'
-                        : 'border-[#333] hover:border-cyan-500/30'
+                        : 'border-[#333] hover:border-blue-500/30'
                     }`}
                   >
                     {/* Time & Status Row */}
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         {timeStr && (
-                          <span className="flex items-center gap-1 text-xs text-cyan-400">
+                          <span className="flex items-center gap-1 text-xs text-blue-400">
                             <Clock size={12} />
                             {timeStr}
                           </span>
@@ -311,8 +311,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         }
                         className={`mt-0.5 transition-colors ${
                           task.status === 'done'
-                            ? 'text-green-500 hover:text-gray-400'
-                            : 'text-gray-500 hover:text-cyan-500'
+                            ? 'text-blue-500 hover:text-gray-400'
+                            : 'text-gray-500 hover:text-blue-500'
                         }`}
                       >
                         {task.status === 'done' ? <CheckCircle size={18} /> : <Square size={18} />}

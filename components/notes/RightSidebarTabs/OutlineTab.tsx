@@ -16,7 +16,7 @@ import { FileText, ChevronRight } from 'lucide-react';
 
 export interface OutlineTabProps {
   noteContent?: string;
-  theme: 'light' | 'dark';
+  theme: 'light' | 'gray' | 'dark';
   colors: Record<string, string>;
 }
 

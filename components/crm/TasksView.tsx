@@ -173,12 +173,12 @@ export const TasksView: React.FC<TasksViewProps> = ({
         {/* Stats */}
         <div className="p-4 border-t border-[#1C1D26]">
           <div className="space-y-3">
-            <div className="bg-[#1A1A1D] rounded-lg p-4 border border-[#333]">
+            <div className="bg-[#000000] rounded-lg p-4 border border-[#1c1c1c]">
               <div className="flex items-center gap-2 mb-2">
-                <Square size={14} className="text-cyan-500" />
+                <Square size={14} className="text-blue-500" />
                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Open</span>
               </div>
-              <div className="text-3xl font-display font-bold text-cyan-400">{stats.open}</div>
+              <div className="text-3xl font-display font-bold text-blue-400">{stats.open}</div>
             </div>
 
             <div className="bg-[#1A1A1D] rounded-lg p-4 border border-[#333]">
@@ -245,7 +245,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
                         ? 'border-[#1C1D26] opacity-60' 
                         : isOverdue(task.dueAt)
                           ? 'border-red-500/30 hover:border-red-500/50'
-                          : 'border-[#1C1D26] hover:border-cyan-500/30'
+                          : 'border-[#1c1c1c] hover:border-blue-500/30'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -256,9 +256,9 @@ export const TasksView: React.FC<TasksViewProps> = ({
                           : handleMarkTaskDone(task.id)
                         }
                         className={`mt-1 transition-colors ${
-                          task.status === 'done' 
-                            ? 'text-green-500 hover:text-gray-400' 
-                            : 'text-gray-500 hover:text-cyan-500'
+                          task.status === 'done'
+                            ? 'text-blue-500 hover:text-gray-400'
+                            : 'text-gray-500 hover:text-blue-500'
                         }`}
                         title={task.status === 'done' ? 'Mark as open' : 'Mark as done'}
                       >

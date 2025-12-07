@@ -17,7 +17,7 @@ import { Settings, Hash } from 'lucide-react';
 
 export interface TOCTabProps {
   noteContent?: string;
-  theme: 'light' | 'dark';
+  theme: 'light' | 'gray' | 'dark';
   colors: Record<string, string>;
 }
 

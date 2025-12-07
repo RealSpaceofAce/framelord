@@ -16,10 +16,10 @@ affine-editor-container {
   /* ===== Background colors — BRAND PALETTE: #000000 (pure black) ===== */
   --affine-background-primary-color: #000000;
   --affine-background-secondary-color: #000000;
-  --affine-background-tertiary-color: #111111;
+  --affine-background-tertiary-color: #0a0a0a; /* Changed from #111111 - closer to pure black */
   --affine-background-overlay-panel-color: rgba(0, 0, 0, 0.98);
   --affine-background-modal-color: #000000;
-  --affine-background-code-block: #0a0a0a;
+  --affine-background-code-block: #050505; /* Changed from #0a0a0a - even closer to pure black */
   --affine-background-error-color: rgba(239, 68, 68, 0.1);
   --affine-background-success-color: rgba(16, 185, 129, 0.1);
   --affine-background-warning-color: rgba(245, 158, 11, 0.1);
@@ -52,12 +52,12 @@ affine-editor-container {
   --affine-hover-color-filled: rgba(0, 67, 255, 0.15);
   --affine-icon-color: #a1a1aa;
   --affine-icon-secondary: #71717a;
-  --affine-tooltip-background: #111111;
+  --affine-tooltip-background: #0a0a0a; /* Changed from #111111 - closer to pure black */
   --affine-tooltip-color: #ffffff;
 
-  /* ===== Link colors — WHITE for visibility in dark mode ===== */
-  --affine-link-color: #ffffff;
-  --affine-link-visited-color: #cccccc;
+  /* ===== Link colors — BLUE for links (separate from regular text) ===== */
+  --affine-link-color: #0043ff;
+  --affine-link-visited-color: #0033cc;
 
   /* ===== Selection ===== */
   --affine-selected-color: rgba(0, 67, 255, 0.2);
@@ -396,11 +396,31 @@ affine-editor-container:empty::before,
   min-height: 100px;
 }
 
+/* Cursor visibility for all themes */
+.inline-editor,
+[contenteditable="true"],
+.affine-paragraph-rich-text-wrapper {
+  caret-color: currentColor !important;
+}
+
+/* Dark mode cursor */
+[data-theme="dark"] .inline-editor,
+[data-theme="dark"] [contenteditable="true"] {
+  caret-color: #ffffff !important;
+}
+
 /* Placeholder text */
 [data-placeholder]::before,
 .affine-paragraph-placeholder::before {
   color: var(--affine-placeholder-color) !important;
   font-style: italic !important;
+}
+
+/* Placeholder styling for all modes */
+.affine-paragraph-rich-text-wrapper::placeholder,
+[contenteditable="true"]:empty::before {
+  color: var(--affine-placeholder-color, #71717a) !important;
+  opacity: 1 !important;
 }
 
 /* Hide placeholder underlines and lines */
@@ -527,18 +547,27 @@ a:hover,
    WIKI LINKS / LINKED DOC REFERENCES — WHITE text for visibility
    ============================================================================= */
 
-/* Linked doc references (wiki links [[note]]) - must be visible WHITE */
+/* Linked doc references (wiki links [[note]]) - WHITE text, NO highlighting whatsoever */
 affine-reference,
 .affine-reference,
 [data-reference],
 [data-linked-page],
 .linked-doc-reference,
-.reference-node {
+.reference-node,
+affine-reference *,
+.affine-reference *,
+[data-reference] *,
+[data-linked-page] *,
+.linked-doc-reference *,
+.reference-node * {
   color: #ffffff !important;
-  text-decoration: underline !important;
-  text-decoration-style: dotted !important;
-  text-underline-offset: 2px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  text-decoration: none !important;
   cursor: pointer !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 affine-reference:hover,
@@ -546,24 +575,57 @@ affine-reference:hover,
 [data-reference]:hover,
 [data-linked-page]:hover,
 .linked-doc-reference:hover,
-.reference-node:hover {
-  color: #0043ff !important;
-  text-decoration-style: solid !important;
+.reference-node:hover,
+affine-reference:hover *,
+.affine-reference:hover *,
+[data-reference]:hover *,
+[data-linked-page]:hover * {
+  color: #cccccc !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  text-decoration: none !important;
 }
 
-/* Light mode - linked references use brand blue */
+/* Light mode - linked references use dark text */
 [data-theme="light"] affine-reference,
 [data-theme="light"] .affine-reference,
 [data-theme="light"] [data-reference],
 [data-theme="light"] [data-linked-page] {
-  color: #0043ff !important;
+  color: #1f1f1f !important;
+  background: transparent !important;
 }
 
 [data-theme="light"] affine-reference:hover,
 [data-theme="light"] .affine-reference:hover,
 [data-theme="light"] [data-reference]:hover,
 [data-theme="light"] [data-linked-page]:hover {
-  color: #0033cc !important;
+  color: #0043ff !important;
+  background: transparent !important;
+}
+
+/* =============================================================================
+   TEXT COLOR FIX — Ensure text is white in dark mode, NOT blue
+   ============================================================================= */
+
+/* Ensure text is white in dark mode, NOT blue */
+[data-theme="dark"] .affine-paragraph-rich-text-wrapper,
+[data-theme="dark"] .affine-paragraph-block-container,
+[data-theme="dark"] [contenteditable="true"],
+[data-theme="dark"] .inline-editor {
+  color: #ffffff !important;
+}
+
+/* Links should be the only blue text */
+[data-theme="dark"] a,
+[data-theme="dark"] .affine-reference,
+[data-theme="dark"] [data-link] {
+  color: #0043ff !important;
+}
+
+/* Regular text must be white */
+[data-theme="dark"] p,
+[data-theme="dark"] span:not(.affine-reference):not([data-link]) {
+  color: #ffffff !important;
 }
 
 /* =============================================================================
@@ -628,19 +690,18 @@ affine-note[data-selected="true"] {
   background: transparent !important;
 }
 
-/* In EDGELESS mode: note blocks should have visible card styling */
+/* In EDGELESS mode: note blocks should have visible card styling - DARK background */
 .affine-edgeless-viewport .affine-note-block-container,
 .affine-edgeless-viewport affine-note,
 affine-edgeless-root .affine-note-block-container,
 affine-edgeless-root affine-note,
 affine-editor-container[data-mode="edgeless"] .affine-note-block-container,
 affine-editor-container[data-mode="edgeless"] affine-note {
-  background: rgba(31, 31, 35, 0.9) !important;
-  border: 1px solid rgba(63, 63, 70, 0.5) !important;
+  background: #0a0a0a !important;
+  border: 1px solid #1c1c1c !important;
   border-radius: 12px !important;
   padding: 24px !important;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2) !important;
-  backdrop-filter: blur(8px) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* =============================================================================
@@ -651,27 +712,30 @@ affine-editor-container[data-mode="edgeless"] affine-note {
 .affine-edgeless-viewport,
 affine-edgeless-root,
 .edgeless-container {
-  background: var(--affine-background-primary-color) !important;
+  background: #000000 !important;
   width: 100% !important;
   height: 100% !important;
   min-height: 600px !important;
   position: relative !important;
   display: block !important;
+  overflow: hidden !important;
 }
 
-/* Edgeless editor container needs explicit height */
+/* Edgeless editor container needs explicit height - NO scrollbars */
 affine-editor-container[data-mode="edgeless"] {
   display: block !important;
   width: 100% !important;
   height: 100% !important;
   min-height: 600px !important;
+  background: #000000 !important;
+  overflow: hidden !important;
 }
 
-/* Grid background */
+/* Grid background - pure black with subtle blue grid */
 .affine-edgeless-surface-block-container,
 affine-surface {
-  background-color: var(--affine-background-primary-color) !important;
-  background-image: radial-gradient(circle, var(--affine-edgeless-grid-color) 1px, transparent 1px) !important;
+  background-color: #000000 !important;
+  background-image: radial-gradient(circle, rgba(0, 67, 255, 0.15) 1px, transparent 1px) !important;
   background-size: 30px 30px !important;
   width: 100% !important;
   height: 100% !important;
@@ -679,16 +743,44 @@ affine-surface {
   position: absolute !important;
   top: 0 !important;
   left: 0 !important;
+  overflow: hidden !important;
 }
 
 /* =============================================================================
    TOOLBARS
    ============================================================================= */
 
-/* Format bar / toolbar - HIGH Z-INDEX for visibility above content */
+/* Ensure format bar is visible and properly positioned */
 .affine-toolbar,
 .format-bar,
 affine-format-bar-widget,
+.affine-format-bar,
+.affine-format-bar-widget,
+.affine-rich-text-toolbar,
+.affine-inline-toolbar,
+format-bar-widget,
+rich-text-toolbar {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 999999 !important;
+  position: fixed !important;
+  pointer-events: auto !important;
+}
+
+/* Format bar styling */
+affine-format-bar-widget {
+  background: var(--affine-background-modal-color, #000000) !important;
+  border: 1px solid var(--affine-border-color, #1c1c1c) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+  padding: 4px !important;
+}
+
+/* Additional format bar styling for compatibility */
+.affine-toolbar,
+.format-bar,
+.affine-format-bar,
 .affine-format-bar-widget,
 .affine-rich-text-toolbar,
 .affine-inline-toolbar,
@@ -699,12 +791,6 @@ rich-text-toolbar {
   border-radius: var(--affine-border-radius) !important;
   box-shadow: var(--affine-shadow-2) !important;
   backdrop-filter: blur(20px) !important;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  z-index: 999999 !important;
-  position: fixed !important;
-  pointer-events: auto !important;
 }
 
 /* Format bar inner container */
@@ -1136,10 +1222,10 @@ button span {
    ============================================================================= */
 
 .blocksuite-canvas-editor {
-  --affine-background-primary-color: #18181b;
+  --affine-background-primary-color: #000000; /* Changed from #18181b - pure black */
   --affine-text-primary-color: #fafafa;
-  --affine-primary-color: #6366f1;
-  --affine-edgeless-grid-color: rgba(99, 102, 241, 0.2);
+  --affine-primary-color: #0043ff; /* Changed from #6366f1 - brand blue */
+  --affine-edgeless-grid-color: rgba(0, 67, 255, 0.2); /* Changed to brand blue */
 }
 
 .blocksuite-canvas-editor affine-editor-container {
@@ -1147,7 +1233,7 @@ button span {
   width: 100% !important;
   height: 100% !important;
   min-height: 400px !important;
-  background: #18181b !important;
+  background: #000000 !important; /* Changed from #18181b - pure black */
 }
 
 /* Edgeless mode class for BlockSuiteDocEditor */
@@ -1193,11 +1279,13 @@ affine-linked-doc-popover,
   pointer-events: auto !important;
 }
 
+/* Wiki link popover positioning - default below, smart positioning */
 affine-linked-doc-popover {
   position: fixed !important;
   z-index: 2147483647 !important; /* Max z-index */
-  background: var(--affine-background-modal-color, #191919) !important;
-  border: 1px solid var(--affine-border-color, #27272a) !important;
+  transform: none !important; /* Remove any transform that might cause jumping */
+  background: var(--affine-background-modal-color, #000000) !important;
+  border: 1px solid var(--affine-border-color, #1c1c1c) !important;
   border-radius: 8px !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
 }
@@ -1232,6 +1320,38 @@ affine-linked-doc-popover .menu-item:hover {
 [data-theme="light"] .linked-doc-popover-item:hover,
 [data-theme="light"] affine-linked-doc-popover .menu-item:hover {
   background: #f3f4f6 !important;
+}
+
+/* =============================================================================
+   WIKI LINK INLINE BEHAVIOR
+   ============================================================================= */
+
+/* Ensure inline display for linked references */
+affine-reference,
+.affine-reference,
+[data-reference],
+.reference-node {
+  display: inline !important;
+  white-space: nowrap !important;
+  vertical-align: baseline !important;
+}
+
+/* Prevent line breaks around wiki links in paragraphs */
+.affine-paragraph-rich-text-wrapper affine-reference,
+.inline-editor affine-reference,
+rich-text affine-reference,
+[contenteditable] affine-reference {
+  display: inline !important;
+  margin: 0 2px !important;
+  line-height: inherit !important;
+}
+
+/* Ensure wiki links stay inline in all contexts */
+.affine-rich-text affine-reference,
+v-line affine-reference,
+v-text affine-reference {
+  display: inline !important;
+  white-space: nowrap !important;
 }
 
 /* =============================================================================

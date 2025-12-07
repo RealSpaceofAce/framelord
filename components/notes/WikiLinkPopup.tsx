@@ -137,7 +137,7 @@ export function WikiLinkPopup({
                   className={`px-3 py-2 cursor-pointer transition-colors ${
                     isSelected
                       ? 'bg-[#0043ff] bg-opacity-10 border-l-2 border-[#0043ff]'
-                      : 'hover:bg-[#111111] border-l-2 border-transparent'
+                      : 'hover:bg-[#0a0a0a] border-l-2 border-transparent'
                   }`}
                   onClick={() => handleSelect(index)}
                   onMouseEnter={() => setSelectedIndex(index)}
@@ -166,7 +166,7 @@ export function WikiLinkPopup({
                 className={`px-3 py-2 cursor-pointer transition-colors ${
                   selectedIndex === filteredNotes.length
                     ? 'bg-[#10b981] bg-opacity-10 border-l-2 border-[#10b981]'
-                    : 'hover:bg-[#111111] border-l-2 border-transparent'
+                    : 'hover:bg-[#0a0a0a] border-l-2 border-transparent'
                 }`}
                 onClick={() => handleSelect(filteredNotes.length)}
                 onMouseEnter={() => setSelectedIndex(filteredNotes.length)}
@@ -195,15 +195,15 @@ export function WikiLinkPopup({
       {/* Footer - keyboard hints */}
       <div className="px-3 py-2 border-t border-[#1c1c1c] bg-[#000000] flex items-center gap-4 text-xs text-[#888888]">
         <div className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 bg-[#111111] rounded text-[10px]">↑↓</kbd>
+          <kbd className="px-1.5 py-0.5 bg-[#0a0a0a] rounded text-[10px]">↑↓</kbd>
           <span>Navigate</span>
         </div>
         <div className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 bg-[#111111] rounded text-[10px]">Enter</kbd>
+          <kbd className="px-1.5 py-0.5 bg-[#0a0a0a] rounded text-[10px]">Enter</kbd>
           <span>Select</span>
         </div>
         <div className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 bg-[#111111] rounded text-[10px]">Esc</kbd>
+          <kbd className="px-1.5 py-0.5 bg-[#0a0a0a] rounded text-[10px]">Esc</kbd>
           <span>Close</span>
         </div>
       </div>
