@@ -461,7 +461,7 @@ affine-paragraph[data-block-type="h3"] {
 }
 
 /* =============================================================================
-   LISTS
+   LISTS — Only show bullets when user explicitly creates a list
    ============================================================================= */
 
 affine-list,
@@ -472,6 +472,123 @@ affine-list,
 .list-block-prefix,
 affine-list::before {
   color: var(--affine-primary-color) !important;
+}
+
+/* =============================================================================
+   HIDE DEFAULT BULLET/PLACEHOLDER INDICATORS
+   BlockSuite may show visual indicators (dots, circles) for empty blocks.
+   Hide these unless user explicitly creates a list.
+   ============================================================================= */
+
+/* Hide any bullet-like indicators on empty paragraphs */
+affine-paragraph:empty::before,
+affine-paragraph:empty::after,
+.affine-paragraph-block-container:empty::before,
+.affine-paragraph-block-container:empty::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Hide drag handle dots/circles when block is empty or not hovered */
+affine-drag-handle-widget,
+.affine-drag-handle,
+.block-hub-menu-container,
+.affine-block-hub {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Only show drag handle on explicit hover of a non-empty block */
+.affine-block-children-container:hover:not(:empty) affine-drag-handle-widget,
+.affine-block-children-container:hover:not(:empty) .affine-drag-handle {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Hide the block hub (plus button that appears on left) */
+.affine-block-hub,
+affine-block-hub,
+.block-hub-menu-container {
+  display: none !important;
+}
+
+/* Remove any left gutter/margin for list-like appearance on paragraphs */
+affine-paragraph,
+.affine-paragraph-block-container,
+[data-block-flavour="affine:paragraph"] {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* Ensure no bullet pseudo-elements on any block type */
+affine-note::before,
+affine-note::after,
+.affine-note-block-container::before,
+.affine-note-block-container::after,
+.affine-block-children-container::before,
+.affine-block-children-container::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* =============================================================================
+   HIDE ALL BLOCKSUITE VISUAL PLACEHOLDER INDICATORS
+   These include dots, circles, and other empty-state UI elements
+   ============================================================================= */
+
+/* Hide add-block widget (the + circle that appears on empty lines) */
+.affine-add-block-widget,
+affine-add-block-widget,
+.add-block-widget,
+.block-add-button,
+.affine-block-hub-menu,
+.affine-drag-indicator,
+.affine-paragraph-placeholder,
+.paragraph-placeholder,
+[data-widget-id],
+.widget-container {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Hide any circular UI indicators */
+.affine-note-block-container circle,
+affine-note circle,
+.affine-block-children-container circle,
+affine-paragraph circle {
+  display: none !important;
+}
+
+/* Hide SVG elements that might render circles/dots */
+affine-editor-container svg.placeholder-icon,
+affine-editor-container .placeholder-indicator,
+affine-editor-container .empty-indicator {
+  display: none !important;
+}
+
+/* Hide the inline toolbar/widget when empty */
+.inline-toolbar-widget,
+affine-inline-toolbar-widget {
+  display: none !important;
+}
+
+/* Reset any ::marker pseudo-elements */
+affine-paragraph::marker,
+.affine-paragraph-block-container::marker,
+affine-note::marker,
+.affine-note-block-container::marker {
+  content: none !important;
+  display: none !important;
+}
+
+/* Force hide list-style for non-list blocks */
+affine-paragraph,
+.affine-paragraph-block-container {
+  list-style: none !important;
+  list-style-type: none !important;
 }
 
 /* =============================================================================
@@ -1078,41 +1195,16 @@ affine-page-root *:focus-visible {
 }
 
 /* =============================================================================
-   DRAG HANDLE / BLOCK INDICATOR (Pill)
+   DRAG HANDLE / BLOCK INDICATOR — HIDDEN BY DEFAULT
+   Only show on hover of blocks with actual content
    ============================================================================= */
 
 affine-drag-handle-widget,
 .affine-drag-handle {
-  position: absolute;
-  left: -28px; /* Position to the left of the block */
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px; /* Thin pill */
-  height: 20px; /* Pill height */
-  border-radius: 2px; /* Rounded corners for pill shape */
-  background-color: var(--affine-primary-color); /* Accent color */
-  opacity: 0; /* Hidden by default */
-  transition: opacity 0.2s ease, background-color 0.2s ease;
-  pointer-events: none; /* Do not interfere with mouse events */
-  z-index: 10;
-}
-
-/* Show on hover of the block children container (paragraph) */
-.affine-block-children-container:hover affine-drag-handle-widget,
-.affine-block-children-container:hover .affine-drag-handle,
-/* Show on focus of the contenteditable element (when typing) */
-.affine-block-children-container:focus-within affine-drag-handle-widget,
-.affine-block-children-container:focus-within .affine-drag-handle,
-[contenteditable="true"]:focus-within + affine-drag-handle-widget { /* Fallback for direct focus */
-  opacity: 1 !important;
-}
-
-/* Adjust color when the block is selected */
-.affine-block-children-container.is-selected affine-drag-handle-widget,
-.affine-block-children-container.is-selected .affine-drag-handle,
-.affine-block-children-container[data-selected="true"] affine-drag-handle-widget,
-.affine-block-children-container[data-selected="true"] .affine-drag-handle {
-  background-color: var(--affine-accent-color-selected); /* A distinct color for selection */
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 /* Ensure parent has relative positioning for absolute child */

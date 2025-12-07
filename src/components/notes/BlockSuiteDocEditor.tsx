@@ -75,13 +75,13 @@ function createNoteStoreLinkedDocConfig(currentDocId: string) {
               console.log('[LinkedDocConfig] Creating doc in collection:', noteId, noteTitle);
               targetDoc = collection.createDoc({ id: noteId });
 
-              // Initialize the doc structure
+              // Initialize the doc structure - no default paragraph
               targetDoc.load(() => {
                 if (!targetDoc) return;
                 const pageBlockId = targetDoc.addBlock('affine:page', { title: new targetDoc.Text(noteTitle) });
                 targetDoc.addBlock('affine:surface', {}, pageBlockId);
-                const noteBlockId = targetDoc.addBlock('affine:note', {}, pageBlockId);
-                targetDoc.addBlock('affine:paragraph', {}, noteBlockId);
+                targetDoc.addBlock('affine:note', {}, pageBlockId);
+                // No default paragraph - blank canvas until user types
               });
             }
 
@@ -571,20 +571,14 @@ export function BlockSuiteDocEditor({ docId, theme = 'dark', mode = 'page', read
               console.log('[BlockSuiteDocEditor] Creating new document structure');
               const pageBlockId = doc.addBlock('affine:page', {});
               doc.addBlock('affine:surface', {}, pageBlockId);
-              const noteBlockId = doc.addBlock('affine:note', {}, pageBlockId);
-              doc.addBlock('affine:paragraph', {}, noteBlockId);
+              doc.addBlock('affine:note', {}, pageBlockId);
+              // No default paragraph - let user start with blank canvas
             } else {
               const surfaces = doc.getBlocksByFlavour('affine:surface');
               if (surfaces.length === 0 && doc.root) {
                 doc.addBlock('affine:surface', {}, doc.root.id);
               }
-              const paragraphs = doc.getBlocksByFlavour('affine:paragraph');
-              if (paragraphs.length === 0) {
-                const notes = doc.getBlocksByFlavour('affine:note');
-                if (notes.length > 0) {
-                  doc.addBlock('affine:paragraph', {}, notes[0].id);
-                }
-              }
+              // No auto-creation of paragraphs - keep canvas blank until user types
             }
           } catch (loadErr) {
             console.error('[BlockSuiteDocEditor] Error in doc.load callback:', loadErr);
