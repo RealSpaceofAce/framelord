@@ -1,0 +1,324 @@
+/* =============================================================================
+   FRAMELORD NOTES SIDEBAR SKIN
+   =============================================================================
+   FrameScan machine aesthetic applied to Notes sidebar:
+   - Navy-black gradient background
+   - Grid overlay texture
+   - Glass effect with backdrop blur
+   - Neon blue accent borders
+   - Hard override for all theme modes
+   ============================================================================= */
+
+/* Root container - wraps entire sidebar */
+.notes-sidebar-framelord {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+
+  /* FrameScan exact background - darker navy-black */
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(3, 8, 20, 0.95) 25%,
+    rgba(5, 12, 28, 0.95) 50%,
+    rgba(3, 8, 20, 0.95) 75%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
+
+  /* Glass effect */
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  /* Full-perimeter glow border - FrameScan exact */
+  border: 1px solid rgba(0, 67, 255, 0.15);
+  box-shadow:
+    inset 0 0 40px rgba(0, 67, 255, 0.03),
+    0 0 20px rgba(0, 67, 255, 0.15);
+}
+
+/* Grid overlay - FrameScan exact pattern */
+.notes-sidebar-framelord::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(rgba(0, 67, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 67, 255, 0.02) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Particle canvas layer - sits between grid and content */
+.notes-sidebar-framelord > canvas {
+  position: absolute;
+  z-index: 1;
+}
+
+/* Content layer - sits above grid and particles */
+.notes-sidebar-framelord > *:not(canvas) {
+  position: relative;
+  z-index: 2;
+}
+
+/* =============================================================================
+   WORKSPACE HEADER STYLING
+   ============================================================================= */
+
+.notes-sidebar-framelord .sidebar-workspace-header {
+  background: transparent;
+  border-bottom: 1px solid rgba(0, 67, 255, 0.2);
+  padding: 16px;
+}
+
+.notes-sidebar-framelord .sidebar-workspace-header h3 {
+  color: #ffffff;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(0, 67, 255, 0.5);
+}
+
+.notes-sidebar-framelord .sidebar-workspace-header span {
+  color: #ffffff;
+}
+
+/* =============================================================================
+   SEARCH INPUT STYLING
+   ============================================================================= */
+
+.notes-sidebar-framelord .sidebar-search {
+  background: rgba(0, 67, 255, 0.05);
+  border: 1px solid rgba(0, 67, 255, 0.2);
+  border-radius: 6px;
+  color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.notes-sidebar-framelord .sidebar-search:focus {
+  background: rgba(0, 67, 255, 0.1);
+  border-color: rgba(0, 67, 255, 0.4);
+  box-shadow: 0 0 15px rgba(0, 67, 255, 0.2);
+  outline: none;
+}
+
+.notes-sidebar-framelord .sidebar-search::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* =============================================================================
+   NAVIGATION ITEMS
+   ============================================================================= */
+
+.notes-sidebar-framelord .sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.notes-sidebar-framelord .sidebar-nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  border-left: 2px solid rgba(0, 67, 255, 0.5);
+}
+
+.notes-sidebar-framelord .sidebar-nav-item.active {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  border-left: 2px solid #0043ff;
+  box-shadow: 0 0 10px rgba(0, 67, 255, 0.2);
+}
+
+.notes-sidebar-framelord .sidebar-nav-item svg {
+  color: rgba(0, 67, 255, 0.7);
+  transition: color 0.2s ease;
+}
+
+.notes-sidebar-framelord .sidebar-nav-item:hover svg,
+.notes-sidebar-framelord .sidebar-nav-item.active svg {
+  color: #0043ff;
+}
+
+/* =============================================================================
+   SECTION HEADERS
+   ============================================================================= */
+
+.notes-sidebar-framelord .sidebar-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(0, 67, 255, 0.1);
+}
+
+.notes-sidebar-framelord .sidebar-section-header button {
+  color: rgba(0, 67, 255, 0.5);
+  transition: color 0.2s ease;
+}
+
+.notes-sidebar-framelord .sidebar-section-header button:hover {
+  color: #0043ff;
+}
+
+/* =============================================================================
+   FOLDER/TREE ITEMS
+   ============================================================================= */
+
+.notes-sidebar-framelord .sidebar-folder-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notes-sidebar-framelord .sidebar-folder-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.notes-sidebar-framelord .sidebar-folder-item.selected {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.notes-sidebar-framelord .sidebar-folder-item svg {
+  color: rgba(0, 67, 255, 0.5);
+  flex-shrink: 0;
+}
+
+/* =============================================================================
+   TAGS SECTION
+   ============================================================================= */
+
+.notes-sidebar-framelord .sidebar-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(0, 67, 255, 0.1);
+  border: 1px solid rgba(0, 67, 255, 0.2);
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notes-sidebar-framelord .sidebar-tag:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(0, 67, 255, 0.4);
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(0, 67, 255, 0.3);
+}
+
+/* =============================================================================
+   SCROLLBAR STYLING
+   ============================================================================= */
+
+.notes-sidebar-framelord ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notes-sidebar-framelord ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.notes-sidebar-framelord ::-webkit-scrollbar-thumb {
+  background: rgba(0, 67, 255, 0.3);
+  border-radius: 3px;
+}
+
+.notes-sidebar-framelord ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 67, 255, 0.5);
+}
+
+/* =============================================================================
+   BUTTON OVERRIDES
+   ============================================================================= */
+
+.notes-sidebar-framelord button {
+  color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.notes-sidebar-framelord button:hover {
+  color: #0043ff;
+}
+
+/* =============================================================================
+   TEXT COLOR OVERRIDES - FORCE ALL TEXT TO LIGHT
+   ============================================================================= */
+
+.notes-sidebar-framelord,
+.notes-sidebar-framelord * {
+  --text-primary: #ffffff !important;
+  --text-secondary: #ffffff !important;
+  --text-tertiary: #ffffff !important;
+  --text-muted: #ffffff !important;
+}
+
+.notes-sidebar-framelord span,
+.notes-sidebar-framelord p,
+.notes-sidebar-framelord div:not([class*="sidebar-"]) {
+  color: inherit;
+}
+
+/* =============================================================================
+   DIVIDERS AND BORDERS
+   ============================================================================= */
+
+.notes-sidebar-framelord hr,
+.notes-sidebar-framelord [class*="border-"] {
+  border-color: rgba(0, 67, 255, 0.15) !important;
+}
+
+/* =============================================================================
+   HOVER STATES FOR INTERACTIVE ELEMENTS
+   ============================================================================= */
+
+.notes-sidebar-framelord [role="button"]:hover,
+.notes-sidebar-framelord [tabindex="0"]:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* =============================================================================
+   GLOW EFFECT FOR ACTIVE/SELECTED STATES
+   ============================================================================= */
+
+.notes-sidebar-framelord .glow-active {
+  box-shadow:
+    0 0 5px rgba(0, 67, 255, 0.3),
+    0 0 10px rgba(0, 67, 255, 0.2),
+    0 0 15px rgba(0, 67, 255, 0.1);
+}
+
+/* =============================================================================
+   ICON COLOR HARMONIZATION
+   ============================================================================= */
+
+.notes-sidebar-framelord svg {
+  color: rgba(0, 67, 255, 0.6);
+}
+
+.notes-sidebar-framelord .sidebar-nav-item:hover svg,
+.notes-sidebar-framelord button:hover svg {
+  color: #0043ff;
+}

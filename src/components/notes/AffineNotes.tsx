@@ -48,6 +48,7 @@ import {
   ScanLine,
   Loader2,
 } from 'lucide-react';
+import { FrameLordNotesSidebarSkin } from './FrameLordNotesSidebarSkin';
 import { MarkdownNoteEditor } from './MarkdownNoteEditor';
 import { BiDirectionalLinks } from './BiDirectionalLinks';
 import { RightSidebar, type RightSidebarTab } from './RightSidebar';
@@ -574,12 +575,10 @@ export const AffineNotes: React.FC = () => {
 
   return (
     <div className="flex h-[calc(100vh-120px)] min-h-[600px]" style={{ background: colors.bg }}>
-      {/* Left Sidebar */}
+      {/* Left Sidebar - FrameLord Machine Skin */}
       {!sidebarCollapsed && (
-        <div
-          className="w-64 flex-shrink-0 flex flex-col border-r overflow-hidden"
-          style={{ background: colors.sidebar, borderColor: colors.border }}
-        >
+        <div className="w-64 flex-shrink-0 overflow-hidden">
+          <FrameLordNotesSidebarSkin>
           {/* Workspace Header */}
           <div className="p-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: colors.accent }}>
@@ -765,6 +764,7 @@ export const AffineNotes: React.FC = () => {
               />
             </CollapsibleSection>
           </nav>
+          </FrameLordNotesSidebarSkin>
         </div>
       )}
 

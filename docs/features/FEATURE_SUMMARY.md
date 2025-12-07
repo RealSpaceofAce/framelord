@@ -83,3 +83,95 @@ Short bullet summaries of completed feature work.
 - `components/debug/`: BlockSuiteSlashTest
 
 **Result**: Notes now use a stable, lightweight Tiptap editor. No canvas/edgeless mode in v1.
+
+---
+
+### [[Wikilinks]], Backlinks, and CRM-Aware Mentions
+
+**Why**: Notes need to link to other notes, contacts, and topics to form a connected knowledge graph.
+
+**Features implemented**:
+
+1. **[[Wikilink]] Trigger**
+   - Type `[[` to open note search popup
+   - Search existing notes by title
+   - Select to insert link, or create new note if not found
+   - Links render in normal text color (not blue) to avoid visual noise
+
+2. **@Contact Mentions**
+   - Type `@` to search and mention contacts from CRM
+   - Creates bidirectional link: note stores `mentionedContactIds`, contact stores `linkedNoteIds`
+   - Clicking mention navigates to contact dossier
+
+3. **#Topic Hashtags**
+   - Type `#` to search and insert topic tags
+   - Creates link to topic in topicStore
+   - Bidirectional sync between notes and topics
+
+4. **Backlinks Section**
+   - `Backlinks.tsx` component at bottom of note editor
+   - Shows all notes that link TO the current note
+   - Click to navigate directly to linking note
+
+5. **Forward Link Creation**
+   - When inserting `[[New Note Title]]` that doesn't exist, creates new note automatically
+   - New note placed in Inbox folder by default
+
+6. **Click-to-Navigate Routing**
+   - Clicking any wikilink navigates to that note in the editor
+   - Uses existing `setSelectedNoteId()` for seamless navigation
+
+**Files added**:
+- `extensions/WikiLink.ts` - Tiptap extension for `[[` trigger detection
+- `extensions/WikiLinkNode.tsx` - Renders wikilink as inline node
+- `extensions/ContactMentionNode.tsx` - Renders @mention as inline node
+- `extensions/TopicMentionNode.tsx` - Renders #hashtag as inline node
+- `WikiLinkSuggestion.tsx` - Popup for searching/selecting notes
+- `ContactMentionSuggestion.tsx` - Popup for searching contacts
+- `TopicMentionSuggestion.tsx` - Popup for searching topics
+- `Backlinks.tsx` - Displays incoming links to current note
+- `BiDirectionalLinks.tsx` - Utility component for link management
+
+**Store additions**:
+- `contactStore.ts`: `addNoteMentionToContact()`, `removeNoteMentionFromContact()`, `getContactsByMention()`
+- `noteStore.ts`: `addMentionToNote()`, `removeMentionFromNote()`, `getNotesLinkingTo()`
+- `topicStore.ts`: `getTopicsByNote()`, `addNoteToTopic()`
+
+---
+
+### FrameScan Sidebar Skin
+
+**Why**: Unify the visual aesthetic across all panels with the FrameScan "machine" look.
+
+**Components skinned**:
+1. **Notes Sidebar** (`FrameLordNotesSidebarSkin.tsx/.css`)
+   - Navy-black gradient background
+   - Subtle blue grid overlay (20px squares)
+   - Full-perimeter neon glow border
+   - Pure white text (#FFFFFF)
+
+2. **Main App Sidebar** (`AppSidebarSkin.css`)
+   - Black header zone (logo + Overview) - no grid/particles
+   - Blue content zone with grid and particles
+   - Exact FrameScan colors from theme.css
+
+3. **Right Panel / Clock Panel** (`RetroClockPanel.tsx`)
+   - Added `right-panel-framelord` class
+   - TV static noise effect preserved
+   - Neon border glow
+
+4. **Floating Particles** (`SidebarParticles.tsx`)
+   - Canvas-based particle system
+   - 20 particles, 1-2px size
+   - Slow drift with random direction changes
+   - Only renders in blue content zones
+
+**CSS Variables** (from FrameScan):
+- `--fl-black: #000000`
+- `--fl-blue: #0043ff`
+- Grid lines: `rgba(0, 67, 255, 0.02)`
+- Border glow: `rgba(0, 67, 255, 0.15)`
+
+**Bug fixes**:
+- Fixed highlight bug where all nav items showed blue (selector was too broad)
+- Fixed RetroClockPanel layout regression (restored original structure)

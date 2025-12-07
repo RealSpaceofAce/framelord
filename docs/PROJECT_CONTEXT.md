@@ -6,7 +6,7 @@ FrameLord is an AI-powered authority diagnostics platform and local-first CRM OS
 
 The application features:
 - **Customer-facing site**: Landing page, coaching application flows, beta program management
-- **CRM OS Dashboard**: Full-featured contact management, notes (Tiptap markdown editor), tasks, calendar, pipelines, and AI frame analysis
+- **CRM OS Dashboard**: Full-featured contact management, notes (Tiptap markdown editor with [[wikilinks]], @mentions, #hashtags, and backlinks), tasks, calendar, pipelines, and AI frame analysis
 
 All data is stored in-memory with service-based stores as the single source of truth. There is no backend - the application runs entirely client-side.
 
@@ -79,7 +79,12 @@ External API integrations for AI services and third-party tools.
 
 ### `src/components/`
 React components organized by feature domain. Key subdirectories:
-- **notes/**: Note editors and UI (AffineNotes, MarkdownNoteEditor)
+- **notes/**: Note editors and UI (AffineNotes container, MarkdownNoteEditor with Tiptap)
+  - Supports [[wikilinks]] to other notes (auto-creates if not found)
+  - Supports @mentions linking to contacts in CRM
+  - Supports #hashtags linking to topics
+  - Backlinks section shows all notes linking to current note
+  - No canvas/BlockSuite integration in v1
 - **crm/**: Dashboard views for contacts, pipelines, projects
 - **ui/**: Shared UI components like TabNavigation
 - **littleLord/**: AI assistant "Little Lord" components

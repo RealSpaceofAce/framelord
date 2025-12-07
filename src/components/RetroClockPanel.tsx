@@ -142,7 +142,7 @@ export const RetroClockPanel: React.FC<RetroClockPanelProps> = ({ time, userLoca
     : 'BUENOS AIRES, ARGENTINA';
 
   return (
-    <div className="rounded-xl border border-[#1f2433] bg-[#0b0f1a] p-6 text-white shadow-lg relative overflow-hidden">
+    <div className="rounded-xl p-6 text-white shadow-lg relative overflow-hidden right-panel-framelord">
       {/* Full-card TV Static noise background */}
       <canvas
         ref={noiseRef}
@@ -157,8 +157,8 @@ export const RetroClockPanel: React.FC<RetroClockPanelProps> = ({ time, userLoca
 
       {/* Content layer - on top of static */}
       <div className="relative z-10 flex flex-col h-full">
-        {/* Top row: Day and Date with black background */}
-        <div className="flex items-start justify-between mb-4 text-[10px] font-mono tracking-wider text-gray-400 bg-[#0b0f1a] py-1">
+        {/* Top row: Day and Date */}
+        <div className="flex items-start justify-between mb-4 text-[10px] font-mono tracking-wider text-gray-400">
           <div>{dayOfWeek}</div>
           <div>{fullDate}</div>
         </div>

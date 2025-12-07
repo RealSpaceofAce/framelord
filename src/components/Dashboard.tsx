@@ -10,6 +10,8 @@ import {
   Upload, Image as ImageIcon, FileText, ArrowRight, AlertTriangle, Lightbulb,
   CheckCircle, Loader2, Paperclip, Mic, FileCode, Crosshair, Binary, Terminal, Cpu, GitCommit, Briefcase, Camera, Notebook, ArrowLeft, Clock as ClockIcon, User, Calendar
 } from 'lucide-react';
+import './AppSidebarSkin.css';
+import { SidebarParticles } from './notes/SidebarParticles';
 import { SparkBorder } from './SparkSystem';
 import { analyzeFrame } from '../lib/llm/geminiService';
 import { FrameAnalysisResult } from '../types';
@@ -1747,22 +1749,31 @@ export const Dashboard: React.FC = () => {
     >
       <div className="fixed inset-0 text-[#DBDBDB] font-sans flex flex-col lg:flex-row overflow-hidden z-[50] app-neon">
         <aside className={`
-          ${isLeftSidebarOpen ? 'w-[280px]' : 'w-0'} bg-[#000000] border-r border-[#1c1c1c] flex flex-col z-40 transform transition-all duration-300 lg:relative overflow-hidden
+          ${isLeftSidebarOpen ? 'w-[280px]' : 'w-0'} flex-shrink-0 flex flex-col z-40 transform transition-all duration-300 lg:relative overflow-hidden app-sidebar-framelord
           ${isMobileMenuOpen && isLeftSidebarOpen ? 'translate-x-0' : isLeftSidebarOpen ? 'translate-x-0' : 'lg:translate-x-0 -translate-x-full'}
       `}>
-        <div className="hidden lg:flex h-16 items-center px-6 border-b border-[#1c1c1c]">
-            <Zap size={20} className="text-[#4433FF] mr-3" />
-            <div className="leading-tight">
-                <h1 className="font-display font-bold text-white text-sm tracking-wider">FRAMELORD</h1>
-                <p className="text-[9px] text-gray-500 tracking-wide">THE OS FOR DOMINANCE</p>
+        {/* BLACK TOP BAR - Seamless zone: Logo + Overview (no grid, no particles, no dividers) */}
+        <div className="sidebar-header-zone hidden lg:flex flex-col px-3 pt-4 pb-2">
+            {/* Logo row */}
+            <div className="flex items-center px-3 mb-4">
+                <Zap size={20} className="text-[#4433FF] mr-3" />
+                <div className="leading-tight">
+                    <h1 className="font-display font-bold text-white text-sm tracking-wider">FRAMELORD</h1>
+                    <p className="text-[9px] text-gray-500 tracking-wide">THE OS FOR DOMINANCE</p>
+                </div>
             </div>
+            {/* Overview - part of black bar */}
+            <NavItem active={currentView === 'OVERVIEW'} onClick={() => handleNav('OVERVIEW')} icon={<LayoutGrid size={16} />} label="OVERVIEW" />
         </div>
 
-        <div className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
-            <div className="px-3 mb-2 mt-2 text-[10px] font-bold text-blue-500 uppercase tracking-widest flex items-center gap-2">
+        {/* BLUE CONTENT ZONE - Grid + Particles region */}
+        <div className="sidebar-content-zone flex-1 overflow-hidden">
+          {/* Particle layer - only in blue zone */}
+          <SidebarParticles />
+          <div className="py-4 px-3 space-y-1 overflow-y-auto h-full">
+            <div className="px-3 mb-2 text-[10px] font-bold text-blue-500 uppercase tracking-widest flex items-center gap-2">
                 <div className="w-1.5 h-1.5 bg-blue-500 rounded-sm" /> Tools
             </div>
-            <NavItem active={currentView === 'OVERVIEW'} onClick={() => handleNav('OVERVIEW')} icon={<LayoutGrid size={16} />} label="OVERVIEW" />
             <NavItem 
               active={currentView === 'DOSSIER' && selectedContactId === CONTACT_ZERO.id} 
               onClick={handleContactZeroNav} 
@@ -1801,10 +1812,11 @@ export const Dashboard: React.FC = () => {
                     )}
                 </AnimatePresence>
             </div>
+          </div>
         </div>
 
-        {/* Account Owner (Contact Zero) - Always Displayed */}
-        <div className="p-4 bg-[#000000] border-t border-[#1c1c1c] space-y-2">
+        {/* FOOTER ZONE - Account section */}
+        <div className="sidebar-footer-zone p-4 space-y-2">
           {/* Contact Zero Info - Always shows account owner */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded flex items-center justify-center overflow-hidden bg-[#4433FF]">

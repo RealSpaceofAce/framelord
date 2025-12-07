@@ -1,0 +1,345 @@
+/* =============================================================================
+   FRAMELORD UNIFIED SIDEBAR SKIN
+   =============================================================================
+   Uses EXACT FrameScan colors from theme.css:
+   - Primary black: #000000
+   - Blue accent: #0043ff
+   - Border: #1c1c1c
+   - Glass shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 67, 255, 0.1)
+
+   Structure:
+   - Solid black top bar (logo + Overview) - NO grid, NO particles
+   - FrameScan blue zone below with grid + particles
+   - Full-perimeter neon glow border
+   ============================================================================= */
+
+/* =============================================================================
+   CSS VARIABLES - Exact FrameScan tokens
+   ============================================================================= */
+
+.app-sidebar-framelord,
+.right-panel-framelord {
+  --fl-black: #000000;
+  --fl-blue: #0043ff;
+  --fl-border: #1c1c1c;
+  --fl-blue-dark: rgba(0, 0, 0, 0.9);
+  --fl-blue-glow: rgba(0, 67, 255, 0.1);
+  --fl-glass-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 67, 255, 0.1);
+}
+
+/* =============================================================================
+   ROOT CONTAINER - Full sidebar with neon border
+   ============================================================================= */
+
+.app-sidebar-framelord {
+  position: relative !important;
+  background: var(--fl-black) !important;
+
+  /* Full-perimeter glow border - matches FrameScan */
+  border: 1px solid rgba(0, 67, 255, 0.15) !important;
+  box-shadow:
+    inset 0 0 40px rgba(0, 67, 255, 0.03),
+    0 0 20px rgba(0, 67, 255, 0.15) !important;
+}
+
+/* =============================================================================
+   BLACK TOP BAR - Seamless header zone (logo + title + Overview)
+   NO grid, NO particles, NO dividing lines
+   ============================================================================= */
+
+.app-sidebar-framelord .sidebar-header-zone {
+  position: relative;
+  z-index: 10;
+  background: var(--fl-black) !important;
+  /* NO border-bottom - seamless with content below */
+}
+
+/* =============================================================================
+   BLUE CONTENT ZONE - FrameScan exact background
+   ============================================================================= */
+
+.app-sidebar-framelord .sidebar-content-zone {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  /* FrameScan exact background - darker navy-black */
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(3, 8, 20, 0.95) 25%,
+    rgba(5, 12, 28, 0.95) 50%,
+    rgba(3, 8, 20, 0.95) 75%,
+    rgba(0, 0, 0, 0.95) 100%
+  ) !important;
+
+  /* Glass effect */
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Grid overlay - FrameScan exact pattern */
+.app-sidebar-framelord .sidebar-content-zone::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(rgba(0, 67, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 67, 255, 0.02) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Particle canvas - only inside content zone */
+.app-sidebar-framelord .sidebar-content-zone > canvas {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Content inside blue zone sits above grid and particles */
+.app-sidebar-framelord .sidebar-content-zone > *:not(canvas) {
+  position: relative;
+  z-index: 2;
+}
+
+/* =============================================================================
+   FOOTER ZONE - Sits in blue gradient area
+   ============================================================================= */
+
+.app-sidebar-framelord .sidebar-footer-zone {
+  position: relative;
+  z-index: 10;
+  background: transparent !important;
+  border-top: 1px solid rgba(0, 67, 255, 0.12);
+}
+
+/* =============================================================================
+   TEXT COLORS - Pure white, matches FrameScan
+   ============================================================================= */
+
+.app-sidebar-framelord,
+.app-sidebar-framelord *,
+.right-panel-framelord,
+.right-panel-framelord * {
+  --text-primary: #ffffff !important;
+  --text-secondary: #ffffff !important;
+  --text-tertiary: #ffffff !important;
+  --text-muted: #ffffff !important;
+}
+
+.app-sidebar-framelord h1,
+.app-sidebar-framelord h2,
+.app-sidebar-framelord h3,
+.app-sidebar-framelord h4,
+.app-sidebar-framelord span,
+.app-sidebar-framelord p,
+.right-panel-framelord h1,
+.right-panel-framelord h2,
+.right-panel-framelord h3,
+.right-panel-framelord h4,
+.right-panel-framelord span,
+.right-panel-framelord p {
+  color: #ffffff !important;
+}
+
+/* Dim text for minor labels */
+.app-sidebar-framelord .text-gray-500,
+.app-sidebar-framelord .text-gray-400,
+.app-sidebar-framelord .text-gray-600,
+.right-panel-framelord .text-gray-500,
+.right-panel-framelord .text-gray-400,
+.right-panel-framelord .text-gray-600 {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* =============================================================================
+   ICON COLORS - Blue tinted, matches FrameScan
+   ============================================================================= */
+
+.app-sidebar-framelord svg {
+  color: rgba(0, 67, 255, 0.6) !important;
+}
+
+.app-sidebar-framelord .text-\[\#4433FF\] svg {
+  color: #0043ff !important;
+}
+
+/* =============================================================================
+   NAVIGATION ITEMS - FrameScan hover/active states
+   ============================================================================= */
+
+/* Nav item text is white */
+.app-sidebar-framelord [class*="cursor-pointer"][class*="transition"] {
+  color: #ffffff !important;
+}
+
+/* Hover state - subtle blue glow (only on hover, not permanent) */
+.app-sidebar-framelord [class*="cursor-pointer"][class*="transition"]:hover {
+  background: rgba(0, 67, 255, 0.08) !important;
+}
+
+/*
+ * ACTIVE state - Only apply to items with BOTH text-white AND bg-[#111111]
+ * Active items have: text-white bg-[#111111]
+ * Inactive items have: text-gray-500 hover:bg-[#111111] (no text-white)
+ */
+.app-sidebar-framelord [class*="text-white"][class*="bg-\[#111111\]"] {
+  background: rgba(0, 67, 255, 0.12) !important;
+}
+
+/* =============================================================================
+   BUTTONS
+   ============================================================================= */
+
+.app-sidebar-framelord button {
+  color: #ffffff !important;
+  transition: all 0.2s ease;
+}
+
+.app-sidebar-framelord button:hover {
+  background: rgba(0, 67, 255, 0.08) !important;
+  color: #0043ff !important;
+}
+
+.app-sidebar-framelord button:hover svg {
+  color: #0043ff !important;
+}
+
+.app-sidebar-framelord button[class*="bg-\[#4433FF\]"] {
+  background: rgba(0, 67, 255, 0.2) !important;
+  color: #0043ff !important;
+}
+
+/* =============================================================================
+   SECTION HEADERS
+   ============================================================================= */
+
+.app-sidebar-framelord .text-blue-500 {
+  color: rgba(0, 67, 255, 0.8) !important;
+}
+
+.app-sidebar-framelord .bg-blue-500 {
+  background: rgba(0, 67, 255, 0.8) !important;
+}
+
+/* =============================================================================
+   BORDERS - FrameScan blue tinted
+   ============================================================================= */
+
+.app-sidebar-framelord .border-b,
+.app-sidebar-framelord .border-t {
+  border-color: rgba(0, 67, 255, 0.12) !important;
+}
+
+.app-sidebar-framelord .border-\[\#1c1c1c\] {
+  border-color: rgba(0, 67, 255, 0.12) !important;
+}
+
+/* =============================================================================
+   SCROLLBAR - FrameScan style
+   ============================================================================= */
+
+.app-sidebar-framelord ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.app-sidebar-framelord ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.app-sidebar-framelord ::-webkit-scrollbar-thumb {
+  background: rgba(0, 67, 255, 0.25);
+  border-radius: 3px;
+}
+
+.app-sidebar-framelord ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 67, 255, 0.4);
+}
+
+/* =============================================================================
+   STATUS INDICATORS - Keep original colors
+   ============================================================================= */
+
+.app-sidebar-framelord .bg-orange-500 {
+  background: #f97316 !important;
+}
+
+.app-sidebar-framelord .text-orange-500 {
+  color: #f97316 !important;
+}
+
+/* =============================================================================
+   RIGHT PANEL - Same styling as left sidebar
+   ============================================================================= */
+
+.right-panel-framelord {
+  position: relative !important;
+  background: var(--fl-black) !important;
+
+  /* Full-perimeter glow border - matches left sidebar */
+  border: 1px solid rgba(0, 67, 255, 0.15) !important;
+  box-shadow:
+    inset 0 0 40px rgba(0, 67, 255, 0.03),
+    0 0 20px rgba(0, 67, 255, 0.15) !important;
+}
+
+/* Black header zone for right panel */
+.right-panel-framelord .panel-header-zone {
+  position: relative;
+  z-index: 10;
+  background: var(--fl-black) !important;
+}
+
+/* Blue content zone for right panel */
+.right-panel-framelord .panel-content-zone {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  /* Same FrameScan background as left sidebar */
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(3, 8, 20, 0.95) 25%,
+    rgba(5, 12, 28, 0.95) 50%,
+    rgba(3, 8, 20, 0.95) 75%,
+    rgba(0, 0, 0, 0.95) 100%
+  ) !important;
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Grid overlay for right panel */
+.right-panel-framelord .panel-content-zone::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(rgba(0, 67, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 67, 255, 0.02) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.right-panel-framelord .panel-content-zone > * {
+  position: relative;
+  z-index: 2;
+}
