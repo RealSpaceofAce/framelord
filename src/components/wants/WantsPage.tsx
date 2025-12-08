@@ -80,18 +80,11 @@ const ScopeListView: React.FC<ScopeListViewProps> = ({ onSelectWant }) => {
 
   // Memoize gallery items to prevent re-renders
   const galleryItems = useMemo(() => {
-    return wants.map((want, index) => ({
+    return wants.map((want) => ({
       image: want.coverImageUrl || DEFAULT_COVER_PLACEHOLDER,
       text: want.title,
     }));
   }, [wants]);
-
-  // Handle gallery item click - navigate to Want detail
-  const handleGalleryClick = useCallback((index: number) => {
-    if (wants[index]) {
-      onSelectWant(wants[index].id);
-    }
-  }, [wants, onSelectWant]);
 
   if (wants.length === 0) {
     return (
@@ -110,7 +103,7 @@ const ScopeListView: React.FC<ScopeListViewProps> = ({ onSelectWant }) => {
       {/* Circular Gallery Header */}
       {wants.length > 0 && (
         <div className="shrink-0 px-6 pt-6">
-          <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card/50">
+          <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card/50 h-[320px]">
             <CircularGallery
               items={galleryItems}
               bend={2}
@@ -119,12 +112,10 @@ const ScopeListView: React.FC<ScopeListViewProps> = ({ onSelectWant }) => {
               font="bold 20px Figtree, system-ui"
               scrollSpeed={1.5}
               scrollEase={0.06}
-              onItemClick={handleGalleryClick}
-              className="h-[280px]"
             />
             {/* Gallery hint */}
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-background/80 backdrop-blur-sm rounded-full text-[10px] text-muted-foreground">
-              Scroll to browse • Click to open
+              Drag to browse
             </div>
           </div>
         </div>
