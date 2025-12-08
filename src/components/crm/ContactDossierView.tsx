@@ -53,6 +53,10 @@ import {
 import {
   getProjectsByContact,
 } from '../../services/projectStore';
+import {
+  getWantsByPrimaryContact,
+  type Want,
+} from '../../services/wantStore';
 import { Contact, RelationshipDomain, ContactStatus, Topic, Task, Interaction, InteractionType, InteractionAttachment } from '../../types';
 import { DatePicker } from '../DatePicker';
 import { 
@@ -215,6 +219,9 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
 
   // Projects for this contact
   const projects = getProjectsByContact(selectedContactId);
+
+  // Wants connected to this contact (where this contact is the primary contact)
+  const wantsConnected = getWantsByPrimaryContact(selectedContactId);
   
   // For Contact Zero: notes written BY Contact Zero about OTHER contacts
   const activityNotes = isContactZero 
@@ -1732,6 +1739,55 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             ) : (
               <p className="text-[#6b92b9] text-sm italic">No projects</p>
             )}
+          </div>
+          )}
+
+          {/* Wants Connected Section */}
+          {wantsConnected.length > 0 && (
+          <div className={`${glassCard} p-6`}>
+            <div className="flex items-center gap-2 mb-4">
+              <Target size={16} className="text-[#ff8f8f]" />
+              <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">
+                Wants Connected
+              </h3>
+              <span className="text-[11px] text-[#7fa6d1] ml-auto">{wantsConnected.length}</span>
+            </div>
+
+            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+              {wantsConnected.map((want) => (
+                <div
+                  key={want.id}
+                  className="p-3 bg-[#0d1627]/80 rounded border border-[#1f2f45] hover:border-[#ff8f8f] transition-colors group shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white font-bold group-hover:text-[#ff8f8f] transition-colors">{want.title}</p>
+                      {want.reason && (
+                        <p className="text-xs text-[#7fa6d1] mt-1 line-clamp-2">{want.reason}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 mt-2 text-xs text-[#6b92b9]">
+                    <span className={`capitalize ${
+                      want.status === 'done' ? 'text-green-400' :
+                      want.status === 'in_progress' ? 'text-yellow-400' : ''
+                    }`}>{want.status.replace('_', ' ')}</span>
+                    {want.deadline && (
+                      <>
+                        <span>•</span>
+                        <span>Due: {new Date(want.deadline).toLocaleDateString()}</span>
+                      </>
+                    )}
+                    {!want.directness.isDirect && (
+                      <>
+                        <span>•</span>
+                        <span className="text-amber-400">⚠ Indirect</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           )}
 

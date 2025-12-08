@@ -268,6 +268,7 @@ export interface Task {
   dueAt?: string | null;          // ISO timestamp
   status: TaskStatus;
   createdAt: string;              // ISO timestamp
+  wantId?: string | null;         // Optional link to a Want (sovereign desire)
 }
 
 // =============================================================================

@@ -11,10 +11,31 @@ import { LittleLordFloatingButton } from './LittleLordFloatingButton';
 import type { LittleLordContext, LittleLordInvocationSource } from '../../services/littleLord/types';
 import { CONTACT_ZERO } from '../../services/contactStore';
 import { getLittleLordShortcut } from '../../lib/settings/userSettings';
+import { loadLittleLord } from '@/lib/agents/loadLittleLord';
+import { runLittleLord as runLittleLordCore, type LittleLordRunOutput } from '@/lib/agents/runLittleLord';
 
 // =============================================================================
 // CONTEXT TYPES
 // =============================================================================
+
+interface LittleLordSpec {
+  name: string;
+  version: string;
+  model: string;
+  corpus: { path: string; format: string; delimiter: string; retrieval: any };
+  identity: { role: string; tone: string; behavior: string[] };
+  doctrine: { source: string; use: string[]; no_output: string[] };
+  inputs: any;
+  outputs: any;
+  event_protocol: any;
+  reasoning_rules: any;
+  safety: { forbidden: string[]; allowed: string[] };
+}
+
+interface LittleLordData {
+  spec: LittleLordSpec;
+  corpus: string;
+}
 
 interface LittleLordContextType {
   /** Open Little Lord with optional context */
@@ -25,6 +46,10 @@ interface LittleLordContextType {
   isOpen: boolean;
   /** Current context */
   currentContext?: LittleLordContext;
+  /** Little Lord spec and corpus data */
+  littleLord: LittleLordData;
+  /** Run Little Lord with a message and context */
+  runLittleLord: (message: string, context?: LittleLordContext) => Promise<LittleLordRunOutput>;
 }
 
 const LittleLordContext = createContext<LittleLordContextType | undefined>(undefined);
@@ -60,6 +85,10 @@ export const LittleLordProvider: React.FC<LittleLordProviderProps> = ({
   const [currentContext, setCurrentContext] = useState<LittleLordContext | undefined>();
   const [invocationSource, setInvocationSource] = useState<LittleLordInvocationSource>('global_command');
 
+  // Initialize Little Lord spec and corpus
+  const { spec, corpus } = loadLittleLord();
+  const littleLord: LittleLordData = { spec: spec as LittleLordSpec, corpus };
+
   const open = useCallback(
     (source: LittleLordInvocationSource, context?: LittleLordContext) => {
       setInvocationSource(source);
@@ -73,6 +102,19 @@ export const LittleLordProvider: React.FC<LittleLordProviderProps> = ({
   const close = useCallback(() => {
     setIsOpen(false);
   }, []);
+
+  // Run Little Lord with a message
+  const runLittleLord = useCallback(
+    async (message: string, context?: LittleLordContext): Promise<LittleLordRunOutput> => {
+      return runLittleLordCore({
+        message,
+        context,
+        spec: littleLord.spec as any,
+        corpus: littleLord.corpus,
+      });
+    },
+    [littleLord]
+  );
 
   // Handle keyboard shortcut (Cmd/Ctrl + K, then LL)
   useEffect(() => {
@@ -167,6 +209,8 @@ export const LittleLordProvider: React.FC<LittleLordProviderProps> = ({
     close,
     isOpen,
     currentContext,
+    littleLord,
+    runLittleLord,
   };
 
   return (

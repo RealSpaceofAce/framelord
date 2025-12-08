@@ -134,7 +134,9 @@ export type LittleLordInvocationSource =
   | 'pipeline_view'
   | 'project_view'
   | 'floating_button'
-  | 'keyboard_shortcut';
+  | 'keyboard_shortcut'
+  | 'wants_board'
+  | 'want_detail';
 
 /**
  * Metadata about a Little Lord invocation.

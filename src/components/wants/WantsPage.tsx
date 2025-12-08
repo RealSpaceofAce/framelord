@@ -32,19 +32,7 @@ import { useLittleLord } from '../littleLord/LittleLordProvider';
 import { cn } from '@/lib/utils';
 
 // Default placeholder image for Wants without cover images
-const DEFAULT_COVER_PLACEHOLDER = 'data:image/svg+xml;base64,' + btoa(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a1a2e"/>
-      <stop offset="50%" style="stop-color:#16213e"/>
-      <stop offset="100%" style="stop-color:#0f3460"/>
-    </linearGradient>
-  </defs>
-  <rect width="100%" height="100%" fill="url(#bg)"/>
-  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#4433FF" font-size="48" font-family="system-ui" opacity="0.2">WANT</text>
-</svg>
-`);
+const DEFAULT_COVER_PLACEHOLDER = '/images-demo/people-7707981_640.jpg';
 import {
   getAllWants,
   subscribe as wantSubscribe,
@@ -78,13 +66,19 @@ const ScopeListView: React.FC<ScopeListViewProps> = ({ onSelectWant }) => {
 
   const wants = getAllWants();
 
-  // Memoize gallery items to prevent re-renders
+  // Create a stable key based on actual content (not array reference)
+  const galleryKey = useMemo(() => {
+    return wants.map(w => `${w.id}:${w.coverImageUrl || ''}:${w.title}`).join('|');
+  }, [wants]);
+
+  // Memoize gallery items using the stable key
   const galleryItems = useMemo(() => {
     return wants.map((want) => ({
       image: want.coverImageUrl || DEFAULT_COVER_PLACEHOLDER,
       text: want.title,
     }));
-  }, [wants]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [galleryKey]);
 
   if (wants.length === 0) {
     return (
@@ -105,6 +99,7 @@ const ScopeListView: React.FC<ScopeListViewProps> = ({ onSelectWant }) => {
         <div className="shrink-0 px-6 pt-6">
           <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card/50 h-[320px]">
             <CircularGallery
+              key={galleryKey}
               items={galleryItems}
               bend={2}
               textColor="#ffffff"

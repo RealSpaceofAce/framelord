@@ -148,38 +148,89 @@ function generateSleepMetrics(days: number): DemoMetricEntry[] {
   return data;
 }
 
+/**
+ * Generate 30+ days of strength training metrics.
+ * Simulates progressive overload on bench press.
+ */
+function generateStrengthMetrics(days: number): DemoMetricEntry[] {
+  const data: DemoMetricEntry[] = [];
+  let benchMax = 185; // Starting point
+
+  for (let i = days; i >= 0; i--) {
+    // Progress slowly upward with variance
+    benchMax = Math.min(225, benchMax + (Math.random() * 1.5 - 0.3));
+
+    data.push({
+      daysAgo: i,
+      values: {
+        bench_max: Math.round(benchMax),
+        sets_completed: Math.floor(3 + Math.random() * 2),
+        gym_session: Math.random() > 0.4, // ~60% training frequency
+        bodyweight: Math.round((185 + Math.random() * 5) * 10) / 10,
+      },
+    });
+  }
+  return data;
+}
+
+/**
+ * Generate 30+ days of family time metrics.
+ * Simulates daily quality time tracking.
+ */
+function generateFamilyMetrics(days: number): DemoMetricEntry[] {
+  const data: DemoMetricEntry[] = [];
+
+  for (let i = days; i >= 0; i--) {
+    data.push({
+      daysAgo: i,
+      values: {
+        quality_time_minutes: Math.floor(30 + Math.random() * 60), // 30-90 mins
+        activities_done: Math.floor(1 + Math.random() * 3),
+        phone_free: Math.random() > 0.25, // ~75% phone-free sessions
+        bedtime_routine: Math.random() > 0.2, // ~80% did bedtime routine
+      },
+    });
+  }
+  return data;
+}
+
+/**
+ * Generate 30+ days of relationship metrics.
+ * Simulates weekly date nights and connection time.
+ */
+function generateRelationshipMetrics(days: number): DemoMetricEntry[] {
+  const data: DemoMetricEntry[] = [];
+
+  for (let i = days; i >= 0; i--) {
+    // Date nights happen ~1x per week
+    const isWeekend = (days - i) % 7 <= 1;
+    const dateNight = isWeekend && Math.random() > 0.3;
+
+    data.push({
+      daysAgo: i,
+      values: {
+        date_night: dateNight,
+        connection_minutes: dateNight ? Math.floor(90 + Math.random() * 60) : Math.floor(15 + Math.random() * 30),
+        appreciation_shared: Math.random() > 0.4, // ~60% of days
+        conflict_resolved: Math.random() > 0.85 ? true : null, // Occasional conflicts
+      },
+    });
+  }
+  return data;
+}
+
 // =============================================================================
 // DEMO COVER IMAGES — TEMP_DEV: Placeholder SVG data URLs
 // =============================================================================
 // These are simple gradient placeholders. Will be replaced with actual images.
 
-const DEMO_COVER_FITNESS = 'data:image/svg+xml;base64,' + btoa(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200">
-  <defs>
-    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a1a2e"/>
-      <stop offset="50%" style="stop-color:#16213e"/>
-      <stop offset="100%" style="stop-color:#0f3460"/>
-    </linearGradient>
-  </defs>
-  <rect width="100%" height="100%" fill="url(#g1)"/>
-  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#4433FF" font-size="24" font-family="system-ui" opacity="0.3">FITNESS</text>
-</svg>
-`);
-
-const DEMO_COVER_BUSINESS = 'data:image/svg+xml;base64,' + btoa(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200">
-  <defs>
-    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a1a1a"/>
-      <stop offset="50%" style="stop-color:#2d2d2d"/>
-      <stop offset="100%" style="stop-color:#1a1a1a"/>
-    </linearGradient>
-  </defs>
-  <rect width="100%" height="100%" fill="url(#g2)"/>
-  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#22C55E" font-size="24" font-family="system-ui" opacity="0.3">PIPELINE</text>
-</svg>
-`);
+// Demo cover images from /public/images-demo/
+const DEMO_COVER_FITNESS = '/images-demo/fitness-8564036_640.jpg';
+const DEMO_COVER_BUSINESS = '/images-demo/banknotes-4516005_640.jpg';
+const DEMO_COVER_SLEEP = '/images-demo/landscape-7396852_640.jpg';
+const DEMO_COVER_STRENGTH = '/images-demo/bodybuilder-331671_640.jpg';
+const DEMO_COVER_FAMILY = '/images-demo/newborn-9950817_640.jpg';
+const DEMO_COVER_RELATIONSHIP = '/images-demo/people-7707981_640.jpg';
 
 // =============================================================================
 // DEMO WANT CONFIGURATIONS
@@ -339,6 +390,7 @@ const DEMO_WANTS: DemoWantConfig[] = [
   },
   {
     title: 'Average 7.5 hours sleep',
+    coverImageUrl: DEMO_COVER_SLEEP,
     reason: 'I want to feel sharp and recovered every day. This is for me.',
     deadline: null,
     steps: [
@@ -388,6 +440,194 @@ const DEMO_WANTS: DemoWantConfig[] = [
       risks_or_costs: 'May require saying no to late-night social activities or work sessions. Short-term FOMO for long-term gains.',
       covert_contract_flags: [],
       congruence_notes: 'Good congruence but moderate consistency. User understands the importance but still battles late-night work patterns. Needs stronger boundary enforcement.',
+    },
+  },
+  {
+    title: 'Bench press 225 lbs',
+    coverImageUrl: DEMO_COVER_STRENGTH,
+    reason: 'I want to feel physically powerful and hit a milestone that proves my dedication.',
+    deadline: '2025-05-01',
+    steps: [
+      { title: 'Test current 1RM', description: 'Establish baseline max bench press', status: 'done' },
+      { title: 'Start 5x5 strength program', description: 'StrongLifts or similar progressive overload', status: 'done' },
+      { title: 'Add bench-specific accessories', description: 'Close-grip bench, dips, tricep work', status: 'done' },
+      { title: 'Track every session in log', description: 'Weight, reps, RPE for each set', status: 'done' },
+      { title: 'Increase protein to 1g/lb', description: 'Fuel muscle recovery and growth', status: 'in_progress' },
+      { title: 'Add paused reps for power', description: '2-second pause at chest', status: 'in_progress' },
+      { title: 'Hit 195 lb checkpoint', description: 'First major milestone', status: 'in_progress', deadline: '2025-02-15' },
+      { title: 'Prioritize recovery days', description: 'At least 48 hours between bench sessions', status: 'not_started' },
+      { title: 'Add speed work', description: 'Explosive reps at 60% for power development', status: 'not_started' },
+      { title: 'Hit 205 lb checkpoint', description: 'Second major milestone', status: 'not_started', deadline: '2025-03-15' },
+      { title: 'Deload week before max attempt', description: 'Reduce volume to peak for PR', status: 'not_started' },
+      { title: 'Hit 225 lb max', description: 'Final milestone - two plates each side', status: 'not_started', deadline: '2025-05-01' },
+    ],
+    metricTypes: ['bench_max', 'sets_completed', 'gym_session', 'bodyweight'],
+    metricsGenerator: generateStrengthMetrics,
+    iterations: [
+      {
+        action: 'feedback',
+        feedback: 'Starting 1RM was 185 lbs',
+        consequence: 'Need 40 lb increase over 4 months - achievable with consistency',
+        daysAgo: 28,
+      },
+      {
+        action: 'milestone',
+        feedback: 'Hit 190 lbs on bench',
+        consequence: 'First 5 lb PR - program is working',
+        daysAgo: 18,
+      },
+      {
+        action: 'resistance',
+        feedback: 'Shoulder felt tweaky after heavy set',
+        consequence: 'Added extra warmup sets and shoulder prehab',
+        daysAgo: 12,
+      },
+      {
+        action: 'revision',
+        feedback: 'Switching to 4-day upper/lower split',
+        consequence: 'More frequency, better recovery',
+        daysAgo: 7,
+      },
+      {
+        action: 'feedback',
+        feedback: 'Bench feeling stronger, hit 195 for a clean double',
+        consequence: 'On track for 225 by deadline',
+        daysAgo: 3,
+      },
+    ],
+    doctrineNotes: [
+      'Strength goal is sovereign - user genuinely wants this for himself, not for external validation.',
+      'Recovery is part of the work. Ego-driven overtraining is the enemy.',
+    ],
+    dossier: {
+      summary: 'Progressive strength training to achieve a 225 lb bench press through consistent programming, proper recovery, and strategic periodization.',
+      why_it_matters: 'Physical strength is a tangible measure of discipline and commitment. 225 lbs (two plates) is a widely recognized milestone that represents dedication over months of consistent effort.',
+      intended_timeline: '4 months from 185 lb baseline to 225 lb goal. Checkpoints: 195 lbs (Month 2), 205 lbs (Month 3), 225 lbs (Month 4).',
+      win_win_frame: 'Increased strength improves overall health, energy, and confidence. Physical capability translates to mental resilience.',
+      risks_or_costs: 'Injury risk if ego overrides smart programming. Time commitment of 4x/week training. May need to prioritize gym over other activities.',
+      covert_contract_flags: [],
+      congruence_notes: 'High congruence. User tracks sessions diligently and has shown willingness to adjust programming when needed. Not chasing numbers blindly.',
+    },
+  },
+  {
+    title: 'Quality time with kids - 1 hour daily',
+    coverImageUrl: DEMO_COVER_FAMILY,
+    reason: 'I want to be present for my children and build memories that matter.',
+    deadline: null,
+    steps: [
+      { title: 'Block 6-7pm as sacred family time', description: 'No work, no phone during this hour', status: 'done' },
+      { title: 'Create activity idea list', description: 'Games, crafts, outdoor activities to choose from', status: 'done' },
+      { title: 'Establish phone-free zones', description: 'Phone stays in another room during family time', status: 'done' },
+      { title: 'Weekly one-on-one time with each kid', description: 'Individual attention for each child', status: 'in_progress' },
+      { title: 'Bedtime story routine nightly', description: '15 minutes of reading before bed', status: 'in_progress' },
+      { title: 'Weekend adventure planning', description: 'One special activity each weekend', status: 'in_progress', deadline: '2025-01-20' },
+      { title: 'Teach a new skill monthly', description: 'Cooking, building, sports - something they can learn', status: 'not_started' },
+      { title: 'Document moments in family journal', description: 'Quick notes on special memories', status: 'not_started' },
+      { title: 'Plan quarterly family trip', description: 'Bigger adventures every 3 months', status: 'not_started' },
+    ],
+    metricTypes: ['quality_time_minutes', 'activities_done', 'phone_free', 'bedtime_routine'],
+    metricsGenerator: generateFamilyMetrics,
+    iterations: [
+      {
+        action: 'feedback',
+        feedback: 'First week of blocked time went well',
+        consequence: 'Kids noticed and started asking "is it family time yet?"',
+        daysAgo: 20,
+      },
+      {
+        action: 'resistance',
+        feedback: 'Work deadline pulled me away two evenings',
+        consequence: 'Guilt hit hard. Must protect this boundary.',
+        daysAgo: 14,
+      },
+      {
+        action: 'revision',
+        feedback: 'Set hard stop on work at 5:45pm',
+        consequence: 'Buffer time allows mental transition before family time',
+        daysAgo: 10,
+      },
+      {
+        action: 'milestone',
+        feedback: 'Daughter said "you\'re the best dad" during game night',
+        consequence: 'This is why I do this. Irreplaceable.',
+        daysAgo: 5,
+      },
+    ],
+    doctrineNotes: [
+      'This is a sovereign Want rooted in values, not guilt. User genuinely desires presence.',
+      'Work boundaries are the friction point. Must be defended aggressively.',
+      'Quality over quantity - but quantity enables quality.',
+    ],
+    dossier: {
+      summary: 'Establish consistent daily quality time with children through protected time blocks, phone-free presence, and intentional activities.',
+      why_it_matters: 'Children grow fast. These years are irreplaceable. Being present now builds the relationship foundation for decades to come. This is not about being a "good parent" - it is about not having regrets.',
+      intended_timeline: 'Ongoing habit. Daily 1-hour minimum. Weekly one-on-one sessions. Quarterly family adventures.',
+      win_win_frame: 'Kids get present, engaged father. User gets fulfillment and connection. Spouse gets partner who prioritizes family. Everyone wins.',
+      risks_or_costs: 'May need to say no to work opportunities or social events. Career advancement may slow if boundaries are firm. Short-term sacrifice for long-term relationship.',
+      covert_contract_flags: [
+        'Watch for: "If I spend enough time, they\'ll always love me" - love is not transactional',
+      ],
+      congruence_notes: 'Strong congruence with clear values alignment. User has shown ability to defend boundaries when tested. This is a real Want.',
+    },
+  },
+  {
+    title: 'Weekly date night with wife',
+    coverImageUrl: DEMO_COVER_RELATIONSHIP,
+    reason: 'I want to keep our connection strong and prioritize our relationship.',
+    deadline: null,
+    steps: [
+      { title: 'Block Saturday night as date night', description: 'Non-negotiable calendar hold', status: 'done' },
+      { title: 'Arrange recurring babysitter', description: 'Same sitter every Saturday for consistency', status: 'done' },
+      { title: 'Create date idea list together', description: 'Both partners contribute ideas', status: 'done' },
+      { title: 'Alternate who plans each week', description: 'Shared responsibility for creativity', status: 'in_progress' },
+      { title: 'No phone rule during dates', description: 'Devices stay in car or at home', status: 'in_progress' },
+      { title: 'Weekly appreciation ritual', description: 'Share 3 things you appreciate about each other', status: 'in_progress' },
+      { title: 'Try one new restaurant monthly', description: 'Novelty keeps things fresh', status: 'not_started' },
+      { title: 'Plan quarterly overnight getaway', description: 'Extended time together without kids', status: 'not_started' },
+      { title: 'Establish daily connection ritual', description: '10 minutes of undistracted conversation', status: 'not_started' },
+    ],
+    metricTypes: ['date_night', 'connection_minutes', 'appreciation_shared', 'conflict_resolved'],
+    metricsGenerator: generateRelationshipMetrics,
+    iterations: [
+      {
+        action: 'feedback',
+        feedback: 'First month of consistent date nights complete',
+        consequence: 'Both feeling more connected. Worth the effort.',
+        daysAgo: 22,
+      },
+      {
+        action: 'resistance',
+        feedback: 'Skipped one week due to work travel',
+        consequence: 'Felt the disconnect. Must protect this time.',
+        daysAgo: 15,
+      },
+      {
+        action: 'external_feedback',
+        feedback: 'Wife said she feels prioritized again',
+        consequence: 'Relationship health improving measurably',
+        daysAgo: 8,
+      },
+      {
+        action: 'revision',
+        feedback: 'Added 10-min daily check-in',
+        consequence: 'Date night is anchor, daily connection is maintenance',
+        daysAgo: 4,
+      },
+    ],
+    doctrineNotes: [
+      'Relationship maintenance is sovereign work. User chooses to invest here.',
+      'Consistency matters more than grand gestures. Show up weekly.',
+    ],
+    dossier: {
+      summary: 'Maintain and strengthen marital connection through consistent weekly date nights, daily rituals, and intentional appreciation practices.',
+      why_it_matters: 'The marriage is the foundation of the family. When the relationship is strong, everything else flows better. This is investment in the most important partnership of your life.',
+      intended_timeline: 'Ongoing habit. Weekly date nights. Daily 10-minute check-ins. Quarterly overnight getaways.',
+      win_win_frame: 'Both partners feel valued and prioritized. Children benefit from parents with strong relationship. Household operates from abundance not scarcity.',
+      risks_or_costs: 'Requires consistent babysitter budget. May need to decline other Saturday commitments. Time investment is real.',
+      covert_contract_flags: [
+        'Watch for: "If I do date nights, she should..." - this is not a transaction',
+      ],
+      congruence_notes: 'Good congruence. User has shown commitment to consistency even when inconvenient. Relationship is genuine priority.',
     },
   },
 ];

@@ -339,23 +339,14 @@ export const LittleLordGlobalModal: React.FC<LittleLordGlobalModalProps> = ({
               </div>
 
               {/* Chat Interface */}
-              <div className="flex-1 overflow-hidden" style={{ height: `calc(100% - 90px)` }}>
-                <LittleLordChat
-                  tenantId={tenantId}
-                  userId={userId}
-                  context={context}
-                  height="100%"
-                  showHeader={false}
-                  className="border-none h-full"
-                />
-              </div>
-
-              {/* Footer hint */}
-              <div className="px-4 py-2 border-t border-[#222] bg-[#0A0A0A]">
-                <p className="text-[9px] text-gray-500 text-center">
-                  Drag header to move • Drag edges to resize • Esc to close
-                </p>
-              </div>
+              <LittleLordChat
+                tenantId={tenantId}
+                userId={userId}
+                context={context}
+                height={`${size.height - 56}px`}
+                showHeader={false}
+                className="border-none rounded-none"
+              />
             </MotionDiv>
           )}
         </>

@@ -1,5 +1,5 @@
 import { Camera, Mesh, Plane, Program, Renderer, Texture, Transform } from 'ogl';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import './CircularGallery.css';
 
@@ -249,6 +249,7 @@ class Media {
         uniform vec2 uPlaneSizes;
         uniform sampler2D tMap;
         uniform float uBorderRadius;
+        uniform float uGrayscale;
         varying vec2 vUv;
 
         float roundedBoxSDF(vec2 p, vec2 b, float r) {
@@ -267,12 +268,17 @@ class Media {
           );
           vec4 color = texture2D(tMap, uv);
 
+          // Apply grayscale using luminance weights
+          float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+          vec3 grayscaleColor = vec3(gray);
+          vec3 finalColor = mix(color.rgb, grayscaleColor, uGrayscale);
+
           float d = roundedBoxSDF(vUv - 0.5, vec2(0.5 - uBorderRadius), uBorderRadius);
 
           float edgeSmooth = 0.002;
           float alpha = 1.0 - smoothstep(-edgeSmooth, edgeSmooth, d);
 
-          gl_FragColor = vec4(color.rgb, alpha);
+          gl_FragColor = vec4(finalColor, alpha);
         }
       `,
       uniforms: {
@@ -281,7 +287,8 @@ class Media {
         uImageSizes: { value: [0, 0] },
         uSpeed: { value: 0 },
         uTime: { value: 100 * Math.random() },
-        uBorderRadius: { value: this.borderRadius }
+        uBorderRadius: { value: this.borderRadius },
+        uGrayscale: { value: 1.0 } // 1.0 = fully grayscale, 0.0 = full color
       },
       transparent: true
     });
@@ -438,6 +445,17 @@ class App {
     this.onResize();
     this.createGeometry();
     this.createMedias(items, bend, textColor, borderRadius, font);
+
+    // Center the gallery by starting at the middle of the first set of items
+    // This ensures items are visible on both left and right sides
+    if (this.medias.length > 0) {
+      const originalItemCount = Math.floor(this.medias.length / 2);
+      const middleOffset = this.medias[0].width * Math.floor(originalItemCount / 2);
+      this.scroll.current = middleOffset;
+      this.scroll.target = middleOffset;
+      this.scroll.last = middleOffset;
+    }
+
     this.update();
     this.addEventListeners();
   }
@@ -665,9 +683,57 @@ export default function CircularGallery({
   scrollEase = 0.05
 }: CircularGalleryProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const appRef = useRef<App | null>(null);
+  const itemsKeyRef = useRef<string>('');
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+
+  // Create a stable key from items to detect actual content changes
+  const itemsKey = items ? items.map(i => `${i.image}:${i.text}`).join('|') : '';
+
+  // Preload all images before initializing the gallery
   useEffect(() => {
-    if (!containerRef.current) return;
-    const app = new App(containerRef.current, {
+    if (!items || items.length === 0) {
+      setImagesLoaded(true);
+      return;
+    }
+
+    setImagesLoaded(false);
+    let loadedCount = 0;
+    const totalImages = items.length;
+
+    items.forEach(item => {
+      const img = new Image();
+      img.onload = () => {
+        loadedCount++;
+        if (loadedCount >= totalImages) {
+          setImagesLoaded(true);
+        }
+      };
+      img.onerror = () => {
+        loadedCount++;
+        if (loadedCount >= totalImages) {
+          setImagesLoaded(true);
+        }
+      };
+      img.src = item.image;
+    });
+  }, [items]);
+
+  useEffect(() => {
+    if (!containerRef.current || !imagesLoaded) return;
+
+    // Only recreate if items actually changed or no app exists
+    if (appRef.current && itemsKeyRef.current === itemsKey) {
+      return;
+    }
+
+    // Destroy existing app if any
+    if (appRef.current) {
+      appRef.current.destroy();
+    }
+
+    itemsKeyRef.current = itemsKey;
+    appRef.current = new App(containerRef.current, {
       items,
       bend,
       textColor,
@@ -676,9 +742,14 @@ export default function CircularGallery({
       scrollSpeed,
       scrollEase
     });
+
     return () => {
-      app.destroy();
+      if (appRef.current) {
+        appRef.current.destroy();
+        appRef.current = null;
+      }
     };
-  }, [items, bend, textColor, borderRadius, font, scrollSpeed, scrollEase]);
+  }, [items, itemsKey, imagesLoaded, bend, textColor, borderRadius, font, scrollSpeed, scrollEase]);
+
   return <div className="circular-gallery" ref={containerRef} />;
 }

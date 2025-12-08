@@ -8,7 +8,7 @@ import {
   Menu, ExternalLink, Shield, Lock,
   Plus, MoreHorizontal, X, Folder, ChevronDown,
   Upload, Image as ImageIcon, FileText, ArrowRight, AlertTriangle, Lightbulb,
-  CheckCircle, Loader2, Paperclip, Mic, FileCode, Crosshair, Binary, Terminal, Cpu, GitCommit, Briefcase, Camera, Notebook, ArrowLeft, Clock as ClockIcon, User, Calendar
+  CheckCircle, Loader2, Paperclip, Mic, FileCode, Crosshair, Binary, Terminal, Cpu, GitCommit, Briefcase, Camera, Notebook, ArrowLeft, Clock as ClockIcon, User, Calendar, Target
 } from 'lucide-react';
 import './AppSidebarSkin.css';
 import { SidebarParticles } from './notes/SidebarParticles';
@@ -69,6 +69,7 @@ import {
 import { LittleLordProvider } from './littleLord';
 // FrameCanvasPage removed - canvas functionality now integrated into Notes (see REFACTOR_PLAN.md)
 import { AffineNotes } from './notes';
+import { WantsPage } from './wants';
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -1595,7 +1596,7 @@ const FrameScoreTileWidget: React.FC = () => {
 };
 
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'DAILY_LOG' | 'INBOX' | 'FOLDER' | 'NOTE_DETAIL' | 'BLOCKSUITE_TEST';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'DAILY_LOG' | 'INBOX' | 'FOLDER' | 'NOTE_DETAIL' | 'BLOCKSUITE_TEST' | 'WANTS';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -1634,6 +1635,11 @@ export const Dashboard: React.FC = () => {
   // SELECTED FRAMESCAN REPORT STATE (for FrameScan report detail view)
   // ==========================================================================
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+
+  // ==========================================================================
+  // SELECTED WANT STATE (for Want detail view)
+  // ==========================================================================
+  const [selectedWantId, setSelectedWantId] = useState<string | null>(null);
 
   // Get selected contact for display in header
   const selectedContact = getContactById(selectedContactId) || getContactZero();
@@ -1702,6 +1708,12 @@ export const Dashboard: React.FC = () => {
   const handleNavigateToFrameScanReport = (reportId: string) => {
     setSelectedReportId(reportId);
     setCurrentView('FRAMESCAN_REPORT');
+  };
+
+  // Handler for navigating to a Want
+  const handleNavigateToWant = (wantId: string | null) => {
+    setSelectedWantId(wantId);
+    setCurrentView('WANTS');
   };
 
   // Get header title based on view
@@ -1783,6 +1795,7 @@ export const Dashboard: React.FC = () => {
             <NavItem active={currentView === 'NOTES'} onClick={() => handleNav('NOTES')} icon={<Notebook size={16} />} label="NOTES" />
             <NavItem active={currentView === 'SCAN'} onClick={() => handleNav('SCAN')} icon={<Scan size={16} />} label="SCAN" />
             <NavItem active={currentView === 'FRAMESCAN' || currentView === 'FRAMESCAN_REPORT'} onClick={() => handleNav('FRAMESCAN')} icon={<Crosshair size={16} />} label="FRAME SCANS" />
+            <NavItem active={currentView === 'WANTS'} onClick={() => handleNav('WANTS')} icon={<Target size={16} />} label="WANTS" />
 
             <div className="h-6" />
 
@@ -1910,6 +1923,11 @@ export const Dashboard: React.FC = () => {
              {currentView === 'SCAN' && <ScanView />}
             {/* AFFiNE-style Notes - single unified view */}
             {currentView === 'NOTES' && <AffineNotes />}
+            {currentView === 'WANTS' && (
+              <WantsPage
+                initialWantId={selectedWantId || undefined}
+              />
+            )}
             {currentView === 'CONTACTS' && (
                <ContactsView 
                  selectedContactId={selectedContactId}

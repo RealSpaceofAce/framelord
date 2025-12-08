@@ -342,6 +342,27 @@ export function createInitialLittleLordMessage(
 ): LittleLordMessage {
   const isContactZero = context?.selectedContactId === CONTACT_ZERO.id || !context?.selectedContactId;
 
+  // DOCTRINE: Special greeting for Want creation flow
+  // When wantCreation is true, Little Lord guides the user through Want validation
+  if (context?.wantCreation) {
+    return {
+      role: 'assistant',
+      content: `I'm here to help you define a new Want.
+
+A true Want comes from your own desire — not from shame, guilt, or obligation. Let's make sure what you're about to declare is a real Want, not a Should.
+
+Tell me: What do you truly desire? What would make your life more vital if you had it?
+
+I'll help you check if this is a genuine Want by looking for:
+• **Win-Win framing** — Does this benefit you AND others?
+• **No covert contracts** — Are you expecting something unstated in return?
+• **Internal motivation** — Is this YOUR desire, or someone else's expectation?
+
+What's on your mind?`,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   if (isContactZero) {
     return {
       role: 'assistant',

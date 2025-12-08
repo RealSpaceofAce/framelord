@@ -191,11 +191,31 @@ export const getOpenTaskCountByContactId = (contactId: string): number => {
   return MOCK_TASKS.filter(t => t.contactId === contactId && t.status === 'open').length;
 };
 
+/** Get all tasks linked to a specific Want */
+export const getTasksByWantId = (wantId: string): Task[] => {
+  return MOCK_TASKS
+    .filter(t => t.wantId === wantId)
+    .sort((a, b) => {
+      if (a.dueAt && b.dueAt) {
+        return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
+      }
+      if (a.dueAt && !b.dueAt) return -1;
+      if (!a.dueAt && b.dueAt) return 1;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+};
+
+/** Get open tasks linked to a specific Want */
+export const getOpenTasksByWantId = (wantId: string): Task[] => {
+  return getTasksByWantId(wantId).filter(t => t.status === 'open');
+};
+
 /** Create a new task */
 export const createTask = (params: {
   contactId: string;
   title: string;
   dueAt?: string | null;
+  wantId?: string | null;
 }): Task => {
   const newTask: Task = {
     id: generateTaskId(),
@@ -204,6 +224,7 @@ export const createTask = (params: {
     dueAt: params.dueAt || null,
     status: 'open',
     createdAt: new Date().toISOString(),
+    wantId: params.wantId || null,
   };
 
   MOCK_TASKS = [newTask, ...MOCK_TASKS];
@@ -216,6 +237,15 @@ export const updateTaskStatus = (taskId: string, status: TaskStatus): void => {
   if (index !== -1) {
     MOCK_TASKS[index] = { ...MOCK_TASKS[index], status };
   }
+};
+
+/** Update task with partial fields */
+export const updateTask = (taskId: string, updates: Partial<Pick<Task, 'title' | 'status' | 'dueAt' | 'contactId'>>): Task | null => {
+  const index = MOCK_TASKS.findIndex(t => t.id === taskId);
+  if (index === -1) return null;
+
+  MOCK_TASKS[index] = { ...MOCK_TASKS[index], ...updates };
+  return MOCK_TASKS[index];
 };
 
 /** Get a task by ID */

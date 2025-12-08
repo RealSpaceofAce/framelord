@@ -212,3 +212,92 @@ affine-editor-container [contenteditable="true"] {
 [contenteditable] v-text {
   display: inline !important;
 }
+
+/* =============================================================================
+   AURORA BACKGROUND ANIMATIONS
+   ============================================================================= */
+@keyframes aurora-1 {
+  0%, 100% {
+    transform: translateX(0) translateY(0) scale(1.5);
+  }
+  50% {
+    transform: translateX(10%) translateY(-10%) scale(1.8);
+  }
+}
+
+@keyframes aurora-2 {
+  0%, 100% {
+    transform: translateX(0) translateY(0) scale(1.5);
+  }
+  50% {
+    transform: translateX(-15%) translateY(5%) scale(1.6);
+  }
+}
+
+@keyframes aurora-3 {
+  0%, 100% {
+    transform: translateX(0) translateY(0) scale(1.5);
+  }
+  50% {
+    transform: translateX(5%) translateY(-15%) scale(1.7);
+  }
+}
+
+.animate-aurora-1 {
+  animation: aurora-1 15s ease-in-out infinite;
+}
+
+.animate-aurora-2 {
+  animation: aurora-2 12s ease-in-out infinite;
+}
+
+.animate-aurora-3 {
+  animation: aurora-3 18s ease-in-out infinite;
+}
+
+/* shadcn-ui CSS variables for dark mode */
+:root {
+  --background: 0 0% 4%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 6%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 6%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 243 100% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 4% 16%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 4% 16%;
+  --muted-foreground: 240 5% 65%;
+  --accent: 240 4% 16%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 4% 16%;
+  --input: 240 4% 16%;
+  --ring: 243 100% 60%;
+  --radius: 0.5rem;
+}
+
+/* Light mode shadcn variables */
+.light-mode {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 243 100% 60%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 243 100% 60%;
+}
