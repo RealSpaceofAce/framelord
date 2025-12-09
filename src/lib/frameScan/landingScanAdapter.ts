@@ -74,22 +74,27 @@ function buildLegacyResult(
     }
   }
 
-  // Build critical signal from diagnostics
+  // Build critical signal from diagnostics (defensive with defaults)
+  const primaryPatterns = rawResult.diagnostics?.primaryPatterns ?? [];
+  const supportingEvidence = rawResult.diagnostics?.supportingEvidence ?? [];
+
   const criticalSignal = {
-    title: rawResult.diagnostics.primaryPatterns[0] || "Frame Pattern Detected",
-    description: rawResult.diagnostics.supportingEvidence.slice(0, 2).join(" ") ||
+    title: primaryPatterns[0] || "Frame Pattern Detected",
+    description: supportingEvidence.slice(0, 2).join(" ") ||
       "Analysis complete. Review corrections below.",
-    quotes: rawResult.diagnostics.supportingEvidence.slice(0, 3),
+    quotes: supportingEvidence.slice(0, 3),
   };
 
   // Build corrections from topShifts (with defensive fallback)
-  const corrections = (rawResult.corrections?.topShifts || [])
+  const topShifts = rawResult.corrections?.topShifts ?? [];
+  const corrections = topShifts
     .slice(0, 5)
     .map(shift => shift.shift);
 
   // Add sample rewrites as corrections if available
-  if (rawResult.corrections?.sampleRewrites?.length) {
-    const rewriteCorrections = rawResult.corrections.sampleRewrites
+  const sampleRewrites = rawResult.corrections?.sampleRewrites ?? [];
+  if (sampleRewrites.length > 0) {
+    const rewriteCorrections = sampleRewrites
       .slice(0, 2)
       .map(r => `${r.purpose}: "${r.apexVersion.slice(0, 100)}..."`);
     corrections.push(...rewriteCorrections);

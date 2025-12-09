@@ -22,19 +22,19 @@ function buildPublicPreview(ui: FrameScanUIReport): FrameScanUIReport {
   return {
     header: {
       ...ui.header,
-      badges: ui.header.badges.slice(0, 2),
+      badges: (ui.header.badges ?? []).slice(0, 2),
     },
     sections: ui.sections.map(section => {
       if (section.id === 'corrections') {
         return {
           ...section,
-          corrections: section.corrections ? section.corrections.slice(0, 1) : [],
+          corrections: (section.corrections ?? []).slice(0, 1),
         };
       }
       if (section.bullets && section.bullets.length > 0) {
         return {
           ...section,
-          bullets: section.bullets.slice(0, 2),
+          bullets: (section.bullets ?? []).slice(0, 2),
         };
       }
       return section;
@@ -276,26 +276,76 @@ export const PublicFrameScanPage: React.FC = () => {
               </div>
             ))}
 
-            {/* Locked Full Report CTA */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/90 to-transparent pointer-events-none z-10" />
-              <div className="bg-[#0E0E0E] rounded-xl border border-[#2A2A2A] p-6 opacity-30">
-                <h3 className="text-lg font-bold text-white mb-3">Full Corrections & Deep Analysis</h3>
-                <div className="h-24 bg-[#1A1A1D] rounded-lg" />
+            {/* Paywall Divider */}
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[#4433FF]/30" />
               </div>
-              <div className="absolute inset-0 flex items-center justify-center z-20">
-                <div className="text-center p-6 max-w-md">
-                  <div className="w-12 h-12 rounded-full bg-[#4433FF]/20 flex items-center justify-center mx-auto mb-4">
-                    <Lock size={24} className="text-[#4433FF]" />
+              <div className="relative flex justify-center">
+                <span className="px-4 py-1 bg-[#0A0A0A] text-xs text-[#4433FF] uppercase tracking-wider font-medium">
+                  Preview Above • Full Report Below
+                </span>
+              </div>
+            </div>
+
+            {/* Locked Full Report - Blurred Content */}
+            <div className="relative">
+              {/* Blurred content behind paywall */}
+              <div className="blur-[6px] select-none pointer-events-none opacity-40 space-y-4">
+                <div className="bg-[#0E0E0E] rounded-xl border border-[#2A2A2A] p-6">
+                  <h3 className="text-lg font-bold text-white mb-3">Axis-by-Axis Breakdown</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-[#1A1A1D] rounded-lg">
+                      <div className="text-sm text-gray-400">Emotional Sovereignty</div>
+                      <div className="text-2xl font-bold text-green-400">78</div>
+                    </div>
+                    <div className="p-4 bg-[#1A1A1D] rounded-lg">
+                      <div className="text-sm text-gray-400">Frame Control</div>
+                      <div className="text-2xl font-bold text-yellow-400">65</div>
+                    </div>
+                    <div className="p-4 bg-[#1A1A1D] rounded-lg">
+                      <div className="text-sm text-gray-400">Outcome Independence</div>
+                      <div className="text-2xl font-bold text-red-400">42</div>
+                    </div>
+                    <div className="p-4 bg-[#1A1A1D] rounded-lg">
+                      <div className="text-sm text-gray-400">Value Assertion</div>
+                      <div className="text-2xl font-bold text-green-400">71</div>
+                    </div>
                   </div>
-                  <h4 className="text-lg font-bold text-white mb-2">This is a Preview</h4>
-                  <p className="text-sm text-gray-400 mb-4">
-                    The full report, with all corrections and detailed breakdown, is available inside FrameLord after signup.
+                </div>
+                <div className="bg-[#0E0E0E] rounded-xl border border-[#2A2A2A] p-6">
+                  <h3 className="text-lg font-bold text-white mb-3">All Corrections & Rewrites</h3>
+                  <div className="space-y-3">
+                    <div className="p-4 bg-[#1A1A1D] rounded-lg">
+                      <div className="text-sm text-white font-medium">Before: "I hope this finds you well..."</div>
+                      <div className="text-sm text-green-400 mt-1">After: "Based on your Q3 results..."</div>
+                    </div>
+                    <div className="p-4 bg-[#1A1A1D] rounded-lg">
+                      <div className="text-sm text-white font-medium">Before: "Would you be open to..."</div>
+                      <div className="text-sm text-green-400 mt-1">After: "Here's what I'm proposing..."</div>
+                    </div>
+                    <div className="p-4 bg-[#1A1A1D] rounded-lg h-16" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Overlay with lock */}
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-[#0A0A0A]/70 to-[#0A0A0A]">
+                <div className="text-center p-8 max-w-md bg-[#0E0E0E]/90 backdrop-blur-md rounded-xl border border-[#4433FF]/30 shadow-[0_0_60px_rgba(68,51,255,0.2)]">
+                  <div className="w-16 h-16 rounded-full bg-[#4433FF]/20 flex items-center justify-center mx-auto mb-6 border border-[#4433FF]/30">
+                    <Lock size={28} className="text-[#4433FF]" />
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-3">Full Report Locked</h4>
+                  <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                    Upgrade inside FrameLord to unlock the full FrameScan report.
                   </p>
-                  <button className="flex items-center justify-center gap-2 px-6 py-3 bg-[#4433FF] hover:bg-[#5544FF] text-white font-bold rounded-lg transition-colors mx-auto">
+                  <button className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#4433FF] hover:bg-[#5544FF] text-white font-bold rounded-lg transition-colors shadow-[0_0_20px_rgba(68,51,255,0.3)]">
                     <Sparkles size={18} />
-                    Get Full Access Free
+                    Upgrade to FrameLord
                   </button>
+                  <p className="text-xs text-gray-500 mt-4">
+                    Get full diagnostics, corrections, and coaching
+                  </p>
                 </div>
               </div>
             </div>

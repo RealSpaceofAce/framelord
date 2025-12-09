@@ -484,8 +484,13 @@ function validateFrameScanResult(input: unknown): FrameScanResult {
     }
   }
 
-  if (corr.sampleRewrites !== undefined && !Array.isArray(corr.sampleRewrites)) {
-    throw new Error("corrections.sampleRewrites must be an array if present");
+  // Allow sampleRewrites to be missing - default to empty array
+  if (corr.sampleRewrites === undefined || corr.sampleRewrites === null) {
+    corr.sampleRewrites = [];
+  }
+
+  if (!Array.isArray(corr.sampleRewrites)) {
+    throw new Error("corrections.sampleRewrites must be an array");
   }
 
   return obj as unknown as FrameScanResult;

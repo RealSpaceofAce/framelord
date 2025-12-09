@@ -229,6 +229,10 @@ function validateUIReport(obj: unknown): void {
   if (typeof header.highlightScore !== "number") {
     throw new Error("header.highlightScore must be a number");
   }
+  // Allow badges to be missing - default to empty array
+  if (header.badges === undefined || header.badges === null) {
+    header.badges = [];
+  }
   if (!Array.isArray(header.badges)) {
     throw new Error("header.badges must be an array");
   }
@@ -244,6 +248,25 @@ function validateUIReport(obj: unknown): void {
   for (const required of requiredSectionIds) {
     if (!sectionIds.includes(required)) {
       throw new Error(`FrameScanUIReport must include section with id "${required}"`);
+    }
+  }
+
+  // Normalize array fields in sections
+  for (const section of report.sections as Array<Record<string, unknown>>) {
+    // Allow bullets to be missing - default to empty array
+    if (section.bullets === undefined || section.bullets === null) {
+      section.bullets = [];
+    }
+    if (section.bullets !== undefined && !Array.isArray(section.bullets)) {
+      throw new Error(`section.bullets must be an array`);
+    }
+
+    // Allow corrections to be missing - default to empty array
+    if (section.corrections === undefined || section.corrections === null) {
+      section.corrections = [];
+    }
+    if (section.corrections !== undefined && !Array.isArray(section.corrections)) {
+      throw new Error(`section.corrections must be an array`);
     }
   }
 }
