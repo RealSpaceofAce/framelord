@@ -86,6 +86,8 @@ export const WantsBanner: React.FC<WantsBannerProps> = ({
   showNav = true,
   showActions = true,
 }) => {
+  // FIXED: Aurora height is now CONSISTENT across all views (250px always)
+  // No more compact mode shrinking - banner stays the same size everywhere
   return (
     <Aurora
       colorStops={['#2B1AFF', '#4433FF', '#3322EE']}
@@ -94,33 +96,12 @@ export const WantsBanner: React.FC<WantsBannerProps> = ({
       speed={0.6}
       className={cn(
         "relative w-full",
-        compact ? "min-h-[150px]" : "min-h-[250px]",
+        "min-h-[250px]", // FIXED: Always 250px, no compact variation
         "bg-gradient-to-b from-[#050508] via-[#080810] to-[#0A0A0F]",
         "border-b border-border/50"
       )}
     >
-      {/* Content container - centered with title */}
-      <div className="relative z-10 w-full h-full flex items-center justify-center px-6">
-        <MotionDiv
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          {customTitle ? (
-            <h1 className="font-bold tracking-tight text-foreground text-2xl">
-              {customTitle}
-            </h1>
-          ) : (
-            <h1 className="font-bold tracking-tight text-foreground/90 text-3xl">
-              WANTS
-            </h1>
-          )}
-          {customSubtitle && (
-            <p className="text-muted-foreground text-sm mt-2">{customSubtitle}</p>
-          )}
-        </MotionDiv>
-      </div>
+      {/* NO TITLE - Pure Aurora gradient only, no text or bars */}
 
       {/* Gradient overlay for smooth blending to background */}
       <div
@@ -147,13 +128,14 @@ export const WantsBannerCompact: React.FC<WantsBannerCompactProps> = ({
   onBack,
   onTalkToLittleLord,
 }) => {
+  // FIXED: Same height as main banner (250px) for consistency across all Wants views
   return (
     <Aurora
       colorStops={['#2B1AFF', '#4433FF', '#3322EE']}
       amplitude={1.2}
       blend={0.7}
       speed={0.5}
-      className="min-h-[140px] bg-gradient-to-b from-[#050508] via-[#080810] to-[#0A0A0F] border-b border-border/50"
+      className="min-h-[250px] bg-gradient-to-b from-[#050508] via-[#080810] to-[#0A0A0F] border-b border-border/50"
     >
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between">

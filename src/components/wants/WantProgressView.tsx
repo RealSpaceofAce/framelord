@@ -27,7 +27,7 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { ScrollArea } from '../ui/ScrollArea';
 import { cn } from '@/lib/utils';
-import { DomainMetricsPanel } from '../metrics';
+import { SuccessTracking } from './SuccessTracking';
 
 const MotionDiv = motion.div as any;
 
@@ -487,21 +487,13 @@ export const WantProgressView: React.FC<WantProgressViewProps> = ({ onSelectWant
           {/* Summary Stats */}
           <SummaryStats wants={wants} />
 
-          {/* Domain-Specific Metrics - Productivity metrics relevant to Wants */}
-          <DomainMetricsPanel
-            domain="productivity"
-            title="Productivity Metrics"
-            className="mb-6"
-            maxMetrics={6}
-          />
-
-          {/* Personal Growth Metrics - Also relevant to Wants */}
-          <DomainMetricsPanel
-            domain="personal"
-            title="Personal Growth"
-            className="mb-6"
-            maxMetrics={6}
-          />
+          {/* Success Tracking - Notion-style daily logging table */}
+          <div className="mb-6">
+            <SuccessTracking
+              title="Success Tracking"
+              compact={false}
+            />
+          </div>
 
           {/* View Content */}
           {viewMode === 'grid' ? (

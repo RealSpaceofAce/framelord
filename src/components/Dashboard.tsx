@@ -78,7 +78,6 @@ const mapViewToLittleLordViewId = (view: string): LittleLordViewId => {
     'FRAMESCAN': 'framescan',
     'FRAMESCAN_REPORT': 'framescan',
     'WANTS': 'wants',
-    'METRICS': 'home', // Metrics uses home view context
     'CONTACTS': 'contacts',
     'TASKS': 'tasks',
     'CALENDAR': 'calendar',
@@ -92,7 +91,6 @@ const mapViewToLittleLordViewId = (view: string): LittleLordViewId => {
 // FrameCanvasPage removed - canvas functionality now integrated into Notes (see REFACTOR_PLAN.md)
 import { AffineNotes } from './notes';
 import { WantsPage } from './wants';
-import { MetricsOverview } from './metrics';
 import { useSavageMode } from '../hooks/useSavageMode';
 import { Flame } from 'lucide-react';
 
@@ -1635,7 +1633,7 @@ const FrameScoreTileWidget: React.FC = () => {
 };
 
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'DAILY_LOG' | 'INBOX' | 'FOLDER' | 'NOTE_DETAIL' | 'BLOCKSUITE_TEST' | 'WANTS' | 'METRICS';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'DAILY_LOG' | 'INBOX' | 'FOLDER' | 'NOTE_DETAIL' | 'BLOCKSUITE_TEST' | 'WANTS';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -1842,7 +1840,6 @@ export const Dashboard: React.FC = () => {
             <NavItem active={currentView === 'SCAN'} onClick={() => handleNav('SCAN')} icon={<Scan size={16} />} label="SCAN" />
             <NavItem active={currentView === 'FRAMESCAN' || currentView === 'FRAMESCAN_REPORT'} onClick={() => handleNav('FRAMESCAN')} icon={<Crosshair size={16} />} label="FRAME SCANS" />
             <NavItem active={currentView === 'WANTS'} onClick={() => handleNav('WANTS')} icon={<Target size={16} />} label="WANTS" />
-            <NavItem active={currentView === 'METRICS'} onClick={() => handleNav('METRICS')} icon={<TrendingUp size={16} />} label="METRICS" />
             <NavItem active={currentView === 'CONTACTS'} onClick={() => handleNav('CONTACTS')} icon={<Users size={16} />} label="CONTACTS" />
           </div>
         </div>
@@ -1954,7 +1951,6 @@ export const Dashboard: React.FC = () => {
                 initialWantId={selectedWantId || undefined}
               />
             )}
-            {currentView === 'METRICS' && <MetricsOverview />}
             {currentView === 'CONTACTS' && (
                <ContactsView 
                  selectedContactId={selectedContactId}
