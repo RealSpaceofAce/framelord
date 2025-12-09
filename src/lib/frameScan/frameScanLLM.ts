@@ -425,8 +425,18 @@ function validateFrameScanResult(input: unknown): FrameScanResult {
 
   const diag = obj.diagnostics as Record<string, unknown>;
 
+  // Allow primaryPatterns to be missing - default to empty array
+  if (diag.primaryPatterns === undefined || diag.primaryPatterns === null) {
+    diag.primaryPatterns = [];
+  }
+
   if (!Array.isArray(diag.primaryPatterns)) {
     throw new Error("diagnostics.primaryPatterns must be an array");
+  }
+
+  // Allow supportingEvidence to be missing - default to empty array
+  if (diag.supportingEvidence === undefined || diag.supportingEvidence === null) {
+    diag.supportingEvidence = [];
   }
 
   if (!Array.isArray(diag.supportingEvidence)) {
@@ -439,6 +449,11 @@ function validateFrameScanResult(input: unknown): FrameScanResult {
   }
 
   const corr = obj.corrections as Record<string, unknown>;
+
+  // Allow topShifts to be missing - default to empty array
+  if (corr.topShifts === undefined || corr.topShifts === null) {
+    corr.topShifts = [];
+  }
 
   if (!Array.isArray(corr.topShifts)) {
     throw new Error("corrections.topShifts must be an array");
@@ -457,6 +472,11 @@ function validateFrameScanResult(input: unknown): FrameScanResult {
 
     if (typeof shift.shift !== "string") {
       throw new Error(`corrections.topShifts[${i}].shift must be a string`);
+    }
+
+    // Allow protocolSteps to be missing - default to empty array
+    if (shift.protocolSteps === undefined || shift.protocolSteps === null) {
+      shift.protocolSteps = [];
     }
 
     if (!Array.isArray(shift.protocolSteps)) {
