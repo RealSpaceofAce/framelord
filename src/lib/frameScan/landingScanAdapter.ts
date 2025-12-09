@@ -74,9 +74,10 @@ function buildLegacyResult(
     }
   }
 
-  // Build critical signal from diagnostics (defensive with defaults)
-  const primaryPatterns = rawResult.diagnostics?.primaryPatterns ?? [];
-  const supportingEvidence = rawResult.diagnostics?.supportingEvidence ?? [];
+  // Build critical signal from diagnostics
+  // Note: rawResult is already normalized by frameScanLLM, so all arrays are guaranteed to exist
+  const primaryPatterns = rawResult.diagnostics.primaryPatterns;
+  const supportingEvidence = rawResult.diagnostics.supportingEvidence;
 
   const criticalSignal = {
     title: primaryPatterns[0] || "Frame Pattern Detected",
@@ -85,14 +86,14 @@ function buildLegacyResult(
     quotes: supportingEvidence.slice(0, 3),
   };
 
-  // Build corrections from topShifts (with defensive fallback)
-  const topShifts = rawResult.corrections?.topShifts ?? [];
+  // Build corrections from topShifts
+  const topShifts = rawResult.corrections.topShifts;
   const corrections = topShifts
     .slice(0, 5)
     .map(shift => shift.shift);
 
   // Add sample rewrites as corrections if available
-  const sampleRewrites = rawResult.corrections?.sampleRewrites ?? [];
+  const sampleRewrites = rawResult.corrections.sampleRewrites;
   if (sampleRewrites.length > 0) {
     const rewriteCorrections = sampleRewrites
       .slice(0, 2)

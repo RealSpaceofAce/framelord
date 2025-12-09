@@ -28,6 +28,7 @@ import { buildFrameScanUIReportSafe, type FrameScanUIReport } from "./frameRepor
 import { getContactById, updateContact } from "../../services/contactStore";
 import type { ContactFrameMetrics } from "../../types";
 import { getApexSupremacyFilter, getSelectiveDoctrine } from "../../services/doctrineLoader";
+import { normalizeFrameScanReport } from "./normalizeFrameScanReport";
 
 // Default contact ID for self-scans
 const CONTACT_ZERO_ID = "contact_zero";
@@ -354,6 +355,7 @@ function getFrameScanSystemPrompt(): string {
 
 /**
  * Validates that the parsed response is a valid FrameScanResult.
+ * Uses the centralized normalizer to ensure all arrays are initialized.
  */
 function validateFrameScanResult(input: unknown): FrameScanResult {
   if (typeof input !== "object" || input === null) {
@@ -387,7 +389,7 @@ function validateFrameScanResult(input: unknown): FrameScanResult {
     throw new Error(`Invalid overallWinWinState: ${obj.overallWinWinState}`);
   }
 
-  // Validate axes
+  // Validate axes (basic check - normalizer will ensure it's an array)
   if (!Array.isArray(obj.axes) || obj.axes.length === 0) {
     throw new Error("axes must be a non-empty array");
   }
@@ -418,82 +420,11 @@ function validateFrameScanResult(input: unknown): FrameScanResult {
     }
   }
 
-  // Validate diagnostics
-  if (typeof obj.diagnostics !== "object" || obj.diagnostics === null) {
-    throw new Error("diagnostics must be an object");
-  }
+  // Use the centralized normalizer to ensure ALL arrays are initialized
+  // This replaces all the scattered "allow X to be missing - default to empty array" logic
+  const normalized = normalizeFrameScanReport(obj);
 
-  const diag = obj.diagnostics as Record<string, unknown>;
-
-  // Allow primaryPatterns to be missing - default to empty array
-  if (diag.primaryPatterns === undefined || diag.primaryPatterns === null) {
-    diag.primaryPatterns = [];
-  }
-
-  if (!Array.isArray(diag.primaryPatterns)) {
-    throw new Error("diagnostics.primaryPatterns must be an array");
-  }
-
-  // Allow supportingEvidence to be missing - default to empty array
-  if (diag.supportingEvidence === undefined || diag.supportingEvidence === null) {
-    diag.supportingEvidence = [];
-  }
-
-  if (!Array.isArray(diag.supportingEvidence)) {
-    throw new Error("diagnostics.supportingEvidence must be an array");
-  }
-
-  // Validate corrections
-  if (typeof obj.corrections !== "object" || obj.corrections === null) {
-    throw new Error("corrections must be an object");
-  }
-
-  const corr = obj.corrections as Record<string, unknown>;
-
-  // Allow topShifts to be missing - default to empty array
-  if (corr.topShifts === undefined || corr.topShifts === null) {
-    corr.topShifts = [];
-  }
-
-  if (!Array.isArray(corr.topShifts)) {
-    throw new Error("corrections.topShifts must be an array");
-  }
-
-  for (let i = 0; i < corr.topShifts.length; i++) {
-    const shift = corr.topShifts[i] as Record<string, unknown>;
-
-    if (typeof shift !== "object" || shift === null) {
-      throw new Error(`corrections.topShifts[${i}] must be an object`);
-    }
-
-    if (typeof shift.axisId !== "string" || !FRAME_AXIS_IDS.includes(shift.axisId as FrameAxisId)) {
-      throw new Error(`corrections.topShifts[${i}].axisId is invalid: ${shift.axisId}`);
-    }
-
-    if (typeof shift.shift !== "string") {
-      throw new Error(`corrections.topShifts[${i}].shift must be a string`);
-    }
-
-    // Allow protocolSteps to be missing - default to empty array
-    if (shift.protocolSteps === undefined || shift.protocolSteps === null) {
-      shift.protocolSteps = [];
-    }
-
-    if (!Array.isArray(shift.protocolSteps)) {
-      throw new Error(`corrections.topShifts[${i}].protocolSteps must be an array`);
-    }
-  }
-
-  // Allow sampleRewrites to be missing - default to empty array
-  if (corr.sampleRewrites === undefined || corr.sampleRewrites === null) {
-    corr.sampleRewrites = [];
-  }
-
-  if (!Array.isArray(corr.sampleRewrites)) {
-    throw new Error("corrections.sampleRewrites must be an array");
-  }
-
-  return obj as unknown as FrameScanResult;
+  return normalized;
 }
 
 /**

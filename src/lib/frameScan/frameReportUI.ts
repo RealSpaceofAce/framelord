@@ -229,7 +229,7 @@ function validateUIReport(obj: unknown): void {
   if (typeof header.highlightScore !== "number") {
     throw new Error("header.highlightScore must be a number");
   }
-  // Allow badges to be missing - default to empty array
+  // Normalize badges array
   if (header.badges === undefined || header.badges === null) {
     header.badges = [];
   }
@@ -251,9 +251,9 @@ function validateUIReport(obj: unknown): void {
     }
   }
 
-  // Normalize array fields in sections
+  // Normalize array fields in sections (UI report has its own arrays separate from FrameScanResult)
   for (const section of report.sections as Array<Record<string, unknown>>) {
-    // Allow bullets to be missing - default to empty array
+    // Normalize bullets array
     if (section.bullets === undefined || section.bullets === null) {
       section.bullets = [];
     }
@@ -261,7 +261,7 @@ function validateUIReport(obj: unknown): void {
       throw new Error(`section.bullets must be an array`);
     }
 
-    // Allow corrections to be missing - default to empty array
+    // Normalize corrections array
     if (section.corrections === undefined || section.corrections === null) {
       section.corrections = [];
     }
@@ -304,11 +304,11 @@ export function buildFallbackUIReport(
     .filter(a => a.score < 0)
     .map(a => `${formatAxisName(a.axisId)}: ${a.notes}`);
 
-  // Build corrections
-  const corrections: FrameScanUICorrection[] = (raw.corrections?.topShifts || []).map(shift => ({
+  // Build corrections (raw is already normalized, so all arrays exist)
+  const corrections: FrameScanUICorrection[] = raw.corrections.topShifts.map(shift => ({
     label: formatAxisName(shift.axisId),
     description: shift.shift,
-    suggestedAction: shift.protocolSteps?.[0] || "Review and adjust approach",
+    suggestedAction: shift.protocolSteps[0] || "Review and adjust approach",
   }));
 
   return {
@@ -322,8 +322,8 @@ export function buildFallbackUIReport(
       {
         id: "summary",
         title: "Summary",
-        mainParagraph: raw.diagnostics?.supportingEvidence?.join(" ") || "Analysis complete.",
-        bullets: raw.diagnostics?.primaryPatterns || [],
+        mainParagraph: raw.diagnostics.supportingEvidence.join(" ") || "Analysis complete.",
+        bullets: raw.diagnostics.primaryPatterns,
       },
       {
         id: "strengths",
