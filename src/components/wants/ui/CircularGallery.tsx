@@ -271,7 +271,11 @@ class Media {
           // Apply grayscale using luminance weights
           float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
           vec3 grayscaleColor = vec3(gray);
-          vec3 finalColor = mix(color.rgb, grayscaleColor, uGrayscale);
+          vec3 baseColor = mix(color.rgb, grayscaleColor, uGrayscale);
+
+          // Apply blue tint overlay (brand color #0043ff)
+          vec3 blueTint = vec3(0.0, 0.263, 1.0); // #0043ff in normalized RGB
+          vec3 finalColor = mix(baseColor, blueTint, 0.4); // 40% blue overlay
 
           float d = roundedBoxSDF(vUv - 0.5, vec2(0.5 - uBorderRadius), uBorderRadius);
 
@@ -288,7 +292,7 @@ class Media {
         uSpeed: { value: 0 },
         uTime: { value: 100 * Math.random() },
         uBorderRadius: { value: this.borderRadius },
-        uGrayscale: { value: 1.0 } // 1.0 = fully grayscale, 0.0 = full color
+        uGrayscale: { value: 0.0 } // 1.0 = fully grayscale, 0.0 = full color
       },
       transparent: true
     });
@@ -389,6 +393,7 @@ interface AppConfig {
   font?: string;
   scrollSpeed?: number;
   scrollEase?: number;
+  onItemClick?: (index: number) => void;
 }
 
 class App {
@@ -421,6 +426,9 @@ class App {
 
   isDown: boolean = false;
   start: number = 0;
+  hasMoved: boolean = false;
+  onItemClick?: (index: number) => void;
+  originalItemCount: number = 0;
 
   constructor(
     container: HTMLElement,
@@ -431,7 +439,8 @@ class App {
       borderRadius = 0,
       font = 'bold 30px Figtree',
       scrollSpeed = 2,
-      scrollEase = 0.05
+      scrollEase = 0.05,
+      onItemClick
     }: AppConfig
   ) {
     document.documentElement.classList.remove('no-js');
@@ -439,6 +448,7 @@ class App {
     this.scrollSpeed = scrollSpeed;
     this.scroll = { ease: scrollEase, current: 0, target: 0, last: 0 };
     this.onCheckDebounce = debounce(this.onCheck.bind(this), 200);
+    this.onItemClick = onItemClick;
     this.createRenderer();
     this.createCamera();
     this.createScene();
@@ -449,8 +459,8 @@ class App {
     // Center the gallery by starting at the middle of the first set of items
     // This ensures items are visible on both left and right sides
     if (this.medias.length > 0) {
-      const originalItemCount = Math.floor(this.medias.length / 2);
-      const middleOffset = this.medias[0].width * Math.floor(originalItemCount / 2);
+      this.originalItemCount = Math.floor(this.medias.length / 2);
+      const middleOffset = this.medias[0].width * Math.floor(this.originalItemCount / 2);
       this.scroll.current = middleOffset;
       this.scroll.target = middleOffset;
       this.scroll.last = middleOffset;
@@ -569,6 +579,7 @@ class App {
 
   onTouchDown(e: MouseEvent | TouchEvent) {
     this.isDown = true;
+    this.hasMoved = false;
     this.scroll.position = this.scroll.current;
     this.start = 'touches' in e ? e.touches[0].clientX : e.clientX;
   }
@@ -577,11 +588,24 @@ class App {
     if (!this.isDown) return;
     const x = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const distance = (this.start - x) * (this.scrollSpeed * 0.025);
+    // Mark as moved if distance is significant (more than 5px movement)
+    if (Math.abs(distance) > 0.02) {
+      this.hasMoved = true;
+    }
     this.scroll.target = (this.scroll.position ?? 0) + distance;
   }
 
   onTouchUp() {
     this.isDown = false;
+
+    // If didn't drag, treat as click and call onItemClick
+    if (!this.hasMoved && this.onItemClick && this.medias.length > 0 && this.originalItemCount > 0) {
+      const width = this.medias[0].width;
+      // Calculate which original item is centered (modulo original count)
+      const centeredIndex = Math.round(Math.abs(this.scroll.current) / width) % this.originalItemCount;
+      this.onItemClick(centeredIndex);
+    }
+
     this.onCheck();
   }
 
@@ -671,6 +695,7 @@ interface CircularGalleryProps {
   font?: string;
   scrollSpeed?: number;
   scrollEase?: number;
+  onItemClick?: (index: number) => void;
 }
 
 export default function CircularGallery({
@@ -680,7 +705,8 @@ export default function CircularGallery({
   borderRadius = 0.05,
   font = 'bold 30px Figtree',
   scrollSpeed = 2,
-  scrollEase = 0.05
+  scrollEase = 0.05,
+  onItemClick
 }: CircularGalleryProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<App | null>(null);
@@ -740,7 +766,8 @@ export default function CircularGallery({
       borderRadius,
       font,
       scrollSpeed,
-      scrollEase
+      scrollEase,
+      onItemClick
     });
 
     return () => {
@@ -749,7 +776,7 @@ export default function CircularGallery({
         appRef.current = null;
       }
     };
-  }, [items, itemsKey, imagesLoaded, bend, textColor, borderRadius, font, scrollSpeed, scrollEase]);
+  }, [items, itemsKey, imagesLoaded, bend, textColor, borderRadius, font, scrollSpeed, scrollEase, onItemClick]);
 
   return <div className="circular-gallery" ref={containerRef} />;
 }

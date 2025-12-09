@@ -9,10 +9,18 @@ import { Reveal } from './components/Reveal';
 import { SparkSystem } from './components/SparkSystem';
 import { ThreeParticles } from './components/ThreeParticles';
 import { InteractiveHeadline } from './components/InteractiveHeadline';
+import SplashCursor from './components/landing/SplashCursor';
 import { ArrowRight, MessageSquare, Terminal, ChevronDown, Calendar } from 'lucide-react';
 import { ApplicationPage } from './components/ApplicationPage';
 import { BetaPage } from './components/BetaPage';
 import { Dashboard } from './components/Dashboard';
+import {
+  TermsOfService,
+  PrivacyPolicy,
+  AcceptableUsePolicy,
+  DataProcessingAddendum,
+} from './components/legal';
+import { ToastProvider } from './components/Toast';
 import type { UserScope } from './types/multiTenant';
 
 const MotionDiv = motion.div as any;
@@ -79,9 +87,21 @@ function ensureEnterpriseTenantExists() {
 // Initialize enterprise tenant on load
 ensureEnterpriseTenantExists();
 
+// View type including legal pages
+type AppView =
+  | 'landing'
+  | 'application'
+  | 'beta'
+  | 'dashboard'
+  | 'booking'
+  | 'terms'
+  | 'privacy'
+  | 'acceptable-use'
+  | 'dpa';
+
 const App: React.FC = () => {
   // Set default to 'landing' for the main landing page
-  const [currentView, setCurrentView] = useState<'landing' | 'application' | 'beta' | 'dashboard' | 'booking'>('landing');
+  const [currentView, setCurrentView] = useState<AppView>('landing');
 
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 500], [1, 0]);
@@ -117,6 +137,27 @@ const App: React.FC = () => {
       setCurrentView('landing');
   };
 
+  // Legal page navigation
+  const navigateToTerms = () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setCurrentView('terms');
+  };
+
+  const navigateToPrivacy = () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setCurrentView('privacy');
+  };
+
+  const navigateToAcceptableUse = () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setCurrentView('acceptable-use');
+  };
+
+  const navigateToDPA = () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setCurrentView('dpa');
+  };
+
   const scrollToScanner = () => {
       const scannerSection = document.getElementById('scanner-section');
       if (scannerSection) {
@@ -125,18 +166,22 @@ const App: React.FC = () => {
   };
 
   return (
+    <ToastProvider>
     <div className="min-h-screen text-white selection:bg-fl-primary selection:text-white overflow-hidden relative app-neon">
 
       {/* Background Systems */}
-      {/* Hide MouseBackground on application page since it has its own ThreeParticles */}
-      {currentView !== 'application' && <MouseBackground />}
-      {/* Particles adapt to the view. If beta, maybe force a specific shape or keep standard. */}
-      {/* Hide particles on dashboard to avoid z-index conflicts and clutter */}
-      {/* ApplicationPage renders its own ThreeParticles, so exclude it here */}
-      {currentView !== 'dashboard' && currentView !== 'application' && (
-        <ThreeParticles forcedShape={currentView === 'beta' ? 'sphere' : null} />
+      {/* MouseBackground only on public pages (not dashboard/authenticated views) */}
+      {currentView === 'landing' && <MouseBackground />}
+      {/* ThreeParticles ONLY on landing page - never in dashboard/authenticated views */}
+      {currentView === 'landing' && (
+        <ThreeParticles forcedShape={null} />
       )}
       <SparkSystem />
+
+      {/* SplashCursor fluid effect - ONLY on landing page */}
+      {/* This creates a WebGL fluid simulation that follows the mouse cursor */}
+      {/* IMPORTANT: Never render on dashboard, contacts, notes, or any authenticated routes */}
+      {currentView === 'landing' && <SplashCursor />}
 
       {/* Navigation */}
       {currentView !== 'dashboard' && (
@@ -296,6 +341,46 @@ const App: React.FC = () => {
                     <Button variant="outline" onClick={navigateToHome}>Return to Home</Button>
                 </div>
             </MotionDiv>
+        ) : currentView === 'terms' ? (
+            <MotionDiv
+                key="terms"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.05 }}
+                transition={{ duration: 0.5 }}
+            >
+                <TermsOfService onBack={navigateToHome} />
+            </MotionDiv>
+        ) : currentView === 'privacy' ? (
+            <MotionDiv
+                key="privacy"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.05 }}
+                transition={{ duration: 0.5 }}
+            >
+                <PrivacyPolicy onBack={navigateToHome} />
+            </MotionDiv>
+        ) : currentView === 'acceptable-use' ? (
+            <MotionDiv
+                key="acceptable-use"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.05 }}
+                transition={{ duration: 0.5 }}
+            >
+                <AcceptableUsePolicy onBack={navigateToHome} />
+            </MotionDiv>
+        ) : currentView === 'dpa' ? (
+            <MotionDiv
+                key="dpa"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.05 }}
+                transition={{ duration: 0.5 }}
+            >
+                <DataProcessingAddendum onBack={navigateToHome} />
+            </MotionDiv>
         ) : (
             <MotionDiv
                 key="dashboard"
@@ -330,9 +415,12 @@ const App: React.FC = () => {
           </div>
 
           <div className="text-fl-gray text-sm flex gap-6 items-center flex-wrap justify-center">
-            <a href="#" className="hover:text-white transition-colors interactive">Privacy</a>
-            <a href="#" className="hover:text-white transition-colors interactive">Terms</a>
-            <a href="#" className="hover:text-white transition-colors interactive">Twitter</a>
+            {/* Legal Links */}
+            <button onClick={navigateToPrivacy} className="hover:text-white transition-colors interactive">Privacy</button>
+            <button onClick={navigateToTerms} className="hover:text-white transition-colors interactive">Terms</button>
+            <button onClick={navigateToAcceptableUse} className="hover:text-white transition-colors interactive">Acceptable Use</button>
+            <button onClick={navigateToDPA} className="hover:text-white transition-colors interactive">DPA</button>
+            <a href="https://twitter.com/framelord" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors interactive">Twitter</a>
             <div className="w-px h-4 bg-fl-gray/30 mx-2" />
             <button onClick={navigateToApp} className="text-fl-primary hover:text-white transition-colors interactive text-xs uppercase tracking-wider">
                 Application Page (Dev)
@@ -358,6 +446,7 @@ const App: React.FC = () => {
       </footer>
       )}
     </div>
+    </ToastProvider>
   );
 };
 

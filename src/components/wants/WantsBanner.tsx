@@ -62,13 +62,15 @@ interface NavTab {
   icon: React.ElementType;
 }
 
-const NAV_TABS: NavTab[] = [
+export const NAV_TABS: NavTab[] = [
   { id: 'board', label: 'Board', icon: LayoutGrid },
   { id: 'all-steps', label: 'All Wants', icon: Layers },
   { id: 'progress', label: 'Progress', icon: TrendingUp },
   { id: 'scope', label: 'Scope', icon: Crosshair },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
+
+export type { NavTab };
 
 // =============================================================================
 // COMPONENT
@@ -87,95 +89,36 @@ export const WantsBanner: React.FC<WantsBannerProps> = ({
   return (
     <Aurora
       colorStops={['#2B1AFF', '#4433FF', '#3322EE']}
-      amplitude={compact ? 0.6 : 1.4}
-      blend={0.6}
-      speed={0.4}
+      amplitude={1.5}
+      blend={0.8}
+      speed={0.6}
       className={cn(
-        "relative",
-        compact ? "py-12" : "py-20",
+        "relative w-full",
+        compact ? "min-h-[150px]" : "min-h-[250px]",
         "bg-gradient-to-b from-[#050508] via-[#080810] to-[#0A0A0F]",
         "border-b border-border/50"
       )}
     >
-      {/* Content container */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6">
-        {/* Title and Navigation Row */}
+      {/* Content container - centered with title */}
+      <div className="relative z-10 w-full h-full flex items-center justify-center px-6">
         <MotionDiv
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="flex items-start justify-between gap-4"
+          transition={{ duration: 0.5 }}
+          className="text-center"
         >
-          {/* Left: Title */}
-          <div className={compact ? "mb-0" : "mb-4"}>
-            <h1
-              className={cn(
-                "font-bold tracking-tight text-foreground",
-                compact ? "text-xl" : "text-3xl"
-              )}
-            >
-              {customTitle || 'WANTS'}
+          {customTitle ? (
+            <h1 className="font-bold tracking-tight text-foreground text-2xl">
+              {customTitle}
             </h1>
-            {!compact && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {customSubtitle || 'Declare. Align. Advance.'}
-              </p>
-            )}
-          </div>
-
-          {/* Right: Navigation + Actions aligned together */}
-          <div className="flex items-center gap-4">
-            {/* Navigation tabs */}
-            {showNav && (
-              <MotionDiv
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-              >
-                <div className="flex items-center gap-1 bg-card/80 backdrop-blur-sm rounded-lg p-1 border border-border">
-                  {NAV_TABS.map((tab) => {
-                    const Icon = tab.icon;
-                    const isActive = activeView === tab.id;
-                    const isDisabled = tab.id === 'settings'; // Placeholder
-
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => !isDisabled && onViewChange(tab.id)}
-                        disabled={isDisabled}
-                        className={cn(
-                          "flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                          isActive
-                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-                          isDisabled && "opacity-40 cursor-not-allowed"
-                        )}
-                      >
-                        <Icon size={14} />
-                        <span className="hidden sm:inline">{tab.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </MotionDiv>
-            )}
-
-            {/* Action button - aligned with nav */}
-            {showActions && onNewWant && (
-              <Button
-                variant="brand"
-                size={compact ? 'sm' : 'default'}
-                onClick={onNewWant}
-                className="gap-1.5 shrink-0"
-                title="New Wants are created through Little Lord to ensure they're real Wants, not Shoulds"
-              >
-                <Sparkles size={compact ? 14 : 16} />
-                <span className={compact ? 'hidden sm:inline' : ''}>
-                  New Want
-                </span>
-              </Button>
-            )}
-          </div>
+          ) : (
+            <h1 className="font-bold tracking-tight text-foreground/90 text-3xl">
+              WANTS
+            </h1>
+          )}
+          {customSubtitle && (
+            <p className="text-muted-foreground text-sm mt-2">{customSubtitle}</p>
+          )}
         </MotionDiv>
       </div>
 
@@ -207,10 +150,10 @@ export const WantsBannerCompact: React.FC<WantsBannerCompactProps> = ({
   return (
     <Aurora
       colorStops={['#2B1AFF', '#4433FF', '#3322EE']}
-      amplitude={1.0}
-      blend={0.6}
-      speed={0.4}
-      className="py-16 bg-gradient-to-b from-[#050508] via-[#080810] to-[#0A0A0F] border-b border-border/50"
+      amplitude={1.2}
+      blend={0.7}
+      speed={0.5}
+      className="min-h-[140px] bg-gradient-to-b from-[#050508] via-[#080810] to-[#0A0A0F] border-b border-border/50"
     >
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between">

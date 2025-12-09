@@ -17,7 +17,8 @@ import { WantProgressView } from './WantProgressView';
 import { WantDetailView } from './WantDetailView';
 import { WantDetailPanel } from './WantDetailPanel';
 import { GlobalStepsBoardView } from './GlobalStepsBoardView';
-import { WantsBanner, type WantsViewMode } from './WantsBanner';
+import { WantsBanner, NAV_TABS, type WantsViewMode } from './WantsBanner';
+import { Sparkles } from 'lucide-react';
 import CircularGallery from './ui/CircularGallery';
 import { Target, AlertCircle, ChevronRight, FlaskConical, MessageSquare, BookOpen } from 'lucide-react';
 import { Card, CardContent } from '../ui/Card';
@@ -92,102 +93,45 @@ const ScopeListView: React.FC<ScopeListViewProps> = ({ onSelectWant }) => {
     );
   }
 
+  // Handle gallery item click
+  const handleGalleryClick = (index: number) => {
+    if (wants[index]) {
+      onSelectWant(wants[index].id);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col">
-      {/* Circular Gallery Header */}
-      {wants.length > 0 && (
-        <div className="shrink-0 px-6 pt-6">
-          <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card/50 h-[320px]">
+      {/* Circular Gallery - Full screen experience */}
+      {wants.length > 0 ? (
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="relative overflow-hidden rounded-xl border border-[#0043ff]/30 bg-[#0043ff]/5 w-full max-w-4xl h-[450px] cursor-pointer hover:border-[#0043ff]/50 transition-colors">
             <CircularGallery
               key={galleryKey}
               items={galleryItems}
               bend={2}
               textColor="#ffffff"
               borderRadius={0.08}
-              font="bold 20px Figtree, system-ui"
+              font="bold 24px Figtree, system-ui"
               scrollSpeed={1.5}
               scrollEase={0.06}
+              onItemClick={handleGalleryClick}
             />
             {/* Gallery hint */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-background/80 backdrop-blur-sm rounded-full text-[10px] text-muted-foreground">
-              Drag to browse
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-[#0043ff]/10 backdrop-blur-sm rounded-full text-xs text-muted-foreground border border-[#0043ff]/30">
+              Drag to browse your Wants • Click to open
             </div>
           </div>
         </div>
-      )}
-
-      {/* List View */}
-      <ScrollArea className="flex-1 mt-4">
-        <div className="p-6 pt-2 max-w-3xl mx-auto space-y-3">
-        {wants.map((want, index) => {
-          const scope = getScope(want.id);
-          const congruency = getCongruencyScore(want.id);
-          const isInert = isScopeInert(want.id);
-          const iterationCount = scope?.iterationEntries.length || 0;
-          const doctrineNotes = scope?.doctrineNotes.length || 0;
-          const stepsCount = want.steps.length;
-          const completedSteps = want.steps.filter(s => s.status === 'done').length;
-
-          return (
-            <React.Fragment key={want.id}>
-              <Card
-                className={cn(
-                  "cursor-pointer transition-all hover:border-primary/50 group",
-                  "bg-card border-border"
-                )}
-                onClick={() => onSelectWant(want.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-sm font-medium text-foreground truncate">{want.title}</h3>
-                        <StatusBadge status={want.status} size="sm" />
-                        {isInert && (
-                          <Badge variant="warning" className="text-[10px] px-1.5 py-0.5">
-                            <AlertCircle size={10} className="mr-1" />
-                            Inert
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {scope?.objective || want.reason || 'No objective set'}
-                      </p>
-                      {/* Summary line */}
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {completedSteps}/{stepsCount} steps • {iterationCount} iterations • {doctrineNotes} notes
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-4 ml-4">
-                      <CongruencyBadge score={congruency} size="default" />
-
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <div className="text-center" title="Iteration entries">
-                          <div className="flex items-center gap-1 text-foreground font-medium">
-                            <MessageSquare size={10} className="text-muted-foreground" />
-                            {iterationCount}
-                          </div>
-                        </div>
-                        <div className="text-center" title="Doctrine notes">
-                          <div className="flex items-center gap-1 text-foreground font-medium">
-                            <BookOpen size={10} className="text-muted-foreground" />
-                            {doctrineNotes}
-                          </div>
-                        </div>
-                      </div>
-
-                      <ChevronRight size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              {index < wants.length - 1 && <Separator className="bg-border/50" />}
-            </React.Fragment>
-          );
-        })}
+      ) : (
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center">
+            <Target size={48} className="mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No Wants Yet</h3>
+            <p className="text-sm text-muted-foreground">Create a Want to see it in the gallery.</p>
+          </div>
         </div>
-      </ScrollArea>
+      )}
     </div>
   );
 };
@@ -322,36 +266,76 @@ export const WantsPage: React.FC<WantsPageProps> = ({ initialWantId, initialRout
   // Route: /wants or /wants?view=board|progress|scope|all-steps
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Unified Banner with Aurora */}
-      {/* DOCTRINE: Only one action at the global level - New Want (via Little Lord) */}
+      {/* Unified Banner with Aurora (title/subtitle only) */}
       <WantsBanner
         activeView={getActiveBannerView()}
         onViewChange={handleViewChange}
-        onNewWant={handleNewWant}
+        showNav={false}
+        showActions={false}
       />
 
-      {/* DEV ONLY: demo data seeding */}
-      {import.meta.env.DEV && (
-        <div className="px-6 py-2 border-b border-border flex items-center gap-2">
+      {/* Unified Control Bar: Nav Left | Actions Right */}
+      <div className="px-6 py-3 border-b border-[#0043ff]/20 bg-[#0A0A0F] flex items-center justify-between">
+        {/* Left: Navigation tabs */}
+        <div className="flex items-center gap-1 bg-[#0E0E16] rounded-lg p-1 border border-[#0043ff]/20">
+          {NAV_TABS.filter(tab => tab.id !== 'settings').map((tab) => {
+            const Icon = tab.icon;
+            const isActive = getActiveBannerView() === tab.id;
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleViewChange(tab.id)}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                <Icon size={14} />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2">
+          {/* DEV ONLY: Load Demo Data */}
+          {import.meta.env.DEV && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                localStorage.removeItem('framelord_demo_seeded');
+                const seeded = seedDemoWantsAndScopes();
+                if (seeded) {
+                  console.log('[Demo] Seeding complete, UI should update automatically');
+                } else {
+                  alert('Demo data already exists. Refresh the page to clear in-memory state, then try again.');
+                }
+              }}
+              className="gap-2 text-purple-400 border-purple-600/30 hover:bg-purple-600/10"
+            >
+              <FlaskConical size={14} />
+              Load Demo Data
+            </Button>
+          )}
+
+          {/* New Want (via Little Lord) */}
           <Button
-            variant="outline"
+            variant="brand"
             size="sm"
-            onClick={() => {
-              localStorage.removeItem('framelord_demo_seeded');
-              const seeded = seedDemoWantsAndScopes();
-              if (seeded) {
-                console.log('[Demo] Seeding complete, UI should update automatically');
-              } else {
-                alert('Demo data already exists. Refresh the page to clear in-memory state, then try again.');
-              }
-            }}
-            className="gap-2 text-purple-400 border-purple-600/30 hover:bg-purple-600/10"
+            onClick={handleNewWant}
+            className="gap-1.5"
+            title="New Wants are created through Little Lord to ensure they're real Wants, not Shoulds"
           >
-            <FlaskConical size={14} />
-            Load Demo Data
+            <Sparkles size={14} />
+            New Want
           </Button>
         </div>
-      )}
+      </div>
 
       {/* Content */}
       <div className="flex-1 overflow-hidden flex flex-col">

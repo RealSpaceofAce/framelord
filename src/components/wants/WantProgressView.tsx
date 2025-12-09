@@ -27,6 +27,7 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { ScrollArea } from '../ui/ScrollArea';
 import { cn } from '@/lib/utils';
+import { DomainMetricsPanel } from '../metrics';
 
 const MotionDiv = motion.div as any;
 
@@ -73,7 +74,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ want, onClick }) => {
       <Card
         className={cn(
           "cursor-pointer transition-all hover:border-primary/50 group",
-          "bg-card hover:shadow-lg hover:shadow-primary/5"
+          "bg-[#0A0A0F] hover:shadow-lg hover:shadow-primary/5"
         )}
         onClick={onClick}
       >
@@ -107,15 +108,15 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ want, onClick }) => {
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-2 mb-3">
-            <div className="bg-muted/50 rounded-lg p-2 text-center">
+            <div className="bg-[#0E0E16] rounded-lg p-2 text-center border border-[#0043ff]/10">
               <div className="text-lg font-bold text-green-500">{completedSteps}</div>
               <div className="text-[10px] text-muted-foreground">Done</div>
             </div>
-            <div className="bg-muted/50 rounded-lg p-2 text-center">
+            <div className="bg-[#0E0E16] rounded-lg p-2 text-center border border-[#0043ff]/10">
               <div className="text-lg font-bold text-blue-500">{inProgressSteps}</div>
               <div className="text-[10px] text-muted-foreground">Active</div>
             </div>
-            <div className="bg-muted/50 rounded-lg p-2 text-center">
+            <div className="bg-[#0E0E16] rounded-lg p-2 text-center border border-[#0043ff]/10">
               <div className="text-lg font-bold text-muted-foreground">{want.steps.length - completedSteps - inProgressSteps}</div>
               <div className="text-[10px] text-muted-foreground">Pending</div>
             </div>
@@ -215,7 +216,7 @@ const AggregateProgressChart: React.FC<AggregateProgressChartProps> = ({ wants }
 
   if (wants.length === 0) {
     return (
-      <Card className="mb-6">
+      <Card className="mb-6 bg-[#0A0A0F] border-[#0043ff]/20">
         <CardContent className="p-8">
           <div className="h-[200px] flex items-center justify-center">
             <div className="text-center">
@@ -230,7 +231,7 @@ const AggregateProgressChart: React.FC<AggregateProgressChartProps> = ({ wants }
   }
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 bg-[#0A0A0F] border-[#0043ff]/20">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
           <TrendingUp size={16} className="text-primary" />
@@ -339,7 +340,7 @@ const SummaryStats: React.FC<SummaryStatsProps> = ({ wants }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
         >
-          <Card>
+          <Card className="bg-[#0A0A0F] border-[#0043ff]/20">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <stat.icon size={16} className={stat.color} />
@@ -379,7 +380,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ wants, onSelectWant }) => {
       </h3>
 
       <div className="relative">
-        <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+        <div className="absolute left-4 top-0 bottom-0 w-px bg-[#0043ff]/20" />
 
         <div className="space-y-4">
           {sortedWants.map((want, index) => {
@@ -404,7 +405,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ wants, onSelectWant }) => {
                       : 'bg-card border-primary'
                 )} />
 
-                <Card className="transition-all group-hover:border-primary/50">
+                <Card className="transition-all group-hover:border-primary/50 bg-[#0A0A0F] border-[#0043ff]/20">
                   <CardContent className="p-3">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm text-foreground">{want.title}</span>
@@ -451,11 +452,11 @@ export const WantProgressView: React.FC<WantProgressViewProps> = ({ onSelectWant
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Sub-header with view toggle */}
-      <div className="px-6 py-3 border-b border-border flex items-center justify-between shrink-0">
+      <div className="px-6 py-3 border-b border-[#0043ff]/20 flex items-center justify-between shrink-0">
         <p className="text-sm text-muted-foreground">
           Track your progress across all Wants
         </p>
-        <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-[#0E0E16] rounded-lg p-1 border border-[#0043ff]/20">
           <Button
             variant={viewMode === 'grid' ? 'brand' : 'ghost'}
             size="sm"
@@ -485,6 +486,22 @@ export const WantProgressView: React.FC<WantProgressViewProps> = ({ onSelectWant
 
           {/* Summary Stats */}
           <SummaryStats wants={wants} />
+
+          {/* Domain-Specific Metrics - Productivity metrics relevant to Wants */}
+          <DomainMetricsPanel
+            domain="productivity"
+            title="Productivity Metrics"
+            className="mb-6"
+            maxMetrics={6}
+          />
+
+          {/* Personal Growth Metrics - Also relevant to Wants */}
+          <DomainMetricsPanel
+            domain="personal"
+            title="Personal Growth"
+            className="mb-6"
+            maxMetrics={6}
+          />
 
           {/* View Content */}
           {viewMode === 'grid' ? (

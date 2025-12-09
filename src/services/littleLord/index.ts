@@ -18,21 +18,67 @@ import type {
   LittleLordResponse,
   LittleLordContext,
   LittleLordMessage,
+  LittleLordViewId,
 } from './types';
 import { getContactById, CONTACT_ZERO } from '../contactStore';
 import { getReportsForContact } from '../frameScanReportStore';
 import { computeCumulativeFrameProfileForContact } from '../../lib/frameScan/frameProfile';
 import { getContactContextSummary } from '../contactContextStore';
+import {
+  getViewConfig,
+  getViewSystemPromptAddition,
+  canOfferWritingAssistance,
+  shouldSuggestFrameScan,
+  getCoachingHints,
+} from './viewBehavior';
+import {
+  createMetricEntry,
+  getMetricDefinitionById,
+  createMetricDefinition,
+  type MetricDomain,
+  type MetricType,
+} from '../metricsStore';
+
+// Re-export view behavior functions for external use
+export {
+  canOfferWritingAssistance,
+  shouldSuggestFrameScan,
+  getCoachingHints,
+  getViewConfig,
+} from './viewBehavior';
+
+// Re-export user profile functions
+export * from './userProfile';
 
 // =============================================================================
 // SYSTEM PROMPT GENERATION
 // =============================================================================
 
 /**
- * Generate the system prompt for Little Lord based on the doctrine.
+ * Generate the system prompt for Little Lord based on the doctrine and current view context.
  */
-function generateSystemPrompt(): string {
+function generateSystemPrompt(viewId?: LittleLordViewId | null): string {
   const doctrine = LITTLE_LORD_DOCTRINE;
+
+  // Get view-specific additions
+  const viewPromptAddition = viewId ? getViewSystemPromptAddition(viewId) : undefined;
+  const coachingHints = viewId ? getCoachingHints(viewId) : [];
+  const writingEnabled = viewId ? canOfferWritingAssistance(viewId) : false;
+  const frameScanEnabled = viewId ? shouldSuggestFrameScan(viewId) : false;
+
+  // Build view context section
+  let viewContextSection = '';
+  if (viewId) {
+    const viewConfig = getViewConfig(viewId);
+    viewContextSection = `
+VIEW CONTEXT:
+- Current View: ${viewConfig.displayName}
+- Writing Assistant: ${writingEnabled ? 'ENABLED - You may offer to draft/write content' : 'DISABLED - Do not offer to write content'}
+- FrameScan Suggestions: ${frameScanEnabled ? 'ENABLED' : 'DISABLED'}
+${viewPromptAddition ? `- Special Context: ${viewPromptAddition}` : ''}
+${coachingHints.length > 0 ? `- Coaching Focus: ${coachingHints.join(', ')}` : ''}
+`;
+  }
 
   return `You are "${doctrine.ai_name}", version ${doctrine.version}.
 
@@ -82,7 +128,8 @@ CRITICAL:
 - Use the doctrine's language and concepts
 - Be concrete, direct, and actionable
 - Never coddle or enable Slave Frame thinking
-- Route everything through grace, not law`;
+- Route everything through grace, not law
+${viewContextSection}`;
 }
 
 // =============================================================================
@@ -228,10 +275,13 @@ function validateLittleLordResponse(obj: unknown): LittleLordResponse {
 export async function invokeLittleLord(
   request: LittleLordRequest
 ): Promise<LittleLordResponse> {
-  const { userMessage } = request;
+  const { userMessage, recentContext } = request;
 
-  // Build system prompt
-  const systemPrompt = generateSystemPrompt();
+  // Extract viewId from context for view-aware behavior
+  const viewId = recentContext?.viewId as LittleLordViewId | undefined;
+
+  // Build system prompt with view context
+  const systemPrompt = generateSystemPrompt(viewId);
 
   // Build context payload
   const contextPayload = buildContextPayload(request);
@@ -274,8 +324,11 @@ export async function invokeLittleLordWithHistory(
   request: LittleLordRequest,
   messages: LittleLordMessage[]
 ): Promise<LittleLordResponse> {
-  // Build system prompt
-  const systemPrompt = generateSystemPrompt();
+  // Extract viewId from context for view-aware behavior
+  const viewId = request.recentContext?.viewId as LittleLordViewId | undefined;
+
+  // Build system prompt with view context
+  const systemPrompt = generateSystemPrompt(viewId);
 
   // Build context payload for first user message
   const contextPayload = buildContextPayload(request);
@@ -401,4 +454,91 @@ export function getLittleLordDisplayName(): string {
  */
 export function getLittleLordVersion(): string {
   return LITTLE_LORD_DOCTRINE.version;
+}
+
+// =============================================================================
+// METRICS METHODS — Little Lord is the sole writer of metrics
+// =============================================================================
+
+/**
+ * Record a metric value.
+ * This is the ONLY way metrics should be written in the system.
+ * UI components should NEVER call createMetricEntry directly.
+ *
+ * @param metricId - The metric definition ID
+ * @param value - The metric value
+ * @param contactId - Contact ID (defaults to Contact Zero)
+ * @param note - Optional note about this metric entry
+ * @returns The created metric entry
+ */
+export function recordMetric(
+  metricId: string,
+  value: number | string | boolean,
+  contactId: string = CONTACT_ZERO.id,
+  note?: string
+) {
+  const definition = getMetricDefinitionById(metricId);
+
+  if (!definition) {
+    console.error(`[Little Lord] Attempted to record metric with unknown ID: ${metricId}`);
+    throw new Error(`Unknown metric ID: ${metricId}`);
+  }
+
+  return createMetricEntry(
+    {
+      metricId,
+      contactId,
+      value,
+      source: 'little_lord',
+      note,
+    }
+  );
+}
+
+/**
+ * Define a new metric type.
+ * Little Lord can create new metric definitions as needed based on user behavior.
+ *
+ * @param name - Metric name
+ * @param description - Metric description
+ * @param domain - Domain category
+ * @param type - Data type
+ * @param options - Optional configuration
+ * @returns The created metric definition
+ */
+export function defineMetric(
+  name: string,
+  description: string,
+  domain: MetricDomain,
+  type: MetricType,
+  options?: {
+    unit?: string;
+    target?: number | string | boolean;
+    isHigherBetter?: boolean;
+  }
+) {
+  return createMetricDefinition({
+    name,
+    description,
+    domain,
+    type,
+    unit: options?.unit,
+    target: options?.target,
+    isHigherBetter: options?.isHigherBetter,
+  });
+}
+
+/**
+ * Record multiple metrics at once.
+ * Useful for batch updates from Little Lord analysis.
+ *
+ * @param metrics - Array of metric records
+ * @param contactId - Contact ID (defaults to Contact Zero)
+ * @returns Array of created metric entries
+ */
+export function recordMetrics(
+  metrics: Array<{ metricId: string; value: number | string | boolean; note?: string }>,
+  contactId: string = CONTACT_ZERO.id
+) {
+  return metrics.map(m => recordMetric(m.metricId, m.value, contactId, m.note));
 }

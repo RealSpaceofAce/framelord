@@ -112,8 +112,8 @@ const SortableWantCard: React.FC<SortableWantCardProps> = ({
       whileHover={{ scale: 1.01, boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}
       transition={{ duration: 0.15 }}
       className={cn(
-        "bg-card border border-border rounded-xl overflow-hidden cursor-pointer hover:border-primary/50 group relative",
-        isDragging && "ring-2 ring-primary/40"
+        "bg-[#0A0A0F] border border-[#0043ff]/20 rounded-xl overflow-hidden cursor-pointer hover:border-[#0043ff]/50 group relative",
+        isDragging && "ring-2 ring-[#0043ff]/40"
       )}
       onClick={onClick}
     >
@@ -159,30 +159,30 @@ const SortableWantCard: React.FC<SortableWantCardProps> = ({
               <MotionDiv
                 initial={{ opacity: 0, scale: 0.95, y: -4 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="absolute right-0 top-6 bg-popover border border-border rounded-lg shadow-xl z-50 py-1 min-w-[120px]"
+                className="absolute right-0 top-6 bg-[#0E0E16] border border-[#0043ff]/30 rounded-lg shadow-xl z-50 py-1 min-w-[120px]"
               >
                 <button
                   onClick={(e) => { e.stopPropagation(); onStatusChange('not_started'); setShowMenu(false); }}
-                  className="w-full px-3 py-1.5 text-left text-xs text-foreground/80 hover:bg-muted flex items-center gap-2"
+                  className="w-full px-3 py-1.5 text-left text-xs text-foreground/80 hover:bg-[#0043ff]/20 flex items-center gap-2"
                 >
                   <div className="w-2 h-2 rounded-full bg-muted-foreground" />
                   Not Started
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); onStatusChange('in_progress'); setShowMenu(false); }}
-                  className="w-full px-3 py-1.5 text-left text-xs text-foreground/80 hover:bg-muted flex items-center gap-2"
+                  className="w-full px-3 py-1.5 text-left text-xs text-foreground/80 hover:bg-[#0043ff]/20 flex items-center gap-2"
                 >
                   <div className="w-2 h-2 rounded-full bg-amber-500" />
                   In Progress
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); onStatusChange('done'); setShowMenu(false); }}
-                  className="w-full px-3 py-1.5 text-left text-xs text-foreground/80 hover:bg-muted flex items-center gap-2"
+                  className="w-full px-3 py-1.5 text-left text-xs text-foreground/80 hover:bg-[#0043ff]/20 flex items-center gap-2"
                 >
                   <div className="w-2 h-2 rounded-full bg-green-500" />
                   Done
                 </button>
-                <div className="border-t border-border my-1" />
+                <div className="border-t border-[#0043ff]/20 my-1" />
                 <button
                   onClick={(e) => { e.stopPropagation(); onDelete(); setShowMenu(false); }}
                   className="w-full px-3 py-1.5 text-left text-xs text-destructive hover:bg-destructive/10 flex items-center gap-2"
@@ -249,7 +249,7 @@ const WantCard: React.FC<{ want: Want }> = ({ want }) => {
   const completionPct = getStepCompletionPercentage(want.id);
 
   return (
-    <div className="bg-card border border-primary rounded-lg p-3 shadow-xl w-[300px]">
+    <div className="bg-[#0A0A0F] border border-[#0043ff]/40 rounded-lg p-3 shadow-xl w-[300px]">
       <div className="pl-4">
         <h4 className="text-sm font-medium text-foreground mb-1">{want.title}</h4>
         <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{want.reason}</p>
@@ -319,7 +319,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
       )}
     >
       {/* Column header */}
-      <div className="flex items-center justify-between mb-3 px-3 py-2 rounded-lg bg-muted border border-border group">
+      <div className="flex items-center justify-between mb-3 px-3 py-2 rounded-lg bg-[#0E0E16] border border-[#0043ff]/20 group">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <div
             className="w-2 h-2 rounded-full shrink-0"
@@ -335,7 +335,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
                   if (e.key === 'Enter') handleSaveRename();
                   if (e.key === 'Escape') setIsEditing(false);
                 }}
-                className="flex-1 bg-background border border-border rounded px-2 py-0.5 text-sm text-foreground focus:outline-none focus:border-primary"
+                className="flex-1 bg-background border border-[#0043ff]/30 rounded px-2 py-0.5 text-sm text-foreground focus:outline-none focus:border-[#0043ff]"
                 autoFocus
               />
               <button onClick={handleSaveRename} className="p-0.5 hover:bg-muted rounded">
@@ -391,7 +391,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
           ))}
 
           {wants.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground text-xs border border-dashed border-border rounded-lg">
+            <div className="text-center py-8 text-muted-foreground text-xs border border-dashed border-[#0043ff]/20 rounded-lg">
               Drag wants here or click + to add
             </div>
           )}
@@ -564,7 +564,7 @@ export const WantBoardView: React.FC<WantBoardViewProps> = ({ onSelectWant, onNe
             {/* Add Stage Column */}
             <div className="min-w-[200px] shrink-0">
               {showAddStage ? (
-                <div className="bg-muted/30 border border-dashed border-border rounded-lg p-3">
+                <div className="bg-[#0E0E16] border border-dashed border-[#0043ff]/20 rounded-lg p-3">
                   <input
                     type="text"
                     value={newStageName}
@@ -574,7 +574,7 @@ export const WantBoardView: React.FC<WantBoardViewProps> = ({ onSelectWant, onNe
                       if (e.key === 'Escape') { setShowAddStage(false); setNewStageName(''); }
                     }}
                     placeholder="Stage name"
-                    className="w-full bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary mb-2"
+                    className="w-full bg-background border border-[#0043ff]/30 rounded px-2 py-1.5 text-sm text-foreground focus:outline-none focus:border-[#0043ff] mb-2"
                     autoFocus
                   />
                   <div className="flex gap-1">
@@ -595,7 +595,7 @@ export const WantBoardView: React.FC<WantBoardViewProps> = ({ onSelectWant, onNe
               ) : (
                 <button
                   onClick={() => setShowAddStage(true)}
-                  className="w-full h-12 border border-dashed border-border rounded-lg flex items-center justify-center gap-2 text-muted-foreground text-sm hover:bg-muted/30 hover:border-primary/30 transition-colors"
+                  className="w-full h-12 border border-dashed border-[#0043ff]/20 rounded-lg flex items-center justify-center gap-2 text-muted-foreground text-sm hover:bg-muted/30 hover:border-[#0043ff]/40 transition-colors"
                 >
                   <Plus size={14} />
                   Add Stage

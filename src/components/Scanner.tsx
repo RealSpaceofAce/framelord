@@ -1,10 +1,13 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { analyzeFrame } from '../lib/llm/geminiService';
+import { analyzeLandingFrame } from '../lib/frameScan/landingScanAdapter';
 import { FrameAnalysisResult } from '../types';
 import { Button } from './Button';
-import { Loader2, Zap, AlertTriangle, CheckCircle, UploadCloud, Image as ImageIcon, X, ArrowRight, Shield } from 'lucide-react';
+import { Loader2, Zap, AlertTriangle, CheckCircle, UploadCloud, Image as ImageIcon, X, ArrowRight, Shield, Scan, Flame } from 'lucide-react';
 import { Reveal } from './Reveal';
+import { useAudio } from '../hooks/useAudio';
+import { toast } from './Toast';
+import { useSavageMode } from '../hooks/useSavageMode';
 
 // Bypass strict type checking for motion components
 const MotionDiv = motion.div as any;
@@ -13,11 +16,57 @@ interface ScannerProps {
   onApply?: () => void;
 }
 
+// Input validation helper - checks for garbage/nonsense text
+const isValidInput = (text: string): { valid: boolean; reason?: string } => {
+  const trimmed = text.trim();
+
+  // Minimum length check (at least 50 characters for meaningful text)
+  if (trimmed.length < 50) {
+    return { valid: false, reason: 'Not enough context to run a FrameScan. Add real text or upload a file.' };
+  }
+
+  // Minimum word count (at least 8 words)
+  const words = trimmed.split(/\s+/).filter(w => w.length > 0);
+  if (words.length < 8) {
+    return { valid: false, reason: 'Not enough words. Enter at least 8 words for proper analysis.' };
+  }
+
+  // Check for repeated character patterns (gibberish detection)
+  const repeatedPattern = /(.)\1{5,}/;  // 6+ same character in a row
+  if (repeatedPattern.test(trimmed)) {
+    return { valid: false, reason: 'Invalid text detected. Please enter real communication text.' };
+  }
+
+  // Check for too many non-letter characters (likely garbage)
+  const letterCount = (trimmed.match(/[a-zA-Z]/g) || []).length;
+  const letterRatio = letterCount / trimmed.length;
+  if (letterRatio < 0.5) {
+    return { valid: false, reason: 'Text contains too many special characters. Enter readable text.' };
+  }
+
+  // Check for keyboard mash patterns
+  const keyboardMash = /[asdfghjkl]{6,}|[qwertyuiop]{6,}|[zxcvbnm]{6,}/i;
+  if (keyboardMash.test(trimmed)) {
+    return { valid: false, reason: 'Keyboard patterns detected. Please enter real text.' };
+  }
+
+  return { valid: true };
+};
+
 export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<FrameAnalysisResult | null>(null);
-  
+  const [isWobbling, setIsWobbling] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Savage Mode
+  const { isEnabled: isSavageMode, accentColor } = useSavageMode();
+
+  // Audio
+  const { play, stop } = useAudio();
+
   // Image State
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -110,13 +159,40 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
 
   const handleScan = async () => {
     if (!input.trim() && !selectedImage) return;
-    
+
+    // Validate text input (skip validation if we have an image)
+    if (!selectedImage && input.trim()) {
+      const validation = isValidInput(input);
+      if (!validation.valid) {
+        setValidationError(validation.reason || 'Invalid input');
+        toast.error('Invalid Input', validation.reason || 'Please enter valid text');
+        return;
+      }
+    }
+
+    // Clear any previous validation error
+    setValidationError(null);
+
+    // Start scan animation and sounds
     setLoading(true);
     setResult(null);
-    
+    setIsWobbling(true);
+    setScanProgress(0);
+
+    // Play scan start sound
+    play('scan_start');
+
+    // Start scan hum (looping)
+    play('scan_hum', { loop: true, volume: 0.15 });
+
+    // Simulate progress for visual feedback
+    const progressInterval = setInterval(() => {
+      setScanProgress(prev => Math.min(prev + Math.random() * 15, 95));
+    }, 200);
+
     try {
-      let imageBase64 = undefined;
-      let mimeType = undefined;
+      let imageBase64: string | undefined = undefined;
+      let mimeType: string | undefined = undefined;
 
       if (selectedImage && imageFile) {
         // Extract base64 data (remove "data:image/jpeg;base64," prefix)
@@ -124,12 +200,48 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
         mimeType = imageFile.type;
       }
 
-      const data = await analyzeFrame(input, imageBase64, mimeType);
+      // Use core FrameScan engine via adapter
+      const data = await analyzeLandingFrame(input, imageBase64, mimeType);
+
+      // Validate result before proceeding
+      if (!data || typeof data.score !== 'number') {
+        throw new Error('Invalid scan result: missing score data');
+      }
+
+      // Complete progress
+      setScanProgress(100);
+
+      // Stop hum, play complete sound
+      stop('scan_hum');
+      await play('scan_complete');
+
+      // CRITICAL: Set result AFTER audio completes to avoid state clearing race condition
       setResult(data);
+
+      // Show toast notification
+      const scoreMessage = data.score < 50
+        ? 'Critical frame weaknesses detected'
+        : data.score < 80
+          ? 'Room for improvement identified'
+          : 'Strong frame patterns detected';
+
+      toast.success('Scan Complete', `Score: ${data.score} - ${scoreMessage}`);
+
     } catch (e) {
-      console.error(e);
+      console.error('FrameScan error:', e);
+      stop('scan_hum');
+      await play('error');
+
+      const errorMessage = e instanceof Error ? e.message : 'Unable to complete analysis. Please try again.';
+      toast.error('Scan Failed', errorMessage);
+
+      // Show visual error in UI
+      setValidationError(errorMessage);
     } finally {
+      clearInterval(progressInterval);
       setLoading(false);
+      setIsWobbling(false);
+      setScanProgress(0);
     }
   };
 
@@ -145,33 +257,83 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-fl-primary/5 blur-[120px] rounded-full -z-10" />
 
       <Reveal width="100%">
-        <MotionDiv 
+        <MotionDiv
             ref={ref}
             onMouseMove={handleMouseMove}
             onTouchMove={handleTouchMove}
             onMouseLeave={handleMouseLeave}
             onTouchEnd={handleMouseLeave}
             style={{ rotateX, rotateY, transformStyle: "preserve-3d" } as any}
-            className="glass-card rounded-2xl p-8 md:p-12 shadow-[0_0_80px_rgba(3,4,18,0.8)] relative overflow-hidden group touch-none transition-all duration-300 border border-[#1f2f45]"
+            animate={isWobbling ? {
+              x: [0, -2, 2, -1, 1, 0],
+              y: [0, 1, -1, 0.5, -0.5, 0],
+            } : {}}
+            transition={isWobbling ? {
+              duration: 0.4,
+              repeat: Infinity,
+              ease: "easeInOut",
+            } : {}}
+            className={`glass-card rounded-2xl p-8 md:p-12 shadow-[0_0_80px_rgba(3,4,18,0.8)] relative overflow-hidden group touch-none transition-all duration-300 border ${loading ? 'border-fl-primary/70 shadow-[0_0_40px_rgba(68,51,255,0.3)]' : 'border-[#1f2f45]'}`}
         >
             {/* Glossy Reflection Gradient */}
             <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl z-40" />
-            
+
             {/* Subtle idle border pulse */}
             <div className="absolute inset-0 border border-fl-primary/0 group-hover:border-fl-primary/50 transition-colors duration-700 rounded-2xl pointer-events-none" />
 
-            {/* Decorative scanning line */}
+            {/* Scanning copier beam effect - bright white line that moves down */}
             {loading && (
-                <MotionDiv 
-                    className="absolute top-0 left-0 w-full h-4 bg-gradient-to-b from-fl-primary to-transparent shadow-[0_0_30px_#4433FF] z-20 opacity-70"
-                    animate={{ top: ['-10%', '110%'] }}
-                    transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+                <MotionDiv
+                    className="absolute left-0 w-full h-1 bg-white shadow-[0_0_20px_#ffffff,0_0_40px_#4433FF,0_0_60px_#4433FF] z-30 pointer-events-none"
+                    initial={{ top: '-5%' }}
+                    animate={{ top: ['0%', '100%'] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                 />
             )}
 
+            {/* Secondary scanning line with glow */}
+            {loading && (
+                <MotionDiv
+                    className="absolute top-0 left-0 w-full h-8 bg-gradient-to-b from-fl-primary/40 to-transparent z-20 opacity-70 pointer-events-none"
+                    animate={{ top: ['-10%', '110%'] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                />
+            )}
+
+            {/* Progress bar at bottom during scan */}
+            {loading && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-fl-black/50 z-30">
+                    <MotionDiv
+                        className="h-full bg-gradient-to-r from-fl-primary to-fl-secondary"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${scanProgress}%` }}
+                        transition={{ duration: 0.3 }}
+                    />
+                </div>
+            )}
+
+            {/* Savage Mode Badge */}
+            {isSavageMode && (
+              <MotionDiv
+                initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="absolute top-4 right-4 z-50"
+              >
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 border border-red-500/50 rounded-full text-red-400 text-xs font-bold uppercase tracking-wider backdrop-blur-sm shadow-[0_0_15px_rgba(255,51,68,0.3)] animate-pulse">
+                  <Flame size={14} className="text-red-500" />
+                  Savage Mode
+                </div>
+              </MotionDiv>
+            )}
+
             <div className="mb-8 text-center transform translate-z-10" style={{ transform: "translateZ(30px)" }}>
-                <h2 className="text-3xl font-display text-white mb-2 tracking-wide">THE AI MIRROR</h2>
-                <p className="text-fl-text">Upload a photo or paste a draft. See how weak you really are.</p>
+                <h2 className="text-3xl font-display text-white mb-2 tracking-wide">FRAMESCAN</h2>
+                <p className="text-fl-text">
+                  {isSavageMode
+                    ? "Upload a photo or paste a draft. No mercy. No excuses."
+                    : "Upload a photo or paste a draft. See how weak you really are."
+                  }
+                </p>
             </div>
 
             <div 
@@ -184,12 +346,32 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
                 {/* Input Area */}
                 <div className="relative group/input">
                     {!selectedImage ? (
-                        <textarea
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="Paste your text here... or drop an image to analyze body language."
-                            className="w-full h-40 bg-fl-navy/50 border border-fl-primary/30 rounded-lg p-6 text-white placeholder-fl-gray/50 focus:outline-none focus:border-fl-primary focus:ring-1 focus:ring-fl-primary transition-all font-mono text-base resize-none shadow-inner hover:bg-fl-navy/70"
-                        />
+                        <>
+                          <textarea
+                              value={input}
+                              onChange={(e) => {
+                                setInput(e.target.value);
+                                if (validationError) setValidationError(null);
+                              }}
+                              placeholder="Paste your text here... or drop an image to analyze body language."
+                              className={`w-full h-40 bg-fl-navy/50 border rounded-lg p-6 text-white placeholder-fl-gray/50 focus:outline-none focus:ring-1 transition-all font-mono text-base resize-none shadow-inner hover:bg-fl-navy/70 ${
+                                validationError
+                                  ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500'
+                                  : 'border-fl-primary/30 focus:border-fl-primary focus:ring-fl-primary'
+                              }`}
+                          />
+                          {/* Validation error message */}
+                          {validationError && (
+                            <MotionDiv
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="absolute -bottom-6 left-0 flex items-center gap-1.5 text-xs text-red-400"
+                            >
+                              <AlertTriangle size={12} />
+                              {validationError}
+                            </MotionDiv>
+                          )}
+                        </>
                     ) : (
                         <div className="w-full h-64 bg-fl-navy/30 border border-fl-primary/50 rounded-lg overflow-hidden relative flex items-center justify-center group/image">
                              <img src={selectedImage} alt="Preview" className="h-full w-full object-contain opacity-80 group-hover/image:opacity-100 transition-opacity" />

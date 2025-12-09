@@ -22,7 +22,6 @@ import { PipelinesView } from './crm/PipelinesView';
 import { ProjectsView } from './crm/ProjectsView';
 import { ProjectDetailView } from './crm/ProjectDetailView';
 import { NotesView } from './crm/NotesView';
-import { ThreeParticles } from './ThreeParticles';
 import { ContactDossierView } from './crm/ContactDossierView';
 import { TopicView } from './crm/TopicView';
 import { TasksView } from './crm/TasksView';
@@ -67,9 +66,35 @@ import {
   formatProfileDate,
 } from '../lib/frameScan/frameProfile';
 import { LittleLordProvider } from './littleLord';
+import type { LittleLordViewId } from '../services/littleLord/types';
+
+// Map Dashboard views to Little Lord view IDs
+const mapViewToLittleLordViewId = (view: string): LittleLordViewId => {
+  const mapping: Record<string, LittleLordViewId> = {
+    'OVERVIEW': 'home',
+    'DOSSIER': 'contact_dossier',
+    'NOTES': 'notes',
+    'SCAN': 'framescan',
+    'FRAMESCAN': 'framescan',
+    'FRAMESCAN_REPORT': 'framescan',
+    'WANTS': 'wants',
+    'METRICS': 'home', // Metrics uses home view context
+    'CONTACTS': 'contacts',
+    'TASKS': 'tasks',
+    'CALENDAR': 'calendar',
+    'PIPELINES': 'pipelines',
+    'PROJECTS': 'projects',
+    'SETTINGS': 'settings',
+    'TOPIC': 'contacts',
+  };
+  return mapping[view] || 'home';
+};
 // FrameCanvasPage removed - canvas functionality now integrated into Notes (see REFACTOR_PLAN.md)
 import { AffineNotes } from './notes';
 import { WantsPage } from './wants';
+import { MetricsOverview } from './metrics';
+import { useSavageMode } from '../hooks/useSavageMode';
+import { Flame } from 'lucide-react';
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -411,11 +436,9 @@ const SpotlightCard: React.FC<{ children: React.ReactNode, className?: string }>
 };
 
 const EnergyFloor: React.FC = () => (
-    <div className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none z-0 overflow-hidden rounded-b-xl">
+    <div className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none z-0 rounded-b-xl">
         <div className="absolute inset-0 bg-gradient-to-t from-[#4433FF]/20 via-[#4433FF]/5 to-transparent z-10" />
-        <div className="absolute inset-0 z-0 opacity-50">
-            <ThreeParticles forcedShape="sphere" />
-        </div>
+        {/* Removed overflow-hidden and local ThreeParticles to avoid clipping - app now has global particles */}
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#4433FF] shadow-[0_0_20px_#4433FF]" />
     </div>
 );
@@ -432,6 +455,9 @@ const ScanView: React.FC = () => {
   const [cursorPosition, setCursorPosition] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Savage Mode for FrameScan
+  const { isEnabled: isSavageModeEnabled, toggle: toggleSavageMode } = useSavageMode();
 
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
@@ -576,7 +602,9 @@ const ScanView: React.FC = () => {
          ref={ref}
          onMouseMove={handleMouseMove}
          style={{ rotateX, rotateY, transformStyle: "preserve-3d" } as any}
-         className="relative bg-[#1a1a2e]/60 backdrop-blur-2xl border border-[#4433FF]/30 rounded-xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden group min-h-[550px] flex flex-col"
+         className={`relative bg-[#1a1a2e]/60 backdrop-blur-2xl border rounded-xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden group min-h-[550px] flex flex-col ${
+           isSavageModeEnabled ? 'savage-framescan' : 'border-[#4433FF]/30'
+         }`}
        >
           <div className="absolute inset-0 pointer-events-none z-0 opacity-20" style={{ backgroundImage: 'linear-gradient(rgba(68, 51, 255, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(68, 51, 255, 0.2) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
           
@@ -590,7 +618,18 @@ const ScanView: React.FC = () => {
                       <div className={`w-2 h-2 rounded-full ${loading ? 'bg-[#4433FF] animate-ping' : 'bg-[#0043ff]'}`} />
                       {loading ? 'ANALYZING...' : 'SYSTEM READY'}
                   </div>
-                  <span className="bg-[#4433FF]/20 px-2 py-1 rounded text-[#4433FF] font-bold">V.2.0.4</span>
+                  <button
+                    onClick={toggleSavageMode}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded font-bold uppercase transition-all ${
+                      isSavageModeEnabled
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        : 'bg-[#4433FF]/20 text-[#4433FF] border border-transparent hover:border-[#4433FF]/30'
+                    }`}
+                    title={isSavageModeEnabled ? 'Disable brutal feedback mode' : 'Enable brutal feedback mode'}
+                  >
+                    <Flame size={12} />
+                    {isSavageModeEnabled ? 'Savage ON' : 'Savage OFF'}
+                  </button>
               </div>
           </div>
 
@@ -1596,7 +1635,7 @@ const FrameScoreTileWidget: React.FC = () => {
 };
 
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'DAILY_LOG' | 'INBOX' | 'FOLDER' | 'NOTE_DETAIL' | 'BLOCKSUITE_TEST' | 'WANTS';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'DAILY_LOG' | 'INBOX' | 'FOLDER' | 'NOTE_DETAIL' | 'BLOCKSUITE_TEST' | 'WANTS' | 'METRICS';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -1646,6 +1685,11 @@ export const Dashboard: React.FC = () => {
 
   // Get selected topic for display in header
   const selectedTopic = selectedTopicId ? getTopicById(selectedTopicId) : null;
+
+  // ==========================================================================
+  // SAVAGE MODE TOGGLE
+  // ==========================================================================
+  const { isEnabled: isSavageModeEnabled, toggle: toggleSavageMode } = useSavageMode();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -1758,6 +1802,8 @@ export const Dashboard: React.FC = () => {
       tenantId="default_tenant"
       userId={CONTACT_ZERO.id}
       showFloatingButton={true}
+      currentViewId={mapViewToLittleLordViewId(currentView)}
+      selectedContactId={selectedContactId}
     >
       <div className="fixed inset-0 text-[#DBDBDB] font-sans flex flex-col lg:flex-row overflow-hidden z-[50] app-neon">
         <aside className={`
@@ -1796,35 +1842,8 @@ export const Dashboard: React.FC = () => {
             <NavItem active={currentView === 'SCAN'} onClick={() => handleNav('SCAN')} icon={<Scan size={16} />} label="SCAN" />
             <NavItem active={currentView === 'FRAMESCAN' || currentView === 'FRAMESCAN_REPORT'} onClick={() => handleNav('FRAMESCAN')} icon={<Crosshair size={16} />} label="FRAME SCANS" />
             <NavItem active={currentView === 'WANTS'} onClick={() => handleNav('WANTS')} icon={<Target size={16} />} label="WANTS" />
-
-            <div className="h-6" />
-
-            <div>
-                <button
-                    onClick={() => setIsWorkspaceOpen(!isWorkspaceOpen)}
-                    className="w-full flex items-center justify-between px-3 py-2 text-gray-500 hover:text-white transition-colors group mb-1"
-                >
-                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
-                         <div className="w-1.5 h-1.5 border border-gray-500 group-hover:border-white rounded-sm" /> Workspace
-                    </div>
-                    <ChevronDown size={12} className={`transition-transform duration-200 ${isWorkspaceOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                <AnimatePresence>
-                    {isWorkspaceOpen && (
-                        <MotionDiv
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden space-y-1"
-                        >
-                            <NavItem active={currentView === 'PIPELINES'} onClick={() => handleNav('PIPELINES')} icon={<GitCommit size={16} />} label="PIPELINES" isSubItem />
-                            <NavItem active={currentView === 'PROJECTS'} onClick={() => handleNav('PROJECTS')} icon={<Folder size={16} />} label="PROJECTS" isSubItem />
-                            <NavItem active={currentView === 'CONTACTS'} onClick={() => handleNav('CONTACTS')} icon={<Users size={16} />} label="CONTACTS" isSubItem />
-                        </MotionDiv>
-                    )}
-                </AnimatePresence>
-            </div>
+            <NavItem active={currentView === 'METRICS'} onClick={() => handleNav('METRICS')} icon={<TrendingUp size={16} />} label="METRICS" />
+            <NavItem active={currentView === 'CONTACTS'} onClick={() => handleNav('CONTACTS')} icon={<Users size={16} />} label="CONTACTS" />
           </div>
         </div>
 
@@ -1922,12 +1941,20 @@ export const Dashboard: React.FC = () => {
              )}
              {currentView === 'SCAN' && <ScanView />}
             {/* AFFiNE-style Notes - single unified view */}
-            {currentView === 'NOTES' && <AffineNotes />}
+            {currentView === 'NOTES' && (
+              <AffineNotes
+                onNavigateToContact={(contactId) => {
+                  setSelectedContactId(contactId);
+                  setCurrentView('DOSSIER');
+                }}
+              />
+            )}
             {currentView === 'WANTS' && (
               <WantsPage
                 initialWantId={selectedWantId || undefined}
               />
             )}
+            {currentView === 'METRICS' && <MetricsOverview />}
             {currentView === 'CONTACTS' && (
                <ContactsView 
                  selectedContactId={selectedContactId}
