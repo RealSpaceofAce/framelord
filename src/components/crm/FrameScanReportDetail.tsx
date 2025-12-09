@@ -7,18 +7,18 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   ArrowLeft, Target, TrendingUp, TrendingDown, Minus,
   AlertTriangle, CheckCircle, Lightbulb, User, Calendar,
-  FileText, Image as ImageIcon, ExternalLink, Star, Zap
+  FileText, Image as ImageIcon, ExternalLink, Star, Zap, Lock, Sparkles
 } from 'lucide-react';
 import { getReportById, type FrameScanReport } from '../../services/frameScanReportStore';
 import { getContactById, CONTACT_ZERO } from '../../services/contactStore';
-import { 
-  getFrameScoreLabel, 
+import {
+  getFrameScoreLabel,
   getFrameScoreColorClass,
   getFrameScoreBgClass,
-  formatProfileDate 
+  formatProfileDate
 } from '../../lib/frameScan/frameProfile';
 import type { FrameAxisScore, FrameBand, FrameWinWinState } from '../../lib/frameScan/frameTypes';
 import type { FrameScanUIReport, FrameScanUISection, FrameScanUICorrection } from '../../lib/frameScan/frameReportUI';
@@ -35,6 +35,10 @@ interface FrameScanReportDetailProps {
   onNavigateToContact?: (contactId: string) => void;
   /** Optional: pass a demo report directly instead of fetching from store */
   demoReport?: FrameScanReport;
+  /** Whether to show the report in paywalled mode (blur second half with upgrade CTA) */
+  isPaywalled?: boolean;
+  /** Callback when user clicks upgrade CTA */
+  onUpgrade?: () => void;
 }
 
 // =============================================================================
@@ -78,6 +82,65 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
 };
 
 // =============================================================================
+// PAYWALL OVERLAY COMPONENT
+// =============================================================================
+
+interface PaywallOverlayProps {
+  onUpgrade?: () => void;
+}
+
+const PaywallOverlay: React.FC<PaywallOverlayProps> = ({ onUpgrade }) => (
+  <div className="absolute inset-0 z-20 flex items-center justify-center bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent">
+    <div className="text-center max-w-md px-6">
+      {/* Lock Icon */}
+      <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#4433FF]/20 border border-[#4433FF]/30 flex items-center justify-center">
+        <Lock size={28} className="text-[#4433FF]" />
+      </div>
+
+      {/* Heading */}
+      <h3 className="text-xl font-bold text-white mb-3">
+        Unlock Full Report
+      </h3>
+
+      {/* Description */}
+      <p className="text-gray-400 mb-6 text-sm leading-relaxed">
+        See detailed corrections, axis breakdowns, and actionable coaching recommendations.
+        Upgrade to access the complete analysis.
+      </p>
+
+      {/* Feature List */}
+      <ul className="text-left mb-6 space-y-2">
+        {[
+          'Detailed axis-by-axis breakdown',
+          'Specific corrections with examples',
+          'Personalized coaching recommendations',
+          'Visual annotations (image scans)',
+        ].map((feature, i) => (
+          <li key={i} className="flex items-center gap-2 text-sm text-gray-300">
+            <Sparkles size={14} className="text-[#4433FF] shrink-0" />
+            {feature}
+          </li>
+        ))}
+      </ul>
+
+      {/* CTA Button */}
+      <button
+        onClick={onUpgrade}
+        className="w-full py-3 px-6 bg-[#4433FF] hover:bg-[#5544FF] text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+      >
+        <Sparkles size={16} />
+        Upgrade to Pro
+      </button>
+
+      {/* Pricing hint */}
+      <p className="text-xs text-gray-500 mt-3">
+        Starting at $79/month • Cancel anytime
+      </p>
+    </div>
+  </div>
+);
+
+// =============================================================================
 // COMPONENT
 // =============================================================================
 
@@ -86,6 +149,8 @@ export const FrameScanReportDetail: React.FC<FrameScanReportDetailProps> = ({
   onBack,
   onNavigateToContact,
   demoReport,
+  isPaywalled = false,
+  onUpgrade,
 }) => {
   // Use demo report if provided, otherwise fetch from store
   const report = demoReport || getReportById(reportId);
@@ -106,10 +171,13 @@ export const FrameScanReportDetail: React.FC<FrameScanReportDetailProps> = ({
     );
   }
 
-  const contact = getContactById(report.subjectContactId);
-  const contactName = report.subjectContactId === CONTACT_ZERO.id 
-    ? 'Contact Zero (Self)' 
+  // For multi-contact scans, show the primary subject (first contact)
+  const primaryContactId = report.subjectContactIds[0];
+  const contact = getContactById(primaryContactId);
+  const contactName = primaryContactId === CONTACT_ZERO.id
+    ? 'Contact Zero (Self)'
     : contact?.fullName || 'Unknown Contact';
+  const hasMultipleContacts = report.subjectContactIds.length > 1;
 
   const scoreColorClass = getFrameScoreColorClass(report.score.frameScore);
   const scoreBgClass = getFrameScoreBgClass(report.score.frameScore);
@@ -166,18 +234,21 @@ export const FrameScanReportDetail: React.FC<FrameScanReportDetailProps> = ({
                 {/* Contact & Date info */}
                 <div className="flex items-center gap-2 mt-4 text-sm text-gray-400">
                   {contact?.avatarUrl && (
-                    <img 
-                      src={contact.avatarUrl} 
-                      alt="" 
+                    <img
+                      src={contact.avatarUrl}
+                      alt=""
                       className="w-6 h-6 rounded-full cursor-pointer"
-                      onClick={() => onNavigateToContact?.(report.subjectContactId)}
+                      onClick={() => onNavigateToContact?.(primaryContactId)}
                     />
                   )}
-                  <span 
+                  <span
                     className="cursor-pointer hover:text-[#4433FF] transition-colors"
-                    onClick={() => onNavigateToContact?.(report.subjectContactId)}
+                    onClick={() => onNavigateToContact?.(primaryContactId)}
                   >
                     {contactName}
+                    {hasMultipleContacts && (
+                      <span className="text-gray-500 ml-1">+{report.subjectContactIds.length - 1}</span>
+                    )}
                   </span>
                   <span>•</span>
                   {report.modality === 'image' ? (
@@ -201,63 +272,126 @@ export const FrameScanReportDetail: React.FC<FrameScanReportDetailProps> = ({
             </div>
           </MotionDiv>
 
-          {/* Sections */}
-          {ui.sections.map((section, index) => (
-            <MotionDiv
-              key={section.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + index * 0.05 }}
-              className="bg-[#0E0E0E] border border-[#222] rounded-lg p-4 mb-4"
-            >
-              <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                {SECTION_ICONS[section.id] || <Zap size={18} className="text-gray-400" />}
-                {section.title}
-              </h2>
+          {/* Sections - Split for paywall */}
+          {(() => {
+            // Show first section (usually summary) in full, blur the rest if paywalled
+            const sections = ui.sections ?? [];
+            const visibleSections = isPaywalled ? sections.slice(0, 1) : sections;
+            const paywalledSections = isPaywalled ? sections.slice(1) : [];
 
-              {/* Main paragraph */}
-              {section.mainParagraph && (
-                <p className="text-gray-300 mb-4 leading-relaxed">
-                  {section.mainParagraph}
-                </p>
-              )}
+            return (
+              <>
+                {/* Visible Sections */}
+                {visibleSections.map((section, index) => (
+                  <MotionDiv
+                    key={section.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + index * 0.05 }}
+                    className="bg-[#0E0E0E] border border-[#222] rounded-lg p-4 mb-4"
+                  >
+                    <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                      {SECTION_ICONS[section.id] || <Zap size={18} className="text-gray-400" />}
+                      {section.title}
+                    </h2>
 
-              {/* Bullets */}
-              {section.bullets && section.bullets.length > 0 && (
-                <ul className="space-y-2 mb-4">
-                  {section.bullets.map((bullet, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
-                      <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${
-                        section.id === 'strengths' ? 'bg-green-500' :
-                        section.id === 'weaknesses' ? 'bg-orange-500' :
-                        'bg-[#4433FF]'
-                      }`} />
-                      {bullet}
-                    </li>
-                  ))}
-                </ul>
-              )}
+                    {/* Main paragraph */}
+                    {section.mainParagraph && (
+                      <p className="text-gray-300 mb-4 leading-relaxed">
+                        {section.mainParagraph}
+                      </p>
+                    )}
 
-              {/* Corrections */}
-              {section.corrections && section.corrections.length > 0 && (
-                <div className="space-y-3">
-                  {section.corrections.map((correction, i) => (
-                    <div key={i} className="bg-[#1A1A1A] rounded-lg p-4">
-                      <div className="font-medium text-white mb-1">{correction.label}</div>
-                      <p className="text-sm text-gray-400 mb-2">{correction.description}</p>
-                      <div className="flex items-start gap-2 text-sm text-emerald-400">
-                        <CheckCircle size={14} className="mt-0.5 shrink-0" />
-                        {correction.suggestedAction}
+                    {/* Bullets */}
+                    {section.bullets && section.bullets.length > 0 && (
+                      <ul className="space-y-2 mb-4">
+                        {section.bullets.map((bullet, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                            <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${
+                              section.id === 'strengths' ? 'bg-green-500' :
+                              section.id === 'weaknesses' ? 'bg-orange-500' :
+                              'bg-[#4433FF]'
+                            }`} />
+                            {bullet}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {/* Corrections */}
+                    {section.corrections && section.corrections.length > 0 && (
+                      <div className="space-y-3">
+                        {section.corrections.map((correction, i) => (
+                          <div key={i} className="bg-[#1A1A1A] rounded-lg p-4">
+                            <div className="font-medium text-white mb-1">{correction.label}</div>
+                            <p className="text-sm text-gray-400 mb-2">{correction.description}</p>
+                            <div className="flex items-start gap-2 text-sm text-emerald-400">
+                              <CheckCircle size={14} className="mt-0.5 shrink-0" />
+                              {correction.suggestedAction}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </MotionDiv>
-          ))}
+                    )}
+                  </MotionDiv>
+                ))}
 
-          {/* Image Annotations (kept separate from UI schema) */}
-          {report.modality === 'image' && report.imageAnnotations && report.imageAnnotations.length > 0 && (
+                {/* Paywalled Sections with Blur Overlay */}
+                {paywalledSections.length > 0 && (
+                  <div className="relative">
+                    {/* Blurred content */}
+                    <div className="blur-sm pointer-events-none select-none">
+                      {paywalledSections.map((section, index) => (
+                        <div
+                          key={section.id}
+                          className="bg-[#0E0E0E] border border-[#222] rounded-lg p-4 mb-4"
+                        >
+                          <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            {SECTION_ICONS[section.id] || <Zap size={18} className="text-gray-400" />}
+                            {section.title}
+                          </h2>
+
+                          {section.mainParagraph && (
+                            <p className="text-gray-300 mb-4 leading-relaxed">
+                              {section.mainParagraph}
+                            </p>
+                          )}
+
+                          {section.bullets && section.bullets.length > 0 && (
+                            <ul className="space-y-2 mb-4">
+                              {section.bullets.map((bullet, i) => (
+                                <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                                  <div className="w-1.5 h-1.5 rounded-full mt-2 shrink-0 bg-gray-500" />
+                                  {bullet}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+
+                          {section.corrections && section.corrections.length > 0 && (
+                            <div className="space-y-3">
+                              {section.corrections.map((correction, i) => (
+                                <div key={i} className="bg-[#1A1A1A] rounded-lg p-4">
+                                  <div className="font-medium text-white mb-1">{correction.label}</div>
+                                  <p className="text-sm text-gray-400 mb-2">{correction.description}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Paywall Overlay */}
+                    <PaywallOverlay onUpgrade={onUpgrade} />
+                  </div>
+                )}
+              </>
+            );
+          })()}
+
+          {/* Image Annotations (kept separate from UI schema) - Hidden when paywalled */}
+          {!isPaywalled && report.modality === 'image' && report.imageAnnotations && report.imageAnnotations.length > 0 && (
             <MotionDiv
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -271,9 +405,9 @@ export const FrameScanReportDetail: React.FC<FrameScanReportDetailProps> = ({
 
               {report.annotatedImageUrl && (
                 <div className="mb-4">
-                  <img 
-                    src={report.annotatedImageUrl} 
-                    alt="Annotated frame scan" 
+                  <img
+                    src={report.annotatedImageUrl}
+                    alt="Annotated frame scan"
                     className="w-full max-w-lg rounded-lg border border-[#333]"
                   />
                 </div>
@@ -296,7 +430,8 @@ export const FrameScanReportDetail: React.FC<FrameScanReportDetailProps> = ({
             </MotionDiv>
           )}
 
-          {/* Axis Breakdown (always shown as reference) */}
+          {/* Axis Breakdown - Hidden when paywalled */}
+          {!isPaywalled && (
           <MotionDiv
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -341,16 +476,19 @@ export const FrameScanReportDetail: React.FC<FrameScanReportDetailProps> = ({
               </table>
             </div>
           </MotionDiv>
+          )}
         </>
       ) : (
         // =========================================================================
         // LEGACY FALLBACK RENDERING (for reports without uiReport)
         // =========================================================================
-        <LegacyReportView 
-          report={report} 
+        <LegacyReportView
+          report={report}
           contact={contact}
           contactName={contactName}
           onNavigateToContact={onNavigateToContact}
+          isPaywalled={isPaywalled}
+          onUpgrade={onUpgrade}
         />
       )}
 
@@ -374,6 +512,8 @@ interface LegacyReportViewProps {
   contact: ReturnType<typeof getContactById>;
   contactName: string;
   onNavigateToContact?: (contactId: string) => void;
+  isPaywalled?: boolean;
+  onUpgrade?: () => void;
 }
 
 const LegacyReportView: React.FC<LegacyReportViewProps> = ({
@@ -381,7 +521,13 @@ const LegacyReportView: React.FC<LegacyReportViewProps> = ({
   contact,
   contactName,
   onNavigateToContact,
+  isPaywalled = false,
+  onUpgrade,
 }) => {
+  // For multi-contact scans, get primary contact ID and check if multiple
+  const primaryContactId = report.subjectContactIds[0];
+  const hasMultipleContacts = report.subjectContactIds.length > 1;
+
   const scoreColorClass = getFrameScoreColorClass(report.score.frameScore);
   const scoreBgClass = getFrameScoreBgClass(report.score.frameScore);
   const scoreLabel = getFrameScoreLabel(report.score.frameScore);
@@ -418,19 +564,22 @@ const LegacyReportView: React.FC<LegacyReportViewProps> = ({
           <div>
             <div className="flex items-center gap-3 mb-2">
               {contact?.avatarUrl && (
-                <img 
-                  src={contact.avatarUrl} 
-                  alt="" 
+                <img
+                  src={contact.avatarUrl}
+                  alt=""
                   className="w-10 h-10 rounded-full cursor-pointer"
-                  onClick={() => onNavigateToContact?.(report.subjectContactId)}
+                  onClick={() => onNavigateToContact?.(primaryContactId)}
                 />
               )}
               <div>
-                <h1 
+                <h1
                   className="text-xl font-bold text-white cursor-pointer hover:text-[#4433FF] transition-colors"
-                  onClick={() => onNavigateToContact?.(report.subjectContactId)}
+                  onClick={() => onNavigateToContact?.(primaryContactId)}
                 >
                   {contactName}
+                  {hasMultipleContacts && (
+                    <span className="text-gray-400 text-base ml-2">+{report.subjectContactIds.length - 1}</span>
+                  )}
                 </h1>
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                   {report.modality === 'image' ? (
@@ -497,55 +646,111 @@ const LegacyReportView: React.FC<LegacyReportViewProps> = ({
         </MotionDiv>
       </div>
 
-      {/* Axis Breakdown */}
-      <MotionDiv
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
-        className="bg-[#0E0E0E] border border-[#222] rounded-lg p-4 mb-8"
-      >
-        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <Target size={18} className="text-[#4433FF]" />
-          Axis Breakdown
-        </h2>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-[#333]">
-                <th className="text-left py-2 px-3">Axis</th>
-                <th className="text-center py-2 px-3">Score</th>
-                <th className="text-center py-2 px-3">Band</th>
-                <th className="text-left py-2 px-3">Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.score.axisScores.map((axis) => (
-                <tr key={axis.axisId} className="border-b border-[#222] hover:bg-[#1A1A1A] transition-colors">
-                  <td className="py-3 px-3 text-sm text-white">
-                    {AXIS_LABELS[axis.axisId] || axis.axisId}
-                  </td>
-                  <td className="py-3 px-3 text-center">
-                    <span className={`font-mono font-bold ${
-                      axis.score > 0 ? 'text-green-400' : axis.score < 0 ? 'text-red-400' : 'text-yellow-400'
-                    }`}>
-                      {axis.score > 0 ? '+' : ''}{axis.score}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-center">
-                    <span className={`inline-block px-2 py-1 rounded text-xs border ${BAND_COLORS[axis.band]}`}>
-                      {BAND_LABELS[axis.band]}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-sm text-gray-400 max-w-xs">
-                    {axis.notes}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Paywalled content wrapper for Legacy view */}
+      {isPaywalled ? (
+        <div className="relative">
+          {/* Blurred content */}
+          <div className="blur-sm pointer-events-none select-none">
+            {/* Axis Breakdown */}
+            <div className="bg-[#0E0E0E] border border-[#222] rounded-lg p-4 mb-8">
+              <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <Target size={18} className="text-[#4433FF]" />
+                Axis Breakdown
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-[#333]">
+                      <th className="text-left py-2 px-3">Axis</th>
+                      <th className="text-center py-2 px-3">Score</th>
+                      <th className="text-center py-2 px-3">Band</th>
+                      <th className="text-left py-2 px-3">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(report.score?.axisScores ?? []).slice(0, 3).map((axis) => (
+                      <tr key={axis.axisId} className="border-b border-[#222]">
+                        <td className="py-3 px-3 text-sm text-white">{AXIS_LABELS[axis.axisId] || axis.axisId}</td>
+                        <td className="py-3 px-3 text-center text-gray-400">—</td>
+                        <td className="py-3 px-3 text-center text-gray-400">—</td>
+                        <td className="py-3 px-3 text-sm text-gray-400">...</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {/* Placeholder diagnostics */}
+            <div className="bg-[#0E0E0E] border border-[#222] rounded-lg p-4 mb-8">
+              <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <AlertTriangle size={18} className="text-orange-400" />
+                Diagnostics
+              </h2>
+              <div className="h-20 bg-[#1A1A1A] rounded animate-pulse" />
+            </div>
+            {/* Placeholder corrections */}
+            <div className="bg-[#0E0E0E] border border-[#222] rounded-lg p-4 mb-8">
+              <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <Lightbulb size={18} className="text-yellow-400" />
+                Corrections
+              </h2>
+              <div className="h-32 bg-[#1A1A1A] rounded animate-pulse" />
+            </div>
+          </div>
+          {/* Paywall Overlay */}
+          <PaywallOverlay onUpgrade={onUpgrade} />
         </div>
-      </MotionDiv>
+      ) : (
+        <>
+          {/* Axis Breakdown */}
+          <MotionDiv
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="bg-[#0E0E0E] border border-[#222] rounded-lg p-4 mb-8"
+          >
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Target size={18} className="text-[#4433FF]" />
+              Axis Breakdown
+            </h2>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-[#333]">
+                    <th className="text-left py-2 px-3">Axis</th>
+                    <th className="text-center py-2 px-3">Score</th>
+                    <th className="text-center py-2 px-3">Band</th>
+                    <th className="text-left py-2 px-3">Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {report.score.axisScores.map((axis) => (
+                    <tr key={axis.axisId} className="border-b border-[#222] hover:bg-[#1A1A1A] transition-colors">
+                      <td className="py-3 px-3 text-sm text-white">
+                        {AXIS_LABELS[axis.axisId] || axis.axisId}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className={`font-mono font-bold ${
+                          axis.score > 0 ? 'text-green-400' : axis.score < 0 ? 'text-red-400' : 'text-yellow-400'
+                        }`}>
+                          {axis.score > 0 ? '+' : ''}{axis.score}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className={`inline-block px-2 py-1 rounded text-xs border ${BAND_COLORS[axis.band]}`}>
+                          {BAND_LABELS[axis.band]}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-sm text-gray-400 max-w-xs">
+                        {axis.notes}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </MotionDiv>
 
       {/* Diagnostics */}
       {report.rawResult.diagnostics && (
@@ -667,6 +872,8 @@ const LegacyReportView: React.FC<LegacyReportViewProps> = ({
             ))}
           </div>
         </MotionDiv>
+      )}
+        </>
       )}
     </>
   );

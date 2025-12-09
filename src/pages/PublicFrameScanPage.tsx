@@ -19,12 +19,13 @@ import { CONTACT_ZERO } from '../services/contactStore';
  * Build a truncated preview of the UI report for public visitors
  */
 function buildPublicPreview(ui: FrameScanUIReport): FrameScanUIReport {
+  const sections = ui.sections ?? [];
   return {
     header: {
       ...ui.header,
-      badges: (ui.header.badges ?? []).slice(0, 2),
+      badges: (ui.header?.badges ?? []).slice(0, 2),
     },
-    sections: ui.sections.map(section => {
+    sections: sections.map(section => {
       if (section.id === 'corrections') {
         return {
           ...section,
@@ -238,7 +239,7 @@ export const PublicFrameScanPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {result.preview.header.badges.map((badge, idx) => (
+                {(result.preview.header?.badges ?? []).map((badge, idx) => (
                   <span key={idx} className="px-3 py-1 bg-[#4433FF]/20 text-[#4433FF] text-xs font-medium rounded-full">
                     {badge}
                   </span>
@@ -247,7 +248,7 @@ export const PublicFrameScanPage: React.FC = () => {
             </div>
 
             {/* Preview Sections */}
-            {result.preview.sections.map((section, idx) => (
+            {(result.preview.sections ?? []).map((section, idx) => (
               <div key={section.id || idx} className="bg-[#0E0E0E] rounded-xl border border-[#2A2A2A] p-6">
                 <h3 className="text-lg font-bold text-white mb-3">{section.title}</h3>
                 {section.mainParagraph && (
