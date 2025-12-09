@@ -6,6 +6,13 @@
 
 import { callOpenAIChat, type LlmMessage } from '../llm/openaiClient';
 import type { LittleLordContext } from '../../services/littleLord/types';
+import {
+  getViewSystemPromptAddition,
+  getCoachingHints,
+  canOfferWritingAssistance,
+  isCapabilityEnabled,
+} from '../../services/littleLord/viewBehavior';
+import { getApexSupremacyFilter, getSelectiveDoctrine } from '../../services/doctrineLoader';
 
 // =============================================================================
 // TYPES
@@ -169,9 +176,13 @@ function retrieveRelevantChunks(
 
 /**
  * Build the system prompt using spec.identity and spec.reasoning_rules.
+ * APEX_SUPREMACY_FILTER is ALWAYS prepended as the primary semantic layer.
  */
 function buildSystemPrompt(spec: LittleLordSpec, corpusChunks: string[]): string {
   const { identity, reasoning_rules, doctrine, safety } = spec;
+
+  // Get APEX_SUPREMACY_FILTER - this MUST be first
+  const apexFilter = getApexSupremacyFilter();
 
   // Build corpus context section
   const corpusContext = corpusChunks.length > 0
@@ -205,7 +216,12 @@ function buildSystemPrompt(spec: LittleLordSpec, corpusChunks: string[]): string
       ).join('\n')}`
     : '';
 
-  return `You are ${spec.name} v${spec.version}.
+  // Build the full system prompt with APEX_SUPREMACY_FILTER first
+  return `${apexFilter}
+
+=== END OF APEX SUPREMACY FILTER ===
+
+You are ${spec.name} v${spec.version}.
 
 ROLE: ${identity.role}
 TONE: ${identity.tone}
@@ -351,11 +367,29 @@ Only emit an event when the user's message clearly implies an operational action
  * Build the user message with context.
  */
 function buildUserMessage(message: string, context?: LittleLordContext): string {
+  // Build view-specific context
+  const viewId = context?.viewId;
+  let viewContextStr = '';
+
+  if (viewId) {
+    const viewSystemPrompt = getViewSystemPromptAddition(viewId);
+    const coachingHints = getCoachingHints(viewId);
+    const writingEnabled = canOfferWritingAssistance(viewId);
+    const coachingEnabled = isCapabilityEnabled(viewId, 'coachingFocus');
+
+    viewContextStr = `\n\nVIEW CONTEXT:
+- Current View: ${viewId}
+- Coaching Mode: ${coachingEnabled ? 'ENABLED - Focus on frame coaching' : 'DISABLED'}
+- Writing Assistant: ${writingEnabled ? 'ENABLED - Can offer to draft content' : 'DISABLED - Coaching only, no writing assistance'}
+${viewSystemPrompt ? `- View Guidance: ${viewSystemPrompt}` : ''}
+${coachingHints.length > 0 ? `- Coaching Focus Areas: ${coachingHints.join(', ')}` : ''}`;
+  }
+
   const contextStr = context
-    ? `\n\nCONTEXT:\n${JSON.stringify(context, null, 2)}`
+    ? `\n\nAPP CONTEXT:\n${JSON.stringify(context, null, 2)}`
     : '';
 
-  return `USER MESSAGE: ${message}${contextStr}`;
+  return `USER MESSAGE: ${message}${viewContextStr}${contextStr}`;
 }
 
 // =============================================================================

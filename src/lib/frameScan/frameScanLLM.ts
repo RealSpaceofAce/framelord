@@ -17,14 +17,17 @@
 // - TODO: Mirror with server-side user-level limits in production
 // =============================================================================
 
-import { FrameScanResult, FrameScore, FrameAxisId, FRAME_AXIS_IDS, FrameDomainId, FrameImageScanResult } from "./frameTypes";
+import { FrameScanResult, FrameScore, FrameAxisId, FRAME_AXIS_IDS, FrameDomainId, FrameImageScanResult, FrameScanContext } from "./frameTypes";
 import { frameScanSpec } from "./frameSpec";
 import { scoreFrameScan } from "./frameScoring";
 import { callOpenAIChat, LlmMessage } from "../llm/openaiClient";
 import { callNanoBananaAnnotateImage } from "../llm/nanobananaClient";
 import { enforceThrottle, incrementScanCount, getThrottleConfig } from "./frameThrottle";
-import { addFrameScanReport, type FrameScanSubjectType } from "../../services/frameScanReportStore";
+import { addFrameScanReport, type FrameScanSubjectType, getLatestReportForContact } from "../../services/frameScanReportStore";
 import { buildFrameScanUIReportSafe, type FrameScanUIReport } from "./frameReportUI";
+import { getContactById, updateContact } from "../../services/contactStore";
+import type { ContactFrameMetrics } from "../../types";
+import { getApexSupremacyFilter, getSelectiveDoctrine } from "../../services/doctrineLoader";
 
 // Default contact ID for self-scans
 const CONTACT_ZERO_ID = "contact_zero";
@@ -41,6 +44,54 @@ const DOMAIN_LABELS: Record<string, string> = {
   landing_page_hero: "Landing page hero scan",
   social_post_image: "Social post image scan",
 };
+
+// =============================================================================
+// CONTACT FRAME METRICS SYNC
+// =============================================================================
+
+/**
+ * Syncs Contact.frame metrics after a FrameScan completes.
+ * Updates currentScore, trend, and lastScanAt for all subject contacts.
+ *
+ * @param contactIds - Array of contact IDs to update
+ * @param newScore - The new frame score (0-100)
+ */
+function syncContactFrameMetrics(contactIds: string[], newScore: number): void {
+  const timestamp = new Date().toISOString();
+
+  for (const contactId of contactIds) {
+    const contact = getContactById(contactId);
+    if (!contact) continue;
+
+    // Get previous score to calculate trend
+    const previousScore = contact.frame.currentScore;
+    const previousScanAt = contact.frame.lastScanAt;
+
+    // Calculate trend (only if there was a previous scan)
+    let trend: ContactFrameMetrics['trend'] = 'flat';
+    if (previousScanAt) {
+      const scoreDiff = newScore - previousScore;
+      // Use a threshold of 3 points to determine significant change
+      if (scoreDiff >= 3) {
+        trend = 'up';
+      } else if (scoreDiff <= -3) {
+        trend = 'down';
+      }
+    }
+
+    // Update contact's frame metrics
+    const updatedContact = {
+      ...contact,
+      frame: {
+        currentScore: newScore,
+        trend,
+        lastScanAt: timestamp,
+      },
+    };
+
+    updateContact(updatedContact);
+  }
+}
 
 // =============================================================================
 // REQUEST PAYLOAD TYPES
@@ -60,9 +111,13 @@ export interface TextFrameScanInput {
   domain: TextDomainId;
   /** The raw text content to analyze */
   content: string;
-  /** Optional metadata like contact or project info */
+  /** @deprecated Legacy metadata field - use scanContext instead */
   context?: Record<string, unknown>;
-  /** Optional contact ID for attribution (defaults to "contact_zero") */
+  /** Optional scan context (what, who, userConcern) */
+  scanContext?: FrameScanContext;
+  /** Optional contact IDs for multi-contact attribution (defaults to ["contact_zero"]) */
+  contactIds?: string[];
+  /** @deprecated Use contactIds instead. Optional contact ID for attribution. */
   contactId?: string;
   /** Optional source reference (e.g., note ID, message ID) */
   sourceRef?: string;
@@ -80,9 +135,13 @@ export interface ImageFrameScanInput {
   imageIdOrUrl: string;
   /** Optional user-supplied description or context about the image */
   description?: string;
-  /** Optional metadata like contact or project info */
+  /** @deprecated Legacy metadata field - use scanContext instead */
   context?: Record<string, unknown>;
-  /** Optional contact ID for attribution (defaults to "contact_zero") */
+  /** Optional scan context (what, who, userConcern) */
+  scanContext?: FrameScanContext;
+  /** Optional contact IDs for multi-contact attribution (defaults to ["contact_zero"]) */
+  contactIds?: string[];
+  /** @deprecated Use contactIds instead. Optional contact ID for attribution. */
   contactId?: string;
   /** Optional source reference (e.g., image URL, asset ID) */
   sourceRef?: string;
@@ -101,10 +160,21 @@ export interface FrameScanRequestPayload {
 }
 
 // =============================================================================
-// SYSTEM PROMPT
+// SYSTEM PROMPT BUILDER
 // =============================================================================
 
-const FRAMESCAN_SYSTEM_PROMPT = `You are the FrameLord FrameScan engine.
+/**
+ * Build the FrameScan system prompt with doctrine injection.
+ * APEX_SUPREMACY_FILTER is ALWAYS prepended as the primary semantic layer.
+ */
+function buildFrameScanSystemPrompt(): string {
+  const apexFilter = getApexSupremacyFilter();
+
+  return `${apexFilter}
+
+=== END OF APEX SUPREMACY FILTER ===
+
+You are the FrameLord FrameScan engine.
 
 You NEVER compute the final 0–100 score. The app already does that.
 Your only job is to output a valid FrameScanResult JSON object.
@@ -266,6 +336,17 @@ Output must be valid JSON with double quotes.
 All scores must be integers.
 
 Do not include comments or explanation outside the JSON.`;
+}
+
+// Cache the system prompt (doctrine doesn't change at runtime)
+let cachedSystemPrompt: string | null = null;
+
+function getFrameScanSystemPrompt(): string {
+  if (!cachedSystemPrompt) {
+    cachedSystemPrompt = buildFrameScanSystemPrompt();
+  }
+  return cachedSystemPrompt;
+}
 
 // =============================================================================
 // VALIDATION
@@ -436,7 +517,7 @@ export async function runTextFrameScan(input: TextFrameScanInput): Promise<Frame
   };
 
   const messages: LlmMessage[] = [
-    { role: "system", content: FRAMESCAN_SYSTEM_PROMPT },
+    { role: "system", content: getFrameScanSystemPrompt() },
     { role: "user", content: JSON.stringify(payload) },
   ];
 
@@ -464,19 +545,29 @@ export async function runTextFrameScan(input: TextFrameScanInput): Promise<Frame
   });
 
   // Save report to store (side effect)
-  const subjectContactId = input.contactId || CONTACT_ZERO_ID;
-  const subjectType: FrameScanSubjectType = subjectContactId === CONTACT_ZERO_ID ? "self" : "contact";
-  
+  // Support new contactIds array while maintaining backwards compatibility with contactId
+  const subjectContactIds = input.contactIds?.length
+    ? input.contactIds
+    : [input.contactId || CONTACT_ZERO_ID];
+  const subjectType: FrameScanSubjectType =
+    subjectContactIds.length === 1 && subjectContactIds[0] === CONTACT_ZERO_ID
+      ? "self"
+      : "contact";
+
   addFrameScanReport({
     subjectType,
-    subjectContactId,
+    subjectContactIds,
     modality: "text",
     domain: input.domain,
+    context: input.scanContext,
     sourceRef: input.sourceRef,
     rawResult: result,
     score,
     uiReport,
   });
+
+  // Auto-sync Contact.frame metrics after scan
+  syncContactFrameMetrics(subjectContactIds, score.frameScore);
 
   return score;
 }
@@ -530,7 +621,7 @@ export async function runImageFrameScan(input: ImageFrameScanInput): Promise<Fra
   };
 
   const messages: LlmMessage[] = [
-    { role: "system", content: FRAMESCAN_SYSTEM_PROMPT },
+    { role: "system", content: getFrameScanSystemPrompt() },
     { role: "user", content: JSON.stringify(payload) },
   ];
 
@@ -560,14 +651,21 @@ export async function runImageFrameScan(input: ImageFrameScanInput): Promise<Fra
   });
 
   // Save report to store (side effect)
-  const subjectContactId = input.contactId || CONTACT_ZERO_ID;
-  const subjectType: FrameScanSubjectType = subjectContactId === CONTACT_ZERO_ID ? "self" : "contact";
-  
+  // Support new contactIds array while maintaining backwards compatibility with contactId
+  const subjectContactIds = input.contactIds?.length
+    ? input.contactIds
+    : [input.contactId || CONTACT_ZERO_ID];
+  const subjectType: FrameScanSubjectType =
+    subjectContactIds.length === 1 && subjectContactIds[0] === CONTACT_ZERO_ID
+      ? "self"
+      : "contact";
+
   addFrameScanReport({
     subjectType,
-    subjectContactId,
+    subjectContactIds,
     modality: "image",
     domain: input.domain,
+    context: input.scanContext,
     sourceRef: input.sourceRef || input.imageIdOrUrl,
     rawResult: result,
     score,
@@ -575,6 +673,9 @@ export async function runImageFrameScan(input: ImageFrameScanInput): Promise<Fra
     annotatedImageUrl: nbResult.annotatedImageUrl,
     uiReport,
   });
+
+  // Auto-sync Contact.frame metrics after scan
+  syncContactFrameMetrics(subjectContactIds, score.frameScore);
 
   return {
     score,
@@ -605,7 +706,7 @@ export async function callLLMForFrameScanResult(
   const payload = { frameScanSpec, request };
 
   const raw = await client.chat({
-    systemPrompt: FRAMESCAN_SYSTEM_PROMPT,
+    systemPrompt: getFrameScanSystemPrompt(),
     userPayload: payload,
   });
 
