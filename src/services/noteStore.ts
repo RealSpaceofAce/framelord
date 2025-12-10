@@ -442,7 +442,7 @@ export const createNote = (params: {
     isInbox: params.isInbox ?? false,
     topics: [],
     tags: params.tags || [],
-    mentions: [], // CRM: Contact IDs mentioned in this note
+    mentions: params.mentionedContactIds ? [...params.mentionedContactIds] : [], // CRM: Contact IDs mentioned in this note
 
     // Display preferences
     preferredView: params.preferredView || 'doc',
@@ -525,6 +525,10 @@ export const updateNote = (
     mentionedContactIds: updates.mentionedContactIds !== undefined
       ? [...updates.mentionedContactIds]
       : currentNote.mentionedContactIds,
+    // Also update mentions field when mentionedContactIds changes
+    mentions: updates.mentionedContactIds !== undefined
+      ? [...updates.mentionedContactIds]
+      : currentNote.mentions,
     // Update sync tracking
     sync_version: (currentNote.sync_version || 0) + 1,
     updatedAt: new Date().toISOString(),
@@ -1594,4 +1598,86 @@ export const setNoteTopics = (noteId: string, topicIds: string[]): void => {
   note.topics = newTopics;
   note.updatedAt = new Date().toISOString();
   note.sync_version = (note.sync_version || 0) + 1;
+};
+
+// =============================================================================
+// FRAMESCAN INTEGRATION
+// =============================================================================
+
+/**
+ * Create a note from a FrameScan report's mini report markdown.
+ * Preserves wikilinks for graph integration.
+ *
+ * @param frameScanReportId - ID of the FrameScan report
+ * @returns The created note
+ * @throws Error if report not found or miniReportMarkdown is empty
+ *
+ * Behavior:
+ * 1. Looks up FrameScan report by ID
+ * 2. Validates miniReportMarkdown is not empty (fails fast if empty)
+ * 3. Determines target contact (uses report's contactId or Contact Zero if missing)
+ * 4. Creates note with:
+ *    - title: FrameScan title or fallback
+ *    - content: miniReportMarkdown (wikilinks preserved)
+ *    - authorContactId: ALWAYS Contact Zero
+ *    - targetContactId: Report's contactId or Contact Zero
+ *    - kind: 'note'
+ *    - folderId: 'inbox'
+ *    - tags: ['framescan', domain] or just ['framescan']
+ * 5. Returns the created note
+ */
+export const createNoteFromFrameScan = (frameScanReportId: string): Note => {
+  // Lazy import to avoid circular dependency
+  // (frameScanReportStore might import noteStore in the future)
+  const { getReportById } = require('./frameScanReportStore');
+
+  const report = getReportById(frameScanReportId);
+
+  if (!report) {
+    throw new Error(`FrameScan report not found: ${frameScanReportId}`);
+  }
+
+  // Validate miniReportMarkdown exists (fail fast if not ready)
+  if (!report.miniReportMarkdown || report.miniReportMarkdown.trim().length === 0) {
+    throw new Error('FrameScan report not ready yet - miniReportMarkdown is empty');
+  }
+
+  // Determine target contact
+  // Use first subject contact, or Contact Zero if none specified
+  const targetContactId = report.subjectContactIds?.[0] || CONTACT_ZERO.id;
+
+  // Get contact name for fallback title
+  let contactName = 'Unknown';
+  if (targetContactId === CONTACT_ZERO.id) {
+    contactName = 'Self';
+  } else {
+    const contact = getContactById(targetContactId);
+    contactName = contact?.fullName || 'Unknown Contact';
+  }
+
+  // Build title (use FrameScan title, or fallback to descriptive format)
+  const title = report.title && report.title !== 'Untitled FrameScan'
+    ? report.title
+    : `FrameScan • ${contactName} • ${new Date(report.createdAt).toLocaleDateString()}`;
+
+  // Build tags array (always include 'framescan', add domain if present)
+  const tags: string[] = ['framescan'];
+  if (report.domain) {
+    tags.push(report.domain);
+  }
+
+  // Create the note using existing store API
+  const note = createNote({
+    title,
+    content: report.miniReportMarkdown, // Wikilinks preserved as-is
+    kind: 'note',
+    folderId: 'inbox',
+    isInbox: false,
+    preferredView: 'doc',
+    targetContactIds: [targetContactId],
+    tags,
+    // Note: authorContactId is ALWAYS CONTACT_ZERO.id by default in createNote
+  });
+
+  return note;
 };

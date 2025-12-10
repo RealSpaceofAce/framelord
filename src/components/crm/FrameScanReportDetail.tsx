@@ -5,12 +5,12 @@
 // to legacy rendering for older reports without uiReport.
 // =============================================================================
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, Target, TrendingUp, TrendingDown, Minus,
   AlertTriangle, CheckCircle, Lightbulb, User, Calendar,
-  FileText, Image as ImageIcon, ExternalLink, Star, Zap, Lock, Sparkles
+  FileText, Image as ImageIcon, ExternalLink, Star, Zap, Lock, Sparkles, FileDown, BookOpen
 } from 'lucide-react';
 import { getReportById, type FrameScanReport } from '../../services/frameScanReportStore';
 import { getContactById, CONTACT_ZERO } from '../../services/contactStore';
@@ -22,6 +22,8 @@ import {
 } from '../../lib/frameScan/frameProfile';
 import type { FrameAxisScore, FrameBand, FrameWinWinState } from '../../lib/frameScan/frameTypes';
 import type { FrameScanUIReport, FrameScanUISection, FrameScanUICorrection } from '../../lib/frameScan/frameReportUI';
+import { MarkdownRenderer } from './MarkdownRenderer';
+import { createNoteFromFrameScan } from '../../services/noteStore';
 
 const MotionDiv = motion.div as any;
 
@@ -33,6 +35,8 @@ interface FrameScanReportDetailProps {
   reportId: string;
   onBack?: () => void;
   onNavigateToContact?: (contactId: string) => void;
+  /** Optional callback to navigate to a note by ID */
+  onNavigateToNote?: (noteId: string) => void;
   /** Optional: pass a demo report directly instead of fetching from store */
   demoReport?: FrameScanReport;
   /** Whether to show the report in paywalled mode (blur second half with upgrade CTA) */
@@ -148,12 +152,44 @@ export const FrameScanReportDetail: React.FC<FrameScanReportDetailProps> = ({
   reportId,
   onBack,
   onNavigateToContact,
+  onNavigateToNote,
   demoReport,
   isPaywalled = false,
   onUpgrade,
 }) => {
   // Use demo report if provided, otherwise fetch from store
   const report = demoReport || getReportById(reportId);
+
+  // State for Add to Notes functionality
+  const [isCreatingNote, setIsCreatingNote] = useState(false);
+  const [noteCreatedMessage, setNoteCreatedMessage] = useState<string | null>(null);
+
+  // Handler for Add to Notes button
+  const handleAddToNotes = () => {
+    if (!report.miniReportMarkdown || report.miniReportMarkdown.trim().length === 0) {
+      return; // Button should be disabled anyway
+    }
+
+    setIsCreatingNote(true);
+    setNoteCreatedMessage(null);
+
+    try {
+      const note = createNoteFromFrameScan(report.id);
+      setNoteCreatedMessage(`Note created: ${note.title}`);
+
+      // Navigate to note after a short delay
+      if (onNavigateToNote) {
+        setTimeout(() => {
+          onNavigateToNote(note.id);
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('[FrameScanReportDetail] Failed to create note:', error);
+      setNoteCreatedMessage('Failed to create note. Please try again.');
+    } finally {
+      setIsCreatingNote(false);
+    }
+  };
 
   if (!report) {
     return (
@@ -430,6 +466,79 @@ export const FrameScanReportDetail: React.FC<FrameScanReportDetailProps> = ({
             </MotionDiv>
           )}
 
+          {/* Mini Report Section - Hidden when paywalled */}
+          {!isPaywalled && report.miniReportMarkdown && report.miniReportMarkdown.trim().length > 0 && (
+          <MotionDiv
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-[#0E0E0E] border border-[#222] rounded-lg p-4 mb-4"
+          >
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <BookOpen size={18} className="text-[#4433FF]" />
+              Analysis Report
+            </h2>
+
+            {/* Markdown content */}
+            <div className="mb-4 text-gray-300">
+              <MarkdownRenderer content={report.miniReportMarkdown} />
+            </div>
+
+            {/* Add to Notes button */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleAddToNotes}
+                disabled={isCreatingNote}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                  isCreatingNote
+                    ? 'bg-[#4433FF]/50 text-white/50 cursor-not-allowed'
+                    : 'bg-[#4433FF] hover:bg-[#5544FF] text-white'
+                }`}
+              >
+                <FileDown size={16} />
+                {isCreatingNote ? 'Creating...' : 'Add to Notes'}
+              </button>
+
+              {noteCreatedMessage && (
+                <span className={`text-sm ${
+                  noteCreatedMessage.includes('Failed') ? 'text-red-400' : 'text-green-400'
+                }`}>
+                  {noteCreatedMessage}
+                </span>
+              )}
+            </div>
+          </MotionDiv>
+          )}
+
+          {/* Not Ready State - Show when miniReportMarkdown is empty */}
+          {!isPaywalled && (!report.miniReportMarkdown || report.miniReportMarkdown.trim().length === 0) && (
+          <MotionDiv
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-[#0E0E0E] border border-[#222] rounded-lg p-4 mb-4"
+          >
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <BookOpen size={18} className="text-[#4433FF]" />
+              Analysis Report
+            </h2>
+
+            <div className="flex items-center gap-3 text-gray-400">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+              <span>Analysis in progress... The report will appear here once complete.</span>
+            </div>
+
+            <button
+              disabled
+              className="mt-4 px-4 py-2 rounded-lg font-medium bg-[#333]/50 text-gray-500 cursor-not-allowed flex items-center gap-2"
+              title="Wait for analysis to finish before saving to Notes"
+            >
+              <FileDown size={16} />
+              Add to Notes
+            </button>
+          </MotionDiv>
+          )}
+
           {/* Axis Breakdown - Hidden when paywalled */}
           {!isPaywalled && (
           <MotionDiv
@@ -442,7 +551,7 @@ export const FrameScanReportDetail: React.FC<FrameScanReportDetailProps> = ({
               <Target size={18} className="text-gray-400" />
               Detailed Axis Breakdown
             </h2>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
