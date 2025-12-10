@@ -1,0 +1,422 @@
+﻿Operational Doctrine: Linguistic Persuasion Patterns and Syntactic Recognition for FrameScan AI Architecture
+1. Architectural Overview and Theoretical Foundation
+The objective of this doctrine is to establish a comprehensive, operational framework for the FrameScan AI architecture, specifically designed to identify, categorize, and quantify linguistic persuasion patterns within textual data. This system bridges two distinct but converging fields: Natural Language Processing (Computational NLP)—the algorithmic analysis of human language—and Neuro-Linguistic Programming (Persuasion NLP)—the study of subjective experience and the strategic use of language to influence cognitive states.1
+The fundamental premise of FrameScan is that persuasive communication, whether therapeutic, hypnotic, or manipulative, possesses a distinct syntactic signature that deviates from standard informational discourse. Informational language typically prioritizes clarity, utilizing specific referential indices and unambiguous verb structures to maximize entropy and signal transmission. In contrast, persuasive language—derived largely from the modeling of hypnotherapists like Milton Erickson and family therapists like Virginia Satir—utilizes "artful vagueness," recursive embedding, and presuppositional logic to bypass the critical faculty of the listener.1
+FrameLord’s operational capacity relies on the system's ability to parse these deviations not merely as grammatical anomalies, but as functional operators that act upon the recipient’s belief system. By mapping the qualitative models of Persuasion NLP (the Milton Model, the Meta Model, and Sleight of Mouth) to the quantitative structures of dependency grammar (Head-Dependent relationships, Part-of-Speech tagging, and Semantic Role Labeling), FrameScan transforms subjective influence into objective data.3 This report details the syntactic morphology of these patterns, providing the necessary linguistic logic for the development of detection algorithms and JSON data schemas.5
+1.1 The Convergence of Surface and Deep Structure
+The theoretical underpinning of FrameScan rests on the distinction between Surface Structure and Deep Structure, a concept adapted from transformational grammar. The Deep Structure contains the full semantic representation of an experience, while the Surface Structure is the linguistically compressed version communicated through speech or text.7
+Persuasion occurs in the gap between these two layers.
+1. The Milton Model purposely distorts the Surface Structure to be vague, forcing the listener to perform a "trans-derivational search" to retrieve meaning from their own Deep Structure, thereby generating internal compliance.2
+2. The Meta Model identifies specific deletions, distortions, and generalizations in the Surface Structure that limit a subject's model of the world, providing a roadmap for information recovery or challenge.10
+For FrameScan, the operational mandate is to detect the specific syntactic transformations—such as the deletion of an agent in a passive construction or the nominalization of a process verb—that facilitate these shifts in psychological state.12
+________________
+2. Presuppositional Logic: The Syntax of Unspoken Truth
+Presuppositions represent the most potent class of linguistic persuasion because they structure the "truth conditions" of a sentence in a way that bypasses conscious negation. A presupposition is a linguistic artifact that must be accepted as true for the sentence to make sense, regardless of whether the sentence is affirmed, denied, or questioned.14
+In computational terms, presuppositions act as "backgrounded entailments." Unlike assertions, which are the main point of a clause and are vulnerable to negation, presuppositions project through negation. For example, in the sentence "The user stopped ignoring the alerts," the assertion is that the ignoring has ceased, but the presupposition—that the user was previously ignoring alerts—remains true even in the negative form: "The user did not stop ignoring the alerts".14 FrameScan must detect these triggers to understand the axiom set being imposed by the text.
+2.1 Taxonomy of Presupposition Triggers and Detection Logic
+To automate detection, we categorize presuppositions by their syntactic headers—the specific lexical items or grammatical constructions that trigger the background assumption.
+2.1.1 Factive Verbs and State Modifiers
+Factive verbs are predicates that presuppose the truth of their complement clause. Syntactically, these involve a main verb taking a clausal complement (ccomp) where the truth value of the dependent clause is assumed.14
+* Operational Definition: Verbs dealing with knowledge, realization, or emotional reaction to facts.
+* Lexicon: Realize, know, regret, be aware, discover, odd that, glad that, proud that.
+* Syntactic Signature:
+   * Head: Factive Verb (e.g., "realize").
+   * Relation: ccomp (clausal complement) or dobj (direct object noun phrase).
+   * Logic: If $Head \in \{Factive\}$ AND $Relation(Head, Dependent) == ccomp$, THEN $Truth(Dependent) = True$.
+Detection Scenario:
+Consider the text: "Do you realize that your compliance is inevitable?"
+The assertion questions the listener's state of realization. The presupposition, buried in the ccomp, is "your compliance is inevitable." FrameScan identifies "realize" as a Factive Trigger and extracts the subordinate clause as a fixed data point.14
+Trigger Category
+	Example Verbs
+	Presupposed Content
+	Dependency Relation
+	Epistemic Factive
+	Know, Realize, Discover
+	The content of the clause is a fact.
+	ccomp
+	Emotive Factive
+	Regret, Glad, Odd
+	The event causing the emotion occurred.
+	ccomp, xcomp
+	Sensory Factive
+	See, Hear, Notice
+	The perceived event is real.
+	ccomp, dobj
+	2.1.2 Change of State Verbs
+These verbs presuppose a specific prior state that differs from the current or future state described by the verb. They are critical for establishing a narrative of transition or forced evolution.14
+* Lexicon: Stop, start, continue, resume, quit, begin, finish, cease, give up.
+* Syntactic Signature:
+   * Head: Change-of-State Verb.
+   * Dependent: xcomp (open clausal complement) or dobj (Gerund).
+* Logic:
+   * Stop X: Presupposes $Subject$ did $X$ in $Time_{past}$.
+   * Start X: Presupposes $Subject$ did not do $X$ in $Time_{past}$.
+   * Continue X: Presupposes $Subject$ did $X$ in $Time_{past}$.
+Detection Scenario:
+Text: "Have you stopped hesitating?"
+The verb "stopped" targets the gerund "hesitating." FrameScan parses the xcomp relationship and logs the presupposition: Subject was hesitating. This pattern is frequently used in "loaded questions" to entrap the respondent.17
+2.1.3 Iteratives and Temporal Repetition
+Iterative markers presuppose that an event is not unique but is part of a recurring sequence. This establishes a history or pattern, even if one does not exist.14
+* Lexicon: Again, anymore, return, restore, repeat, back, another time.
+* Syntactic Signature:
+   * Head: Verb.
+   * Dependent: Adverb (advmod) matching the Iterative List OR Particle (compound:prt) like "back."
+* Example: "When will you demonstrate excellence again?"
+   * The adverb "again" modifies "demonstrate."
+   * Presupposition: The subject has demonstrated excellence in the past.
+2.1.4 Cleft and Pseudo-Cleft Structures
+Cleft sentences are syntactic operations that split a single clause into two parts to shift focus. This structure inevitably presupposes the information in the relative clause while focusing attention on the clefted element.14
+* It-Cleft Structure: It was X that Y.
+   * Syntax: cop (is/was) + nsubj (dummy 'it') + focus (X) + acl:relcl (relative clause Y).
+   * Presupposition: Someone/Something did Y.
+   * Example: "It is your potential that frightens you." (Presupposes: Something frightens you).
+* Pseudo-Cleft Structure: What X did was Y.
+   * Syntax: Nominal relative clause as nsubj.
+   * Example: "What you need to do is relax." (Presupposes: You need to do something).
+2.1.5 Adverbial Clauses of Time
+Temporal subordinate clauses presuppose the truth of the events they describe because they function as the background context (Reference Time) for the main clause.14
+* Triggers: Before, after, during, while, since, as soon as, when.
+* Syntactic Signature:
+   * Head: Preposition/Subordinating Conjunction (mark).
+   * Structure: [ mark + Clause A ] $\rightarrow$ modifies Main Clause B.
+* Example: "While you consider the benefits, you can sign here."
+   * The clause "you consider the benefits" is shielded from negation. The listener accepts they are considering benefits as a precondition for processing the main command (sign here).20
+2.2 The Projection Problem and Accommodation
+In linguistic theory, the "projection problem" refers to the behavior of presuppositions when embedded in complex sentences. For FrameScan to accurately rate the "truth density" of a text, it must distinguish between presuppositions that "project" (survive) and those that are blocked.15
+FrameScan Filtering Rules:
+1. Holes: Operators that allow presuppositions to pass through.
+   * Examples: Negation (not), Modals (might, possible), Interrogatives.
+   * Action: FrameScan propagates the presupposition to the global context.
+2. Plugs: Verbs of saying or belief that block the presupposition from becoming a global truth (shifting it to a subjective truth of the agent).
+   * Examples: Say, claim, allege, believe.
+   * Action: FrameScan attributes the presupposition to the nsubj of the plug verb, not the Global Fact base.
+3. Filters: Connectives where the presupposition might be canceled if entailed by the antecedent.
+   * Example: If/Then structures. "If I have a wife, my wife is happy." (The presupposition "I have a wife" is canceled/filtered).
+Accommodation Mechanism:
+When a presupposition is encountered that is not in the listener's "Common Ground," the listener often performs "Accommodation"—they update their mental model to include the presupposition to make sense of the utterance.16 FrameScan detects Novel Presuppositions (those introducing new information via background channels) as high-probability persuasion attempts.
+________________
+3. The Milton Model: Syntactic Ambiguity and Trance Architectures
+The Milton Model, formulated by Bandler and Grinder based on the work of Milton Erickson, acts as the inverse of the Meta Model. While the Meta Model seeks to clarify language, the Milton Model deliberately utilizes "artfully vague" syntax to induce trance. Trance, in this context, is defined as a state of internal focus where the critical faculty is bypassed.2
+Operationalizing the Milton Model involves detecting high-entropy syntax—structures that allow for multiple interpretations or require the user to access internal resources to generate meaning.1
+3.1 Comparative Deletions and Quantitative Vagueness
+Comparative deletions are sentences containing a comparative adjective or adverb where the referent (the standard of comparison) is omitted. This forces the listener to supply their own referent, often one that creates a favorable internal representation.10
+* Lexicon: Better, easier, more, less, worse, harder, stronger.
+* Syntactic Signature:
+   * POS Tag: JJR (Adjective, comparative) or RBR (Adverb, comparative).
+   * Dependency Check: Absence of a prep_than clause or a comparative argument.
+* Example: "You will find this approach more effective."
+   * Analysis: More effective than what? The user supplies "than my current failing approach."
+   * FrameScan Logic: If JJR exists without prep_than child $\rightarrow$ FLAG: Comparative_Deletion.
+Associated with this are Vague Quantifiers, which lack specific numerical grounding (e.g., many, few, some). These allow the speaker to imply consensus or scale without evidence.23 FrameScan utilizes Vision-Language Model (VLM) research logic to tag these as "Unquantified-Scalar" elements.25
+3.2 Unspecified Referential Index
+This pattern involves the use of nouns or pronouns that do not refer to a specific, identifiable entity in the real world. This ambiguity allows the listener to project their own specific grievances or desires onto the general term.10
+* Lexicon: People, they, one, things, it, everyone, the situation.
+* Syntactic Signature:
+   * Head: nsubj or dobj.
+   * Condition: The noun is semantically generic (WordNet hypernym check: 'person', 'artifact', 'group') AND lacks a definite determiner or specific named entity antecedent.
+* Example: "People often learn quickly."
+   * Analysis: Which people? The listener assumes "I am people, so I can learn quickly."
+3.3 Unspecified Verbs (Process Deletion)
+Unspecified verbs describe an action or process without defining the specific manner, intensity, or duration. This is a form of "Process Deletion," forcing the listener to simulate the action using their own preferred method.28
+* Lexicon: Change, learn, grow, experience, process, understand, think, wonder, know, solve.
+* Syntactic Signature:
+   * Head: Verb (Transitive or Intransitive).
+   * Missing Dependents: Lack of advmod (manner), prep_with (instrument), or prep_by (agent).
+* Example: "You can change."
+   * Analysis: Change what? How? Into what? The ambiguity is the mechanism of persuasion.
+3.4 Embedded Commands and Analogical Marking
+Embedded commands are imperative sentences nested within a declarative "carrier phrase." They allow a directive to bypass resistance because the conscious mind analyzes the carrier phrase while the unconscious processes the command.9
+* Syntactic Structure:
+   * Carrier Phrase: I wonder if you will..., You might want to..., I don't know if..., People can...
+   * Embedded Imperative: A verb phrase that, if isolated, functions as a valid command.
+   * Dependency Relation: Typically found in ccomp (clausal complement), xcomp, or advcl.
+* Detection Heuristic:
+   * Identify "Softener" phrases (I wonder, maybe).
+   * Identify the subordinate verb phrase.
+   * Check if the subordinate verb is dynamic (action-oriented) and semantically directed at the listener (Second Person).
+   * Analogical Marking: In text, look for shifts in formatting (bold, italics, capitalization) or punctuation pauses (...) that isolate the command.31
+Table 2: Embedded Command Analysis
+Carrier Phrase
+	Embedded Command
+	Syntactic Relation
+	"I wonder if you will..."
+	sign the contract.
+	ccomp
+	"You might want to..."
+	relax deeply.
+	xcomp
+	"There is no need to..."
+	agree immediately.
+	acl (adjectival clause)
+	3.5 Tag Questions and Pacing
+Tag questions are syntactic appendages that transform a statement into a question, inviting agreement and weakening resistance.35 They are often used to confirm a "Yes Set" (a series of verifiable statements) before a leading suggestion.
+* Syntactic Signature:
+   * Declarative Main Clause + Comma + Auxiliary Verb (often negated) + Pronoun + Question Mark.
+   * Example: "You are listening, aren't you?"
+   * FrameScan Detection: Look for parataxis or discourse relations at the end of a sentence involving an auxiliary matching the root verb.
+________________
+4. The Meta Model: Deletion, Distortion, and Generalization
+Originally developed by Bandler and Grinder as a therapeutic tool to recover information from a client's impoverished model of the world, the Meta Model in a persuasion context is used to create these impoverishments. FrameScan uses the Meta Model categories to detect when a text is manipulating reality by removing or distorting information.10
+4.1 Nominalizations (Frozen Actions)
+Nominalizations are arguably the most significant pattern in bureaucratic and political persuasion. A nominalization occurs when a process (verb) is turned into a static thing (noun). This deletes the time index and the agent, making the concept appear objective, static, and unchangeable.12
+* Morphology: Verbs transformed via suffixes -tion, -ment, -ance, -ing, -ity, -ism, -al.
+* Deep Structure Loss: Relation(Agent, Patient, Time) $\rightarrow$ Concept.
+* Example: "The decision was made."
+   * Surface Structure: Noun Phrase (Decision).
+   * Deep Structure: decided at. The agent is deleted.
+* Persuasive Effect: It prevents the listener from questioning who is responsible or how the action occurred. It creates "Zombie Nouns" that possess agency without humanity.13
+FrameScan Detection Algorithm:
+1. Tokenize text and identify Nouns (NN, NNS).
+2. Cross-reference lemma against a Deverbal Noun Dictionary (nouns derived from verbs).
+3. Check Semantic Role: Is the nominalization the Subject (nsubj) of a sentence?
+4. Metric: Calculate "Nominalization Density." High density correlates with hypnotic or bureaucratic obfuscation.38
+4.2 Mind Reading
+Mind Reading occurs when a speaker claims to know the internal state, thoughts, or intentions of another person without specifying the sensory evidence for that claim.8
+* Syntactic Signature:
+   * Subject: Speaker (I, We).
+   * Verb: Epistemic or Perception (know, see, feel, understand, bet).
+   * Object: A clause describing the User's internal state.
+* Example: "I know you are worried about the cost."
+   * Analysis: How do you know? This assertion imposes a state on the listener.
+* FrameScan Flag: claim_of_epistemic_access.
+4.3 Cause-Effect (C>E) Distortion
+This distortion implies a causal link between two events where no mechanical link exists. It is the linguistic basis for creating beliefs (A causes B).8
+* Types:
+   1. Explicit Causatives: Make, force, cause, require, push, pull.
+      * "You make me angry." (Attributing internal state to external agent).
+   2. Implicit Causatives (Conjunctions): And, as, while, since, because.
+      * "As you sit there, you will feel more confident." (Temporal connector as implies that sitting causes confidence).
+* Syntactic Structure:
+   * [Clause A] + [Causal Connector] +.
+   * FrameScan checks for mark (subordinating conjunctions) linking a Pacing Statement (Clause A) to a Leading Statement (Clause B).
+4.4 Complex Equivalence (A = B)
+Complex Equivalence occurs when two separate experiences or statements are linked as being synonymous.41
+* Lexicon: Is, means, equals, represents, proves, shows.
+* Syntactic Signature:
+   * nsubj (Clause A / Noun A) + cop (is) + attr (Clause B / Noun B).
+   * OR: nsubj (Clause A) + Verb (means) + dobj (Clause B).
+* Example: "They are looking at you; that means they are judging you."
+   * Analysis: Looking $\neq$ Judging. The speaker hallucinates meaning.
+   * FrameScan Logic: Detect copular relationships between disparate semantic clusters.
+________________
+5. Modal Operators and Deontic Logic
+Modal operators are the linguistic controls of the "boundary conditions" of a person's model of the world. They dictate what is necessary, what is possible, and what is impossible. FrameScan utilizes concepts from Modal Logic (Alethic and Deontic) to parse these operators.44
+5.1 Modal Operators of Necessity
+These words imply rules, obligations, or lack of choice. They are high-pressure influencers used to constrain the listener's perceived options.
+* Lexicon: Must, should, have to, need to, ought to, supposed to.
+* Negative Necessity: Must not, shouldn't, can't (in the sense of forbidden).
+* Logic: $\square P$ (It is necessary that P).
+* Persuasive Effect: Coercion, urgency, authority.
+FrameScan Detection:
+* Tag: MD (Modal auxiliary).
+* Lemma Check: Necessity List.
+* Dependency: aux relation to the ROOT verb.
+5.2 Modal Operators of Possibility
+These words imply ability, choice, or potential. They are permissive and are often used in hypnotic contexts to lower resistance by framing commands as options.45
+* Lexicon: Can, could, might, may, possible, able to, willing to.
+* Logic: $\diamond P$ (It is possible that P).
+* Persuasive Effect: "You might want to close the door." (Polite command).
+5.3 FrameScan Deontic Scoring
+FrameScan calculates a Deontic Force Score for the text.
+* High Necessity Density: Indicates authoritarian, rigid, or crisis-mode communication.
+* High Possibility Density: Indicates therapeutic, hypnotic, or brainstorming communication.
+* Modal Operator of Impossibility: (It is impossible, no one can). Used to define limiting beliefs.45
+________________
+6. Temporal Manipulation and Future Pacing
+Future pacing is a specialized NLP technique where the speaker anchors a desired behavior or resource state into the future. By describing a future event with high sensory detail and specific verb tenses, the speaker makes the future event feel inevitable.1
+6.1 Syntactic Markers of Future Pacing
+Linguistic research into Future Time Reference (FTR) indicates that languages and constructions that mark the future as "current" (e.g., going to) create stronger behavioral intentions.49
+1. Future Progressive Aspect: Using "will be [verb]-ing" creates an immersive, ongoing experience rather than a punctual event.
+   * Example: "In a moment, you will be feeling a sense of calm."
+   * Syntax: aux (will) + aux (be) + VBG (feeling).
+2. Pseudo-Orientation in Time: Discussing the future using past tense markers relative to a future reference point (Future Perfect).
+   * Example: "Look back from five years hence and see what you have achieved."
+   * Effect: Presupposes the achievement is already done.
+3. Temporal Adverbials: The use of specific time markers to trigger the mental rehearsal.
+   * Lexicon: When, as soon as, after, once, in a moment, tomorrow.
+   * Structure: +.
+   * Logic: The Temporal Clause sets the Reference Time (RT) in the future, pulling the listener's Event Time (ET) forward.20
+6.2 Detection Algorithm
+* Step 1: Identify Temporal Connectors (mark: when, after).
+* Step 2: Check Tense of Main Clause (will, going to).
+* Step 3: Check for Mental State Verbs in the Main Clause (feel, realize, understand, enjoy).
+* Logic: If Time_Condition + Future_Result + Internal_State $\rightarrow$ Future_Pacing_Pattern.
+________________
+7. Reframing, Sleight of Mouth, and Double Binds
+Reframing is the process of changing the context or meaning of a statement to alter the emotional response.51 FrameScan must detect these shifts in argumentative structure, particularly the Sleight of Mouth patterns modeled by Robert Dilts from Richard Bandler's rhetoric.53
+7.1 Context vs. Content Reframing
+* Content Reframe: Changing the meaning of the behavior itself (Redefinition).
+   * Pattern: "X is not Y, X is Z."
+   * Example: "That's not failure, that's feedback."
+   * Syntax: Negation (not) + Noun A + Copula + Noun B $\rightarrow$ Contrastive Conjunction (but/implicit) + Noun C.
+* Context Reframe: Changing the context in which the behavior occurs to make it useful.
+   * Pattern: "X is useful in Context Y."
+   * Example: "Stubbornness is a virtue when you are defending your family."
+   * Syntax: Noun A + Copula + Adjective (Positive) + advcl (Context Marker: when, if, in the case of).
+7.2 Sleight of Mouth Syntactic Patterns
+Sleight of Mouth patterns are specific linguistic maneuvers used to dismantle limiting beliefs (usually C>E or Complex Equivalences).
+7.2.1 Apply to Self (Recursive)
+Turning the criterion of the belief back onto the speaker or the belief itself.56
+* Input: "You are too negative."
+* Response: "Are you being negative about my negativity?"
+* Syntax: Repetition of the root lemma of the accusation in the nsubj or dobj of the response sentence.
+7.2.2 Hierarchy of Criteria (Values)
+Moving the argument to a higher logical level (Abstract Nouns) that trumps the current concern.56
+* Input: "This training is expensive."
+* Response: "Isn't mastery more important than cost?"
+* Syntax: Comparative construction comparing Input Noun (cost) with Higher Value Noun (mastery/integrity/safety) found in a Values Dictionary.
+7.2.3 Consequence
+Directing attention to the effect of the belief rather than the belief itself.54
+* Input: "I can't stop smoking."
+* Response: "Believing that will only make your health deteriorate faster."
+* Syntax: nsubj (Gerund: Believing that) + Future Tense Verb (Cause/Result).
+7.3 Double Binds and Paradoxical Logic
+A Double Bind offers two choices that lead to the same outcome, creating an illusion of choice to generate compliance.58
+* Structure: Alternative Question (or) or Conditional (if).
+* Mechanism: Both options enforce the same presupposition.
+* Example: "Would you like to go into trance now or in a few minutes?"
+   * Option A: Trance now.
+   * Option B: Trance later.
+   * Invariant Core: Go into trance.
+* FrameScan Detection:
+   1. Identify Interrogative Sentence with cc ("or").
+   2. Extract Option A and Option B.
+   3. Analyze the Predicates of A and B.
+   4. Intersection Analysis: If Predicate(A) $\approx$ Predicate(B) (using word vectors or lemma matching) but Adjunct(A) $\neq$ Adjunct(B) (Time/Location), FLAG as Double_Bind.
+________________
+8. Operational Implementation: JSON Schemas and Parsing Logic
+This section translates the linguistic theory into actionable data structures for the FrameLord ecosystem. We utilize standard JSON Schema definitions to ensure interoperability.5
+8.1 Dependency Parsing Pipeline
+FrameScan relies on a dependency parser (e.g., spaCy or Stanza) to generate the tree structure.4
+Parsing Example:
+Sentence: "I wonder if you will realize that you are already relaxing."
+ROOT -> wonder (VBP)
+nsubj -> I (PRP)
+ccomp -> realize (VB) <-- Factive Verb Trigger
+mark -> if (IN)
+nsubj -> you (PRP)
+aux -> will (MD)
+ccomp -> relaxing (VBG) <-- Embedded State / Presupposition
+mark -> that (IN)
+nsubj -> you (PRP)
+aux -> are (VBP)
+advmod -> already (RB) <-- Iterative/Temporal
+8.2 JSON Output Schema for Persuasion Analysis
+The following schema defines the output format for a processed text segment. It aggregates patterns from Presuppositions, Milton Model, and Meta Model analyses.5
+
+
+JSON
+
+
+
+
+{
+ "$schema": "http://framelord.ai/schemas/persuasion-analysis-v2.json",
+ "title": "FrameScan Persuasion Analysis",
+ "type": "object",
+ "properties": {
+   "meta": {
+     "type": "object",
+     "properties": {
+       "version": { "type": "string" },
+       "analyzer": { "const": "FrameScan-Core" },
+       "timestamp": { "type": "string", "format": "date-time" }
+     }
+   },
+   "analysis": {
+     "type": "object",
+     "properties": {
+       "sentence_id": { "type": "string" },
+       "text": { "type": "string" },
+       "persuasion_patterns": {
+         "type": "array",
+         "items": {
+           "type": "object",
+           "properties": {
+             "type": {
+               "type": "string",
+               "enum": ["presupposition", "milton_model", "meta_model", "double_bind", "reframing"]
+             },
+             "subtype": { "type": "string" },
+             "trigger_token": { "type": "string" },
+             "trigger_index": { "type": "integer" },
+             "scope_indices": { "type": "array", "items": { "type": "integer" } },
+             "content": { "type": "string", "description": "Extracted implicit meaning or missing arguments" },
+             "deontic_force": { "type": "string", "enum": ["necessity", "possibility", "impossibility"] },
+             "vector_score": { "type": "number", "minimum": 0, "maximum": 1 }
+           },
+           "required": ["type", "subtype", "trigger_token"]
+         }
+       },
+       "aggregated_metrics": {
+         "type": "object",
+         "properties": {
+           "hypnotic_density": { "type": "number", "description": "Ratio of Milton Model patterns to total tokens" },
+           "coercion_index": { "type": "number", "description": "Density of Necessity Modals and Embedded Commands" },
+           "presuppositional_load": { "type": "number" },
+           "nominalization_count": { "type": "integer" }
+         }
+       }
+     }
+   }
+ },
+ "required": ["meta", "analysis"]
+}
+
+8.3 Example Analysis Output
+Input Text: "Before you decide to buy, notice how comfortable this feels."
+
+
+JSON
+
+
+
+
+{
+ "sentence_id": "S_1042",
+ "text": "Before you decide to buy, notice how comfortable this feels.",
+ "persuasion_patterns":,
+ "aggregated_metrics": {
+   "hypnotic_density": 0.4,
+   "coercion_index": 0.1,
+   "presuppositional_load": 0.8,
+   "nominalization_count": 0
+ }
+}
+
+8.4 Integration with Python/spaCy
+To implement detection, custom extensions are registered to the spaCy Doc object.64
+
+
+Python
+
+
+
+
+import spacy
+from spacy.tokens import Doc, Span
+
+# Define custom attribute for persuasion scoring
+Doc.set_extension("persuasion_score", default=0.0)
+Span.set_extension("pattern_type", default=None)
+
+nlp = spacy.load("en_core_web_trf")
+
+def detect_presupposition(doc):
+   for token in doc:
+       # Check for Factive Verbs
+       if token.lemma_ in FACTIVE_VERBS and token.pos_ == "VERB":
+            # Check for clausal complement
+            for child in token.children:
+                if child.dep_ in ["ccomp", "dobj"]:
+                    span = doc[child.left_edge.i : child.right_edge.i+1]
+                    span._.pattern_type = "factive_presupposition"
+                    # Log to FrameScan output
+   return doc
+
+nlp.add_pipe("detect_presupposition", last=True)
+
+9. Conclusion
+This operational doctrine provides the blueprint for FrameScan, a sophisticated linguistic analysis engine capable of decoding the mechanics of persuasion. By synthesizing the subjective patterns of Persuasion NLP (Milton Model, Meta Model, Sleight of Mouth) with the objective rigor of Computational NLP (Dependency Parsing, Deontic Logic, JSON Schema), we create a system that does not merely process text, but understands influence.
+FrameScan moves beyond sentiment analysis (positive/negative) to intent analysis (manipulative/hypnotic/coercive). It exposes the hidden "Deep Structure" maneuvers—the deleted agents, the presupposed truths, and the double binds—that define high-leverage communication. This capability is essential for modern AI systems tasked with navigating, defending against, or utilizing complex human interactions.
+End of Doctrine.

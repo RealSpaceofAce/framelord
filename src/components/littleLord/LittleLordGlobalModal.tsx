@@ -9,6 +9,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Crown, Minus, Maximize2, Minimize2, GripVertical } from 'lucide-react';
 import { LittleLordChat } from './LittleLordChat';
+import { LittleLordFullscreenChat } from './LittleLordFullscreenChat';
 import type { LittleLordContext } from '../../services/littleLord/types';
 import { getLittleLordDisplayName } from '../../services/littleLord';
 
@@ -234,6 +235,19 @@ export const LittleLordGlobalModal: React.FC<LittleLordGlobalModalProps> = ({
     </div>
   );
 
+  // When maximized, render the immersive fullscreen orb experience
+  if (isOpen && isMaximized && !isMinimized) {
+    return (
+      <LittleLordFullscreenChat
+        tenantId={tenantId}
+        userId={userId}
+        context={context}
+        onClose={onClose}
+        onMinimize={handleMaximize} // Toggle back to normal size
+      />
+    );
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -273,18 +287,16 @@ export const LittleLordGlobalModal: React.FC<LittleLordGlobalModalProps> = ({
               }}
             >
               {/* Resize handles */}
-              {!isMaximized && (
-                <>
-                  <ResizeHandle direction="n" className="top-0 left-2 right-2 h-1" cursor="n-resize" />
-                  <ResizeHandle direction="s" className="bottom-0 left-2 right-2 h-1" cursor="s-resize" />
-                  <ResizeHandle direction="e" className="top-2 bottom-2 right-0 w-1" cursor="e-resize" />
-                  <ResizeHandle direction="w" className="top-2 bottom-2 left-0 w-1" cursor="w-resize" />
-                  <ResizeHandle direction="ne" className="top-0 right-0 w-3 h-3" cursor="ne-resize" />
-                  <ResizeHandle direction="nw" className="top-0 left-0 w-3 h-3" cursor="nw-resize" />
-                  <ResizeHandle direction="se" className="bottom-0 right-0 w-3 h-3" cursor="se-resize" />
-                  <ResizeHandle direction="sw" className="bottom-0 left-0 w-3 h-3" cursor="sw-resize" />
-                </>
-              )}
+              <>
+                <ResizeHandle direction="n" className="top-0 left-2 right-2 h-1" cursor="n-resize" />
+                <ResizeHandle direction="s" className="bottom-0 left-2 right-2 h-1" cursor="s-resize" />
+                <ResizeHandle direction="e" className="top-2 bottom-2 right-0 w-1" cursor="e-resize" />
+                <ResizeHandle direction="w" className="top-2 bottom-2 left-0 w-1" cursor="w-resize" />
+                <ResizeHandle direction="ne" className="top-0 right-0 w-3 h-3" cursor="ne-resize" />
+                <ResizeHandle direction="nw" className="top-0 left-0 w-3 h-3" cursor="nw-resize" />
+                <ResizeHandle direction="se" className="bottom-0 right-0 w-3 h-3" cursor="se-resize" />
+                <ResizeHandle direction="sw" className="bottom-0 left-0 w-3 h-3" cursor="sw-resize" />
+              </>
 
               {/* Header - Draggable */}
               <div
@@ -307,7 +319,7 @@ export const LittleLordGlobalModal: React.FC<LittleLordGlobalModalProps> = ({
                     <div className="px-2 text-gray-500">
                       <GripVertical size={14} />
                     </div>
-                    
+
                     {/* Minimize */}
                     <button
                       onClick={(e) => { e.stopPropagation(); handleMinimize(); }}
@@ -321,9 +333,9 @@ export const LittleLordGlobalModal: React.FC<LittleLordGlobalModalProps> = ({
                     <button
                       onClick={(e) => { e.stopPropagation(); handleMaximize(); }}
                       className="p-1.5 hover:bg-[#1A1A1A] rounded-lg transition-colors text-gray-400 hover:text-white"
-                      title={isMaximized ? "Restore" : "Maximize"}
+                      title="Immersive Mode"
                     >
-                      {isMaximized ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                      <Maximize2 size={14} />
                     </button>
 
                     {/* Close */}

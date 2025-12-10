@@ -21,6 +21,8 @@ vi.mock("../llm/openaiClient", () => ({
 describe("frameReportUI", () => {
   // Sample test data
   const sampleRawResult: FrameScanResult = {
+    status: "ok",
+    rejectionReason: null,
     modality: "text",
     domain: "sales_email",
     overallFrame: "apex",

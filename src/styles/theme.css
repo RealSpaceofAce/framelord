@@ -301,3 +301,137 @@ affine-editor-container [contenteditable="true"] {
   --input: 214.3 31.8% 91.4%;
   --ring: 243 100% 60%;
 }
+
+/* =============================================================================
+   SAVAGE MODE - Brutal feedback with red accents
+   ============================================================================= */
+.savage-mode {
+  --accent-color: #FF3344;
+  --accent-2: #FF3344;
+  --ring: 0 84% 60%;
+  --primary: 0 84% 60%;
+}
+
+/* Override blue accents with red when savage mode is active */
+.savage-mode .bg-\[\#4433FF\],
+.savage-mode .bg-fl-primary,
+.savage-mode .bg-primary {
+  background: #FF3344 !important;
+  box-shadow: 0 12px 30px rgba(255, 51, 68, 0.32);
+}
+
+.savage-mode .text-\[\#4433FF\],
+.savage-mode .text-fl-primary,
+.savage-mode .text-primary {
+  color: #FF3344 !important;
+}
+
+.savage-mode .border-\[\#4433FF\],
+.savage-mode .border-fl-primary,
+.savage-mode .border-primary {
+  border-color: #FF3344 !important;
+}
+
+.savage-mode .hover\:bg-\[\#5544FF\]:hover,
+.savage-mode .hover\:bg-fl-primary:hover {
+  background: #CC2233 !important;
+}
+
+.savage-mode .shadow-\[\#4433FF\],
+.savage-mode .shadow-fl-primary {
+  box-shadow: 0 0 20px rgba(255, 51, 68, 0.3) !important;
+}
+
+/* Savage mode ring/focus effects */
+.savage-mode .ring-\[\#4433FF\],
+.savage-mode .ring-fl-primary,
+.savage-mode .focus\:ring-primary:focus {
+  --tw-ring-color: #FF3344 !important;
+}
+
+/* Gradient adjustments for savage mode */
+.savage-mode .from-\[\#4433FF\],
+.savage-mode .from-fl-primary {
+  --tw-gradient-from: #FF3344 !important;
+}
+
+.savage-mode .to-\[\#4433FF\],
+.savage-mode .to-fl-primary {
+  --tw-gradient-to: #FF3344 !important;
+}
+
+.savage-mode .via-\[\#4433FF\],
+.savage-mode .via-fl-primary {
+  --tw-gradient-via: #FF3344 !important;
+}
+
+/* Savage mode button overrides */
+.savage-mode .neon-button {
+  background: #FF3344;
+  box-shadow: 0 12px 36px rgba(255, 51, 68, 0.35);
+}
+
+/* Savage mode glass shadow */
+.savage-mode .glass-card {
+  --glass-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 51, 68, 0.1);
+}
+
+/* Savage mode indicator pulse */
+.savage-mode-indicator {
+  animation: savage-pulse 2s ease-in-out infinite;
+}
+
+@keyframes savage-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 51, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 51, 68, 0);
+  }
+}
+
+/* =============================================================================
+   FRAMESCAN WOBBLE ANIMATION - Subtle motion during scanning
+   ============================================================================= */
+@keyframes framescan-wobble {
+  0%, 100% {
+    transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+  }
+  25% {
+    transform: perspective(1000px) rotateX(1deg) rotateY(2deg);
+  }
+  50% {
+    transform: perspective(1000px) rotateX(-1deg) rotateY(-1deg);
+  }
+  75% {
+    transform: perspective(1000px) rotateX(0.5deg) rotateY(-2deg);
+  }
+}
+
+.framescan-wobble {
+  animation: framescan-wobble 1.5s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+/* =============================================================================
+   SCOPED SAVAGE MODE FOR FRAMESCAN - Red theme only for FrameScan card
+   ============================================================================= */
+.savage-framescan {
+  border-color: #FF3344 !important;
+  box-shadow: 0 0 20px rgba(255, 51, 68, 0.3);
+}
+
+.savage-framescan .bg-\[\#4433FF\],
+.savage-framescan .neon-button {
+  background: #FF3344 !important;
+  box-shadow: 0 8px 20px rgba(255, 51, 68, 0.35);
+}
+
+.savage-framescan .text-\[\#4433FF\] {
+  color: #FF3344 !important;
+}
+
+.savage-framescan .border-\[\#4433FF\]\/50,
+.savage-framescan .hover\:border-\[\#4433FF\]\/50:hover {
+  border-color: rgba(255, 51, 68, 0.5) !important;
+}

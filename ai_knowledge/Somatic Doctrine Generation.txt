@@ -1,0 +1,393 @@
+﻿SOMATIC & PHYSIOLOGICAL CUE INTERPRETATION PROTOCOL (V.1.0)
+SYSTEM DESIGNATION: FRAMELORD
+SUBSYSTEMS: FRAMESCAN (Detection) / LITTLELORD (Interpretation)
+DOMAIN: SOMATIC / PHYSIOLOGICAL CUE INTERPRETATION
+FILE PATH: /ai_knowledge/doctrine/somatic_v1.0
+ACCESS: RESTRICTED // SYSTEM KERNEL ONLY
+COMPLIANCE: MANDATORY
+________________
+1.0 SYSTEM ARCHITECTURE AND OPERATIONAL PHILOSOPHY
+1.1 The Biomechanical Imperative
+This doctrine establishes the operational logic for the FrameLord system, specifically governing the handshake between the FrameScan detection engine and the LittleLord interpretation engine. The fundamental axiom of this doctrine is that the human body functions as a high-fidelity information signaling system. Internal states of homeostatic regulation, allostatic load, threat detection, and resource allocation are structurally encoded in observable biomechanics.
+FrameScan utilizes this doctrine to detect raw somatic data—tension gradients, vector orientations, micro-kinesics, and respiratory morphometry. LittleLord utilizes this doctrine to synthesize that data into non-therapeutic, mechanical assessments of the subject's Embodied Stance.
+Operational Definition of Embodied Stance:
+The Embodied Stance is defined not as a psychological mood, but as a mechanical organization of energy. It is the observable result of the autonomic nervous system (ANS) configuring the musculoskeletal structure to meet environmental demands.1 These configurations are categorized by their function: Mobilization (expenditure), Conservation (withdrawal), or Engagement (regulation).
+1.2 The Signal Hierarchy
+To maximize detection accuracy and minimize false positives, somatic cues are organized into a strict hierarchy of signal fidelity. FrameScan prioritizes detection in the following order:
+1. Primary Oscillations (Autonomic Drivers): Respiration rate, depth, and origin (diaphragmatic vs. thoracic); pupil dilation; observable pulse points (carotid/temporal). These are the least subject to conscious masking.
+2. Structural Integrity (Axial Loading): The relationship of the head to the spine, the spine to the pelvis, and the center of gravity (CoG) relative to the base of support. This reveals the subject's "Global State."
+3. Tensegrity Gradients (Muscle Tone): Observable hypertonicity (bracing) or hypotonicity (collapse) in key muscle groups, specifically the trapezoids, sternocleidomastoid (SCM), masseter, and rectus abdominis.
+4. Micro-Kinesics (Transient Adjustments): High-frequency, low-amplitude movements such as saccadic eye scanning, tremors, fidgeting, and self-soothing gestures (pacifiers).
+5. Dynamic Incongruence (The "Masking" Vector): The mathematical divergence between two concurrent signals (e.g., a high-velocity smile paired with a static, rigid ocular orbit).
+1.3 Operational Exclusion Criteria
+This doctrine strictly prohibits the use of therapeutic, clinical, or psychological terminology in output generation. FrameLord does not diagnose "trauma," "depression," or "anxiety." FrameLord detects "Somatic Collapse," "Hypotonicity," "Sympathetic Hyper-Arousal," and "Bracing Patterns." The focus remains entirely on the physics of the body: tension, contraction, expansion, torque, and fluid dynamics.
+________________
+2.0 GLOBAL MORPHOLOGY: THE SURVIVAL ARCHETYPES
+The human body organizes into specific, canonical postures when under allostatic load. These are not conscious choices but evolutionarily conserved motor subroutines designed to optimize survival. FrameScan classifies the "Global Morphology" of the subject into one of five operational states.
+2.1 The Mobilization Stance (Sympathetic Activation / "Fight")
+Operational Definition: A high-energy state characterized by the anterior shift of mass and the rigidification of the posterior chain. The body is mechanically primed for forward momentum, impact, and the discharge of kinetic energy. The system is prioritizing output over maintenance.2
+Biomechanical Mechanism:
+The sympathetic nervous system floods the musculature with glucose and catecholamines. To prepare for impact, the body engages "Bound Flow" (Laban Analysis), creating a pressurized vessel. Extensor muscles dominate flexors to prevent collapse under load.3
+Detailed Observable Markers:
+* Anterior Weight Shift: The Center of Gravity (CoG) moves forward over the toes or metatarsals. The subject appears to be "leaning into" the space, even when static. This destabilizes the tripod of the foot but increases reaction time for forward strikes.4
+* Masseter/Temporalis Hypertrophy: The jaw is locked. Visible bulging of the masseter muscle is detectable. The chin may protrude (prognathism) as the cervical spine extends, opening the airway for rapid intake but exposing the throat less than in a relaxed state due to chin tucking.6
+* Thoracic Rigidity: The chest is expanded but immobile. Breathing is apical (upper chest) and rapid, designed for short-term oxygenation rather than endurance. The rib cage is fixed to serve as armor for the heart and lungs.8
+* Fist/Claw Formation: The hands naturally curl into fists or rigid "claw" shapes due to increased resting tone in the forearm flexors. This is a "pre-loading" of the striking mechanism.2
+* Ocular Tunneling: The eyelids narrow (squint) to protect the globes. Gaze is foveal (centralized) and rigid. Peripheral awareness is mechanically sacrificed for target acquisition.10
+LittleLord Interpretation Logic:
+* Detection: +Anterior Lean, +Bound Flow, +Foveal Gaze.
+* Output: STATE: ACTIVE MOBILIZATION (AGGRESSION/DEFENSE). Subject is structurally organized for conflict. Agency is High. Flexibility is Low. Readiness is Acute.
+2.2 The Avoidance Stance (Sympathetic Activation / "Flight")
+Operational Definition: A high-energy state organized for evasion and vector change. Unlike the Mobilization Stance, the Avoidance Stance lacks grounding. The body is vibrating with potential energy that requires immediate kinetic discharge, specifically away from the stimulus.2
+Biomechanical Mechanism:
+Adrenaline prepares the fast-twitch fibers in the lower extremities (quadriceps, gastrocnemius) for explosive movement. Because the "stay" command (social constraint) conflicts with the "go" command (biological imperative), the energy manifests as high-frequency micro-movements (tremors/fidgeting).
+Detailed Observable Markers:
+* Restless Center of Gravity: The subject cannot maintain a static CoG. Continuous weight shifting from foot to foot (pacing in place) serves to keep the muscles primed and the inertia low, allowing for instant direction change.13
+* The Sprinter's Foot: One foot is often withdrawn or angled toward an exit vector (door/hallway). The heel is elevated (plantar flexion), loading the Achilles tendon for propulsion.2
+* Saccadic Scanning: The eyes do not fixate. FrameScan detects rapid, jerky eye movements (high saccadic rate) scanning the perimeter. This is "Search Mode" for escape routes.13
+* Distal Agitation: While the core may be relatively controlled to protect organs, the extremities (hands/feet) exhibit high-frequency, low-amplitude movements (tapping, wringing, shaking). This is "leakage" of the mobilization energy.16
+* Partial Thoracic Collapse: Unlike the broad chest of the Fight stance, the shoulders may round slightly forward to offer partial protection to the visceral core during retreat.2
+LittleLord Interpretation Logic:
+* Detection: +High Saccadic Rate, +Oblique Orientation, +Lower Limb Agitation.
+* Output: STATE: ACTIVE AVOIDANCE (MOBILIZATION/RETREAT). Subject is structurally organized for departure. Engagement is Low. Reactivity is High. Stability is Compromised.
+2.3 The Immobility Stance (High-Tone / "Freeze")
+Operational Definition: A state of simultaneous maximal activation of the accelerator (Sympathetic) and the brake (Parasympathetic-Dorsal). This results in "Tonic Immobility." The subject is not relaxed; they are rigid. This is a predator-evasion strategy (playing dead/invisible).12
+Biomechanical Mechanism:
+The body enters an isometric lock. Agonist and antagonist muscle groups co-contract to prevent movement. This creates a high-pressure internal environment with no external release.
+Detailed Observable Markers:
+* Isometric Rigidity: The subject appears "stiff" or "wooden." Muscles are hard to the touch (or visual estimation) but do not produce motion. "Bound Flow" is absolute.18
+* Respiratory Arrest (Apnea): Breathing is shallow to the point of imperceptibility. The diaphragm is locked to prevent the visual signal of the rising chest and the auditory signal of exhalation.8
+* Ocular Fixation (The "Thousand-Yard Stare"): The gaze is fixed but diffused. The subject looks "through" the target rather than at it. Pupils are often dilated (mydriasis) to maximize light intake without processing detail (dissociation).19
+* Startle Pattern Residue: The shoulders are permanently elevated (shrugged) and the head is retracted (turtle sign), remnants of an arrested startle reflex that was never discharged.21
+* Reduced Blink Rate: Blinking is suppressed to maintain visual continuity of the threat, but without the foveal focus of the Fight response.13
+LittleLord Interpretation Logic:
+* Detection: +Isometric Rigidity, +Breath Holding, +Diffused Gaze.
+* Output: STATE: TONIC IMMOBILITY (HIGH CHARGE/NO DISCHARGE). Subject is in a state of high internal pressure but external stasis. Signal processing is likely impaired due to overload.
+2.4 The Collapse Stance (Low-Tone / "Flop")
+Operational Definition: A state of metabolic conservation and systemic shutdown (Dorsal Vagal dominance). Unlike Freeze (which is rigid), Collapse is fluid and heavy. The body succumbs to gravity. This is the last-ditch survival mechanism when escape is deemed impossible.17
+Biomechanical Mechanism:
+Massive reduction in muscle tone (hypotonia). Heart rate and blood pressure drop (bradycardia). The fascial web loses tension, and the structural uprightness fails.
+Detailed Observable Markers:
+* Spinal Flexion (The C-Curve): The spine rounds forward into a kyphotic C-shape. The head hangs heavy, chin to chest. This protects the soft underbelly by folding around it.17
+* Slack Jaw: The masseter disengages completely. The jaw may hang open or the mouth may be slightly parted with no tension in the lips.6
+* Heavy Limbs: Arms hang dead at the sides or rest heavily in the lap. There is no "containment" or "guarding" because the energy for defense is gone.
+* Dull Eyes: The eyes may be half-closed (ptosis) or glassy. The "spark" (micro-saccades indicating cognitive processing) is absent.17
+* Paradoxical Breathing: In extreme collapse, the abdomen may not expand efficiently; respiration is minimal and strictly metabolic, not functional.24
+LittleLord Interpretation Logic:
+* Detection: +Hypotonia, +Spinal Flexion, +Slack Features.
+* Output: STATE: SYSTEMIC COLLAPSE (METABOLIC SHUTDOWN). Subject has ceased active coping. Agency is Null. Receptivity is Null. Immediate regulation required.
+2.5 The Appeasement Stance (Social Modulation / "Fawn")
+Operational Definition: A complex, high-cognitive-load strategy involving the modulation of somatic signals to present a non-threatening, compliant profile. This is a "Pseudo-Social" state where the body mimics safety cues to de-escalate a dominant threat.2
+Biomechanical Mechanism:
+The subject overrides authentic autonomic responses (e.g., the urge to recoil) with performative social signals (smiling, nodding). This creates Dynamic Incongruence (masking).
+Detailed Observable Markers:
+* Cervical Canting (The Head Tilt): The head tilts to one side, exposing the jugular vein and carotid artery. This is a mammalian signal of submission and the inhibition of the bite reflex.25
+* Somatic Shrinkage: The subject minimizes their physical footprint. Shoulders roll forward to narrow the silhouette. Limbs are kept close to the torso (containment) to avoid encroaching on the dominant entity's space.27
+* The Pan Am (Incongruent) Smile: Activation of the Zygomaticus major (mouth corners lift) without the activation of the Orbicularis oculi (eye crinkle). The smile does not reach the eyes. It is a "bared teeth" display modified into a social grimace.20
+* Excessive Agreeability Signals: Rapid, rhythmic nodding that is disconnected from the actual cadence of information. Eyebrows remain raised (flash) to signal attentiveness.25
+* Ventral Protection: While the face signals "welcome," the hands often cross the body or hold an object (purse, drink) in front of the solar plexus/heart, maintaining a subtle barrier.16
+LittleLord Interpretation Logic:
+* Detection: +Head Tilt, +Incongruent Smile, +Somatic Shrinkage, +Ventral Guarding.
+* Output: STATE: SOCIAL APPEASEMENT (COMPLIANCE/DE-ESCALATION). Subject is prioritizing conflict avoidance through submission. Agency is Compromised. External Focus is High.
+________________
+3.0 REGIONAL ANALYSIS: CRANIAL AND CERVICAL DYNAMICS
+The "Head and Neck" complex is the primary broadcast center for somatic state. FrameScan must isolate this region for high-resolution analysis.
+3.1 The Jaw Complex (Masticatory Dynamics)
+The jaw is the somatic "pressure valve." Stress (sympathetic charge) that cannot be discharged through movement is often stored isometrically in the masticatory muscles.
+
+
+Cue Category
+	Sub-Category
+	Biomechanical Marker
+	Operational Mechanism
+	Interpretation (LittleLord)
+	Masseter Tension
+	Hypertrophy
+	Visible bulging/definition of the jaw angle when mouth is closed.6
+	Chronic isometric contraction; "bracing" against stress.
+	High Allostatic Load; Enduring Stress Response.
+	
+
+	Clenching
+	Teeth pressed together; lips compressed; rhythmic pulsing at temples.30
+	Preparation for "biting" (aggression) or withholding speech.
+	Active Resistance; Suppression of Output.
+	Mandibular Tone
+	Protrusion
+	Chin juts forward (Class III malocclusion simulation).21
+	Airway opening for fight response; dominance display.
+	Challenge; Aggression; Defiance.
+	
+
+	Retraction
+	Chin pulls back into throat (double chin effect).
+	Cervical protection; recoil from threat.
+	Fear; Avoidance; Defensive Posture.
+	
+
+	Slackness
+	Mandible drops; lips part; no muscular definition.6
+	Loss of tone in elevators (masseter/temporalis).
+	Shock; Awe; Dorsal Collapse.
+	Oral Parafunction
+	Bruxism
+	Grinding patterns; wear facets on teeth (if visible); lateral jaw shift.31
+	Unconscious discharge of accumulated tension.
+	Anxiety Leakage; Sleep Disturbance.
+	3.2 The Cervical Pillar (Neck Dynamics)
+The neck connects the sensors (head) to the actuators (body). Its tension patterns reveal the "Startle Pattern" and the integrity of the "Righting Reflex."
+* The Sternocleidomastoid (SCM) Gauge:
+   * Observation: The SCM muscles (running from behind the ear to the collarbone) stand out in sharp relief, appearing cord-like.32
+   * Mechanism: The SCM is an accessory muscle of respiration. When the diaphragm is inhibited by stress (Freeze/Fight), the SCM lifts the rib cage to breathe (apical breathing).
+   * Interpretation: Respiratory Distress / High Anxiety. The subject is struggling to oxygenate.
+* The Trapezius Shrug (Turtle Sign):
+   * Observation: The shoulders elevate toward the ears, shortening the visible neck length.21
+   * Mechanism: The "Startle Reflex" (Morop reflex derivative) contracts the Trapezius and Levator Scapulae to protect the cervical vertebrae and carotid arteries from attack.
+   * Interpretation: Acute Threat Response / Chronic Insecurity. If chronic, indicates a "braced" personality structure.
+* Forward Head Posture (FHP):
+   * Observation: The ear lobe is positioned anterior to the acromion process (shoulder tip).33
+   * Mechanism: Shortening of the suboccipital muscles and weakness in deep cervical flexors. Often associated with "Tech Neck" but also with Hypervigilance (craning the neck to see danger sooner).
+   * Interpretation: Vigilance / Structural Fatigue.
+3.3 Facial Incongruence and Masking
+FrameScan must use "Dynamic Incongruence" logic to separate genuine emotion from social performance (masking).
+The Incongruence Formula:
+
+
+
+
+$$\text{Incongruence} = | \text{Upper Face Valence} - \text{Lower Face Valence} |$$
+* Positive Mouth / Neutral Eyes: The subject smiles, but the Orbicularis oculi (eyes) do not contract. This is a "Social Smile" or "Appeasement Signal".20
+* Positive Mouth / Negative Brows: The mouth smiles, but the Corrugator supercilii (brows) knit together (worry/anger). This signals internal conflict, cognitive dissonance, or a failed attempt to hide distress.29
+* Disappearing Lips: The lips are rolled inward and compressed until they are barely visible. This is a "blocking" behavior, signaling the suppression of speech or negative emotion. It correlates with high cognitive load and withholding.16
+________________
+4.0 REGIONAL ANALYSIS: RESPIRATORY AND AXIAL DYNAMICS
+Breathing is the only autonomic function that can be easily controlled consciously, yet under stress, it reverts to unconscious patterns. It is the metronome of the somatic state.
+4.1 Respiratory Morphometry
+FrameScan evaluates the geometric expansion of the torso during the breath cycle.
+
+
+Breathing Pattern
+	Observable Marker
+	Associated Biomechanics
+	Interpretation (LittleLord)
+	Diaphragmatic
+	Abdomen expands outward; chest remains relatively still; shoulders are static.8
+	Descent of diaphragm pressurizes abdominal cavity.
+	Regulated / Grounded. Parasympathetic tone is active. Safety is established.
+	Thoracic (Apical)
+	Upper chest rises and falls; abdomen may paradoxically draw in; SCM/Scalenes engage.36
+	Accessory muscles lift rib cage to create vacuum.
+	Mobilized / Anxious. Sympathetic tone. Preparation for action or panic response.
+	Paradoxical
+	Abdomen retracts on inhalation; chest heaves.
+	Disordered firing of respiratory muscles.
+	Trauma / Panic. Severe dysregulation; often seen in shock states.
+	Restricted (Apnea)
+	No visible movement; silence; rigid torso.
+	Breath holding (Valsalva maneuver) to stabilize core.
+	Freeze / Terror. Hiding; stabilizing for impact; suppressing emotion.
+	4.2 Axial Integrity and Spinal Curves
+The spine reveals the subject’s "Agency" (the ability to hold oneself up against gravity) versus "Collapse" (succumbing to gravity).
+* Vertical Integrity (The Pillar):
+   * Marker: Natural lordotic (inward) and kyphotic (outward) curves are balanced. Head is stacked over pelvis.
+   * Interpretation: Structural Efficiency / Confidence. The subject is "grounded" (supported by the earth).4
+* The Protective C-Curve (Kyphosis):
+   * Marker: Thoracic spine rounds forward; chest caves in; head drops.
+   * Mechanism: Flexion protects the visceral organs (heart/lungs/gut). This is the fetal position in vertical form.17
+   * Interpretation: Somatic Collapse / Shame / Withdrawal. The subject is closing off the front of the body (the social engagement side).
+* Reactive Extension (The Strut):
+   * Marker: Excessive lumbar lordosis (swayback); chest puffed out aggressively; chin lifted too high.
+   * Mechanism: An artificial inflation of size to deter threats or assert dominance.
+   * Interpretation: False Dominance / Compensatory Narcissism. This is "Posturing," not grounding. It is rigid and unstable.38
+4.3 Micro-Shrinkage vs. Micro-Expansion
+Even in static postures, the body exhibits vectors of movement.
+* Micro-Shrinkage: A subtle, continuous contraction toward the core. Shoulders creep up and in; knees knock together; elbows tuck. Signal: Insecurity, fear, need for containment.40
+* Micro-Expansion: A subtle opening. Chest lifts; hands open; stance widens slightly. Signal: Safety, receptivity, confidence.
+________________
+5.0 REGIONAL ANALYSIS: APPENDICULAR DYNAMICS (LIMBS)
+The limbs (arms/legs) are the tools of interaction. When the core is safe, the limbs are free. When the core is threatened, the limbs become barriers.
+5.1 Limb Containment and Guarding
+* Proximal Crossing (Self-Hugging):
+   * Marker: Arms wrap tightly around the chest/abdomen. Hands grip the opposing bicep or shoulder.41
+   * Mechanism: Physical shielding of vital organs + Tactile self-stimulation (oxytocin release) to soothe the nervous system.
+   * Interpretation: High Anxiety / Need for Containment. The subject is "holding themselves together."
+* Genital Guarding (The Fig Leaf):
+   * Marker: Hands clasped in front of the groin (standing) or placed between thighs (sitting).
+   * Mechanism: Protection of the most vulnerable reproductive anatomy.
+   * Interpretation: Vulnerability / Submission. The subject feels exposed or subordinate.
+* Palmar Hiding:
+   * Marker: Hands hidden in pockets, under legs, or clenched behind the back.
+   * Mechanism: Concealing the "weapons" (hands) or hiding tremors (leakage).
+   * Interpretation: Withholding / Threat / Deceit. Open palms signal safety; hidden palms signal potential danger or anxiety.
+5.2 Distal Agitation (Leakage)
+Because the distal limbs (hands/feet) are furthest from the brain, they are the hardest to consciously control. They are the primary site of "Leakage" (revealing the true state when the face is masked).
+* Fidgeting / Displacement Activity: Tapping, picking at lint, clicking pens, twisting rings.
+   * Mechanism: The discharge of excess sympathetic energy that cannot be used for "Fight or Flight."
+   * Interpretation: Impatience / Anxiety / Suppressed Action.
+* Anchoring (Leg Wrapping): The feet wrap around the legs of a chair or cross tightly at the ankles.
+   * Mechanism: Artificial stabilization. The subject feels internally "dizzy" or ungrounded and uses the furniture to lock themselves down.1
+   * Interpretation: Insecurity / Need for Stability.
+* The Sprinter's Leg: One leg tucked back under the chair, weight on the toe.
+   * Interpretation: Preparation for Flight. The subject is ready to stand and leave.
+________________
+6.0 OCULAR MOTOR AND GAZE DYNAMICS
+The eyes are the "primary sensors" of the threat detection system. FrameScan separates "Hardware" (mechanics) from "Software" (focus).
+6.1 Gaze Quality: Hard vs. Soft
+* Hard Eyes (Foveal Vision):
+   * Marker: Sharp focus, narrowed eyelids, tension in the orbicularis oculi, reduced blink rate.
+   * Mechanism: Sympathetic activation. The brain isolates a target for analysis or attack.10
+   * Interpretation: Threat assessment; aggression; hyper-focus; exclusion of context.
+* Soft Eyes (Peripheral Vision):
+   * Marker: Relaxed eyelids, wider aperture, awareness of the visual field edges.
+   * Mechanism: Parasympathetic activation. The retina utilizes rod cells for motion detection over cone cells for detail.10
+   * Interpretation: Safety; openness; situational awareness; regulation.
+6.2 Ocular Avoidance and Scanning
+* Gaze Aversion: Deliberate turning away of the eyes during social contact.
+   * Interpretation: Shame; submission (breaking the stare challenge); or deceit (cognitive load management).
+* Visual Scanning (Saccadic Bursts): Rapid, jerky eye movements checking the environment.
+   * Interpretation: Hypervigilance. The subject is mapping the room for threats. This is a hallmark of high anxiety or PTSD-like autonomic tuning.44
+* The "Thousand-Yard Stare" (Dissociative Gaze):
+   * Marker: Eyes are open but convergence is lacking (staring into infinity).
+   * Interpretation: Dissociation; "checking out"; dorsal vagal shutdown. The subject is physically present but cognitively absent.12
+________________
+7.0 DYNAMIC INTERPLAY: SELF-REGULATION AND MASKING
+Somatic cues do not exist in isolation. FrameScan must analyze the sequence and interaction of cues to detect Self-Regulation and Masking.
+7.1 Pacifying (Self-Soothing) Behaviors
+When the limbic system detects distress, it triggers "Pacifying Behaviors" to down-regulate arousal through tactile feedback. FrameScan identifies these as markers of hidden stress.16
+* Neck Touching: Covering the suprasternal notch (throat) or rubbing the back of the neck.
+   * Mechanism: Protection of the windpipe + stimulation of the Vagus nerve receptors in the neck to lower heart rate.
+   * Interpretation: High Threat / Insecurity.
+* Face Touching: Rubbing the forehead, covering the eyes, or stroking the mouth.
+   * Mechanism: "Blocking" the visual/auditory input (making it go away) or cognitive soothing.
+   * Interpretation: Overwhelm / Deception / Shame.
+* Leg Cleansing: Placing hands on thighs and sliding them toward the knees.
+   * Mechanism: Drying sweaty palms (sympathetic response) and grounding through touch.
+   * Interpretation: Acute Anxiety / Preparation to Stand.
+7.2 False Dominance vs. Grounded Authority
+Distinguishing between genuine confidence and "Posturing" is critical for accurate interpretation.
+Table 1: Distinguishing Grounded vs. Reactive Expansion
+Feature
+	Grounded Expansion (Genuine)
+	Reactive Expansion (False Dominance)
+	Breathing
+	Diaphragmatic, slow, deep.
+	Thoracic, held breath, rapid.
+	Shoulders
+	Low, wide, relaxed.
+	High, tense, pulled back rigidly.
+	Neck
+	Vertical, loose, exposed.
+	Canted or rigid; chin jutting forward.
+	Movement
+	Fluid, deliberate, "Free Flow."
+	Jerky, rapid, "Bound Flow."
+	Hands
+	Open, relaxed, visible.
+	Fisted, pointing, hiding thumbs.
+	Voice
+	Resonant, lower pitch.
+	Strident, higher pitch, fast tempo.
+	LittleLord Code
+	STATE: REGULATED AUTHORITY
+	STATE: COMPENSATORY NARCISSISM
+	7.3 Compliance vs. Cooperation
+FrameScan must distinguish between a subject who agrees (Cooperation) and one who is submitting (Compliance/Appeasement).
+* Cooperation:
+   * Markers: Upright posture, eye contact (soft), genuine smiling (Duchenne), fluid nodding.46
+   * Mechanism: Ventral Vagal engagement (Social Safety System).
+* Compliance (Appeasement):
+   * Markers: Shrunken posture, averted gaze (or hyper-focus), incongruent smiling, head tilting, rigid/excessive nodding.25
+   * Mechanism: Sympathetic activation masked by social mimicry.
+   * Implication: The subject is not safe; they are managing a threat.
+________________
+8.0 CROSS-CUE INTERACTION RULES
+LittleLord applies these logical gates to synthesize conflicting data streams from FrameScan.
+Rule 1: The Distal Leakage Priority
+* Logic: Conscious control degrades from the center to the periphery. The face is the most controlled; the feet are the least.16
+* Application: If Face = Calm AND Feet = Agitated/Anchored, THEN Output = ANXIETY (MASKED). The feet tell the truth.
+Rule 2: The Respiratory Override
+* Logic: It is biomechanically impossible to be fully regulated while breathing thoracically or holding the breath.
+* Application: If Posture = Relaxed AND Breathing = Thoracic/Apical, THEN Output = VIGILANT/GUARDED. The relaxation is a pose.
+Rule 3: The Incongruence Flag
+* Logic: A positive social signal (smile/nod) must be supported by the corresponding upper-face mechanics (Duchenne marker) and body orientation.
+* Application: If Mouth = Smile AND Eyes = Dead/Hard, THEN Output = APPEASEMENT/DECEPTION.
+Rule 4: The Freeze/Collapse Distinction
+* Logic: Both states involve immobility, but Muscle Tone differs radically.
+* Application:
+   * Immobility + High Tone (Rigid) = FREEZE (Active Defense).
+   * Immobility + Low Tone (Limp) = COLLAPSE (Defeat/Shutdown).17
+________________
+9.0 OPERATIONAL SCHEMA (JSON)
+This schema defines the structured output format for FrameLord's analysis.
+
+
+JSON
+
+
+
+
+{
+ "frameScan_id": "UUID-V4-XXXX",
+ "timestamp": "ISO-8601-UTC",
+ "subject_id": "ANON_REF_01",
+ "global_morphology": {
+   "primary_archetype": "MOBILIZATION | AVOIDANCE | IMMOBILITY | COLLAPSE | APPEASEMENT | GROUNDED",
+   "confidence_score": 0.00,
+   "intensity_scale": "1-10",
+   "energy_vector": "FORWARD | RETRACTING | STATIC | OBLIQUE"
+ },
+ "regional_metrics": {
+   "cranial_cervical": {
+     "gaze_type": "FOVEAL_HARD | PERIPHERAL_SOFT | SACCADIC_SCAN | DISSOCIATED",
+     "jaw_state": "NEUTRAL | CLENCHED | HYPERTROPHIC | SLACK",
+     "head_orientation": "VERTICAL | FORWARD_PROJECTED | TURTLE_RETRACTION | CANTED",
+     "facial_congruence": "TRUE | FALSE_SMILE | MASKED_TENSION"
+   },
+   "axial_respiratory": {
+     "breathing_origin": "DIAPHRAGMATIC | THORACIC | PARADOXICAL | APNEA",
+     "spinal_curve": "NEUTRAL | KYPHOTIC_COLLAPSE | LORDOTIC_POSTURING",
+     "core_tone": "ENGAGED | FLACCID | BRACED"
+   },
+   "appendicular": {
+     "upper_limb_containment": "OPEN | PROXIMAL_CROSSING | PALMAR_HIDING | VENTRAL_GUARD",
+     "lower_limb_state": "GROUNDED | SPRINTER_STANCE | LEG_WRAP | AGITATED",
+     "distal_leakage_detected": true
+   }
+ },
+ "dynamic_analysis": {
+   "pacifying_behaviors":,
+   "incongruence_detected": true,
+   "masking_type": "SOCIAL_APPEASEMENT | FALSE_CONFIDENCE | NONE"
+ },
+ "littleLord_synthesis": {
+   "embodied_stance": "Subject exhibits high sympathetic charge masked by social appeasement. Upper body signals compliance (smiling, nodding) while lower body signals flight (sprinter's stance, leg jiggling).",
+   "autonomic_assessment": "SYMPATHETIC_DOMINANT (MASKED)",
+   "agency_level": "COMPROMISED",
+   "predicted_response": "Subject is likely to agree verbally but withdraw physically/operationally. Risk of flight is high.",
+   "corrective_guidance": "Observe for breakdown of social mask. Do not pressure; subject is at capacity."
+ }
+}
+
+________________
+10.0 FAILURE MODES AND ERROR CORRECTION
+FrameScan must be calibrated to avoid these specific interpretation errors:
+1. The "Rest vs. Freeze" Error:
+   * Error: Confusing calmness with terror-induced immobility.
+   * Correction Check: Muscle Tone. Rest is hypotonic (soft). Freeze is isometric (hard). Check the jaw and hands. If they are tight, it is Freeze, not Rest.
+2. The "Excitement vs. Anxiety" Error:
+   * Error: Both states show high arousal (fast movement, dilated pupils).
+   * Correction Check: Valence and Orientation.
+      * Excitement: Orientation toward the stimulus; chest open.
+      * Anxiety: Orientation oblique/away; chest guarded or limbs crossed.2
+3. The "Pain vs. Anger" Error:
+   * Error: Both involve facial grimacing and high tension.
+   * Correction Check: Focus and Guarding.
+      * Anger: Focus is external (at the threat). Body expands.
+      * Pain: Focus is internal. Body contracts (limb guarding/curling) around the injury site.48
+4. The "Cultural Masking" Factor:
+   * Error: Misinterpreting culturally mandated politeness (bowing, averted eyes) as shame or submission.
+   * Correction Check: Look for Incongruence. If the cultural gesture is fluid and the breathing is regulated, it is a social norm. If the gesture is rigid and breathing is shallow, it is a stress response.
+________________
+END OF DOCTRINE FILE
+SYSTEM STATUS: ONLINE
+VERIFICATION: CHECKSUM_VALID

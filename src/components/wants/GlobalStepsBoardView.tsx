@@ -96,7 +96,7 @@ const StepCardItem: React.FC<StepCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -10 }}
       className={cn(
-        "p-3 bg-card border border-border rounded-lg group relative",
+        "p-3 bg-card border border-[#0043ff]/20 rounded-lg group relative",
         step.status === 'done' && "opacity-60"
       )}
     >
@@ -165,7 +165,7 @@ const StepCardItem: React.FC<StepCardProps> = ({
               <MotionDiv
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="absolute right-0 top-6 bg-popover border border-border rounded-lg shadow-xl z-50 py-1 min-w-[100px]"
+                className="absolute right-0 top-6 bg-popover border border-[#0043ff]/30 rounded-lg shadow-xl z-50 py-1 min-w-[100px]"
               >
                 <button
                   onClick={() => { onEdit(step); setShowMenu(false); }}
@@ -216,10 +216,10 @@ const WantColumn: React.FC<WantColumnProps> = ({
   const totalSteps = want.steps.length;
 
   return (
-    <div className="w-72 flex-shrink-0 flex flex-col bg-muted/30 rounded-lg border border-border">
+    <div className="w-72 flex-shrink-0 flex flex-col bg-muted/30 rounded-lg border border-[#0043ff]/20">
       {/* Want Header */}
       <div
-        className="p-3 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors"
+        className="p-3 border-b border-[#0043ff]/20 cursor-pointer hover:bg-muted/50 transition-colors"
         onClick={() => onNavigateToWant?.(want.id)}
       >
         <div className="flex items-center justify-between mb-2">
@@ -275,7 +275,7 @@ const WantColumn: React.FC<WantColumnProps> = ({
       </ScrollArea>
 
       {/* Add Step Button - Opens Dialog */}
-      <div className="p-2 border-t border-border">
+      <div className="p-2 border-t border-[#0043ff]/20">
         <Button
           variant="ghost"
           size="sm"
@@ -371,7 +371,7 @@ export const GlobalStepsBoardView: React.FC<GlobalStepsBoardViewProps> = ({
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#0043ff]/20 shrink-0">
         <div className="flex items-center gap-2">
           <Layers size={16} className="text-muted-foreground" />
           <h3 className="text-sm font-medium text-foreground">

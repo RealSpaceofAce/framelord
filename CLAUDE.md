@@ -513,6 +513,40 @@ Maintain `app_info/YYYY-MM-DD_app_functionality.md`:
 
 ---
 
+## Troubleshooting (REQUIRED READING)
+
+**When encountering bugs, ALWAYS read: `TROUBLESHOOTING.md`**
+
+This document contains:
+- Common issue patterns and their solutions
+- Debugging console.log patterns
+- Quick fixes checklist
+- File reference for trouble spots
+
+**Detailed postmortems** are in `app_info/`:
+- `2025-12-05_black_screen_bug_postmortem.md` - BlockSuite DOM conflicts
+- `2025-12-08_framescan_demo_data_postmortem.md` - Schema mismatch issues
+
+### Quick Debugging Protocol
+
+1. **Open Browser DevTools Console** (Cmd+Option+J)
+2. **Find the actual error** - Look for TypeError/ReferenceError with line numbers
+3. **Trace to source** - The error points to the real problem (not the symptom)
+4. **Check schema match** - Does data structure match the TypeScript interface?
+5. **Add console.log** - Trace data flow from creation to consumption
+
+### Most Common Issue: "Data Not Loading"
+
+**Reality:** Data IS loading, but component crashes on render.
+
+**How to fix:**
+1. Look for `Cannot read properties of undefined (reading 'X')` in console
+2. Find the file:line in the error
+3. Check if the data structure matches the expected interface
+4. Update data source OR add defensive checks (`obj?.nested?.property`)
+
+---
+
 ## Testing & Debugging
 
 ### Resetting Onboarding State

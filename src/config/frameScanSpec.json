@@ -203,8 +203,10 @@
   },
   "text_scan": {
     "output_schema": {
-      "overall_frame": "apex | slave | mixed",
-      "overall_win_win_state": "win_win | win_lose | lose_lose | neutral",
+      "status": "ok | rejected",
+      "rejectionReason": "string | null (required if status is rejected, must explain why the scan was rejected)",
+      "overall_frame": "apex | slave | mixed (only present if status is ok)",
+      "overall_win_win_state": "win_win | win_lose | lose_lose | neutral (only present if status is ok)",
       "axes": [
         {
           "axis_id": "string",
@@ -222,19 +224,37 @@
         ]
       },
       "corrections": {
+        "language_rules": {
+          "prohibited_patterns": [
+            "I want to feel [emotion] by you",
+            "I want to feel respected / loved / safe by you",
+            "I need you to make me feel [X]",
+            "I just want to feel [emotion] in this relationship",
+            "Any phrasing that outsources emotional state to another person"
+          ],
+          "required_patterns": [
+            "I only participate in relationships where [condition]",
+            "I require [standard] as a baseline for [engagement]",
+            "I choose [relationships/interactions] where [condition]",
+            "I am available for [relationships] that [treat my X as Y]",
+            "My presence is reserved for [interactions/people] where [condition]",
+            "I accept invitations from people who [demonstrate specific behavior]"
+          ],
+          "framing_rule": "Express wants as standards, conditions, or decisions about what the user chooses, accepts, requires, or exits—never as requests for others to deliver emotional states."
+        },
         "top_shifts": [
           {
             "axis_id": "string",
-            "shift": "short description of the structural change needed",
+            "shift": "short description of the structural change needed (must express as standard/condition, NOT as outsourced feeling)",
             "protocol_steps": [
-              "concrete behavioral or wording changes for the next message"
+              "concrete behavioral or wording changes for the next message (use standards language: 'I require...', 'I choose...', 'I only participate in...')"
             ]
           }
         ],
         "sample_rewrites": [
           {
             "purpose": "for example: subject line, first paragraph, closing",
-            "apex_version": "rewritten text that reflects Apex Frame and Win Win"
+            "apex_version": "rewritten text that reflects Apex Frame and Win Win. CRITICAL: Must use standards/conditions language ('I only participate in...', 'I require...', 'I choose relationships where...'). NEVER use 'I want to feel [X]' or outsourced-feeling phrasing."
           }
         ]
       }
@@ -429,6 +449,23 @@
       }
     },
     "feedback_templates": {
+      "global_rewrite_rules": {
+        "description": "These rules apply to ALL corrections, suggested_shifts, and sample rewrites across all axes and bands.",
+        "prohibited": [
+          "NEVER use 'I want to feel [X]' or 'I want to feel [emotion] by you'",
+          "NEVER frame wants as requests for others to deliver emotional states",
+          "NEVER use 'I need you to make me feel [X]'"
+        ],
+        "required": [
+          "ALWAYS phrase corrections as standards, conditions, or decisions",
+          "Use patterns like: 'I only participate in...', 'I require...', 'I choose...', 'I am available for...'",
+          "Frame the user as the source of worth and arbiter of participation"
+        ],
+        "examples": {
+          "wrong": "Rewrite to express that you want to feel respected in this relationship.",
+          "correct": "Rewrite to express your standard: 'I only participate in relationships where respect is mutual and consistent.'"
+        }
+      },
       "by_axis_and_band": {
         "assumptive_state": {
           "strong_slave": {
@@ -454,10 +491,10 @@
           "strong_slave": {
             "headline": "You are positioned as the product, not the buyer.",
             "diagnosis": "You chase approval and try to be picked instead of screening for fit.",
-            "correction": "Flip the frame so you are interviewing the other side. State your criteria and make it clear you are choosing who to work with.",
+            "correction": "Flip the frame so you are interviewing the other side. State your criteria using standards language: 'I choose to work with people who...' NOT 'I want to feel valued.'",
             "suggested_shifts": [
-              "Add one line that defines who you are willing to work with.",
-              "Remove language that begs for a chance and replace it with calm invitations."
+              "Add one line that defines your standard: 'I am available for relationships where [condition is met].'",
+              "Remove language that begs for a chance and replace with: 'I choose engagements where both sides bring clear value.'"
             ]
           },
           "strong_apex": {
@@ -475,8 +512,10 @@
   },
   "image_scan": {
     "output_schema": {
-      "overall_frame": "apex | slave | mixed",
-      "overall_win_win_state": "win_win | win_lose | lose_lose | neutral",
+      "status": "ok | rejected",
+      "rejectionReason": "string | null (required if status is rejected, must explain why the scan was rejected - e.g. 'This is a software screenshot, not a human interaction' or 'No context provided for the image')",
+      "overall_frame": "apex | slave | mixed (only present if status is ok)",
+      "overall_win_win_state": "win_win | win_lose | lose_lose | neutral (only present if status is ok)",
       "axes": [
         {
           "axis_id": "string",

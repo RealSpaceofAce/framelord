@@ -93,6 +93,28 @@ interface Collection {
   color: string;
 }
 
+// =============================================================================
+// UTILITY: Strip HTML tags from content for plain text preview
+// =============================================================================
+
+/**
+ * Strips HTML tags and data attributes from content, returning plain text.
+ * Used for note previews/snippets in list views.
+ */
+const stripHtml = (html: string): string => {
+  if (!html) return '';
+
+  // Create a temporary element to parse HTML
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+
+  // Get text content (strips all HTML)
+  const text = temp.textContent || temp.innerText || '';
+
+  // Clean up whitespace
+  return text.replace(/\s+/g, ' ').trim();
+};
+
 // Emoji options for note icons (organized by category)
 const EMOJI_OPTIONS = [
   // Smileys
@@ -121,7 +143,12 @@ const EMOJI_OPTIONS = [
 // MAIN COMPONENT
 // =============================================================================
 
-export const AffineNotes: React.FC = () => {
+interface AffineNotesProps {
+  /** Callback when navigating to a contact dossier from @mention */
+  onNavigateToContact?: (contactId: string) => void;
+}
+
+export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact }) => {
   // Core state
   const [sidebarView, setSidebarView] = useState<SidebarView>('all');
   const [mainTab, setMainTab] = useState<MainTab>('docs');
@@ -569,6 +596,17 @@ export const AffineNotes: React.FC = () => {
     }
   }, [theme]);
 
+  // Sidebar colors - ALWAYS use light text for FrameScan machine skin
+  // This ensures text is visible against the dark sidebar regardless of main theme
+  const sidebarColors = useMemo(() => ({
+    text: '#ffffff',
+    textMuted: 'rgba(255, 255, 255, 0.7)',
+    border: 'rgba(0, 67, 255, 0.2)',
+    hover: 'rgba(255, 255, 255, 0.06)',
+    active: 'rgba(0, 67, 255, 0.2)',
+    accent: '#0043ff',
+  }), []);
+
   // ==========================================================================
   // RENDER
   // ==========================================================================
@@ -581,16 +619,16 @@ export const AffineNotes: React.FC = () => {
           <FrameLordNotesSidebarSkin>
           {/* Workspace Header */}
           <div className="p-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: colors.accent }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: sidebarColors.accent }}>
               <span className="text-white text-sm font-bold">F</span>
             </div>
-            <span className="text-sm font-semibold" style={{ color: colors.text }}>FrameLord</span>
+            <span className="text-sm font-semibold" style={{ color: sidebarColors.text }}>FrameLord</span>
           </div>
 
           {/* Search */}
           <div className="px-3 pb-2 flex items-center gap-2">
             <div className="flex-1 relative">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: colors.textMuted }} />
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: sidebarColors.textMuted }} />
               <input
                 type="text"
                 value={searchQuery}
@@ -598,13 +636,13 @@ export const AffineNotes: React.FC = () => {
                 placeholder="Search"
                 className="w-full pl-8 pr-3 py-1.5 text-sm rounded-md outline-none border"
                 style={{
-                  color: colors.text,
-                  background: theme === 'light' ? '#ffffff' : colors.hover,
-                  borderColor: colors.border,
+                  color: sidebarColors.text,
+                  background: 'rgba(0, 67, 255, 0.05)',
+                  borderColor: sidebarColors.border,
                 }}
               />
             </div>
-            <button onClick={handleNewPage} className="p-1.5 rounded-md transition-colors" style={{ color: colors.textMuted, background: colors.hover }}>
+            <button onClick={handleNewPage} className="p-1.5 rounded-md transition-colors" style={{ color: sidebarColors.textMuted, background: sidebarColors.hover }}>
               <Plus size={18} />
             </button>
           </div>
@@ -617,7 +655,7 @@ export const AffineNotes: React.FC = () => {
               isActive={sidebarView === 'all'}
               onClick={() => { setSidebarView('all'); setMainTab('docs'); setSelectedPageId(null); }}
               count={activeNotes.length}
-              colors={colors}
+              colors={sidebarColors}
             />
             <SidebarNavItem
               icon={<Calendar size={16} />}
@@ -633,10 +671,10 @@ export const AffineNotes: React.FC = () => {
                 setRefreshKey(k => k + 1);
               }}
               count={journalNotes.length}
-              colors={colors}
+              colors={sidebarColors}
             />
 
-            <div className="my-3 border-t" style={{ borderColor: colors.border }} />
+            <div className="my-3 border-t" style={{ borderColor: sidebarColors.border }} />
 
             {/* Organize (Folders) */}
             <CollapsibleSection
@@ -644,7 +682,7 @@ export const AffineNotes: React.FC = () => {
               isExpanded={expandedSections.organize}
               onToggle={() => setExpandedSections(s => ({ ...s, organize: !s.organize }))}
               onAdd={handleCreateFolder}
-              colors={colors}
+              colors={sidebarColors}
             >
               {folders.map((folder, index) => (
                 <FolderItemView
@@ -668,7 +706,7 @@ export const AffineNotes: React.FC = () => {
                   isDraggedFolder={draggedFolderId === folder.id}
                   isFolderDropTarget={dragOverFolderIndex === index && draggedFolderId !== folder.id}
                   onFolderDragEnter={() => setDragOverFolderIndex(index)}
-                  colors={colors}
+                  colors={sidebarColors}
                 />
               ))}
             </CollapsibleSection>
@@ -678,10 +716,10 @@ export const AffineNotes: React.FC = () => {
               label="Tags"
               isExpanded={expandedSections.tags}
               onToggle={() => setExpandedSections(s => ({ ...s, tags: !s.tags }))}
-              colors={colors}
+              colors={sidebarColors}
             >
               {allTags.length === 0 ? (
-                <div className="px-2 py-2 text-xs" style={{ color: colors.textMuted }}>No tags yet</div>
+                <div className="px-2 py-2 text-xs" style={{ color: sidebarColors.textMuted }}>No tags yet</div>
               ) : (
                 allTags.map(tag => (
                   <button
@@ -689,13 +727,13 @@ export const AffineNotes: React.FC = () => {
                     onClick={() => { setSidebarView('tag'); setSelectedTag(tag); setMainTab('tags'); setSelectedPageId(null); }}
                     className="w-full flex items-center gap-2 px-2 py-1 rounded text-sm text-left"
                     style={{
-                      background: sidebarView === 'tag' && selectedTag === tag ? colors.active : 'transparent',
-                      color: colors.text,
+                      background: sidebarView === 'tag' && selectedTag === tag ? sidebarColors.active : 'transparent',
+                      color: sidebarColors.text,
                     }}
                   >
-                    <Hash size={14} style={{ color: colors.textMuted }} />
+                    <Hash size={14} style={{ color: sidebarColors.textMuted }} />
                     {tag}
-                    <span className="ml-auto text-xs" style={{ color: colors.textMuted }}>
+                    <span className="ml-auto text-xs" style={{ color: sidebarColors.textMuted }}>
                       {activeNotes.filter(n => n.tags?.includes(tag)).length}
                     </span>
                   </button>
@@ -709,10 +747,10 @@ export const AffineNotes: React.FC = () => {
               isExpanded={expandedSections.collections}
               onToggle={() => setExpandedSections(s => ({ ...s, collections: !s.collections }))}
               onAdd={handleCreateCollection}
-              colors={colors}
+              colors={sidebarColors}
             >
               {collections.length === 0 ? (
-                <div className="px-2 py-2 text-xs" style={{ color: colors.textMuted }}>No collections yet</div>
+                <div className="px-2 py-2 text-xs" style={{ color: sidebarColors.textMuted }}>No collections yet</div>
               ) : (
                 collections.map(collection => (
                   <div
@@ -720,20 +758,20 @@ export const AffineNotes: React.FC = () => {
                     onClick={() => { setSidebarView('collection'); setSelectedCollectionId(collection.id); setMainTab('collections'); setSelectedPageId(null); }}
                     className="w-full flex items-center gap-2 px-2 py-1 rounded text-sm text-left group cursor-pointer"
                     style={{
-                      background: sidebarView === 'collection' && selectedCollectionId === collection.id ? colors.active : 'transparent',
-                      color: colors.text,
+                      background: sidebarView === 'collection' && selectedCollectionId === collection.id ? sidebarColors.active : 'transparent',
+                      color: sidebarColors.text,
                     }}
                   >
                     <Library size={14} style={{ color: collection.color }} />
                     {collection.name}
-                    <span className="ml-auto text-xs" style={{ color: colors.textMuted }}>
+                    <span className="ml-auto text-xs" style={{ color: sidebarColors.textMuted }}>
                       {collection.noteIds.length}
                     </span>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDeleteCollection(collection.id); }}
                       className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-white/10 rounded"
                     >
-                      <X size={12} style={{ color: colors.textMuted }} />
+                      <X size={12} style={{ color: sidebarColors.textMuted }} />
                     </button>
                   </div>
                 ))
@@ -745,7 +783,7 @@ export const AffineNotes: React.FC = () => {
               label="Others"
               isExpanded={expandedSections.others}
               onToggle={() => setExpandedSections(s => ({ ...s, others: !s.others }))}
-              colors={colors}
+              colors={sidebarColors}
             >
               <SidebarNavItem
                 icon={<Trash2 size={16} />}
@@ -753,14 +791,14 @@ export const AffineNotes: React.FC = () => {
                 isActive={sidebarView === 'trash'}
                 onClick={() => { setSidebarView('trash'); setMainTab('docs'); setSelectedPageId(null); }}
                 count={trashedNotes.length}
-                colors={colors}
+                colors={sidebarColors}
               />
               <SidebarNavItem
                 icon={<Settings size={16} />}
                 label="Settings"
                 isActive={false}
                 onClick={() => setShowSettings(true)}
-                colors={colors}
+                colors={sidebarColors}
               />
             </CollapsibleSection>
           </nav>
@@ -784,6 +822,7 @@ export const AffineNotes: React.FC = () => {
               onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
               onToggleRightSidebar={() => setRightSidebarOpen(!rightSidebarOpen)}
               onNavigateToNote={handleNavigateToNote}
+              onNavigateToContact={onNavigateToContact}
               onTitleChange={(title) => { updateNote(selectedPage.id, { title }); setRefreshKey(k => k + 1); }}
               onToggleTheme={handleThemeToggle}
               onToggleFavorite={() => handleToggleFavorite(selectedPage.id)}
@@ -1497,7 +1536,7 @@ const DocListItem: React.FC<DocListItemProps> = ({ page, onSelect, onDelete, onR
       <div className="text-lg">{page.icon || (page.dateKey ? '📅' : '📄')}</div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate" style={{ color: colors.text }}>{page.title || 'Untitled'}</div>
-        {page.content && <div className="text-xs truncate" style={{ color: colors.textMuted }}>{page.content.slice(0, 60)}</div>}
+        {page.content && <div className="text-xs truncate" style={{ color: colors.textMuted }}>{stripHtml(page.content).slice(0, 60)}</div>}
       </div>
       <div className="flex items-center gap-3 text-xs" style={{ color: colors.textMuted }}>
         <span>{formatTimeAgo(page.updatedAt)}</span>
@@ -1568,7 +1607,7 @@ const DocGridItem: React.FC<DocGridItemProps> = ({ page, onSelect, onDelete, onR
       </div>
     </div>
     <h3 className="font-medium text-sm truncate" style={{ color: colors.text }}>{page.title || 'Untitled'}</h3>
-    <p className="text-xs mt-1 line-clamp-2" style={{ color: colors.textMuted }}>{page.content?.slice(0, 80) || 'No content'}</p>
+    <p className="text-xs mt-1 line-clamp-2" style={{ color: colors.textMuted }}>{stripHtml(page.content || '').slice(0, 80) || 'No content'}</p>
     <p className="text-xs mt-2" style={{ color: colors.textMuted }}>{formatTimeAgo(page.updatedAt)}</p>
   </div>
 );

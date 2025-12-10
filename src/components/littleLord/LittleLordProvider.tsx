@@ -66,6 +66,10 @@ export interface LittleLordProviderProps {
   userId: string;
   /** Whether to show the floating button */
   showFloatingButton?: boolean;
+  /** Current view ID for context-aware behavior */
+  currentViewId?: LittleLordContext['viewId'];
+  /** Currently selected contact ID */
+  selectedContactId?: string | null;
   /** Optional callback when Little Lord is invoked */
   onInvoke?: (source: LittleLordInvocationSource, context?: LittleLordContext) => void;
 }
@@ -79,6 +83,8 @@ export const LittleLordProvider: React.FC<LittleLordProviderProps> = ({
   tenantId,
   userId,
   showFloatingButton = true,
+  currentViewId,
+  selectedContactId,
   onInvoke,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -91,12 +97,18 @@ export const LittleLordProvider: React.FC<LittleLordProviderProps> = ({
 
   const open = useCallback(
     (source: LittleLordInvocationSource, context?: LittleLordContext) => {
+      // Merge provider-level context with invocation-specific context
+      const mergedContext: LittleLordContext = {
+        viewId: currentViewId,
+        selectedContactId: selectedContactId ?? undefined,
+        ...context,
+      };
       setInvocationSource(source);
-      setCurrentContext(context);
+      setCurrentContext(mergedContext);
       setIsOpen(true);
-      onInvoke?.(source, context);
+      onInvoke?.(source, mergedContext);
     },
-    [onInvoke]
+    [onInvoke, currentViewId, selectedContactId]
   );
 
   const close = useCallback(() => {

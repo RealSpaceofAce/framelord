@@ -38,6 +38,7 @@ import {
   setLittleLordShortcut,
   type LittleLordShortcutPreference,
 } from '../../lib/settings/userSettings';
+import { useSavageMode } from '../../hooks/useSavageMode';
 import { CONTACT_ZERO, getContactZero, updateContact } from '../../services/contactStore';
 import {
   getNotificationSettings,
@@ -45,6 +46,44 @@ import {
 } from '../../services/systemLogStore';
 
 type SettingsTab = 'profile' | 'billing' | 'appearance' | 'notifications' | 'integrations' | 'privacy' | 'help';
+
+// Savage Mode Toggle Component
+const SavageModeToggle: React.FC = () => {
+  const { isEnabled, toggle } = useSavageMode();
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-sm font-semibold text-white mb-1">Enable Savage Feedback</div>
+          <div className="text-xs text-gray-500">
+            Get brutally honest (but clean) feedback from FrameScan and Little Lord.
+            No sugarcoating, no profanity - just direct truth.
+          </div>
+        </div>
+        <button
+          onClick={toggle}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            isEnabled ? 'bg-red-500' : 'bg-gray-600'
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              isEnabled ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
+      </div>
+      {isEnabled && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <span className="text-xs text-red-400">
+            Savage Mode is active. Your feedback will be more direct and unfiltered.
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface SettingsViewProps {
   selectedContactId: string;
@@ -620,6 +659,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   />
                 </div>
               </div>
+            </SettingCard>
+
+            {/* Savage Mode Card */}
+            <SettingCard
+              title="Savage Mode"
+              description="Enable brutally honest feedback from FrameScan and Little Lord"
+            >
+              <SavageModeToggle />
             </SettingCard>
 
             {/* Keyboard Shortcuts Card */}

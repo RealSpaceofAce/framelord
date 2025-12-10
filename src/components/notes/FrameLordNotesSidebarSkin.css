@@ -270,15 +270,52 @@
 .notes-sidebar-framelord,
 .notes-sidebar-framelord * {
   --text-primary: #ffffff !important;
-  --text-secondary: #ffffff !important;
-  --text-tertiary: #ffffff !important;
-  --text-muted: #ffffff !important;
+  --text-secondary: rgba(255, 255, 255, 0.9) !important;
+  --text-tertiary: rgba(255, 255, 255, 0.8) !important;
+  --text-muted: rgba(255, 255, 255, 0.7) !important;
 }
 
 .notes-sidebar-framelord span,
 .notes-sidebar-framelord p,
+.notes-sidebar-framelord label,
 .notes-sidebar-framelord div:not([class*="sidebar-"]) {
-  color: inherit;
+  color: #ffffff !important;
+}
+
+/* =============================================================================
+   CATEGORY HEADERS FIX (Organize, Tags, Collections, etc.)
+   ============================================================================= */
+
+.notes-sidebar-framelord h3,
+.notes-sidebar-framelord h4,
+.notes-sidebar-framelord h5,
+.notes-sidebar-framelord h6,
+.notes-sidebar-framelord [class*="header"],
+.notes-sidebar-framelord [class*="title"],
+.notes-sidebar-framelord [class*="category"],
+.notes-sidebar-framelord [class*="group-label"],
+.notes-sidebar-framelord [class*="section-label"] {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Specific fix for category headers that might use muted colors */
+.notes-sidebar-framelord .text-gray-400,
+.notes-sidebar-framelord .text-gray-500,
+.notes-sidebar-framelord .text-gray-600,
+.notes-sidebar-framelord .text-muted,
+.notes-sidebar-framelord [class*="muted"],
+.notes-sidebar-framelord [class*="secondary"] {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Fix for Journals, Trash, Settings text */
+.notes-sidebar-framelord [class*="nav"] span,
+.notes-sidebar-framelord [class*="menu"] span,
+.notes-sidebar-framelord [class*="list"] span,
+.notes-sidebar-framelord li span,
+.notes-sidebar-framelord a span {
+  color: #ffffff !important;
 }
 
 /* =============================================================================

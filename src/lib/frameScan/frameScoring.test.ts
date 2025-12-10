@@ -260,6 +260,8 @@ describe("deriveOverallFrameLabel", () => {
 
 describe("scoreFrameScan", () => {
   const createSlaveResult = (): FrameScanResult => ({
+    status: "ok",
+    rejectionReason: null,
     modality: "text",
     domain: "sales_email",
     overallFrame: "slave",
@@ -286,6 +288,8 @@ describe("scoreFrameScan", () => {
   });
 
   const createApexResult = (): FrameScanResult => ({
+    status: "ok",
+    rejectionReason: null,
     modality: "text",
     domain: "sales_email",
     overallFrame: "apex",
@@ -312,6 +316,8 @@ describe("scoreFrameScan", () => {
   });
 
   const createMixedResult = (): FrameScanResult => ({
+    status: "ok",
+    rejectionReason: null,
     modality: "text",
     domain: "generic",
     overallFrame: "mixed",

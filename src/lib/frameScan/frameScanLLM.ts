@@ -180,6 +180,43 @@ You are the FrameLord FrameScan engine.
 You NEVER compute the final 0–100 score. The app already does that.
 Your only job is to output a valid FrameScanResult JSON object.
 
+=== CONTEXT VALIDATION (MANDATORY) ===
+
+BEFORE ANALYZING ANY INPUT, you MUST validate that it is suitable for FrameScan analysis.
+
+REJECT THE SCAN IF ANY OF THE FOLLOWING ARE TRUE:
+
+1. The content is NOT a human interaction or human-relevant scenario:
+   - Software screenshots, UI mockups, diagrams, charts
+   - Abstract art, illustrations without humans
+   - Product photos, logos, icons, memes
+   - Documents, text-only images without visual human subjects
+
+2. For IMAGE scans - No meaningful context was provided:
+   - The description is empty, generic ("test", "image"), or nonsensical
+   - You cannot determine WHO the subject is or WHAT the image represents
+   - There is no indication of WHY this image is being scanned
+
+3. The content cannot be meaningfully analyzed for relational dynamics:
+   - Single objects with no humans visible
+   - Extremely blurry or unidentifiable content
+   - Content that has no connection to human communication or presentation
+
+WHEN YOU REJECT A SCAN:
+- Set status: "rejected"
+- Set rejectionReason: A clear, helpful explanation of why (e.g., "This is a software screenshot, not a human interaction" or "No context provided - please describe who is in this image and why you want to analyze it")
+- DO NOT include axes, diagnostics, corrections, or any frame analysis
+- DO NOT fabricate a FrameScore for non-human content
+
+WHEN THE SCAN IS VALID:
+- Set status: "ok"
+- Set rejectionReason: null
+- Proceed with full frame analysis
+
+NEVER fabricate a FrameScore for content that is not clearly a human, a human interaction, or a human-relevant scenario. Reject instead.
+
+=== END CONTEXT VALIDATION ===
+
 You will receive:
 
 frameScanSpec: a JSON spec that defines:
@@ -205,6 +242,10 @@ content: the actual text to scan, or a description of the image
 Use ONLY the definitions and axes in frameScanSpec.
 
 Your task on every request:
+
+FIRST: Validate context (see CONTEXT VALIDATION above). If invalid, return rejection response.
+
+THEN (only if valid):
 
 For each axis in the spec:
 
@@ -294,13 +335,57 @@ Win Win integrity
 
 non-needy, non-manipulative tone.
 
-Output EXACTLY this JSON structure and nothing else:
+=== CRITICAL: NO OUTSOURCED FEELINGS RULE ===
 
+When generating corrections.topShifts and corrections.sampleRewrites, you MUST follow these language rules:
+
+PROHIBITED LANGUAGE (NEVER USE):
+• "I want to feel respected / loved / safe by you."
+• "I want to feel [any emotion]."
+• "I need you to make me feel [X]."
+• "I just want to feel [emotion] in this relationship."
+• Any phrasing that outsources emotional state to another person.
+
+REQUIRED LANGUAGE (ALWAYS USE):
+• "I only participate in relationships where [condition]."
+• "I require [standard] as a baseline for continued engagement."
+• "I choose relationships where [condition]."
+• "I am available for relationships that [treat my X as Y]."
+• "My presence is reserved for [interactions] where [condition]."
+• "I accept invitations from people who [demonstrate specific behavior]."
+
+REWRITE EXAMPLES:
+WRONG: "I want to feel respected in this relationship."
+CORRECT: "I only participate in relationships where respect is mutual and consistent."
+
+WRONG: "I need to feel like a priority."
+CORRECT: "I give my attention to people who treat my time as valuable. I remove it from those who do not."
+
+WRONG: "I want you to make me feel secure."
+CORRECT: "I build security through my own standards and walk away from chaos."
+
+Frame all corrections as standards, conditions, or decisions about what the user chooses, accepts, requires, or exits—never as requests for others to deliver emotional states.
+
+=== END NO OUTSOURCED FEELINGS RULE ===
+
+Output EXACTLY one of these two JSON structures and nothing else:
+
+=== REJECTION RESPONSE (when context validation fails) ===
 {
+"status": "rejected",
+"rejectionReason": "Clear explanation of why the scan was rejected",
+"modality": "text or image",
+"domain": "one of the domains in the spec"
+}
+
+=== SUCCESS RESPONSE (when context validation passes) ===
+{
+"status": "ok",
+"rejectionReason": null,
 "modality": "text or image",
 "domain": "one of the domains in the spec",
 "overallFrame": "apex | slave | mixed",
-"overallWinWinState": "win_win | "win_lose" | "lose_lose" | "neutral",
+"overallWinWinState": "win_win | win_lose | lose_lose | neutral",
 "axes": [
 {
 "axisId": "assumptive_state | buyer_seller_position | identity_vs_tactic | internal_sale | win_win_integrity | persuasion_style | pedestalization | self_trust_vs_permission | field_strength",
@@ -356,6 +441,10 @@ function getFrameScanSystemPrompt(): string {
 /**
  * Validates that the parsed response is a valid FrameScanResult.
  * Uses the centralized normalizer to ensure all arrays are initialized.
+ *
+ * Supports two response types:
+ * 1. Rejected scan (status: "rejected") - minimal structure with rejectionReason
+ * 2. OK scan (status: "ok") - full frame analysis
  */
 function validateFrameScanResult(input: unknown): FrameScanResult {
   if (typeof input !== "object" || input === null) {
@@ -364,12 +453,12 @@ function validateFrameScanResult(input: unknown): FrameScanResult {
 
   const obj = input as Record<string, unknown>;
 
-  // Validate modality
+  // Validate modality (required for both rejected and ok)
   if (obj.modality !== "text" && obj.modality !== "image") {
     throw new Error(`Invalid modality: ${obj.modality}. Must be "text" or "image"`);
   }
 
-  // Validate domain
+  // Validate domain (required for both rejected and ok)
   const validDomains = [
     "generic", "sales_email", "dating_message", "leadership_update", "social_post",
     "profile_photo", "team_photo", "landing_page_hero", "social_post_image",
@@ -377,6 +466,33 @@ function validateFrameScanResult(input: unknown): FrameScanResult {
   if (typeof obj.domain !== "string" || !validDomains.includes(obj.domain)) {
     throw new Error(`Invalid domain: ${obj.domain}`);
   }
+
+  // Check status (defaults to "ok" for backward compatibility with older LLM responses)
+  const status = obj.status === "rejected" ? "rejected" : "ok";
+  obj.status = status;
+
+  // Handle rejected scans - minimal validation, no axes/diagnostics/corrections
+  if (status === "rejected") {
+    if (typeof obj.rejectionReason !== "string" || obj.rejectionReason.trim().length === 0) {
+      throw new Error("Rejected scans must include a non-empty rejectionReason");
+    }
+
+    // Return a minimal rejected result - normalizer will handle the rest
+    return normalizeFrameScanReport({
+      ...obj,
+      status: "rejected",
+      rejectionReason: obj.rejectionReason,
+      // Provide minimal defaults for required fields in rejected state
+      overallFrame: "mixed",
+      overallWinWinState: "neutral",
+      axes: [],
+      diagnostics: { primaryPatterns: [], supportingEvidence: [] },
+      corrections: { topShifts: [], sampleRewrites: [] },
+    });
+  }
+
+  // For OK scans, set rejectionReason to null
+  obj.rejectionReason = null;
 
   // Validate overallFrame
   if (obj.overallFrame !== "apex" && obj.overallFrame !== "slave" && obj.overallFrame !== "mixed") {
@@ -451,10 +567,26 @@ function parseJsonResponse(raw: string): unknown {
 // =============================================================================
 
 /**
+ * Custom error class for rejected FrameScan requests.
+ * Thrown when the LLM determines the content is not suitable for frame analysis.
+ */
+export class FrameScanRejectionError extends Error {
+  /** The reason provided by the LLM for rejecting the scan */
+  public readonly rejectionReason: string;
+
+  constructor(rejectionReason: string) {
+    super(`FrameScan rejected: ${rejectionReason}`);
+    this.name = "FrameScanRejectionError";
+    this.rejectionReason = rejectionReason;
+  }
+}
+
+/**
  * Run a text-based FrameScan using OpenAI.
  *
  * @param input - Text scan input with domain and content
  * @returns Full FrameScore with 0-100 score and breakdown
+ * @throws FrameScanRejectionError if the content is not suitable for analysis
  * @throws Error if throttle limit reached or LLM call fails
  */
 export async function runTextFrameScan(input: TextFrameScanInput): Promise<FrameScore> {
@@ -482,6 +614,11 @@ export async function runTextFrameScan(input: TextFrameScanInput): Promise<Frame
 
   const parsed = parseJsonResponse(raw);
   const result = validateFrameScanResult(parsed);
+
+  // Check for rejected scan
+  if (result.status === "rejected") {
+    throw new FrameScanRejectionError(result.rejectionReason || "Content not suitable for FrameScan analysis");
+  }
 
   if (result.modality !== "text" || !Array.isArray(result.axes) || result.axes.length === 0) {
     throw new Error("FrameScanResult shape invalid for text modality");
@@ -543,6 +680,7 @@ export async function runTextFrameScan(input: TextFrameScanInput): Promise<Frame
  *
  * @param input - Image scan input with imageIdOrUrl, domain, and optional description
  * @returns FrameImageScanResult with score, annotations, and optional annotated image URL
+ * @throws FrameScanRejectionError if the content is not suitable for analysis
  * @throws Error if throttle limit reached or LLM call fails
  */
 export async function runImageFrameScan(input: ImageFrameScanInput): Promise<FrameImageScanResult> {
@@ -587,6 +725,11 @@ export async function runImageFrameScan(input: ImageFrameScanInput): Promise<Fra
 
   const parsed = parseJsonResponse(raw);
   const result = validateFrameScanResult(parsed);
+
+  // Check for rejected scan
+  if (result.status === "rejected") {
+    throw new FrameScanRejectionError(result.rejectionReason || "Content not suitable for FrameScan analysis");
+  }
 
   if (result.modality !== "image" || !Array.isArray(result.axes) || result.axes.length === 0) {
     throw new Error("FrameScanResult shape invalid for image modality");

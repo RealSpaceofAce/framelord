@@ -97,6 +97,8 @@ const fakeTextScore: FrameScore = {
 };
 
 const fakeTextResult: FrameScanResult = {
+  status: 'ok',
+  rejectionReason: null,
   modality: 'text',
   domain: 'sales_email',
   overallFrame: 'mixed',
@@ -120,7 +122,7 @@ const fakeTextReport: FrameScanReport = {
   id: 'demo-text-001',
   createdAt: new Date().toISOString(),
   subjectType: 'self',
-  subjectContactId: CONTACT_ZERO.id,
+  subjectContactIds: [CONTACT_ZERO.id],
   modality: 'text',
   domain: 'sales_email',
   sourceRef: 'demo',
@@ -261,6 +263,8 @@ const fakeImageScore: FrameScore = {
 };
 
 const fakeImageResult: FrameScanResult = {
+  status: 'ok',
+  rejectionReason: null,
   modality: 'image',
   domain: 'profile_photo',
   overallFrame: 'apex',
@@ -281,7 +285,7 @@ const fakeImageReport: FrameScanReport = {
   id: 'demo-image-001',
   createdAt: new Date().toISOString(),
   subjectType: 'self',
-  subjectContactId: CONTACT_ZERO.id,
+  subjectContactIds: [CONTACT_ZERO.id],
   modality: 'image',
   domain: 'profile_photo',
   sourceRef: 'demo',

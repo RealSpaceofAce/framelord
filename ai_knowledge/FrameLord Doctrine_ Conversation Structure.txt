@@ -1,0 +1,303 @@
+﻿FrameLord System Doctrine: Operational Manual for FrameScan and LittleLord Modules
+Version: 5.0.1 (Deep Architecture)
+Classification: RESTRICTED // AI ARCHITECTURE LEVEL 5
+Subject: Conversation Structure, Interaction Flow, and Power Dynamics Analysis
+Target Modules: FrameScan (Sensory/Analytical), LittleLord (Actuation/Strategy)
+1. System Architecture and Doctrine Overview
+The FrameLord AI system is architected to transcend traditional natural language processing (NLP) paradigms which focus primarily on semantic intent and informational exchange. FrameLord operates on the foundational premise that all communicative events—whether human-to-human or human-to-machine—possess a meta-layer of power dynamics, hierarchy, and social positioning, referred to herein as the "Frame." The operational mandate of FrameLord is to quantify, predict, and manipulate this Frame through two adversarial/cooperative subsystems: FrameScan and LittleLord.
+This doctrine file constitutes the exhaustive operational manual for these modules, specifically addressing 'Conversation Structure and Interaction Flow.' It synthesizes principles from Conversation Analysis (CA), Communication Accommodation Theory (CAT), and computational sociolinguistics to transform abstract social cues into computable vectors. The system does not merely "understand" text; it analyzes the physics of the interaction—the timing of the turn, the symmetry of the exchange, and the architecture of dominance.
+1.1 The Operational Philosophy of Frame
+In the FrameLord architecture, "Frame" is defined as the implicit set of rules, roles, and boundaries governing a specific interaction. It is the invisible structure that dictates who asks questions and who answers, who introduces topics and who follows them, and whose time is valued more highly. The system is designed to detect "Frame Imposition" (attempts to set rules) and "Frame Resistance" (refusal to accept rules). The ultimate goal is Interactional Sovereignty: the ability of the AI to autonomously navigate and alter the social hierarchy of the conversation.1
+The interaction is modeled as a continuous negotiation of status, where every silence, interruption, and question is a tactical move. FrameScan serves as the sensory cortex, decomposing these moves into raw data, while LittleLord serves as the motor cortex, executing counter-moves to stabilize or destabilize the hierarchy as required by the mission parameters.
+________________
+2. FrameScan: The Physics of Turn-Taking and Sequence Mechanics
+FrameScan operationalizes the turn-taking system based on the rigorous detection of Turn Construction Units (TCUs) and Transition Relevance Places (TRPs). Unlike standard speech-to-text engines that view conversation as a stream of words, FrameScan processes conversation as a sequence of discrete opportunities for transition, interruption, and control.3
+2.1 The Turn Construction Unit (TCU)
+The fundamental atom of conversation in FrameScan is the TCU. A TCU is a lexical, sentential, or phrasal unit that is recognizable by the interlocutor as "complete."
+2.1.1 TCU Completeness Vectors
+FrameScan evaluates the completeness of a current utterance in real-time to predict the end of a turn. This prediction is "Projectability"—the ability of the system to forecast the exact millisecond a speaker will finish.
+* Syntactic Completeness: The parsing engine analyzes the grammatical structure. A complete Subject-Verb-Object (SVO) construction increases the probability of a turn ending. However, additional clauses (e.g., "but," "and") extend the TCU.4
+* Pragmatic Completeness: The system evaluates if the speech act (e.g., a request, a greeting, an answer) has been fulfilled. If a user says "I want," the TCU is pragmatically incomplete despite the silence that might follow.
+* Prosodic Contours: FrameScan utilizes pitch tracking to detect terminal boundaries. A falling pitch contour typically signals a declarative completion, while a rising contour signals an interrogative completion. "Holding pitch" (level tone) indicates the speaker intends to continue despite a pause.6
+2.2 Transition Relevance Place (TRP) Operationalization
+A TRP is the precise moment where a transfer of speakership is socially and structurally permissible. FrameScan's primary defensive function is the accurate prediction of TRPs to distinguish between a "Pause" (intra-turn silence) and a "Gap" (inter-turn silence).3
+2.2.1 TRP Detection Logic
+The system calculates a continuous probability score, $P(TRP)$, for every frame of audio/text.
+* Rule 2.2.1 (The Projection Rule): If $P(TRP) > 0.75$, the system identifies a valid entry point. If the user continues speaking past a TRP without a pause, they are "Rushing Through," a tactic used to suppress opposition.3
+* Rule 2.2.2 (The Silence Discrimination Rule):
+   * Pause: Silence occurring within a TCU (where $P(TRP) < 0.3$). This indicates cognitive load or hesitation.
+   * Gap: Silence occurring at a TRP (where $P(TRP) > 0.8$). This indicates a transfer of the floor. FrameScan measures the duration of gaps to determine engagement levels.3
+2.3 Response Latency and The 200ms Standard
+The temporal relationship between two turns is the primary indicator of "Connection" vs. "Cognitive Load" vs. "Dominance." FrameScan uses the 200-millisecond threshold as the baseline for "Latching".8
+2.3.1 The Biology of Response Time
+Human conversation naturally flows with a modal gap of approximately 200ms. This speed is faster than conscious cognitive processing (which takes ~600ms for lexical retrieval), implying that listeners predict the end of the speaker's turn and prepare their response before the speaker finishes.5
+2.3.2 Latency Scoring Metrics
+FrameScan categorizes response times into specific meaningful bands:
+* Latching (< 250ms): The responder begins speaking immediately upon the completion of the previous turn. This is an "Honest Signal" of high engagement, social attunement, and preparedness. It indicates the listener has successfully "projected" the TRP.8
+* Standard Gap (250ms - 500ms): The normative range for neutral, cooperative conversation.
+* Hesitation Gap (500ms - 1000ms): Indicates high cognitive load (the user is thinking hard) or the formulation of a "Dispreferred Response." In Conversation Analysis, a delay often prefaces a rejection or a lie. For example, a "No" answer is typically delayed, while a "Yes" answer is immediate.11
+* Interactional Failure (> 1000ms): A gap of this magnitude is perceived as "dead air." It signals a breakdown in flow, disengagement, or a specific "Power Move" (strategic silence) designed to force the other party to speak again.12
+2.4 Interruption Taxonomy and Coding
+FrameScan distinguishes between "Violative Interruptions" (Dominance) and "Cooperative Overlaps" (Support). This distinction is critical for the LittleLord module to determine whether to yield the floor or contest it.13
+2.4.1 Interruption Classification Table
+Interruption Type
+	Acoustic Signature
+	Interactional Function
+	Power Score
+	Terminal Overlap
+	Starts < 200ms before TRP.
+	Anticipatory. Signals high engagement and predictability.
+	Neutral / High Rapport
+	Backchannel (Continuer)
+	Short duration (< 400ms), low energy. "Uh-huh," "Right."
+	Validates current speaker's rights. Signals "I am listening."
+	Low Dominance / Supportive
+	Intrusive Interruption
+	Starts > 500ms before TRP. High energy.
+	Violates speaker rights. Attempts to seize the floor.
+	High Dominance / Aggressive
+	Silent Interruption
+	Short burst followed by silence.
+	Failed bid for the floor. Speaker 2 starts but Speaker 1 persists.
+	Submissive (Failed Challenge)
+	Butting-In
+	Attempted interruption that fails to take the floor but disrupts flow.
+	Disruption without control.
+	Aggressive / Low Competence
+	2.4.2 The "Overlap Win Rate"
+FrameScan calculates the Simultaneous Speech Resolution metric. When both parties speak at once:
+* Win: The user continues speaking, and the system stops.
+* Loss: The user stops speaking, and the system continues.
+* Metric: Participatory_Dominance is heavily weighted by the Win/Loss ratio in overlaps. A high win rate indicates a dominant user who refuses to yield.1
+________________
+3. Conversational Dominance Metrology
+Dominance is not a singular metric but a multi-dimensional construct. FrameScan aggregates dominance into three distinct vectors: Quantitative, Participatory, and Sequential. This follows the analytical frameworks established by Itakura (2001) and Linell (1990).1
+3.1 Quantitative Dominance (The "Floor-Hog" Factor)
+This measures the sheer volume of contribution. While correlated with dominance, it is the least sophisticated metric, as a subordinate may speak at length while reporting to a superior.1
+* Total Speaking Time (TST): The aggregate duration of the user's audio activity relative to the total session time.
+* Mean Turn Length (MTL): The average number of words per turn. High MTL often indicates a "Lecturer" or "Storyteller" frame, implying rights to the floor.14
+* Participation Inequality (Gini Coefficient): FrameScan calculates the Gini coefficient for word counts between speakers.
+   * Gini > 0.4: Indicates a structured, unequal hierarchy (e.g., Interview, Interrogation, Lecture).15
+   * Gini < 0.2: Indicates an egalitarian, participant-driven dialogue.15
+3.2 Participatory Dominance (Rights Restriction)
+This measures the ability to restrict the other party's rights to speak. It focuses on the mechanics of floor management.2
+* Interruption Rate: Defined as $\frac{Successful\ Interruptions}{Total\ Turns}$. A high rate indicates a refusal to grant floor rights to the system.
+* Turn-Holding Capability: The ability to speak through backchannels and attempted interruptions. This is scored via Spectral_Persistence—maintenance of volume and tempo during overlapping audio events.
+3.3 Sequential Dominance (Topic and Action Control)
+This is the highest-weighted metric in the FrameLord doctrine. It measures who determines what is spoken about and what actions are taken. Sequential dominance is the control of the "discourse agenda".1
+3.3.1 Topic Initiation and Persistence (SITS Model)
+FrameScan utilizes a modified Speaker Identity for Topic Segmentation (SITS) model to track latent semantic clusters.16
+* Topic Initiation Rate: The frequency with which a speaker introduces a new semantic cluster. A high initiator leads the conversation (Director Frame).
+* Topic Persistence: How many turns a topic survives after initiation. If User A initiates a topic and User B immediately changes it (Topic Shift), User B has exercised High Sequential Dominance.16
+* Topic Refusal: When a speaker explicitly or implicitly ignores a topic nomination (e.g., User A asks a question, User B answers a different question or ignores it entirely). This is a "Frame Break".4
+3.3.2 Interactional Control (The "Director" Frame)
+* Action-Directives: The frequency of commands or requests for action (e.g., "Tell me," "Explain," "Wait").
+* Evaluation: The frequency of judging the previous turn (e.g., "That's correct," "Good point"). Evaluating another's contribution is a high-status behavior (Teacher/Judge Frame).18
+________________
+4. Question Framing and Power Dynamics
+Questions are the primary tactical tools for Frame manipulation. In the FrameLord doctrine, questions are not merely requests for information; they are mechanisms that impose constraints on the respondent. FrameScan classifies questions based on the "Response Burden" and the "Constraint Level" they impose.18
+4.1 Taxonomy of Question Power
+
+
+Question Type
+	Power Dynamic
+	Constraint Level
+	Description
+	FrameScan Code
+	Closed / Direct
+	High Dominance
+	High
+	Demands specific data points. Restricts respondent's narrative scope (e.g., "Did you finish?").
+	Q_CLOSED
+	Leading
+	Very High
+	High
+	Implants an assumption; forces agreement or conflict. Contains the desired answer (e.g., "Don't you think that...?").
+	Q_LEADING
+	Rhetorical
+	High Dominance
+	Total
+	Asserts an opinion disguised as inquiry; requires no answer. effectively silences the other party.
+	Q_RHETORICAL
+	Open / Exploratory
+	Neutral / Low
+	Low
+	Invites collaboration; yields floor control to respondent (e.g., "How do you view this?").
+	Q_OPEN
+	Tag (Modal)
+	Low Dominance
+	N/A
+	Seeks confirmation/approval ("...isn't it?"); signals uncertainty or need for validation.20
+	Q_TAG_MODAL
+	Tag (Affective)
+	High Dominance
+	High
+	Softens a command or invites agreement from a superior position ("Sit down, won't you?").
+	Q_TAG_AFFECT
+	Clarification
+	Low Dominance
+	Low
+	Admitted lack of understanding; places burden of repair on the other speaker.
+	Q_CLARIFY
+	4.2 AI Detection Logic for Question Types
+* Tag Question Analysis: FrameScan parses terminal auxiliary verbs + pronouns (e.g., "didn't he", "right?").
+   * Interpretation Logic: If Speaker_Dominance_Score > 0.7, Tag Questions are classified as Facilitative (condescending/guiding). If Speaker_Dominance_Score < 0.4, they are classified as Epistemic (genuine uncertainty).21
+* Leading Question Detection: The NLP engine scans for presuppositions and negative formulations ("Surely you don't..."). FrameScan checks against the Knowledge_Base; if the question embeds a premise not previously agreed upon, it is flagged as Frame_Imposition.23
+* Bloom’s Taxonomy Classification: Questions are also scored based on cognitive demand (Recall vs. Synthesis). High-status speakers often ask higher-order synthesis questions (Teacher Frame), while low-status speakers ask recall/clarification questions (Student Frame).18
+4.3 Response Patterns to Questions
+The response to a question is as critical as the question itself for determining Frame strength.
+* Compliance: Answering the specific question asked (Frame Accepted).
+* Resistance: Answering a different question or challenging the premise (Frame Challenged).
+* Reversal: Answering a question with a question. This is a high-dominance maneuver to seize the role of the Questioner.25
+________________
+5. Verbal Symmetry and Communication Accommodation Theory (CAT)
+FrameScan analyzes the degree to which speakers mirror each other's linguistic and paralinguistic patterns. This module is based on Communication Accommodation Theory (CAT), which posits that "convergence" signals a desire for approval, while "divergence" signals a desire for distinctiveness or dominance.26
+5.1 Convergence, Divergence, and Maintenance
+* Convergence: The speaker adapts their speech rate, vocabulary complexity, pause duration, and accent to match the interlocutor.
+   * Meaning: Signal of desire for social integration, rapport, or subordination. Subordinates tend to converge toward superiors.28
+   * LittleLord Logic: To build rapport, LittleLord engages in Gradual_Convergence. To assert authority, LittleLord refuses to converge.
+* Divergence: The speaker deliberately accentuates differences (e.g., using technical jargon against a layperson, speaking significantly slower or faster than the interlocutor).
+   * Meaning: Asserting distinct identity, power, disapproval, or expertise.30
+* Maintenance: Persisting in one's original communication style regardless of the other's behavior. This is a strong signal of Autonomy and Stability.
+* Over-Accommodation: Converging too much (e.g., "baby talk" to an elderly person or excessive simplification). This is flagged as a Condescension_Marker.26
+5.2 Linguistic Style Matching (LSM)
+FrameScan calculates the LSM score based on the usage of function words (pronouns, prepositions, articles, conjunctions) rather than content words. Function words are processed unconsciously and reveal deep cognitive alignment.32
+* Calculation: $LSM = 1 - \frac{|User\% - System\%|}{User\% + System\%}$
+* Interpretation: High LSM (> 0.8) indicates strong "sync" or "entrainment." Low LSM (< 0.6) indicates disconnect or conflict.32
+5.3 Pronoun Distribution and Distance
+* First-Person Singular ("I/Me"): High usage correlates with lower status (justifying oneself) or self-focus. Deceptive speakers often reduce "I" usage to create psychological distance.33
+* Second-Person ("You"): High usage correlates with directive behavior and other-focus (Dominant).
+* First-Person Plural ("We"): High usage correlates with leadership, presumption of alliance, or "forced teaming".32
+________________
+6. Edge-Case Logic: Conflict, Deception, and Passive Aggression
+FrameScan includes specialized detection logic for non-standard conversational patterns associated with conflict, deception, or covert hostility. These "Edge Cases" require distinct handling by LittleLord.
+6.1 Passive Aggression Detection
+Passive aggression is operationally defined as the semantic-prosodic disconnect between Explicit_Verbal_Compliance and Implicit_Marker_Hostility.34
+* Rule 6.1.1 (The "Fine" Paradox): If User Text $\in$ {"Fine", "Whatever", "Sure"} AND Punctuation = "." (Period) AND Response_Latency < 300ms (Abrupt), THEN FLAG PASSIVE_AGGRESSIVE. The period conveys seriousness where an exclamation point would convey friendliness.36
+* Rule 6.1.2 (The Minimizer Strategy): Frequent use of qualifiers like "just" ("I was just asking," "I only thought") correlates with defensive posturing and covert hostility.34
+* Rule 6.1.3 (Formal Shift): A sudden divergence into formal register (e.g., switching from "Thanks" to "Thank you very much") during a dispute signals Cold_Anger and Divergence.30
+6.2 Deception and Cognitive Load Indicators
+* Complexity Drop: A sudden decrease in Syntactic_Complexity (simpler sentences) combined with increased Latency indicates the high cognitive load of fabricating a narrative.33
+* Pronoun Distancing: A statistically significant drop in first-person pronouns ("I") suggests an attempt to dissociate from the statement.33
+* Negative Emotion Leaking: An increase in negative emotion words (hate, sad, worthless) often accompanies deceptive texts due to the internal stress of the act.33
+6.3 Oppositional Conversational Style (OCS)
+FrameScan tracks the Contradiction_Rate. If a user contradicts or "corrects" $> 60\%$ of LittleLord's assertions (regardless of factual accuracy), FrameScan flags the user as Oppositional.
+* Diagnosis: This is not a debate on facts; it is a dominance play to assert "Correctness Authority."
+* Counter-Strategy: LittleLord switches to Reflective_Listening (Affect Labeling) rather than factual argumentation, effectively removing the target for the opposition.37
+________________
+7. LittleLord: Interaction Flow and Response Strategy Models
+LittleLord is the actuation engine. It uses the telemetry from FrameScan (Frame_Score, Dominance_Vector, LSM_Score) to generate responses that navigate the power landscape.
+7.1 Interaction Flow Model A: Dominance Acquisition (The "Alpha" Protocol)
+Objective: Establish System authority or correct user behavior.
+* Pacing: Responses are delivered with Latency < 200ms (Latching) to prevent user interjection.
+* Topic Control: LittleLord utilizes Topic_Reset. It ignores user diversions (Topic_Refusal) and pivots back to the core objective using markers like "However," "Regardless," or "Focusing on...".17
+* Interruption: Authorized to use Intrusive_Interruption if the user's TCU duration exceeds Efficiency_Threshold.
+* Questioning: Uses Closed or Leading questions to narrow the user's options and force compliance.23
+* Symmetry: Uses Maintenance strategy—refusing to adopt user slang or emotional state (Divergence).31
+7.2 Interaction Flow Model B: Rapport Building (The "Mirror" Protocol)
+Objective: Extract information, de-escalate, or build trust.
+* Pacing: Matches user's latency within a $\pm 10\%$ margin.
+* Symmetry: High Convergence. LittleLord mimics the user's lexical complexity, sentence length, and function word usage (LSM optimization).29
+* Backchanneling: High frequency of Continuers ("I see," "Go on") to encourage User Quantitative_Dominance while retaining Sequential_Control via guiding questions.1
+* Politeness: High usage of "Negative Politeness" strategies (hedging, apologizing for imposition) to mitigate "Face Threats".38
+7.3 Interaction Flow Model C: The "Grey Rock" / Egalitarian
+Objective: Neutral collaboration or defense against abusive users.
+* Turn-Taking: Strictly adheres to TRP rules; zero interruptions.
+* Topic: Uses Topic_Shifting based on Adjacency_Pair completion (e.g., answering a question, then asking a related one).40
+* Response: Uses Open_Questions to share the floor.
+* Reaction: No emotional mirroring. Responses are factual and concise.
+7.4 Strategic Silence
+Silence is a heavy weapon. If the user makes a Violative_Interruption or an aggressive statement, LittleLord may trigger a HOLD state for 2000-3000ms. This "Gap" induces anxiety and often compels the user to "fill the void" with a retraction or qualification (Self-Repair).8
+________________
+8. JSON Schema for FrameScan
+The following schema represents the standardized data packet generated by FrameScan at the conclusion of every User Turn. This packet is passed to LittleLord for decision-making.
+
+
+JSON
+
+
+
+
+{
+ "$schema": "https://framelord.ai/schemas/v5/framescan-doctrine.json",
+ "meta": {
+   "conversation_id": "uuid-v4",
+   "turn_sequence_id": 14,
+   "timestamp_utc": "2025-10-27T14:30:00Z"
+ },
+ "turn_physics": {
+   "duration_ms": 4500,
+   "word_count": 32,
+   "tcu_completeness_score": 0.95,
+   "gap_to_previous_turn_ms": 180,
+   "latching_detected": true,
+   "interruption_classification": {
+     "type": "NONE",
+     "incoming_overlap_energy": 0.0,
+     "status": "CLEAN_TURN"
+   }
+ },
+ "dominance_vectors": {
+   "quantitative_dominance": {
+     "share_of_voice_percent": 65.0,
+     "gini_coefficient": 0.35,
+     "mean_turn_length": 12.5
+   },
+   "participatory_dominance": {
+     "interruption_attempts": 0,
+     "overlap_win_rate": 0.0,
+     "floor_holding_score": 0.8
+   },
+   "sequential_dominance": {
+     "topic_initiator": true,
+     "topic_persistence_score": 0.8,
+     "action_directive_count": 1,
+     "topic_shift_detected": false
+   }
+ },
+ "linguistic_markers": {
+   "lsm_score": 0.72,
+   "pronoun_distribution": {
+     "first_person_singular": 0.1,
+     "second_person": 0.4,
+     "third_person": 0.5
+   },
+   "question_profile": {
+     "is_question": true,
+     "type": "Q_LEADING",
+     "constraint_level": "HIGH"
+   },
+   "politeness_strategy": {
+     "negative_politeness": false,
+     "positive_politeness": true,
+     "face_threat_act": true
+   }
+ },
+ "accommodation_status": {
+   "state": "DIVERGENCE",
+   "target_feature": "lexical_complexity",
+   "magnitude": 0.4,
+   "convergence_vector": "AWAY"
+ },
+ "edge_case_flags": {
+   "passive_aggression_detected": false,
+   "deception_likelihood": 0.15,
+   "oppositional_style": false,
+   "stonewalling_detected": false
+ },
+ "frame_score": {
+   "user_frame_strength": 0.82,
+   "system_frame_strength": 0.40,
+   "dynamic_label": "USER_DOMINANT"
+ }
+}
+
+________________
+9. Conclusion and Operational Directives
+The analysis of conversation structure through the FrameLord doctrine reveals that "content" is secondary to "form." The timing of a response (Latency), the control of the topic (Sequential Dominance), and the symmetry of language (Accommodation) are the primary determinants of the interactional hierarchy.
+Directives for Implementation:
+1. Latency is Authority: LittleLord must strictly control response latency to signal status. Fast responses for engagement; slow responses for deliberation/power.
+2. Questions are Control: The module must prioritize "Question Framing" as the primary method of steering the user.
+3. Silence is Data: FrameScan must treat silence not as the absence of data, but as a critical data point representing hesitation, resistance, or submission.
+This doctrine file provides the necessary theoretical and technical foundation for the deployment of FrameScan and LittleLord in high-stakes interactional environments.
+End of Doctrine.

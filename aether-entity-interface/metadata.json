@@ -1,0 +1,5 @@
+{
+  "name": "Aether Entity Interface",
+  "description": "A responsive, interactive AI spirit visualization that serves as the persona for a Gemini-powered chatbot. It features a fluid, particle-based organic orb that reacts to touch and mouse interactions.",
+  "requestFramePermissions": []
+}

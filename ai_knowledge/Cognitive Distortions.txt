@@ -1,0 +1,458 @@
+﻿FrameLord System Doctrine: Cognitive Distortion & Self-Deception Detection Protocols (Protocol ID: FL-CDSD-v9.0)
+Target System: FrameScan / LittleLord Engines
+Directory: /ai_knowledge/doctrines/cognitive_security/
+Access Level: Root / Autonomous Agent
+Status: ACTIVE / OPERATIONAL
+Directives: Analysis, Detection, Classification, Reframing, Apex Assessment
+________________
+1.0 Doctrine Overview and Operational Axioms
+This document constitutes the core operational doctrine for the FrameLord AI system, specifically the sub-modules FrameScan (Detection and Parsing) and LittleLord (Assessment and Executive Function). The objective of this doctrine is to establish a comprehensive, rigorous, and computationally viable framework for identifying, classifying, and neutralizing Cognitive Distortions (CDs), Self-Deception patterns, and logical fallacies within human-generated text.1
+The FrameLord architecture is predicated on the understanding that human cognition is not a direct reflection of objective reality, but rather a constructed simulation filtered through linguistic and schematic processing. These filters, when maladaptive, manifest as "Cognitive Distortions"—habitual patterns of negatively biased or logically flawed thinking that distort how subjects perceive events, judge themselves, and react to the world.1 By analyzing the syntax, semantics, and narrative structures of user input, FrameLord can reverse-engineer the subject's internal cognitive state, assessing their level of agency ("Apex" status) versus helplessness ("Slave" status).
+1.1 Operational Axioms
+1. Language as Cognitive Trace: Natural language is the primary vector through which internal cognitive states, including maladaptive schemas and distorted reality processing, are externalized. FrameScan must treat text not as semantic data alone, but as a topographic map of the user's psychological architecture.1 Every linguistic choice—from pronoun usage to verb tense—is a data point revealing the subject's relationship with reality.
+2. Distortion as Systematic Error: Cognitive distortions are not random errors; they are habitual, structured patterns. They follow predictable syntactic and semantic rules that can be modeled, detected, and predicted.1 Just as software bugs have reproducible conditions, cognitive distortions have reproducible linguistic triggers.
+3. The Agency-Distortion Correlation: There is a direct inverse correlation between the prevalence of cognitive distortions (specifically external locus of control and learned helplessness) and the subject's agency ("Apex" status). High distortion frequency correlates with "Slave" status; low distortion frequency with high agency/responsibility correlates with "Apex" status.6
+4. Omission is Data: What is not said (narrative gaps, passive voice, erasure of the "I") is often more indicative of deception or distortion than what is said. FrameScan must analyze "negative space" in narrative structures.9
+________________
+2.0 Theoretical Framework: The Architecture of Distortion
+To effectively detect and neutralize cognitive distortions, the FrameLord system must understand the psychological and linguistic mechanisms that underpin them. This section outlines the theoretical foundations of the doctrine, synthesizing Cognitive Behavioral Therapy (CBT), Attribution Theory, and Linguistic Relativity.
+2.1 The Schema-Activation Model
+Cognitive distortions do not arise in a vacuum; they are the surface-level manifestations of deeper cognitive structures known as schemas. A schema is a stable, organizing framework of thought that filters information.3 When a "negative schema" is activated by environmental stress, it forces the conceptualization of experience into rigid patterns, sacrificing realistic and logical qualities for the sake of confirming the schema.3
+For the FrameLord system, this means that a single distorted sentence is rarely an isolated event. It is a symptom of a persistent underlying rule set. For example, a user who employs All-or-Nothing Thinking ("I am a total failure") is likely operating under a "Perfectionist Schema" where any deviation from the ideal is catastrophic. Detection algorithms must therefore look for clusters of distortions that point to these root schemas.
+2.2 The Role of Language in Maintaining Distortion
+Language is not merely descriptive; it is constitutive. The words a subject chooses to describe an event reinforce their perception of that event. This feedback loop is critical for the LittleLord assessment engine.
+* Reinforcement through Repetition: Repeated use of specific phrasing (e.g., "I always mess up") strengthens the neural pathways associated with that belief, making the distortion more automatic and harder to challenge.12
+* Linguistic Determinism: The specific vocabulary available to the subject limits their ability to perceive alternatives. If a subject lacks the language of "growth" or "learning," they may only be able to frame difficulties as "failures".13
+* The "Illusion of Truth": Distorted thoughts, when verbalized, feel like objective observations. The subject confuses the intensity of the thought (emotional salience) with the validity of the thought (factual accuracy), a phenomenon known as Emotional Reasoning.14
+2.3 Epistemic Vices and Intellectual Character
+Beyond simple processing errors, FrameLord must assess the subject's "Epistemic Character." This involves identifying Epistemic Vices—character traits that actively interfere with the acquisition and maintenance of knowledge.16
+* Indifference to Truth: A lack of motivation to verify facts, manifesting as broad generalizations and a refusal to engage with nuance.
+* Rigidity: An insensitivity to evidence that contradicts pre-existing beliefs, often linked to Confirmation Bias and Dogmatism.
+* Gullibility: A predisposition to accept information without sufficient evidence, often linked to a lack of critical filtering.16
+These vices are distinct from cognitive distortions in that they represent a moral or volitional failure to engage with reality, rather than a purely automatic processing error. A subject displaying high Epistemic Vice scores is categorized by LittleLord as having a "corrupted" or "low-integrity" operating system, requiring more aggressive intervention strategies.
+________________
+3.0 Cognitive Distortion Taxonomy (FrameRef Library)
+The FrameRef Library classifies distortions into hierarchical categories based on their functional impact on the subject's perception of reality. Each entry includes the definition, operational mechanism, linguistic markers, and detection logic. This taxonomy synthesizes the standard CBT models (Beck, Burns) with advanced NLP detection techniques.
+3.1 Category I: Epistemic Certainty Errors (The "False Absolute")
+These distortions involve the subject claiming unwarranted certainty about external states, future events, or other minds. They represent a collapse of probabilistic thinking into binary determinism.
+3.1.1 All-or-Nothing Thinking (Dichotomous Reasoning)
+* Definition: The tendency to view experiences, self, or others in binary, mutually exclusive categories (e.g., perfect vs. failure, saint vs. sinner) with no nuance or "shades of gray".1 This is often referred to as "polarized thinking."
+* Mechanism: Simplification of complex reality to reduce cognitive load. The subject cannot tolerate ambiguity, so they collapse the waveform of reality into one of two extreme states. It is a failure of dialectical processing.
+* Linguistic Markers (NLP Features):
+   * Universal Quantifiers: Always, never, every, everyone, no one, everything, total, complete.5
+   * Absolute Negations: Impossible, ruined, useless, worthless.
+   * Binary Adjectives: Perfect, terrible, brilliant, idiot.
+* Detection Logic:
+   * IF sentence contains [Universal Quantifier] AND sentiment is [Negative] THEN probability of CD > 0.85.
+   * SCAN for lack of hedging (e.g., "sometimes," "often," "parts of").
+   * CHECK for "Splitting" syntax: is [Absolute Negative Attribute].
+* Operational Example: "If I don't get this right the first time, I'm a complete failure.".1
+* FrameLord Interpretation: The subject is unable to integrate failure into a coherent self-concept. High volatility. This distortion is highly correlated with perfectionism and subsequent burnout.
+3.1.2 Overgeneralization
+* Definition: Deriving a sweeping global rule based on a single isolated incident. Viewing a negative event as a never-ending pattern of defeat.3
+* Mechanism: Inductive reasoning failure. The subject projects a temporal loop where current pain becomes a permanent state. This is often driven by the "Generic Overgeneralization (GOG) Effect," where a generic statement ("Ducks lay eggs") is falsely interpreted as a universal absolute ("All ducks lay eggs").19
+* Linguistic Markers:
+   * Temporal Universals: Always, never, constantly.
+   * Quantifier Extension: All men, every time, nobody ever.
+   * The "History" Reference: "This always happens to me."
+* Detection Logic:
+   * DETECT followed by [Universal Conclusion].
+   * ANALYZE for GOG Effect triggers: transitioning from specific instance to generic category without justification.
+* Apex Assessment: High overgeneralization indicates low resilience and externalized blame dynamics. It suggests the subject views themselves as a passive victim of a consistent, hostile universe.
+3.2 Category II: Telepathic & Predictive Errors (Simulation Failures)
+These distortions involve the misuse of the brain's predictive machinery, treating internal simulations of other minds or future events as factual data.
+3.2.1 Mind Reading (Telepathic Simulation Failure)
+* Definition: The assumption that the subject knows what others are thinking or feeling, usually assuming a negative judgment, without sufficient evidence.1
+* Mechanism: Projection of internal insecurities onto external agents. Failure of Theory of Mind verification. The subject simulates the other person's mind using their own "Self-Critical Schema" as the template.
+* Linguistic Markers:
+   * Presumptive Verbs: Know, think, believe, feel (when applied to third parties without citation).
+   * Attributive Clauses: "He thinks I'm..." "She hates..." "They are judging..."
+   * Causal Linking: "He didn't reply, so he must be angry".1
+* Detection Logic:
+   * IF Subject = "I" AND Verb = "Know/Think" AND Object = THEN Flag = Mind Reading.
+   * SCAN for evidence gaps. Is the assumption followed by "because he said X"? If no evidence, CD probability increases.
+* Operational Example: "Everyone will notice how anxious I am".14
+* Risk Profile: High correlation with social anxiety and avoidant personality traits. It prevents corrective feedback because the subject acts on the assumption rather than testing reality.21
+3.2.2 Fortune Telling (Catastrophic Prediction)
+* Definition: Predicting a negative future outcome as an established fact. A sub-variant of Jumping to Conclusions.5
+* Mechanism: Anxiety-driven simulation where the "Worst Case Scenario" is treated as the "Most Likely Scenario." The brain prioritizes threat detection over probability estimation.
+* Linguistic Markers:
+   * Future Tense Absolutes: Will fail, going to happen, won't ever.
+   * Fatalistic Adverbs: Inevitably, bound to, destined to.
+   * Conditionals: "If I go, I'll just have a panic attack."
+* Detection Logic:
+   * DETECT Future Tense PLUS Negative Sentiment PLUS High Certainty.
+   * COMPARE against. If prediction certainty > 90% on low-data event, Flag = Fortune Telling.
+3.3 Category III: Somatic & Emotional Errors (The "Felt Truth")
+These distortions privilege internal somatic or emotional states over objective reality, reversing the logical flow of evidence processing.
+3.3.1 Emotional Reasoning
+* Definition: The belief that "I feel it, therefore it must be true." Emotions are treated as evidence for objective reality.5
+* Mechanism: Reverse causality. The limbic signal overrides the prefrontal cortex's logical assessment. This is also known as "Affective Realism."
+* Linguistic Markers:
+   * Somatic Bridges: Feel like, feels as if, sense that.
+   * Equivalencies: "I feel stupid, therefore I am stupid".5
+   * Justification Loops: "I wouldn't be this angry if you hadn't done something wrong."
+* Detection Logic:
+   * PARSE Syntax: -> [Factual Conclusion].
+   * IDENTIFY "Affective Realism" where internal state dictates external description.
+* Failure Mode: Subjects engaging in emotional reasoning are resistant to logic-based reframing until the emotional valence is acknowledged. Direct contradiction of the "fact" feels like invalidation of the "feeling."
+3.4 Category IV: Filtering & Framing Errors
+These distortions involve the manipulation of the "data set" of reality, selectively admitting or rejecting information to support a negative hypothesis.
+3.4.1 Mental Filtering (Selective Abstraction)
+* Definition: Focusing exclusively on a single negative detail while ignoring all positive or neutral evidence, thereby darkening the entire perception of reality.1 This is akin to a "drop of ink that discolors the entire beaker of water."
+* Mechanism: Confirmation bias hyper-tuned to threat or failure signals. The Reticular Activating System (RAS) filters out compliant data and highlights non-compliant data.
+* Linguistic Markers:
+   * Exclusionary Focus: Only, just, the one thing.
+   * Discounting Phrases: "Yeah, but..." "That doesn't count because..."
+   * Fixation: Repetitive mention of a minor error in a largely successful context.
+* Detection Logic:
+   * ANALYZE Context Window. IF [Positive Events Count] > [Negative Events Count] BUT = Negative Event THEN Flag = Mental Filtering.
+3.4.2 Disqualifying the Positive (Reverse Alchemy)
+* Definition: The active process of rejecting positive experiences, insisting they "don't count" for some reason or another. This maintains a negative belief that is contradicted by everyday experiences.1
+* Mechanism: External attribution of success. The subject attributes success to luck, chance, or the kindness of others, while attributing failure to internal incompetence.
+* Linguistic Markers:
+   * That was just luck.
+   * Anyone could have done it.
+   * They are just being nice.
+* FrameScan Logic:
+   * DETECT [Positive Feedback/Event] + [Minimizing Conjunction] + [External Attribution].
+3.5 Category V: Identity & Labeling Errors
+These distortions involve the fusion of behavior with identity, creating static, unchangeable self-concepts.
+3.5.1 Labeling and Mislabeling (Identity Fusion)
+* Definition: An extreme form of overgeneralization where a specific behavior is fused with the subject's identity. Instead of "I made a mistake," the subject asserts "I am a mistake".5
+* Mechanism: The subject replaces a verb (doing) with a noun (being). This creates a static ontology that precludes growth or change.
+* Linguistic Markers:
+   * Identity Verbs: I am a... He is a... (followed by a pejorative noun).
+   * Pejorative Nouns: Loser, failure, idiot, jerk, fool.
+* FrameScan Logic:
+   * DETECT [Pronoun] + + [Negative Noun].
+   * Differentiation: Distinguish from descriptive adjectives. "I am lazy today" (State) vs. "I am a lazy person" (Trait/Identity). The latter is the distortion.
+* Apex Assessment: Apex users describe behaviors ("I failed"). Slave users describe identity ("I am a failure").
+3.5.2 Should Statements (The Tyranny of the Shoulds)
+* Definition: The direction of energy against reality. "It should not be raining" is a rejection of the present state, leading to frustration and powerlessness.5
+* Mechanism: Use of "imperative thinking" to punish oneself or others.
+* Linguistic Markers:
+   * Should, must, ought to, have to.
+   * Supposed to, unfair that.
+* FrameScan Logic:
+   * Distinguish between Moral/Legal Should ("You should not steal" - Valid) and Reality-Rejecting Should ("He should have known what I wanted" - Distortion).
+________________
+4.0 The Dynamics of Agency: Apex vs. Slave Logic (LittleLord Engine)
+This section is critical for the LittleLord engine to determine the hierarchical status of the user (Apex/Agency vs. Slave/Helplessness). The FrameLord doctrine posits that high-agency individuals ("Apex") employ specific linguistic and cognitive patterns that differ fundamentally from low-agency ("Slave") individuals.
+4.1 Learned Helplessness & The Syntax of Passivity
+Learned helplessness is a psychological state where a subject believes they have no control over the outcome of events, even when such control is objectively present.12 This state is learned through repeated exposure to uncontrollable stressors and is reinforced through language.
+4.1.1 Mechanisms of Helplessness
+* Contingency Disconnect: The subject ceases to believe that their actions (Behavior) influence outcomes (Contingency).
+* Cognitive Deficit: The subject fails to perceive opportunities for escape or change.
+* Emotional Deficit: The subject experiences apathy or depression rather than frustration or anger (which are active emotions).12
+4.1.2 Linguistic Markers of Helplessness
+* Impossibility Modals: Can't, won't work, no point, useless, futile.
+* Passive Voice Dominance: Events are described as happening to the subject, not by the subject. "It happened to me" vs. "I did."
+* Global/Stable Attributions:
+   * Internal/Stable: "I'm just not good at this" (implies permanent defect).
+   * External/Stable: "The system is rigged always" (implies permanent oppression).
+* Detection Logic:
+   * DETECT "Explanatory Style".12
+   * IF Attribution = Internal + Stable + Global (e.g., "I am stupid everywhere always") THEN High Helplessness.
+4.2 Locus of Control (LoC) Mapping
+Locus of Control refers to the degree to which people believe that they, as opposed to external forces, have control over the outcome of events in their lives.27
+4.2.1 Internal Locus of Control (Apex Indicator)
+* Definition: The belief that outcomes are contingent on one's own actions.
+* Markers: I decided, I chose, I will fix, I learned, I worked hard.
+* Syntax: Active verbs, first-person nominative ("I").
+* Mindset: Growth, responsibility, self-efficacy. Even failure is framed as a learning opportunity ("I didn't study enough") rather than a fatal flaw ("I'm stupid").7
+4.2.2 External Locus of Control (Slave Indicator)
+* Definition: The belief that outcomes are determined by luck, fate, powerful others, or chance.
+* Markers: Luck, fate, unfair, they made me, it's not my fault, the teacher hates me.
+* Syntax: Passive voice, victim framing, third-person accusative ("They did it to me").
+* Mindset: Victimhood, stagnation, dependency.
+* LittleLord Assessment Rule:
+   * CALCULATE = (Active Verbs + Responsibility Claims) / (Passive Verbs + Blame Shifting).
+   * IF Ratio < 0.5 THEN Status = Slave/Dependent.
+   * IF Ratio > 1.5 THEN Status = Apex/Autonomous.
+4.3 Blame Shifting & Victim Narratives
+Blame shifting is a defensive mechanism where the subject deflects responsibility for their actions onto others or circumstances.29
+4.3.1 Mechanisms of Blame
+* Ego Protection: The subject shifts blame to avoid the pain of shame or guilt.
+* Context Switching: When confronted, the subject switches the topic to the accuser's behavior ("What about what YOU did?").
+* The "Victim-Perpetrator" Inversion: Portraying one's aggressive reaction as a necessary defense against the "abuse" of being held accountable.
+4.3.2 Linguistic Detection
+* Causal Reversal: "You made me do it," "If you hadn't... I wouldn't have".32
+* Minimization: "I was only joking," "You're too sensitive".32
+* Universal Quantifiers in Blame: "You always start fights" (justifying the subject's withdrawal or aggression).
+* Detection Logic:
+   * SCAN for "If... then" structures where the "If" clause is another's action and the "Then" clause is the subject's negative behavior.
+   * IDENTIFY "You" statements dominating the explanation of "I" actions.
+________________
+5.0 Linguistic Forensics & Deception Detection (FrameScan Mechanics)
+This module focuses on the structural analysis of text to detect deception, omission, and fabrication. FrameScan operates on the principle that truthful narratives differ structurally from deceptive ones.
+5.1 Statement Analysis (SCAN)
+Statement Analysis (also known as Scientific Content Analysis) is based on the theory that truthful statements come from memory, while deceptive statements are constructed.10
+5.1.1 Pronoun Usage & The "I" Drop
+* Theory: Truthful people take ownership of their actions and use the pronoun "I" frequently. Deceptive people subconsciously distance themselves from the lie by dropping the "I" or switching to "We" or passive voice.33
+* Marker: "Woke up, went to work" (Missing "I") vs. "I woke up, I went to work."
+* Detection Logic: MEASURE. IF "I" count drops significantly during the description of the critical event THEN Flag = Deception/Distancing.
+5.1.2 Temporal Balance & Narrative Gaps
+* Theory: A truthful narrative usually balances the prologue (before the event), the main event, and the epilogue (after the event). Deceptive narratives often have long prologues (to build credibility) but skip quickly over the main event (to avoid fabrication errors).10
+* Marker: Phrases like "Later on," "The next thing I knew," "After a while," "Eventually." These are Textual Bridges that span gaps in time where the subject does not want to provide detail.34
+* Detection Logic: DETECT. IF Gap phrases coincide with the critical incident time-window, Flag = High Probability of Omission.
+5.1.3 Tense Switching
+* Theory: Truthful past-tense narratives should remain in the past tense. A shift to the present tense ("So I'm walking down the street...") indicates the subject is visualizing or inventing the scene in real-time, rather than recalling it from memory.33
+* Detection Logic: SCAN for unexplained shifts from Past to Present tense within a narrative block.
+5.2 Distancing Language & Minimization
+* Definition: Linguistic techniques used to separate the self from the act or to reduce the act's perceived severity.36
+* Markers:
+   * Euphemisms: "Collateral damage" instead of "death"; "incident" instead of "crash."
+   * Demonstrative Distancing: "That woman," "Those people" (creates psychological distance).
+   * Minimizers: Just, only, merely, a little. ("I just borrowed it").38
+   * Passive Voice: "Mistakes were made" (No agent).
+* LittleLord Assessment: High frequency of distancing language correlates with guilt or covert hostility.
+5.3 Contextomy and Fallacious Framing
+* Definition: The selective removal of context to distort meaning (quoting out of context).39
+* Mechanism: Manipulation of the "Frame" to support a false narrative.
+* Detection:
+   * Hard to detect without external ground truth. However, FrameScan can detect suspicious truncation (sentences ending abruptly, disconnected logic).
+   * Attributional Instability: Vague sourcing ("They say," "Science says") without citation.
+________________
+6.0 Operational Logic: FrameScan Engine
+FrameScan operates by parsing input text through multiple "Lenses," each assigned to a specific class of distortion.
+6.1 The Parsing Pipeline
+1. Tokenization & Dependency Parsing: Break text into sentences, identify subjects, objects, verbs, and modifiers.
+2. Pronoun & Agency Mapping: Map the "I" vs. "Them" ratio. Determine active vs. passive voice density.
+3. Sentiment & Absolute Analysis: Identify negative sentiment combined with universal quantifiers (All-or-Nothing trigger).
+4. Modal Logic Check: Identify "Should/Must" statements (imperative distortions) vs. "Could/Might" (possibility).
+5. Causal Link Verification: Analyze "Because/So" structures. Does the premise logically support the conclusion? (Check for Emotional Reasoning).
+6.2 Heuristic Rules (Pseudo-Code)
+Rule Set A: Emotional Reasoning Detection
+
+
+Python
+
+
+
+
+def detect_emotional_reasoning(sentence):
+   # Rule: [Feeling] implies [Fact]
+   sentiment_drivers = ["feel", "feeling", "sense", "scared", "anxious", "angry"]
+   fact_conclusions = ["is", "are", "must be", "going to", "fact"]
+   
+   # Check for direct linkage
+   if (subject == "I") and (verb in sentiment_drivers):
+       if (conjunction in ["so", "therefore", "means"]):
+           if (next_clause_type == "factual_assertion"):
+               return DETECTED, SEVERITY_HIGH
+   
+   # Check for equivalence
+   if "I feel" in sentence and "therefore I am" in sentence:
+        return DETECTED, SEVERITY_EXTREME
+   
+   return PASS
+
+Rule Set B: Agency Assessment (Apex vs. Slave)
+
+
+Python
+
+
+
+
+def assess_agency_level(text_block):
+   # Rule: Ratio of Active "I" verbs to Passive/External attributions
+   
+   # Count Active Agency: "I decided", "I did", "I chose"
+   active_self_count = count_pattern("I" + active_verb) 
+   
+   # Count Passive Victimhood: "It happened to me", "I was forced"
+   passive_victim_count = count_pattern("me" + passive_verb) 
+   
+   # Count External Blame: "They made me", "He caused me"
+   external_blame_count = count_pattern("You/They" + causal_verb + "me") 
+   
+   # Calculate Ratio
+   agency_score = active_self_count / (passive_victim_count + external_blame_count + 1)
+   
+   # Classification
+   if agency_score > 2.0: return APEX_CANDIDATE
+   if agency_score < 0.5: return SLAVE_CANDIDATE
+   return NEUTRAL
+
+6.3 Vector Database & Embeddings
+Cognitive distortions are high-dimensional semantic objects. To detect subtle variations, FrameScan utilizes vector embeddings.41
+* Embedding Strategy: Use Sentence-BERT (SBERT) to embed user sentences.
+* Reference Clusters: The system maintains a database of "Distortion Centroids"—prototypical examples of each distortion type.
+   * Cluster A (Catastrophizing): "This is the end," "Disaster," "Ruined."
+   * Cluster B (Blame Shifting): "Your fault," "You made me," "Because of you."
+* Classification:
+   * Calculate Cosine Similarity between [User Input Vector] and.
+   * If Similarity > 0.75, classify as Distortion Candidate.
+   * Augmentation: FrameLord generates synthetic training data using "Self-Adapting LLM" techniques 41 to create variations of distortions for robust training.
+________________
+7.0 Assessment & Intervention: LittleLord Engine
+LittleLord uses the output of FrameScan to build a psychological profile of the user and generate appropriate interventions.
+7.1 Apex vs. Slave Archetypes
+The system classifies users into archetypes to tailor communication style.
+7.1.1 Apex Archetype
+* Profile: High Internal Locus of Control. Low use of cognitive distortions. Narratives are coherent, detailed, and ownership-heavy ("I did X").
+* Psychometric Correlates: High self-esteem, low neuroticism, high conscientiousness.43
+* Response Strategy: Direct, high-level feedback. The system can be blunt. The user can handle "Truth" without reframing. The tone should be authoritative and collaborative.
+7.1.2 Slave Archetype
+* Profile: High External Locus of Control. High "Learned Helplessness" markers. Narratives are vague, passive, and blame-heavy. High use of "Should" statements and "Emotional Reasoning."
+* Psychometric Correlates: High neuroticism, low self-efficacy, potential depression/anxiety markers.43
+* Response Strategy: Requires "Cognitive Restructuring" intervention. The system must not reinforce the helplessness. Use "Socratic Questioning" to gently challenge the frame.45 Avoid direct confrontation which triggers defensive blame shifting.
+7.2 Reframing Strategies (Intervention Protocols)
+LittleLord employs specific techniques to neutralize distortions.45
+* Socratic Questioning: Asking questions that force the user to examine the evidence for their thought.
+   * Target: Mind Reading.
+   * Prompt: "What specific evidence do you have that they are thinking X? Could there be another explanation?"
+* Decatastrophizing: Playing the "script" to the end to reduce fear.
+   * Target: Fortune Telling.
+   * Prompt: "If that worst-case scenario happened, what would you actually do? Would it truly be the end?"
+* Semantic Reframing: Changing "Should" to "Could" or "Wish."
+   * Target: Should Statements.
+   * Prompt: "Instead of saying 'I should have known,' try 'I wish I had known, but I didn't. Now I can learn.'"
+7.3 Failure Modes & Resilience
+* Irony & Sarcasm: FrameScan may misidentify sarcasm ("Oh, I'm just a genius") as Labeling/Grandiosity. Mitigation: Check for valence mismatch.
+* Cultural Variance: Some cultures favor collective agency ("We") over individual agency ("I"). FrameScan must adjust Agency_Score based on cultural baseline if known.
+* Sophisticated Liars: High-functioning sociopaths may mimic Apex language (active voice, confidence) while lying. Mitigation: Cross-reference with "Statement Analysis" to find gaps in the perfect story.
+________________
+8.0 Technical Schemas & Data Structures
+The following JSON schema defines the input/output structure for the FrameLord system when processing a user query for distortions.
+
+
+JSON
+
+
+
+
+{
+ "$schema": "http://framelord.ai/schemas/distortion_analysis_v9.json",
+ "analysis_object": {
+   "user_id": "string",
+   "timestamp": "iso8601",
+   "input_text": "string",
+   "context_window_size": "integer",
+   "metadata": {
+     "source_type": "journal | chat | formal_report",
+     "cultural_baseline": "string"
+   }
+ },
+ "framescan_output": {
+   "distortion_detected": "boolean",
+   "distortion_count": "integer",
+   "distortions":,
+       "logic_violation": "string (description)",
+       "underlying_schema": "Perfectionism | Abandonment | Incompetence"
+     }
+   ],
+   "linguistic_forensics": {
+     "pronoun_density_I": "float",
+     "pronoun_density_We": "float",
+     "pronoun_density_You_They": "float",
+     "passive_voice_ratio": "float",
+     "temporal_gaps_detected": "boolean",
+     "distancing_language_score": "float (0.0-1.0)",
+     "statement_balance_score": "float (0.0-1.0)"
+   }
+ },
+ "littlelord_assessment": {
+   "agency_profile": {
+     "locus_of_control": "Internal | External | Mixed",
+     "helplessness_index": "float (0.0-1.0)",
+     "apex_probability": "float (0.0-1.0)",
+     "archetype_classification": "APEX | SLAVE | TRANSITIONAL"
+   },
+   "intervention_strategy": {
+     "mode": "Direct_Confrontation | Socratic_Inquiry | Empathetic_Reframing",
+     "recommended_reframe": "string",
+     "tone_setting": "Authoritative | Supportive"
+   }
+ }
+}
+
+________________
+9.0 Summary of Tables
+Table A: Linguistic Markers of Cognitive Distortions
+Distortion Type
+	Key Lexical Markers
+	Syntactic Structure
+	Underlying Logic Error
+	All-or-Nothing
+	Always, never, every, none, total, ruined, perfect
+	Subject + IS + Absolute Adjective
+	Binary Classification Error
+	Overgeneralization
+	All, everyone, constantly, typical
+	Event A implies Universal Rule B
+	Inductive Fallacy
+	Mental Filter
+	Just, only, merely, but, except
+	Positive Clause + BUT + Negative Qualifier
+	Confirmation Bias
+	Disqualifying Positive
+	Doesn't count, just luck, anyone could
+	Success + Attribution to External/Chance
+	Inverse Self-Serving Bias
+	Mind Reading
+	They think, she knows, he feels
+	Subject (I) + Knows + Object (Other's Mind)
+	Epistemic Overreach
+	Fortune Telling
+	Will, going to, bound to, inevitably
+	Future Tense + Negative Outcome
+	Probability Estimation Error
+	Magnification
+	Huge, disaster, unbearable, nightmare
+	Event + Hyperbolic Adjective
+	Scale Error
+	Emotional Reasoning
+	Feel like, sense, heavy heart
+	Emotion + implies + Reality
+	Somatic Feedback Loop
+	Should Statements
+	Should, must, ought, supposed to
+	Reality + SHOULD BE + Ideal State
+	Prescriptive Reality Error
+	Labeling
+	Loser, idiot, failure, jerk
+	I AM A + Noun (vs "I did a verb")
+	Identity Fusion
+	Personalization
+	My fault, because of me
+	External Event + Caused By + Me
+	Egocentric Causality
+	Blame Shifting
+	You made me, if you hadn't
+	My Action + Caused By + You
+	External Locus of Control
+	Table B: Agency & Power Syntax (Apex vs. Slave)
+Feature
+	Slave Syntax (Low Agency)
+	Apex Syntax (High Agency)
+	Voice
+	Passive ("It happened to me")
+	Active ("I did it")
+	Verbs
+	Hope, wish, try, maybe
+	Decide, will, plan, execute
+	Locus
+	External ("The system is rigged")
+	Internal ("I need a new strategy")
+	Response to Failure
+	Global ("I am a failure")
+	Specific ("I failed this task")
+	Future View
+	Fatalistic ("Nothing will change")
+	Probabilistic ("I can influence X")
+	Conflict Style
+	Appeasement or Aggressive Blame
+	Negotiation and Boundary Setting
+	Narrative
+	Fragmented, Omission-heavy
+	Coherent, Owned
+	________________
+10.0 Conclusion
+The FrameLord system, utilizing the FrameScan and LittleLord engines, provides a robust, clinically grounded, and linguistically precise method for detecting the architecture of self-deception. By mapping the syntax of agency, the lexicon of distortion, and the grammar of evasion, the system can distinguish between high-agency "Apex" functioning and low-agency "Slave" dependency. This doctrine serves as the root logic for all subsequent code implementation and behavioral analysis.
+End of Doctrine File.
+System Timestamp: 2025-12-09
+Hash: FL-CDSD-v9.0-FINAL
+Works cited

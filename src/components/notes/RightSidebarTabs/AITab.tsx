@@ -20,6 +20,7 @@ import {
   Copy,
   Check,
   ChevronDown,
+  Lock,
 } from 'lucide-react';
 import {
   invokeLittleLordWithHistory,
@@ -29,6 +30,7 @@ import {
 import type { LittleLordMessage, LittleLordContext } from '../../../services/littleLord/types';
 import { CONTACT_ZERO } from '../../../services/contactStore';
 import { createNote } from '../../../services/noteStore';
+import { canAccessWritingAssistant, getUserTierSummary } from '../../../services/littleLord/userProfile';
 
 const MotionDiv = motion.div as any;
 
@@ -51,12 +53,17 @@ export interface AITabProps {
 // SUGGESTION BUTTONS
 // =============================================================================
 
-const SUGGESTIONS = [
-  'Read article',
-  'Tidy with AI',
-  'Add illustrations',
-  'Complete writing',
-  'Freely communicate',
+// Core writing suggestions - always active
+const CORE_SUGGESTIONS = [
+  { text: 'Tidy with AI', requiresWritingTier: true },
+  { text: 'Complete writing', requiresWritingTier: true },
+];
+
+// Secondary suggestions - greyed out in notes view per UX spec
+const SECONDARY_SUGGESTIONS = [
+  { text: 'Read article', disabled: true },
+  { text: 'Add illustrations', disabled: true },
+  { text: 'Freely communicate', disabled: true },
 ];
 
 // =============================================================================
@@ -202,29 +209,66 @@ export const AITab: React.FC<AITabProps> = ({
 
   const displayName = getLittleLordDisplayName();
 
+  // Check tier access
+  const hasWritingAccess = canAccessWritingAssistant(tenantId, userId);
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Header with "What can I help you with?" */}
-      <div className="px-4 py-3 border-b" style={{ borderColor: colors.border }}>
-        <h3 className="text-sm font-medium mb-1" style={{ color: colors.text }}>
-          What can I help you with?
-        </h3>
+      {/* Header with LL Writing Assistant branding */}
+      <div className="px-4 py-3 border-b" style={{ borderColor: colors.border, background: `linear-gradient(to right, ${colors.accent}15, transparent)` }}>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="p-1.5 rounded-lg" style={{ background: `${colors.accent}20`, border: `1px solid ${colors.accent}30` }}>
+            <Crown size={14} style={{ color: colors.accent }} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold" style={{ color: colors.text }}>
+              LL Writing Assistant
+            </h3>
+          </div>
+        </div>
+        <p className="text-xs leading-relaxed" style={{ color: colors.textMuted }}>
+          LL can help you tidy drafts, clarify ideas, and suggest improvements. Full writing assistance is a premium feature.
+        </p>
       </div>
 
       {/* Suggestion Buttons */}
       {messages.length <= 1 && !loading && (
         <div className="px-4 py-3 flex flex-wrap gap-2">
-          {SUGGESTIONS.map((suggestion) => (
+          {/* Core writing suggestions - tier-gated */}
+          {CORE_SUGGESTIONS.map((suggestion) => {
+            const isDisabled = suggestion.requiresWritingTier && !hasWritingAccess;
+            return (
+              <button
+                key={suggestion.text}
+                onClick={() => !isDisabled && handleSend(suggestion.text)}
+                disabled={isDisabled}
+                className="px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1"
+                style={{
+                  background: isDisabled ? `${colors.hover}50` : colors.hover,
+                  color: isDisabled ? colors.textMuted : colors.text,
+                  opacity: isDisabled ? 0.5 : 1,
+                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isDisabled && <Lock size={10} />}
+                {suggestion.text}
+              </button>
+            );
+          })}
+          {/* Secondary suggestions - always greyed out in notes context */}
+          {SECONDARY_SUGGESTIONS.map((suggestion) => (
             <button
-              key={suggestion}
-              onClick={() => handleSend(suggestion)}
+              key={suggestion.text}
+              disabled
               className="px-3 py-1.5 rounded-lg text-xs transition-colors"
               style={{
-                background: colors.hover,
-                color: colors.text,
+                background: `${colors.hover}30`,
+                color: colors.textMuted,
+                opacity: 0.4,
+                cursor: 'not-allowed',
               }}
             >
-              {suggestion}
+              {suggestion.text}
             </button>
           ))}
         </div>
@@ -301,28 +345,46 @@ export const AITab: React.FC<AITabProps> = ({
         )}
       </div>
 
-      {/* Action Buttons */}
+      {/* Action Buttons - Tier-gated */}
       {lastAssistantMessage && !loading && (
         <div className="px-4 py-2 border-t flex flex-wrap gap-2" style={{ borderColor: colors.border }}>
           <ActionButton
-            icon={<Plus size={12} />}
+            icon={hasWritingAccess ? <Plus size={12} /> : <Lock size={12} />}
             label="Insert"
-            onClick={handleInsert}
-            disabled={!onInsert}
+            onClick={hasWritingAccess ? handleInsert : undefined}
+            disabled={!hasWritingAccess || !onInsert}
             colors={colors}
+            tooltip={!hasWritingAccess ? "Upgrade to insert AI responses" : undefined}
           />
           <ActionButton
-            icon={<FileText size={12} />}
-            label="Save as Doc"
-            onClick={handleSaveAsDoc}
-            colors={colors}
-          />
-          <ActionButton
-            icon={copied ? <Check size={12} /> : <Copy size={12} />}
+            icon={hasWritingAccess ? (copied ? <Check size={12} /> : <Copy size={12} />) : <Lock size={12} />}
             label={copied ? 'Copied!' : 'Copy'}
-            onClick={handleCopy}
+            onClick={hasWritingAccess ? handleCopy : undefined}
+            disabled={!hasWritingAccess}
             colors={colors}
+            tooltip={!hasWritingAccess ? "Upgrade to copy AI responses" : undefined}
           />
+          <ActionButton
+            icon={hasWritingAccess ? <FileText size={12} /> : <Lock size={12} />}
+            label={hasWritingAccess ? "Save as Doc" : "Save (Pro)"}
+            onClick={hasWritingAccess ? handleSaveAsDoc : undefined}
+            disabled={!hasWritingAccess}
+            colors={colors}
+            tooltip={!hasWritingAccess ? "Upgrade to save AI responses as notes" : undefined}
+          />
+        </div>
+      )}
+
+      {/* Upgrade CTA for non-upgraded users */}
+      {!hasWritingAccess && lastAssistantMessage && !loading && (
+        <div className="px-4 py-2 border-t" style={{ borderColor: colors.border }}>
+          <button
+            onClick={() => console.log('[Upsell] Unlock full writing features clicked')}
+            className="w-full text-center py-2 rounded-lg text-xs font-medium transition-colors"
+            style={{ background: `${colors.accent}15`, color: colors.accent, border: `1px solid ${colors.accent}30` }}
+          >
+            Unlock full writing features
+          </button>
         </div>
       )}
 
@@ -404,17 +466,19 @@ export const AITab: React.FC<AITabProps> = ({
 interface ActionButtonProps {
   icon: React.ReactNode;
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
   disabled?: boolean;
   colors: Record<string, string>;
+  tooltip?: string;
 }
 
-const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, onClick, disabled, colors }) => (
+const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, onClick, disabled, colors, tooltip }) => (
   <button
     onClick={onClick}
     disabled={disabled}
+    title={tooltip}
     className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-    style={{ background: colors.hover, color: colors.text }}
+    style={{ background: colors.hover, color: disabled ? colors.textMuted : colors.text }}
   >
     {icon}
     {label}

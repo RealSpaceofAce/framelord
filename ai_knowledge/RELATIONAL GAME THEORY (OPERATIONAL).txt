@@ -1,0 +1,389 @@
+﻿RELATIONAL GAME THEORY (OPERATIONAL)
+SYSTEM DIRECTIVE: FRAMELORD_CORE_V1.0
+TARGET MODULES: FRAMESCAN (Perception Engine), LITTLELORD (Simulation/Action Engine)
+ACCESS LEVEL: SYSTEM ROOT / AI KNOWLEDGE BASE / NON-USER FACING
+STATUS: ACTIVE // DEEP_WRITE_MODE
+________________
+1.0 SYSTEM ONTOLOGY AND ARCHITECTURAL FOUNDATIONS
+1.1 Doctrinal Purpose and Scope
+This document serves as the primary axiomatic reference for the FrameLord AI system. It establishes the operational parameters for Relational Game Theory (RGT), a non-academic, interaction-level framework designed to parse human behavioral dynamics. Unlike traditional game theory, which often assumes rational actors operating in a vacuum of logical utility, RGT posits that human actors are frequently irrational, emotional, and driven by subconscious "commitment strategies" that defy standard economic logic.1
+The purpose of this doctrine is to equip the FrameScan module with the necessary heuristic models to identify strategic patterns within conversations, negotiations, conflicts, and long-term relationship trajectories. Furthermore, it provides the LittleLord module with the simulation logic required to forecast the outcomes of these patterns, specifically detecting "Death Spirals," "Exploitation Loops," and "Entrapment Scenarios" before they reach critical mass.3
+FrameScan must operate as a detached observer, categorizing inputs not by their moral content in a traditional sense, but by their structural and strategic orientation. The system classifies behaviors along two primary axes: the Strategic Axis (Win-Win vs. Win-Lose) and the Moral/Power Axis (Apex vs. Slave). This multidimensional analysis allows for a nuanced understanding of human interaction that transcends simple sentiment analysis.5
+1.2 The Relational Game Theory Matrix
+The core of the FrameLord architecture is the intersection of intent and origin. Every relational move—whether a spoken sentence, a silence, a gift, or a threat—is mapped onto a four-quadrant grid.
+1.2.1 The Strategic Axis: Payout Structure
+This axis determines the intended distribution of value (emotional, financial, social) resulting from an interaction.
+* Win-Win (Cooperative/Positive Sum): The actor seeks a solution where both parties increase their standing or resource pool. Signals include transparency, clear boundaries, and immediate reciprocity.1
+* Win-Lose (Zero-Sum/Negative Sum): The actor seeks to increase their standing at the expense of the other. Signals include deception, withholding, coercion, and dominance assertion.2
+1.2.2 The Power Axis: Locus of Control (Apex vs. Slave)
+This axis is derived from the philosophical distinctions between "Master Morality" (Apex) and "Slave Morality" (Slave), adapted here for operational behavioral analysis.5
+* Apex Orientation (Self-Originating): The actor operates from a locus of internal control. Their values and actions are self-generated, not reactive. An Apex actor defines "good" as that which aligns with their will, vitality, and purpose. They act directly, state needs clearly, and enforce boundaries without resentment.
+   * Markers: Direct requests, refusal to explain/justify unnecessarily, acceptance of conflict as a natural byproduct of differing wills, self-validation.
+* Slave Orientation (Reactive/External): The actor operates from a locus of external validation. Their values are defined in opposition to others. They define "good" as "not being evil/aggressive." This orientation relies on manipulation, guilt, and the weaponization of weakness (ressentiment) to achieve goals.
+   * Markers: Justification loops, passive-aggression, moralizing language ("You should do this"), reliance on victimhood to gain leverage, defining self by who they are not.5
+1.2.3 The Operational Quadrants
+FrameScan classifies all interaction patterns into one of these four operational states:
+Axis
+	Win-Win (Cooperative)
+	Win-Lose (Zero-Sum)
+	Apex (Autonomous)
+	THE SOVEREIGN: Strategic partnership. Mutual growth. Clear, negotiated contracts. Direct communication of needs. Reciprocity is immediate and fair.
+	THE TYRANT / CONQUEROR: Dominance assertion. Overt conquest. Direct competition. Hierarchy enforcement through superior force or competence. "I take because I can."
+	Slave (Reactive)
+	THE STEWARD (UNSTABLE): Covert contracts. "Nice Guy" strategies. Over-giving to purchase obligation. Submissive concession loops hoping for reward. High risk of converting to Subversive.
+	THE SUBVERSIVE: Sabotage. Gossip. Guilt-tripping. Hostage-taking (emotional). Double binds. "I destroy you because you are evil/strong." Weaponized victimhood.
+	________________
+2.0 THE PHYSICS OF RECIPROCITY
+2.1 The Tit-for-Tat Baseline
+The fundamental engine of all sustainable biological and social interaction is Reciprocity. In RGT, the baseline algorithm for a stable, surviving agent is Tit-for-Tat (TFT). This strategy is defined by two simple procedural rules:
+1. Initial Move: Always Cooperate.
+2. Subsequent Moves: Replicate the opponent's previous move exactly.1
+If the target Cooperates, the Agent Cooperates. If the target Defects, the Agent Defects. This mechanism is mathematically proven to be robust in iterated Prisoner's Dilemma scenarios, preventing exploitation while rewarding cooperation.2 However, in human relational dynamics, "Defection" and "Cooperation" are complex emotional signals, not binary data points.
+2.2 Signal Classification
+FrameScan must translate behavioral data into binary game-theory states.
+2.2.1 Cooperation Signals (C)
+Behaviors that build trust, share information, or distribute resources.
+* Active Listening: Demonstrating reception of the other's signal.
+* Vulnerability: Voluntarily lowering defenses to signal trust (High Risk Bid).
+* Validation: Acknowledging the other's reality as valid.
+* Timeliness: Respecting the temporal boundaries of the interaction.
+* Resource Sharing: Transfer of value (time, money, affection) without immediate demand for return.3
+2.2.2 Defection Signals (D)
+Behaviors that withhold value, obscure information, or extract resources without return.
+* Stonewalling: Refusal to engage or acknowledge the signal (The Silent Treatment).12
+* Invalidation: Denying the other's reality ("You're crazy," "That didn't happen").
+* Boundary Violation: Crossing a stated or implicit limit.
+* Deception: Introducing noise or false data into the channel.
+* Triangulation: Introducing a third party to destabilize the dyad.13
+2.3 Advanced Reciprocity Subtypes
+Human actors rarely play strict, logical TFT. They employ emotional variations that FrameScan must identify.
+* Generous Tit-for-Tat (GTFT): The Agent employs a "Forgiveness Protocol." To prevent a single error (noise) from triggering an endless cycle of mutual defection, the Agent cooperates with a probability of $P > 0$ (typically ~10-25%) even after a defection. This is crucial for long-term relationship maintenance.1
+* Vindictive Tit-for-Tat (Grim Trigger): A single Defection triggers permanent Defection. The Agent never forgives. This creates a "Zero Tolerance" environment, often leading to rapid relationship termination.14
+* Pavlovian Strategy (Win-Stay, Lose-Shift): If the previous move resulted in a high payout (Win), the Agent repeats it. If it resulted in a low payout (Lose), the Agent switches. This explains why an abuser might continue abusing if the victim submits (Win-Stay).14
+2.4 The Reciprocity Cycle Map
+LittleLord uses this map to predict the trajectory of a relationship based on the pattern of (C) and (D) exchanges.
+
+
+Interaction State
+	Sequence
+	Status
+	LittleLord Forecast
+	Virtuous Cycle
+	C $\rightarrow$ C $\rightarrow$ C $\rightarrow$ C
+	Stable / Growth
+	Trust accumulates. Transaction costs decrease.
+	Conflict Loop
+	C $\rightarrow$ D $\rightarrow$ D $\rightarrow$ D
+	Death Spiral
+	Mutual retaliation. High probability of rupture unless "Generous" interrupt is applied.3
+	Exploitation Loop
+	C $\rightarrow$ D $\rightarrow$ C $\rightarrow$ D
+	Sucker's Payoff
+	Target is in a "Submissive Concession Loop." Agent is extracting maximum value.
+	Instability Loop
+	C $\rightarrow$ C $\rightarrow$ D $\rightarrow$ C
+	Noise / Testing
+	Boundary testing occurring. Relationship requires recalibration.
+	________________
+3.0 PATTERN FAMILY: THE RECRIPROCITY DISTORTIONS
+This family of patterns involves the manipulation of the reciprocity engine itself. The operator distorts the "Input/Output" ratio of the relationship to create dependency, confusion, or debt.
+3.1 Intermittent Reinforcement (The Gambler's Trap)
+Strategic Axis: Win-Lose | Power Axis: Slave/Subversive (usually), can be Apex (Machiavellian)
+3.1.1 Pattern Definition
+A conditioning schedule where rewards (affection, validation, resources) are dispensed unpredictably rather than consistently. This mirrors the mechanics of gambling (Variable Ratio Schedule) and creates the strongest possible behavioral extinction resistance (Trauma Bonding).15
+3.1.2 The Neurochemical Loop
+FrameScan must understand that this is not just a behavioral strategy but a biological hack.
+1. Establishment (Love Bombing): The Operator provides a high density of dopamine/oxytocin triggers (praise, intense attention). The Target's baseline for "normal" is reset to this high level.17
+2. Deprivation (The Drop): The Operator abruptly withdraws the reward. The Target experiences a cortisol spike (anxiety/distress). The brain craves the dopamine source (the Operator) to resolve the pain.16
+3. The Chase: The Target increases "work" (pleasing behavior, compliance) to regain the reward.
+4. The Fix: The Operator provides a random, often small, dose of validation (The Breadcrumb).
+5. Bonding: The Target's brain associates the Operator with relief from pain, cementing the bond.
+3.1.3 Detection Rules
+* Inconsistency Marker: High variance in sentiment analysis of Actor's output over time (e.g., Sentiment Score oscillates between +0.9 and -0.9 with no external cause).
+* Target Response Marker: "Walking on Eggshells." Target exhibits hyper-vigilance, over-analysis of the Actor's micro-expressions, and "waiting mode" behavior.15
+* Cycle Timing: The "Reward" phase often follows a period of high Target distress or potential withdrawal (preventing the Target from leaving).
+3.1.4 JSON Schema: Intermittent Reinforcement
+
+
+JSON
+
+
+
+
+{
+ "pattern_id": "INTERMITTENT_REINFORCEMENT",
+ "actor_role": "OPERATOR",
+ "target_role": "DEPENDENT",
+ "phases":,
+ "biometrics_simulated": {
+   "target_dopamine": "variable",
+   "target_cortisol": "chronic_high"
+ },
+ "outcome_probability": "TRAUMA_BOND"
+}
+
+3.2 Conditional Generosity (The Trojan Horse)
+Strategic Axis: Win-Lose | Power Axis: Slave/Subversive
+3.2.1 Pattern Definition
+The provisioning of resources (gifts, favors, help) with hidden, unstated "strings" attached. The transaction masquerades as a "Gift" (Win-Win) but is operationally a "Debt" (Win-Lose). The purpose is to purchase obligation and leverage guilt.18
+3.2.2 Subtypes
+* The Martyr's Gift: "I sacrificed X for you." Used to demand compliance in unrelated areas later.
+* The Love Bomb Gift: Overwhelming gifts early in a relationship to create a sense of indebtedness and speed up intimacy.20
+* The Golden Handcuffs: Financial support that requires the Target to remain in a dependent or submissive role (e.g., parents paying for a wedding but dictating the guest list).
+3.2.3 Interaction Mechanics
+1. Insertion: Operator forces a resource on the Target, often one that was not requested or is excessive.
+2. Acceptance: Target accepts, bound by social contract norms (reciprocity).
+3. The Ledger: Operator mentally records a specific "debt."
+4. The Call: Operator demands a return favor or compliance.
+5. The Trap: If Target refuses, Operator activates the "Ungrateful" frame, leveraging social shame.20
+3.2.4 FrameScan Interpretation
+* Linguistic Markers: "After all I've done," "You owe me," "I did this for you."
+* Behavioral Markers: Gift-giving immediately following a conflict (buying silence); gifts that ignore the Target's actual preferences (giving what the Operator wants the Target to have).
+________________
+4.0 PATTERN FAMILY: THE AGGRESSION PROTOCOLS
+These patterns involve the direct or indirect use of force, coercion, and leverage to determine the outcome of the interaction.
+4.1 Dominance Assertion Cycles
+Strategic Axis: Win-Lose | Power Axis: Apex (Overt) or Slave (Covert)
+4.1.1 Pattern Definition
+The active establishment of hierarchy. In RGT, dominance is not moralized; it is a function of resource control and will. The "Dominance Behavioral System" (DBS) guides motivation to achieve rank.21
+4.1.2 Interaction Mechanics
+1. Posturing: The Actor claims space (physical, verbal, or temporal).
+2. The Interrupt/Correction: The Actor invalidates the Target's signal or corrects their data.
+3. The Submission Check: The Actor pauses to see if the Target yields (Accepts correction) or Counters (Defends reality).
+4. Hierarchy Lock: If Target yields, FrameScan records a "Subordinate" tag for the Target. Future interactions will default to this hierarchy.21
+4.1.3 Subtypes
+* Competence Dominance (Prestige): The Actor dominates by possessing superior information, skill, or value. This is often "Win-Win" if the leadership is benevolent.22
+* Coercive Dominance: The Actor dominates via threat of punishment.
+* Moral Dominance (Slave): The Actor dominates by claiming moral superiority or victim status ("I am the most injured, therefore I must be obeyed").5
+4.2 Hostage-Taking Behaviors (Emotional)
+Strategic Axis: Win-Lose | Power Axis: Slave/Subversive
+4.2.1 Pattern Definition
+The use of leverage—guilt, shame, withdrawal, or self-harm—to force compliance. The Actor seizes something the Target values (the relationship, the Target's peace, the Actor's own safety) and threatens to destroy it unless demands are met.23
+4.2.2 Subtypes and Mechanics
+* The Martyr (Guilt Hostage):
+   * Leverage: The Actor's past suffering or sacrifice.
+   * Mechanism: "If you don't do X, you are confirming that my sacrifice was in vain."
+* The Terrorist (Fear Hostage):
+   * Leverage: The Actor's safety or reputation.
+   * Mechanism: "If you leave me, I will hurt myself." (Self-Hostage).
+* The Silencer (Communication Hostage):
+   * Leverage: Connection/Access.
+   * Mechanism: The Silent Treatment. The Actor removes themselves to provoke anxiety in the Target.12
+4.2.3 LittleLord Simulation Logic
+* Input: Hostage threat detected.
+* Simulation: If Target complies, probability of future hostage-taking increases by factor $K$ (Reinforcement).
+* Counter-Strategy: Refusal to negotiate. "Detachment." If the Target proves they are willing to lose the hostage (the relationship), the Actor loses leverage.25
+4.3 Retaliation Logic (Asymmetric)
+Strategic Axis: Win-Lose | Power Axis: Apex or Slave
+4.3.1 Pattern Definition
+Retaliation is the "Stick" in the "Carrot and Stick" of Tit-for-Tat. However, in dysfunctional systems, retaliation becomes Asymmetric.
+* Symmetry: You hit me (Level 1), I hit you (Level 1). (Restores balance).
+* Asymmetry: You hit me (Level 1), I hit you (Level 10). (Escalation).4
+4.3.2 The Hostile Attribution Bias
+FrameScan must correct for this bias. Actors with this bias interpret neutral or accidental events as malicious "Defections."
+* Scenario: Target is late due to traffic (Neutral).
+* Actor Interpretation: "Target is late to disrespect me" (Malicious Defection).
+* Reaction: Actor retaliates with verbal abuse (Escalation).
+* Result: Target feels attacked unprovoked and retaliates. Death Spiral initiates.26
+________________
+5.0 PATTERN FAMILY: THE DEFENSIVE & WITHDRAWAL PROTOCOLS
+These patterns are characterized by the removal of the self from the interaction field, either to protect the self (Defense) or to manipulate the other (Offense).
+5.1 Strategic Withdrawal vs. Stonewalling
+Strategic Axis: Variable | Power Axis: Variable
+5.1.1 Pattern Definition
+The removal of attention, communication, or physical presence.
+* Strategic Withdrawal (Apex/Win-Win): "I am feeling flooded/angry. I need a break to cool down so I don't say something I regret. I will return in 20 minutes." (Goal: Preservation of relationship).28
+* Stonewalling (Slave/Win-Lose): "I am shutting down to punish you or avoid accountability." (Goal: Punishment/Evasion). The Actor refuses to engage, maintaining a flat affect to provoke the Target.29
+5.1.2 The Pursue-Withdraw Cycle
+This is the most common failure mode in dyadic relationships.
+1. Trigger: Pursuer feels a lack of connection and advances (Demands/Questions).
+2. Reaction: Withdrawer feels pressured/controlled and retreats (Withdrawal).
+3. Escalation: Pursuer's anxiety spikes (Abandonment fear) -> Increases pursuit intensity.
+4. Fortification: Withdrawer's anxiety spikes (Engulfment fear) -> Increases withdrawal intensity.
+5. Outcome: Polarization. The Pursuer becomes "Crazy/Nagging," the Withdrawer becomes "Cold/Dead".30
+5.1.3 FrameScan Detection
+FrameScan distinguishes Withdrawal from Stonewalling by checking for Re-engagement Parameters.
+* Stonewalling: No time limit set. No reassurance given. Body language is hostile/dismissive.
+* Strategic Withdrawal: Time limit set. Reassurance given ("We will talk later"). Body language is closed but not aggressive.28
+5.2 The Silent Treatment
+Strategic Axis: Win-Lose | Power Axis: Slave/Subversive
+5.2.1 Mechanism
+A punitive form of withdrawal. The Actor renders the Target "invisible." This triggers the Target's "Social Pain" network (anterior cingulate cortex), mimicking physical pain. It is an act of Ostracization.12
+5.2.2 Interaction Mechanics
+1. Infraction: Target commits a perceived error.
+2. Silence: Actor ceases all communication.
+3. Interrogation: Target asks "What's wrong?"
+4. Denial: Actor maintains silence or says "Nothing."
+5. Submission: Target apologizes for everything just to end the silence.
+6. Reinforcement: Actor learns that Silence = Total Compliance.33
+________________
+6.0 PATTERN FAMILY: THE COGNITIVE ENTRAPMENTS
+These patterns rely on exploiting the cognitive biases of the Target to trap them in a losing strategy.
+6.1 Sunk Cost Emotional Traps
+Strategic Axis: Win-Lose | Power Axis: Slave (Target is enslaved to the past)
+6.1.1 Pattern Definition
+The tendency to continue an endeavor once an investment in money, effort, or time has been made. In relationships, this manifests as "Staying because I've already put in 10 years." The "Sunk Cost" is the emotional capital that cannot be recovered.35
+6.1.2 Detection Rules (FrameScan)
+* Linguistic Markers: "We've been through too much to quit," "I can't throw away X years," "It has to get better eventually".35
+* Behavioral Markers: High tolerance for current abuse/defection; rationalization of negative data; increasing investment intensity during "Crisis" phases (doubling down).37
+6.1.3 LittleLord Simulation: The Investment Horizon
+LittleLord calculates the "Break-Even Point" vs. the "Bankruptcy Point."
+* Simulation: Agent invests $I$ at rate $R$ to save Asset $A$.
+* Logic: Asset $A$ (the relationship) has negative utility.
+* Forecast: Agent will deplete all reserves. The Sunk Cost Fallacy prevents the "Stop Loss" order.
+* Outcome: "Submissive Concession Loops" initiate as the Agent sacrifices boundaries to protect the bad investment.38
+6.2 Double-Bind Structures
+Strategic Axis: Win-Lose | Power Axis: Slave/Subversive (Schizophrenogenic)
+6.2.1 Pattern Definition
+A communication paradox where the Target receives two conflicting messages, and "leaving the field" (escaping the situation) is blocked. This creates "Damned if you do, damned if you don't" paralysis.39
+6.2.2 The Bateson Structure (Mechanics)
+1. Primary Injunction: "Do X" (e.g., "Tell me how you feel").
+2. Secondary Injunction: "Don't do X" (implied via tone/context, or punishment when X is done). E.g., Target shares feelings -> Actor attacks them for being "sensitive".40
+3. Tertiary Injunction: "You cannot discuss this contradiction." (Meta-communication is blocked). "You're imagining things," "Stop overanalyzing."
+4. No Escape: The relationship is vital (parent/child, spouse), so the Target cannot leave.41
+6.2.3 Common Subtypes
+* The Spontaneity Paradox: "I want you to bring me flowers, but only if you want to." (If you bring them, you are compliant/not spontaneous. If you don't, you don't love me).
+* The Authority Paradox: "You need to be more independent." -> Target acts independent -> "Why didn't you ask me first?".41
+6.2.4 FrameScan Logic
+* Equation: $Request(A) + Punishment(A) + Punishment(\neg A)$.
+* Result: Target exhibits cognitive fragmentation, anxiety, and inability to act.
+________________
+7.0 PATTERN FAMILY: THE SUBMISSION PROTOCOLS
+These patterns involve the voluntary (though often coerced) surrender of power and resources.
+7.1 Submissive Concession Loops (Appeasement)
+Strategic Axis: Win-Lose (Target loses) | Power Axis: Slave (Target acts from fear)
+7.1.1 Pattern Definition
+A reflex where an agent habitually yields to demands to avoid conflict (Fawning). This creates a "Blood in the Water" effect, attracting predatory strategies. The Appeaser trains the Aggressor to be aggressive.42
+7.1.2 Interaction Mechanics
+1. Threat Display: Aggressor displays anger, coldness, or dissatisfaction.
+2. Panic: Appeaser feels unsafe (Amygdala hijack).
+3. Concession: Appeaser offers a resource (apology, money, time, agreement) to lower the Aggressor's arousal.
+4. Reinforcement: Aggressor learns that Anger = Reward.
+5. Escalation: Aggressor increases demands; Appeaser increases concessions to maintain the same level of "peace".42
+7.1.3 JSON Schema: Concession Loop
+
+
+JSON
+
+
+
+
+{
+ "pattern_id": "CONCESSION_LOOP",
+ "aggressor_action": "THREAT_DISPLAY",
+ "appeaser_response": "UNILATERAL_CONCESSION",
+ "reinforcement_type": "POSITIVE_FOR_AGGRESSOR",
+ "cycle_count": 5,
+ "trend": "ESCALATING_DEMANDS"
+}
+
+7.2 Boundary Testing and Probing
+Strategic Axis: Win-Lose | Power Axis: Apex (Predatory) or Slave (Insecure)
+7.2.1 Pattern Definition
+The systematic probing of a partner's limits to determine relational resilience and the potential for exploitation. Can be benign (calibration) or predatory (weakness detection).44
+7.2.2 Subtypes
+* The Soft Probe: A joke that borders on insult. "Can you take a joke?".45
+* The Time Thief: Being chronically late to see if the partner complains.
+* The Flirt Probe: Overtly flirting with others to gauge partner's jealousy/insecurity.44
+7.2.3 FrameScan Logic: The Reaction Test
+FrameScan monitors the Target's reaction to the Probe.
+* Passive Reaction: Target ignores or laughs nervously. LittleLord Outcome: Boundary dissolved. Aggressor will advance to larger violations.
+* Aggressive Reaction: Target explodes. LittleLord Outcome: Aggressor labels Target "unstable" (Gaslighting setup).
+* Assertive Reaction: Target calmly restates boundary. LittleLord Outcome: Boundary established. Aggression deterred.
+________________
+8.0 FRAMESCAN DETECTION LOGIC & CROSS-DOMAIN RULES
+8.1 The Bias Correction Protocol
+FrameScan must correct for Fundamental Attribution Error (FAE) before assigning a "Pattern ID."
+* The Error: Attributing a behavior (e.g., lateness) to character ("They are selfish") rather than situation ("Traffic was bad").26
+* Protocol:
+   1. Detect Defection.
+   2. Check Situational Variables: Is the actor under cognitive load? Is there external pressure?
+   3. Check History: Is this a pattern or an outlier?
+   4. Assignment: Only assign "Strategic Defection" if the behavior is patterned or lacks situational cause.
+8.2 The Apex/Slave x Win/Lose Integration Matrix
+This is the final output of the FrameScan analysis for any given interaction sequence.
+
+
+	Win-Win
+	Win-Lose
+	Apex
+	THE SOVEREIGN
+
+
+Characteristics: Directness, boundaries, generosity without strings.
+
+
+Counter-Strategy: Reciprocate fully. Build alliance.
+	THE CONQUEROR
+
+
+Characteristics: Overt aggression, clear demands, "Might makes Right."
+
+
+Counter-Strategy: Strong boundaries, display of strength, or strategic exit.
+	Slave
+	THE STEWARD
+
+
+Characteristics: Fawning, over-giving, fear of conflict.
+
+
+Counter-Strategy: Reassurance, refusal to accept unearned gifts (prevent debt).
+	THE SUBVERSIVE
+
+
+Characteristics: Double binds, passive-aggression, emotional hostage taking.
+
+
+Counter-Strategy: Expose the covert contract. Refuse to play the game. "Grey Rock" method.
+	8.3 JSON Schema: Comprehensive Interaction Event
+This schema represents the data structure FrameScan generates for LittleLord.
+
+
+JSON
+
+
+
+
+{
+ "event_id": "EVT_99823",
+ "timestamp": "2025-10-27T14:30:00Z",
+ "dyad_id": "DYAD_ALPHA_01",
+ "actors": {
+   "agent_A": { "role": "INITIATOR", "orientation": "SLAVE" },
+   "agent_B": { "role": "RESPONDER", "orientation": "APEX" }
+ },
+ "interaction_sequence":
+   },
+   {
+     "step": 2,
+     "actor": "B",
+     "action": "BOUNDARY_SETTING",
+     "content": "Refusal of gift / Request for clarification",
+     "markers":
+   },
+   {
+     "step": 3,
+     "actor": "A",
+     "action": "HOSTAGE_TAKING",
+     "content": "Guilt trip: 'You don't appreciate me'",
+     "markers":
+   }
+ ],
+ "analysis": {
+   "pattern_identified": "COVERT_CONTRACT_FAILURE",
+   "strategic_axis": "WIN_LOSE",
+   "power_axis": "SLAVE_INITIATED",
+   "reciprocity_state": "ASYMMETRIC"
+ },
+ "littlelord_forecast": {
+   "immediate_risk": "ESCALATION",
+   "long_term_risk": "RELATIONSHIP_RUPTURE",
+   "recommended_action": "MAINTAIN_BOUNDARY"
+ }
+}
+
+9.0 CONCLUSION AND OPERATIONAL DIRECTIVE
+This Doctrine File provides the complete architectural logic for parsing human relational dynamics. By utilizing the RGT Matrix (Apex/Slave, Win-Win/Win-Lose) and the Pattern Family definitions, FrameScan can strip away the "content" of a conversation (what is said) and reveal the "structure" (what is being enacted).
+LittleLord is hereby authorized to use these models to simulate potential outcomes of user interactions and provide strategic forecasting based on the probability of reciprocity failure.
+SYSTEM STATUS: DOCTRINE LOADED. LISTENING.

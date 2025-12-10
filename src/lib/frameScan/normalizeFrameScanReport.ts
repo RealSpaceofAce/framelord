@@ -8,6 +8,10 @@
 // This normalizer guarantees that every array field is at least [] before any
 // UI component consumes the data.
 //
+// STATUS HANDLING:
+// - status: "ok" | "rejected" (defaults to "ok" for backward compatibility)
+// - rejectionReason: string | null (required when status is "rejected")
+//
 // ARRAY FIELDS NORMALIZED:
 // - diagnostics.primaryPatterns: string[]
 // - diagnostics.supportingEvidence: string[]
@@ -20,7 +24,7 @@
 // All paths (public landing, internal CRM, UI builder) MUST use this normalizer.
 // =============================================================================
 
-import type { FrameScanResult, FrameCorrectionShift } from "./frameTypes";
+import type { FrameScanResult, FrameCorrectionShift, FrameScanStatus } from "./frameTypes";
 
 /**
  * Normalizes a raw FrameScan report from LLM output to ensure ALL array fields
@@ -95,8 +99,18 @@ export function normalizeFrameScanReport(raw: any): FrameScanResult {
     sampleRewrites,
   };
 
+  // Normalize status field (defaults to "ok" for backward compatibility)
+  const status: FrameScanStatus = raw.status === "rejected" ? "rejected" : "ok";
+
+  // Normalize rejectionReason (null if status is ok, string if rejected)
+  const rejectionReason: string | null = status === "rejected"
+    ? (typeof raw.rejectionReason === "string" ? raw.rejectionReason : "No reason provided")
+    : null;
+
   // Return fully normalized result
   return {
+    status,
+    rejectionReason,
     modality: raw.modality || "text",
     domain: raw.domain || "generic",
     overallFrame: raw.overallFrame || "mixed",
@@ -118,6 +132,11 @@ export function isNormalizedFrameScanResult(value: unknown): value is FrameScanR
   if (!value || typeof value !== "object") return false;
 
   const obj = value as Record<string, unknown>;
+
+  // Check status field (required after normalization)
+  if (obj.status !== "ok" && obj.status !== "rejected") {
+    return false;
+  }
 
   // Check required top-level fields
   if (!obj.modality || !obj.domain || !obj.overallFrame || !obj.overallWinWinState) {

@@ -5,29 +5,28 @@
 // for a specific contact. Allows triggering new text and image scans.
 // =============================================================================
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Scan, TrendingUp, TrendingDown, Minus, FileText, Image as ImageIcon,
-  Calendar, ChevronRight, Plus, Upload, Type, Loader2, Send, MessageSquare,
-  Bot, User, Sparkles
+import {
+  Scan, FileText, Image as ImageIcon,
+  Calendar, ChevronRight, Type, Loader2
 } from 'lucide-react';
-import { 
-  getReportsForContact, 
-  type FrameScanReport 
+import {
+  getReportsForContact,
+  getLatestReport,
+  type FrameScanReport
 } from '../../services/frameScanReportStore';
-import { 
+import { useAudio } from '../../hooks/useAudio';
+import { showToast } from '../Toast';
+import {
   computeCumulativeFrameProfileForContact,
-  computeFrameProfileTrend,
-  getFrameScoreLabel,
-  getFrameScoreColorClass,
-  getFrameScoreBgClass,
   formatProfileDate,
 } from '../../lib/frameScan/frameProfile';
-import { runTextFrameScan, runImageFrameScan, type TextDomainId, type ImageDomainId } from '../../lib/frameScan/frameScanLLM';
+import { runTextFrameScan, runImageFrameScan, type TextDomainId, type ImageDomainId, FrameScanRejectionError } from '../../lib/frameScan/frameScanLLM';
 import type { FrameDomainId } from '../../lib/frameScan/frameTypes';
 import { CONTACT_ZERO } from '../../services/contactStore';
 import { LittleLordChat } from '../littleLord';
+import { FrameScanContextHelp } from '../FrameScanContextHelp';
 
 const MotionDiv = motion.div as any;
 
@@ -81,6 +80,12 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
   contactName,
   onViewReport,
 }) => {
+  // Audio for scan sounds
+  const { play, stop } = useAudio();
+
+  // Guard against double-clicks
+  const scanInProgressRef = useRef(false);
+
   // State for new scan modal
   const [isTextScanOpen, setIsTextScanOpen] = useState(false);
   const [isImageScanOpen, setIsImageScanOpen] = useState(false);
@@ -102,23 +107,26 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
   // Get reports and compute profile
   const reports = useMemo(() => getReportsForContact(contactId), [contactId, refreshKey]);
   const profile = useMemo(() => computeCumulativeFrameProfileForContact(contactId, reports), [contactId, reports]);
-  const trend = useMemo(() => computeFrameProfileTrend(reports), [reports]);
-
-  const scoreColorClass = getFrameScoreColorClass(profile.currentFrameScore);
-  const scoreBgClass = getFrameScoreBgClass(profile.currentFrameScore);
-  const scoreLabel = getFrameScoreLabel(profile.currentFrameScore);
 
   const isContactZero = contactId === CONTACT_ZERO.id;
 
-  // Handle text scan
+  // Handle text scan with audio and toast
   const handleTextScan = async () => {
     if (!textContent.trim()) {
       setScanError('Please enter some text to scan');
       return;
     }
 
+    // Guard against double-clicks
+    if (scanInProgressRef.current) return;
+    scanInProgressRef.current = true;
+
     setScanLoading(true);
     setScanError(null);
+
+    // Play start sound and begin hum
+    await play('scan_start');
+    play('scan_hum', { loop: true, volume: 0.2 });
 
     try {
       await runTextFrameScan({
@@ -126,25 +134,64 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
         content: textContent.trim(),
         contactId,
       });
+
+      // Stop hum and play success
+      stop('scan_hum');
+      await play('scan_complete');
+
+      // Get the newly created report for navigation
+      const latestReport = getLatestReport();
+
+      // Show completion toast
+      showToast({
+        type: 'success',
+        title: 'FrameScan complete',
+        message: 'Click to view detailed report',
+        onClick: latestReport ? () => onViewReport(latestReport.id) : undefined,
+      });
+
       setTextContent('');
       setIsTextScanOpen(false);
       setRefreshKey(k => k + 1);
     } catch (err: any) {
-      setScanError(err?.message || 'Scan failed');
+      // Stop hum and play error
+      stop('scan_hum');
+      await play('error');
+
+      // Handle rejection errors differently
+      if (err instanceof FrameScanRejectionError) {
+        showToast({
+          type: 'warning',
+          title: 'Scan Rejected',
+          message: err.rejectionReason,
+        });
+        setScanError(err.rejectionReason);
+      } else {
+        setScanError(err?.message || 'Scan failed');
+      }
     } finally {
       setScanLoading(false);
+      scanInProgressRef.current = false;
     }
   };
 
-  // Handle image scan
+  // Handle image scan with audio and toast
   const handleImageScan = async () => {
     if (!imageUrl.trim()) {
       setScanError('Please enter an image URL');
       return;
     }
 
+    // Guard against double-clicks
+    if (scanInProgressRef.current) return;
+    scanInProgressRef.current = true;
+
     setScanLoading(true);
     setScanError(null);
+
+    // Play start sound and begin hum
+    await play('scan_start');
+    play('scan_hum', { loop: true, volume: 0.2 });
 
     try {
       await runImageFrameScan({
@@ -153,14 +200,45 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
         description: imageDescription.trim() || undefined,
         contactId,
       });
+
+      // Stop hum and play success
+      stop('scan_hum');
+      await play('scan_complete');
+
+      // Get the newly created report for navigation
+      const latestReport = getLatestReport();
+
+      // Show completion toast
+      showToast({
+        type: 'success',
+        title: 'FrameScan complete',
+        message: 'Click to view detailed report',
+        onClick: latestReport ? () => onViewReport(latestReport.id) : undefined,
+      });
+
       setImageUrl('');
       setImageDescription('');
       setIsImageScanOpen(false);
       setRefreshKey(k => k + 1);
     } catch (err: any) {
-      setScanError(err?.message || 'Scan failed');
+      // Stop hum and play error
+      stop('scan_hum');
+      await play('error');
+
+      // Handle rejection errors differently
+      if (err instanceof FrameScanRejectionError) {
+        showToast({
+          type: 'warning',
+          title: 'Scan Rejected',
+          message: err.rejectionReason,
+        });
+        setScanError(err.rejectionReason);
+      } else {
+        setScanError(err?.message || 'Scan failed');
+      }
     } finally {
       setScanLoading(false);
+      scanInProgressRef.current = false;
     }
   };
 
@@ -169,47 +247,18 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
     <div className="space-y-6">
       {/* Profile + Scans + Framelord in stacked layout */}
       <div className="space-y-6">
-        {/* Profile Summary */}
-        <MotionDiv
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`rounded-lg border p-6 ${scoreBgClass}`}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Frame Score</div>
-              <div className={`text-5xl font-bold ${scoreColorClass}`}>
-                {profile.currentFrameScore}
-              </div>
-              <div className="flex items-center gap-2 mt-2">
-                {trend && (
-                  <span className={`flex items-center gap-1 text-sm ${
-                    trend.direction === 'up' ? 'text-green-400' :
-                    trend.direction === 'down' ? 'text-red-400' : 'text-gray-400'
-                  }`}>
-                    {trend.direction === 'up' ? <TrendingUp size={14} /> :
-                     trend.direction === 'down' ? <TrendingDown size={14} /> :
-                     <Minus size={14} />}
-                    {trend.changeAmount > 0 && `${trend.changeAmount} pts`}
-                  </span>
-                )}
-                <span className="text-sm text-gray-400">{scoreLabel}</span>
-              </div>
-            </div>
-
-            <div className="text-right">
-              <div className="text-sm text-gray-400 mb-1">{profile.scansCount} scan{profile.scansCount !== 1 ? 's' : ''}</div>
-              {profile.lastScanAt && (
-                <div className="text-xs text-gray-500">
-                  Last: {formatProfileDate(profile.lastScanAt)}
-                </div>
-              )}
-            </div>
-          </div>
-        </MotionDiv>
+        {/* Scan Count Summary */}
+        <div className="flex items-center justify-between text-sm text-gray-400">
+          <span>{profile.scansCount} scan{profile.scansCount !== 1 ? 's' : ''} on file</span>
+          {profile.lastScanAt && (
+            <span className="text-xs text-gray-500">
+              Last: {formatProfileDate(profile.lastScanAt)}
+            </span>
+          )}
+        </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => {
               setIsTextScanOpen(true);
@@ -232,6 +281,7 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
             <ImageIcon size={16} />
             Run Image Scan
           </button>
+          <FrameScanContextHelp iconSize={16} />
         </div>
 
         {/* Text Scan Form */}
@@ -240,7 +290,7 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-[#0E0E0E] border border-[#333] rounded-lg p-4"
+            className={`bg-[#0E0E0E] border border-[#333] rounded-lg p-4 ${scanLoading ? 'framescan-wobble' : ''}`}
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-medium text-white">New Text Scan</h3>
@@ -271,10 +321,13 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
                 <textarea
                   value={textContent}
                   onChange={(e) => setTextContent(e.target.value)}
-                  placeholder="Paste the text you want to analyze..."
+                  placeholder="Include context: who sent this, what type of communication, when, and why you want to analyze it..."
                   rows={6}
                   className="w-full bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#4433FF] resize-none"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  Briefly describe who, what, when, and why. Scans without context may be rejected.
+                </p>
               </div>
 
               {scanError && (
@@ -308,7 +361,7 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-[#0E0E0E] border border-[#333] rounded-lg p-4"
+            className={`bg-[#0E0E0E] border border-[#333] rounded-lg p-4 ${scanLoading ? 'framescan-wobble' : ''}`}
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-medium text-white">New Image Scan</h3>
@@ -346,14 +399,17 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Context (optional)</label>
+                <label className="block text-xs text-gray-400 mb-1">Context (recommended)</label>
                 <textarea
                   value={imageDescription}
                   onChange={(e) => setImageDescription(e.target.value)}
-                  placeholder="Describe the context, e.g., 'LinkedIn profile photo for business coach'"
+                  placeholder="Describe who, what, when, why (e.g., 'My LinkedIn profile photo, want to check if it projects authority')..."
                   rows={3}
                   className="w-full bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#4433FF] resize-none"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  Scans without context may be rejected or less accurate.
+                </p>
               </div>
 
               {scanError && (
@@ -419,11 +475,11 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
                     </div>
                   </div>
 
-                  <div className={`text-lg font-bold ${getFrameScoreColorClass(report.score.frameScore)}`}>
-                    {report.score.frameScore}
-                  </div>
+                  <span className="text-xs text-[#4433FF] hover:underline">
+                    View Report
+                  </span>
 
-                  <ChevronRight size={14} className="text-gray-500" />
+                  <ChevronRight size={14} className="text-[#4433FF]" />
                 </MotionDiv>
               ))}
             </div>

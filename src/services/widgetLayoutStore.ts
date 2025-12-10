@@ -4,13 +4,14 @@
 // Allows users to reorder and show/hide widgets, save per-contact or global layouts
 // =============================================================================
 
-export type WidgetId = 
+export type WidgetId =
   | 'timeline'
   | 'keyDates'
   | 'frameScan'
   | 'tasks'
   | 'projects'
   | 'notes'
+  | 'notesMentioning' // Notes that @mention this contact
   | 'tags'
   | 'attachments'
   | 'openTasksOwed' // Contact Zero only
@@ -33,21 +34,33 @@ export interface WidgetLayout {
 }
 
 // Default widget order and visibility
+// Optimized for 4-zone layout:
+// Zone 1 (Identity): tags
+// Zone 2 (Frame & Scans): frameScan, keyDates
+// Zone 3 (Timeline): timeline
+// Zone 4 (Next Actions & Notes): tasks, notes, notesMentioning
+// Hidden by default: projects, attachments, statsSummary (clutter)
 const DEFAULT_WIDGETS: WidgetConfig[] = [
-  { id: 'timeline', visible: true, order: 0 },
-  { id: 'keyDates', visible: true, order: 1 },
-  { id: 'frameScan', visible: true, order: 2 },
-  { id: 'tasks', visible: true, order: 3 },
-  { id: 'projects', visible: true, order: 4 },
-  { id: 'notes', visible: true, order: 5 },
-  { id: 'tags', visible: true, order: 6 },
-  { id: 'attachments', visible: true, order: 7 },
-  { id: 'openTasksOwed', visible: true, order: 8 },
-  { id: 'upcomingTasks', visible: true, order: 9 },
-  { id: 'topics', visible: true, order: 10 },
-  { id: 'activityFeed', visible: true, order: 11 },
-  { id: 'lastInteractions', visible: true, order: 12 },
-  { id: 'statsSummary', visible: true, order: 13 },
+  // Primary 4-zone widgets - visible by default
+  { id: 'tags', visible: true, order: 0 },           // Zone 1: Identity
+  { id: 'frameScan', visible: true, order: 1 },      // Zone 2: Frame & Scans
+  { id: 'keyDates', visible: true, order: 2 },       // Zone 2: Frame & Scans
+  { id: 'timeline', visible: true, order: 3 },       // Zone 3: Timeline
+  { id: 'tasks', visible: true, order: 4 },          // Zone 4: Next Actions
+  { id: 'notes', visible: true, order: 5 },          // Zone 4: Notes
+  { id: 'notesMentioning', visible: true, order: 6 }, // Zone 4: Notes mentioning
+
+  // Secondary widgets - hidden by default (reduce clutter)
+  { id: 'projects', visible: false, order: 7 },
+  { id: 'attachments', visible: false, order: 8 },
+  { id: 'statsSummary', visible: false, order: 9 },
+
+  // Contact Zero only widgets
+  { id: 'openTasksOwed', visible: true, order: 10 },
+  { id: 'upcomingTasks', visible: true, order: 11 },
+  { id: 'topics', visible: false, order: 12 },       // Hidden by default
+  { id: 'activityFeed', visible: false, order: 13 }, // Hidden by default
+  { id: 'lastInteractions', visible: false, order: 14 },
 ];
 
 // In-memory storage

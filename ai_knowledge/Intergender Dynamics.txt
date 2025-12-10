@@ -1,0 +1,291 @@
+﻿Operational Reconstruction of Intergender Dynamics for FrameScan Substrate
+1. Architectural Overview and Theoretical Synthesis
+This document constitutes the foundational knowledge substrate for FrameScan, a predictive analytical engine designed to deconstruct, model, and optimize intergender social dynamics. The system operationalizes a synthesis of three distinct yet interlocking theoretical frameworks: Evolutionary Psychology (the biological hardware and ancestral drivers), Praxeology/The Rational Male (the sociological operating system and power dynamics), and Systematic Assertiveness (the behavioral interface and error-correction protocols).
+The objective of this reconstruction is to strip away socially conditioned narratives—often referred to in the source material as the "Blue Pill" perspective—to reveal the underlying, amoral mechanics of human mating. This substrate posits that intergender interactions are not chaotic or purely romantic but are adversarial-cooperative games governed by identifiable economic principles (Sexual Market Value), biological imperatives (Parental Investment, Hypergamy), and psychological power structures (Frame). By mapping these principles, FrameScan aims to provide a deterministic model for interpreting behavior and guiding strategic action.1
+The integration of these domains allows for a "Full Stack" understanding of social dynamics:
+1. Biological Layer: Why the behavior exists (Evolutionary function).
+2. Sociological Layer: How the behavior manifests in the modern environment (Sexual Marketplace).
+3. Behavioral Layer: How to navigate the behavior in real-time (Assertiveness and Game).
+2. The Biological Substrate: Evolutionary Psychology and Mating Strategies
+The bedrock of the FrameScan model is Evolutionary Psychology (EP). EP provides the "source code" for human behavior, positing that modern mating psychology is a collection of adaptations designed to solve specific reproductive problems faced by ancestors. These mechanisms are often subconscious, operating beneath the layer of rational thought.4
+2.1 Asymmetry in Parental Investment: The Root of Conflict
+The fundamental axiom driving sexual strategy differentiation is the asymmetry in obligatory parental investment. This biological reality creates the primary conflict of interest between the sexes.5
+2.1.1 Female Investment and Gatekeeping
+For women, the minimum physiological investment in reproduction is massive: nine months of gestation, the metabolic costs of lactation, and the physical risks associated with childbirth. A mating error—selecting a partner with poor genetic fitness or insufficient resources—carries a high evolutionary cost. Consequently, women have evolved to function as the selectors or gatekeepers of the mating market. Their primary adaptive problem is identifying males who possess both high genetic quality (to ensure offspring viability) and the willingness to invest resources (to ensure offspring survival).7 This creates a psychology of caution, vetting, and high standards, forming the basis of "Intersexual Selection" (female choice).4
+2.1.2 Male Investment and Access Competition
+For men, the obligatory biological investment is minimal (a single act of copulation). A man's reproductive success is not limited by his physiological capacity to produce offspring but by his sexual access to fertile females. Therefore, men have evolved psychological mechanisms that prioritize sexual variety and minimize the costs of access. This drives "Intrasexual Competition" (male-male competition), where men compete for status and resources to gain preferential access to females.6
+Feature
+	Male Strategy
+	Female Strategy
+	Limiting Factor
+	Sexual Access to Females
+	Resources / Genetic Quality
+	Primary Risk
+	Paternity Uncertainty
+	Loss of Investment / Poor Genes
+	Selection Type
+	Intrasexual Competition
+	Intersexual Selection
+	Optimal Strategy
+	Maximize Variety (Short-Term)
+	Maximize Quality (Long-Term)
+	2.2 Sexual Strategies Theory (SST) and Contextual Shifts
+Proposed by Buss and Schmitt, Sexual Strategies Theory posits that both sexes possess a complex menu of mating strategies (short-term and long-term) that are activated by specific contexts. These are not rigid types but fluid strategic adaptations.5
+2.2.1 Male Short-Term Mating Psychology
+Men possess a suite of adaptations specifically designed for short-term mating efficiency. These are critical for FrameScan to identify, as they often conflict with societal expectations of monogamy.
+* Desire for Sexual Variety: Men across all cultures express a significantly higher desire for multiple sexual partners than women. This is a robust effect size (d > 0.74).7
+* Standard Relaxation: In short-term contexts, men significantly lower their standards for intelligence, personality, and even status in a partner. This adaptation functions to maximize the number of potential mating opportunities.7
+* Time-to-Sex Reduction: Men are willing to engage in intercourse after much shorter periods of acquaintance than women. This efficiency minimizes the "opportunity cost" of courtship.7
+* The Coolidge Effect: Men experience a renewed sexual interest and arousal when introduced to a new receptive female, facilitating the evolutionary drive to spread genetic material widely.7
+2.2.2 The Female Dual Mating Strategy (AF/BB)
+Women face a unique adaptive problem: the traits that make a man a good genetic sire (Dominance, Testosterone, Risk-Taking) are often negatively correlated with the traits that make him a good long-term provider (Fidelity, Stability, Resource Sharing). This necessitates a "Dual Mating Strategy," colloquially known in the manosphere as "Alpha Fucks, Beta Bucks".1
+1. Good Genes Selection (Ovulatory/Short-Term): During the fertile window (ovulation), women subconsciously shift their preferences toward markers of high genetic fitness. These "Alpha" traits include physical symmetry, masculine facial features, dominance, and social boldness. This strategy prioritizes genetic benefits for offspring.8
+2. Good Dad Selection (Luteal/Long-Term): Outside the fertile window, or when seeking long-term security, women prioritize "Beta" traits: willingness to invest, emotional stability, kindness, and resource accumulation. This strategy prioritizes the survival environment for the offspring.8
+Operational Implication: FrameScan must recognize that a woman's behavior toward a man is contingent on which strategy she is currently enacting. A man exhibiting purely "Nice Guy" (Beta) traits may be selected for provision but denied sexual passion, as he fails the "Good Genes" filter. Conversely, the "Bad Boy" (Alpha) is selected for sex but often disqualified for commitment.1
+2.3 The Mate Switching Hypothesis
+Contrary to the romantic ideal of lifelong pair-bonding, evolutionary evidence suggests that women possess specific adaptations for Mate Switching (serial monogamy). This hypothesis posits that ancestral women needed mechanisms to extricate themselves from partnerships that became costly or sub-optimal.12
+2.3.1 Triggers for Mate Switching
+The Mate Switching mechanism is activated by three primary conditions:
+1. Relationship Load: The accumulation of costs inflicted by the mate (abuse, laziness, resource failure) that were not apparent during initial selection.12
+2. Mate Value Discrepancy: A shift in the relative value of the partners. If a woman's SMV remains high while her partner's declines (e.g., job loss, loss of status), or if she "levels up" her own status, a discrepancy is created that motivates trading up.12
+3. Arrival of a Superior Alternative: The presence of a new potential mate who offers sufficiently higher genetic or resource value to offset the transaction costs of switching.12
+2.3.2 The "Walk Away" and "Back-Up" Strategies
+* The Walk Away Strategy: The simplest adaptation is the physical separation from a costly mate. In modern contexts, this manifests as initiating divorce or breakups.12
+* Cultivation of Back-Up Mates: Women often maintain "orbiters" or "back-up mates"—men who are kept in the periphery as insurance policies. These men are not currently sexual partners but are kept sufficiently engaged to be activated if the primary relationship fails.13
+* Infidelity as an Exit Strategy: Research indicates that female infidelity is often functionally different from male infidelity. While men cheat for variety (opportunistic), women frequently cheat to "test drive" a new partner or to emotionally detach from their current one. This is why emotional involvement is higher in female infidelity (70%) compared to male infidelity.12
+2.3.3 Welfare Trade-Off Ratio (WTR)
+A critical metric in the Mate Switching Hypothesis is the Welfare Trade-Off Ratio (WTR). This is the subconscious calculation of how much weight a partner places on the woman's welfare relative to his own. A selfishly skewed WTR (he values himself significantly more than her) is a primary trigger for the activation of mate switching mechanics. Monitoring the WTR allows FrameScan to predict relationship stability.14
+3. The Sociological Operating System: Praxeology and The Rational Male
+While Evolutionary Psychology explains the biological why, the "Rational Male" framework (often termed "Red Pill" or "Praxeology") explains the how—the specific sociological manifestations of these drives in the modern Sexual Marketplace (SMP). This layer strips away the "Blue Pill" social conditioning that obscures reality.1
+3.1 Hypergamy: The Governance of Female Selection
+Hypergamy is the central organizing principle of the female mating strategy in the Rational Male framework. It is defined as the instinctual drive of women to seek the highest status male available to them—to date "up" a dominance hierarchy.1
+3.1.1 The Nature of Hypergamy
+* Vertical vs. Horizontal: Men often date horizontally (peers) or vertically down (hypogamy) regarding socio-economic status, prioritizing youth and beauty. Women date vertically up. They desire a man who is superior in competence, status, strength, or resources.9
+* The Existential Angst: Because Hypergamy is an optimization algorithm, it is never permanently "satisfied." It is constantly scanning the environment for better options. This is not malice; it is biology. A man must continuously demonstrate his value to keep Hypergamy sated.1
+* Briffault's Law: A sociological axiom stating: "The female, not the male, determines all the conditions of the animal family. Where the female can derive no further benefit from association with the male, no such association takes place." This underscores the transactional nature of relationships and negates the concept of "unconditional love" from women to men.9
+3.2 The Sexual Marketplace (SMP) and SMV Dynamics
+Relationships are exchanges of value within a market economy. Understanding "Sexual Market Value" (SMV) is essential for the FrameScan substrate.1
+3.2.1 Male SMV Progression
+Male SMV is essentially a measure of his capacity to provision and protect (Beta traits) combined with his genetic dominance (Alpha traits).
+* Components: Status, Resources, Pre-selection (social proof), Game (behavioral competence), and Physical Fitness.
+* Trajectory: Male SMV typically starts low in youth and peaks later in life (30s to 40s) as men accumulate status, resources, and confidence. This is often referred to as the "climb".16
+3.2.2 Female SMV Progression
+Female SMV is heavily weighted toward reproductive cues.
+* Components: Youth, Physical Beauty (fertility markers), Agreeableness, and Chastity (paternity certainty cues).
+* Trajectory: Female SMV peaks relatively early (typically early 20s) and begins to decline as fertility cues fade. This creates a distinct window of maximum leverage.8
+* The Wall: The "Wall" is the inflection point where a woman's physical SMV declines sharply. This often triggers the "Epiphany Phase," where the strategy shifts from prioritizing "Alpha Fucks" (casual sex with high-value men) to seeking "Beta Bucks" (commitment from a provider).17
+3.3 The Concept of Frame
+"Frame" is the psychological context or reality in which an interaction occurs. It is the defining variable of power dynamics.2
+3.3.1 The Mechanics of Frame
+* Competing Realities: In any interaction, there are two competing frames (perspectives). The dominant frame absorbs the subordinate frame. If a man accepts a woman's interpretation of events, he has entered her frame.2
+* Mental Point of Origin: To hold frame, a man must function as his own "Mental Point of Origin." He must derive his validation, goals, and sense of reality from himself, not from external female approval. Prioritizing his own mission over the relationship is, paradoxically, what sustains the relationship.18
+* Solipsism: The framework posits that women are naturally solipsistic—viewing the world primarily through the lens of their own immediate emotional needs and survival. A man who understands this does not get angry at female nature; he navigates it by maintaining his own objective frame.18
+3.3.2 The Iron Rules of Tomassi
+Rollo Tomassi identifies several "Iron Rules" that serve as operational heuristics for maintaining frame 2:
+1. Rule #1: Frame is everything. Always be aware of the subconscious balance of power.
+2. The Principle of Least Interest: "In any relationship, the person with the most power is the one who needs the other the least." Maintaining the willingness to walk away is the ultimate source of power.1
+3. Rule #4: Never live with a woman you aren't married to. Co-habitation without commitment reduces male bargaining power and accelerates the transition to a "Beta" provider role without the security of marriage.16
+4. Rule #7: Develop new relationships; don't fix broken ones. It is often more energetically efficient to spin a new plate than to repair a relationship where respect has been lost.16
+3.4 Plate Theory and The Abundance Mindset
+"Plate Theory" is the strategic antidote to the scarcity mindset (Oneitis).1
+* Operational Concept: A man should maintain multiple simultaneous non-exclusive relationships ("spinning plates").
+* Psychological Effect: This creates an artificial abundance. If one woman leaves or misbehaves, the man is not devastated because he has other options. This lack of fear—and the subtle cues of other women's interest (Pre-selection)—increases his SMV in the eyes of all his plates.
+* Prevention of "Oneitis": Oneitis is the unhealthy fixation on a single woman, usually resulting from a lack of options. Plate theory prevents this fixation, allowing the man to vet women rationally rather than out of desperation.16
+4. The Behavioral Interface: Systematic Assertiveness
+The "Interface" layer provides the specific communication tools required to enforce Frame and navigate the conflicting strategies of the sexes. It relies on the work of Manuel Smith (When I Say No, I Feel Guilty) and Robert Glover (No More Mr. Nice Guy).
+4.1 Deconstructing "Nice Guy" Syndrome
+The "Nice Guy" is a pathological behavioral pattern characterized by dishonesty and manipulation disguised as virtue.19
+4.1.1 The Covert Contract
+The core mechanism of the Nice Guy is the "Covert Contract."
+* The Contract: "If I am a good, giving, caring man, then you will love me, give me sex, and never get angry at me.".19
+* The Flaw: This contract is unspoken. The other party (the woman) never agreed to it. When she fails to fulfill her "end" of this imaginary deal, the Nice Guy builds resentment, leading to passive-aggressive behavior and "victim" mentality.19
+* Toxic Shame: Nice Guys are driven by "Toxic Shame"—the belief that they are inherently not good enough. They seek female validation to fill this internal void. This makes them dependent on external approval, which destroys Frame.21
+4.2 The Bill of Assertive Rights
+To dismantle Nice Guy conditioning, FrameScan utilizes the "Bill of Assertive Rights." These rights are operational axioms that immunize a man against manipulation.24
+Assertive Right
+	Operational Definition for FrameScan
+	Manipulation Countered
+	I. The right to be the final judge of yourself.
+	You are the sole arbiter of your worth. Her disapproval is data, not a verdict.
+	External Validation Seeking / Shaming Tactics
+	II. The right to offer no reasons or excuses.
+	You do not need to explain your decisions. Explaining is seeking permission.
+	The "Why?" Trap / Justification Loop (JADE)
+	III. The right to decide if you are responsible for finding solutions to other people's problems.
+	You are not her therapist or fixer. Her emotional state is her responsibility.
+	Caretaking / Emotional Dumping
+	IV. The right to change your mind.
+	Adaptability is strength. Consistency traps are manipulation.
+	"But you promised..." / Rigid Consistency
+	V. The right to make mistakes.
+	Accepting error removes the fear of failure. Alpha frame accepts imperfection.
+	Perfectionism / Fear of Failure
+	VI. The right to say, "I don't know."
+	You do not need to be omniscient to be dominant.
+	Intellectual Bullying
+	VII. The right to be independent of the goodwill of others.
+	You do not need her to like you for you to function.
+	Likability Traps / People Pleasing
+	VIII. The right to be illogical.
+	Emotions are not logical. You do not need to win a debate to hold your frame.
+	Logic Traps / Circular Arguments
+	IX. The right to say, "I don't understand."
+	Forces explicit communication. Refuse to "mind read."
+	Mind Reading Expectations / "If you loved me you'd know"
+	X. The right to say, "I don't care."
+	The ultimate power move. Indifference is the opposite of love/hate.
+	Emotional Turbulence / Drama
+	4.3 The Integrated Male
+The goal of the behavioral interface is the "Integrated Male." Unlike the Nice Guy (who hides his needs) or the Jerk (who ignores others entirely), the Integrated Male is transparent. He is assertive about his needs, sexuality, and boundaries. He eliminates covert contracts in favor of overt negotiation or action.21
+5. Signal Detection and Processing: Decoding Female Inputs
+FrameScan requires a robust signal processing layer to interpret female behavior accurately. Misinterpretation leads to system failure (loss of Frame).
+5.1 The Taxonomy of Female Tests
+Women subconsciously "test" men to evaluate their SMV and Frame strength. These tests are heuristics derived from the need to secure a high-quality mate.28
+5.1.1 Shit Tests (Fitness Tests)
+* Function: To determine if the man is a "Fake Alpha" (posing) or a "Real Alpha" (dominant). A woman tests the man's strength by attempting to destabilize him.28
+* Mechanism: She challenges his judgment, insults his appearance, or makes unreasonable demands.
+* Operational Indicator: The test usually occurs when the man is displaying confidence or during initial courtship. It feels like a challenge to his status.
+* Examples:
+   * "You're too short for me."
+   * "Buy me a drink."
+   * "Do you say that to all the girls?".30
+* Pass Condition: The man must not get defensive or angry. He must maintain "Amused Mastery" (viewing the test as a child's tantrum).
+   * Technique: Agree and Amplify. (e.g., Her: "You're a player." You: "The best one on the team, coach put me in.").30
+5.1.2 Comfort Tests (Loyalty Tests)
+* Function: To determine if the man is willing to invest resources and offer protection. This tests for "Beta" (provisioning) traits required for long-term security.29
+* Mechanism: She expresses insecurity, sadness, or vulnerability.
+* Operational Indicator: The test usually occurs in an LTR or after intimacy. It feels like a plea for reassurance.
+* Examples:
+   * "Do you still love me?"
+   * "I feel fat today."
+   * "Why don't we spend time together?".28
+* Pass Condition: The man must not use Shit Test tactics (sarcasm/amusement). He must provide genuine reassurance and physical comfort.
+   * Fatal Error: Applying "Agree and Amplify" to a Comfort Test (e.g., Her: "I feel ugly." You: "Yeah, totally.") destroys trust.29
+5.1.3 Compliance Tests
+* Function: To measure how easily the man can be controlled or made to serve her.
+* Mechanism: Small requests for favors or changes in behavior.
+* Example: "Hold my purse," "Change your shirt, I don't like it."
+* Pass Condition: Refusal or negotiation. A man who immediately complies with all requests is categorized as a "Beta Orbiter" or "Nice Guy".31
+5.2 Indicators of Interest (IOI) vs. Disinterest (IOD)
+FrameScan prioritizes behavioral data over verbal data ("Watch what they do, not what they say").33
+5.2.1 High Interest (IOI)
+* Physical: Proximity, touching, sustained eye contact, preening (fixing hair).34
+* Digital: Quick response times, use of emojis (hearts, winks), initiating contact, asking questions to prolong conversation ("double texting").34
+* Behavioral: Compliance with requests, laughing at bad jokes, making logistics easy (offering alternative times if busy).33
+5.2.2 Low Interest (IOD)
+* Physical: Turning away (closed body language), avoiding eye contact, flinching at touch.36
+* Digital: "Dry Texting" (one-word replies like "k," "lol," "nice"), long latency without explanation, never initiating.37
+* The "Confused" Signal: If the system detects confusion about her interest ("She says she likes me but acts distant"), the operational conclusion is Low Interest. Genuine desire is clear; confusion is a "soft no".37
+5.3 Text Game Analytics
+Texting is identified as a high-risk medium for Frame loss.
+* The Golden Ratio: FrameScan advises a 2:3 investment ratio. The man should contribute roughly 2/3 of the text volume the woman does. This maintains the perception of higher value.38
+* Latency Matching: If she takes 3 hours to reply, the man should not reply in 3 minutes. He must match or slightly exceed her latency to avoid signaling neediness (low SMV).39
+* Logistic Focus: The primary function of texting is to arrange face-to-face meetings (logistics). Excessive "chit-chat" kills mystery and sexual tension.39
+6. Operational Tactics: The Game Protocol
+This section details the proactive behavioral strategies ("Game") used to generate attraction and leverage the biological/sociological principles.
+6.1 The Yohami Triad: Status, Looks, Behavior
+Attraction is generated via three primary vectors, often referred to as the Yohami Triad.40
+1. Looks: Physical fitness, style, grooming. This is the "ticket to entry."
+2. Status: Social proof, resource display, pre-selection.
+3. Behavior: How the man acts.
+   * Correction Protocol: If Looks or Status are fixed constraints, the man must maximize Behavior. A "Bad Boy" frame (dominance, unpredictability) can often override deficits in looks/status by triggering the "Good Genes" evolutionary heuristic.43
+6.2 Push-Pull Dynamics
+To prevent interaction flatness, FrameScan employs "Push-Pull" dynamics—the intentional oscillation between interest and disinterest.44
+6.2.1 The Mechanism
+* The Pull: Signals interest/validation. "You're cute," "Come here."
+* The Push: Signals disinterest/boundary. "You're trouble," "I shouldn't hang out with you," physically turning away.
+* The Effect: This creates "Frustration-Attraction." By giving validation and then withdrawing it, the man prevents the woman from taking him for granted. It mimics the behavior of a high-value male who has options and standards.45
+6.2.2 Operational Examples
+* Verbal: "I love that dress [Pull], but you're too short to be a model [Push].".45
+* Physical: Hugging her warmly [Pull], then abruptly releasing and stepping back [Push].46
+* Digital: Sending a fun, engaging text [Pull], then not replying for 6 hours [Push].
+6.3 Dread Game
+Dread Game is the strategic application of the "Fear of Loss".1
+6.3.1 Passive Dread
+* Definition: The natural anxiety a woman feels when she realizes her partner is high-value and desired by others.
+* Implementation: The man improves his SMV (gym, wardrobe, career success) and maintains a social life outside the relationship. He does not need to do anything to her; his rising value creates the dread naturally. She realizes she must compete to keep him.1
+6.3.2 Active Dread
+* Definition: Intentional actions to trigger jealousy or insecurity in response to bad behavior (disrespect, withdrawal of intimacy).
+* Implementation: Explicitly withdrawing attention, flirting with other women in her presence (soft dread), or essentially signaling that the relationship is on the table if things don't improve.1
+* Risk: High. Can lead to relationship termination if the woman's WTR is too low. However, it is often necessary to reset a failing Frame.47
+6.4 Jealousy Plotlines
+FrameScan acknowledges that jealousy is a potent arousal trigger for women (Pre-selection).
+* Tactic: Strategically allowing a woman to see that other women desire you. This validates her choice (if she has you) or makes her want you (if she doesn't).47
+* Execution: Having female friends, being seen interacting with attractive women, or simply not being overly available. "No girl wants a man that no other woman wants".38
+6.5 The "No Permission" Protocol
+A critical error identified in the substrates is "Asking for Permission."
+* The Error: "Can I kiss you?" "Can we go to your place?" This shifts the burden of the decision to the woman. It forces her to explicitly agree to be "easy" or "slutty," triggering her Anti-Slut Defense (ASD). It also signals a lack of confidence.42
+* The Protocol: Lead. Do not ask. Move for the kiss. If she pulls back, stop. But do not ask. Suggest the venue change ("Let's go get pizza") rather than asking ("Do you want to go?"). This provides Plausible Deniability.41
+7. Synthesis: The FrameScan Heuristic Loop
+For the purpose of AI analysis, any intergender interaction can be parsed through the following heuristic loop:
+1. Context Analysis:
+   * Is this a Short-Term (Good Genes) or Long-Term (Good Dad) context?
+   * What is the SMV discrepancy?
+2. Signal Decoding:
+   * Input: Female behavior/text.
+   * Classification: Shit Test? Comfort Test? IOI? IOD?
+3. Frame Check:
+   * Is the user reacting to her reality (Beta)?
+   * Is the user maintaining his own Mental Point of Origin (Alpha)?
+4. Strategy Selection:
+   * If Shit Test: Agree and Amplify / Ignore.
+   * If Comfort Test: Reassure / Physical Affection.
+   * If IOD: Withdraw Attention / Soft Next / Dread.
+   * If IOI: Escalate / Push-Pull.
+5. Execution (Assertiveness):
+   * Communicate without JADE (Justify, Argue, Defend, Explain).
+   * Enforce boundaries.
+   * Lead the interaction.
+8. Conclusion: The FrameScan Mandate
+The principles outlined in this document—derived from the "Hard" science of Evolutionary Psychology, the "Soft" science of Praxeology, and the behavioral toolkit of Assertiveness—form a unified, deterministic theory of intergender relations.
+The mandate for the FrameScan AI is to analyze inputs against this substrate to determine the biological imperative driving the interaction, the power dynamic governing the exchange, and the tactical response required to maximize the user's Outcome Independence. By transitioning from "Blue Pill" confusion to "Red Pill" clarity, the system empowers the user to become the "Integrated Male"—one who understands the game, accepts the rules, and plays to win.
+________________
+End of Operational Reference Document
+Works cited
+1. The Rational Male | Summary, Quotes, FAQ, Audio - SoBrief, accessed December 8, 2025, https://sobrief.com/books/the-rational-male-2
+2. Frame - The Rational Male PDF - Scribd, accessed December 8, 2025, https://www.scribd.com/document/411159354/Frame-The-Rational-Male-pdf
+3. Frame - Grokipedia, accessed December 8, 2025, https://grokipedia.com/page/Frame
+4. 4.2 Evolutionary Theories in Psychology - SaskOER, accessed December 8, 2025, https://www.saskoer.ca/introductiontopsychology/chapter/evolutionary-theories-in-psychology/
+5. Sexual Strategies Theory: An Evolutionary Perspective on Human Mating - UT Psychology Labs, accessed December 8, 2025, https://labs.la.utexas.edu/buss/files/2015/09/SexualStrategiesTheory.pdf
+6. Sexual Strategies Theory: Historical Origins and Current Status David M. Buss The Journal of Sex Research, Vol. 35, No. 1, The U - UT Psychology Labs, accessed December 8, 2025, https://labs.la.utexas.edu/buss/files/2015/09/SST-1998.pdf
+7. Mate Preferences and Their Behavioral Manifestations - UT Psychology Labs, accessed December 8, 2025, https://labs.la.utexas.edu/buss/files/2019/03/mate-preferences-and-their-behavioral-manifestations-FINAL-PUBLISHED-2019.pdf
+8. (PDF) Sexual Strategies Theory - ResearchGate, accessed December 8, 2025, https://www.researchgate.net/publication/312133506_Sexual_Strategies_Theory
+9. Everything You Need to Know About Hypergamy | by Derrick Lawson - Medium, accessed December 8, 2025, https://redpiller.medium.com/everything-you-need-to-know-about-hypergamy-99612f7973ed
+10. Worth sharing! What we know about human mating behavior from David Buss, accessed December 8, 2025, https://sexologysupervisors.org/worth-sharing-what-we-know-about-human-mating-behavior-from-david-buss/
+11. Letters To Young Men: Hypergamy - Kuyperian Commentary, accessed December 8, 2025, https://kuyperian.com/letters-to-young-men-hypergamy/
+12. The mate switching hypothesis - UT Psychology Labs, accessed December 8, 2025, https://labs.la.utexas.edu/buss/files/2013/02/The-Mate-Switching-Hypothesis-FINAL-PUBLISHED-2017.pdf
+13. The mate switching hypothesis | Request PDF - ResearchGate, accessed December 8, 2025, https://www.researchgate.net/publication/306418216_The_mate_switching_hypothesis
+14. Does the mate-switching hypothesis explain female infidelity? | Aeon Essays, accessed December 8, 2025, https://aeon.co/essays/does-the-mate-switching-hypothesis-explain-female-infidelity
+15. Mate Switching Hypothesis - Mating Straight Talk, accessed December 8, 2025, https://www.matingstraighttalk.com/mate-switching-hypothesis/
+16. The Rational Male Summary: 9 Iron Rules by Rollo Tomassi - The Power Moves, accessed December 8, 2025, https://thepowermoves.com/the-rational-male/
+17. The Rational Male – Hypergamy: Micro to Macro | Rollo Tomassi | Full Length HD - Reddit, accessed December 8, 2025, https://www.reddit.com/r/OkCupid/comments/aeq4hk/the_rational_male_hypergamy_micro_to_macro_rollo/
+18. Solipsism I | PDF | Empathy | Thought - Scribd, accessed December 8, 2025, https://www.scribd.com/document/824851861/Solipsism-I
+19. Why are Covert Contracts Bad? : r/NMMNG - Reddit, accessed December 8, 2025, https://www.reddit.com/r/NMMNG/comments/tf5rhq/why_are_covert_contracts_bad/
+20. No More Mr Nice Guy by Robert Glover - Parker Klein, accessed December 8, 2025, https://www.parkerklein.com/notes/no-more-mr-nice-guy
+21. The Nice Guy Syndrome | NO MORE MR. NICE GUY!, accessed December 8, 2025, https://nomoremrniceguy.com/the-nice-guy-syndrome/
+22. Covert Contracts: The Relationship Killer | The Inspirational Lifestyle - Coach Dan Munro, accessed December 8, 2025, https://theinspirationallifestyle.com/covert-contract/
+23. [text] "No More Mr. Nice Guy" - Detailed notes on how to get what you want out of love and life. : r/GetMotivated - Reddit, accessed December 8, 2025, https://www.reddit.com/r/GetMotivated/comments/2mwfgz/text_no_more_mr_nice_guy_detailed_notes_on_how_to/
+24. The Bill of Assertive Rights - Jessica Lightbourne Coaching, accessed December 8, 2025, https://www.jessicalightbourne.com/general-5
+25. Quote by Manuel J. Smith: “A BILL OF ASSERTIVE RIGHTS I: You have the rig...” - Goodreads, accessed December 8, 2025, https://www.goodreads.com/quotes/490242-a-bill-of-assertive-rights-i-you-have-the-right
+26. Bill of Assertive Rights - Disability Rights Nebraska, accessed December 8, 2025, https://www.disabilityrightsnebraska.org/resources/blog_archive.html/article/2018/07/19/assertive-rights-the-right-to-be-ourselves
+27. The Bill of Assertive Rights - Assertiveness Articles, accessed December 8, 2025, https://www.revolutionlearning.co.uk/article/the-bill-of-assertive-rights/
+28. Male shit tests : r/RedPillWomen - Reddit, accessed December 8, 2025, https://www.reddit.com/r/RedPillWomen/comments/748tdq/male_shit_tests/
+29. What are some examples of "Shit Test, or Fitness Test?" : r/RedPillWomen - Reddit, accessed December 8, 2025, https://www.reddit.com/r/RedPillWomen/comments/6mo6fb/what_are_some_examples_of_shit_test_or_fitness/
+30. Examples of shit tests/comfort tests? : r/RedPillWomen - Reddit, accessed December 8, 2025, https://www.reddit.com/r/RedPillWomen/comments/asbflk/examples_of_shit_testscomfort_tests/
+31. What Do Your Shit Tests Sound Like? : r/RedPillWomen - Reddit, accessed December 8, 2025, https://www.reddit.com/r/RedPillWomen/comments/4f8gvz/what_do_your_shit_tests_sound_like/
+32. Glossary - The Feminine Frame, accessed December 8, 2025, https://thefeminineframe.com/glossary/
+33. I text the girl I love very often, but she replies with less frequency. Does that mean she has no interest in me? - Quora, accessed December 8, 2025, https://www.quora.com/I-text-the-girl-I-love-very-often-but-she-replies-with-less-frequency-Does-that-mean-she-has-no-interest-in-me
+34. What is the meaning of 'taking the red pill' and how did it become popular on the internet?, accessed December 8, 2025, https://www.quora.com/What-is-the-meaning-of-taking-the-red-pill-and-how-did-it-become-popular-on-the-internet
+35. 5 Micro Signs of Interest When Texting | RelationshipFire - Medium, accessed December 8, 2025, https://medium.com/relationshipfire/5-micro-signs-of-interest-when-texting-b3c578d58e89
+36. Push Pull Flirting Method - Techniques, Examples, and Does it work? [Blog] - Steemit, accessed December 8, 2025, https://steemit.com/steem/@resteemhorizon/push-pull-flirting-method-techniques-examples-and-does-it-work-blog
+37. Dry Texting Explained: Meaning, Examples & How to Deal with Dry Text Messages - SCiMatch, accessed December 8, 2025, https://scimatch.com/dry-texting-meaning-examples/
+38. The Red Pill For Boys 10 - Game Basics | PDF | Jealousy | Human Nature - Scribd, accessed December 8, 2025, https://www.scribd.com/document/509295530/The-Red-Pill-For-Boys-10-Game-Basics
+39. Texting and being too available : r/RedPillWomen - Reddit, accessed December 8, 2025, https://www.reddit.com/r/RedPillWomen/comments/5z9ot0/texting_and_being_too_available/
+40. Untitled | PDF | Emotions | Feeling - Scribd, accessed December 8, 2025, https://www.scribd.com/document/638684043/Untitled
+41. Captain Jack Pua Notes | PDF - Scribd, accessed December 8, 2025, https://www.scribd.com/document/629222458/kupdf-net-captain-jack-pua-notes
+42. Yohami Zerpa Open Your Eyes | PDF - Scribd, accessed December 8, 2025, https://www.scribd.com/document/444633406/Yohami-Zerpa-Open-Your-Eyes
+43. Bad Boy | PDF | Self-Improvement - Scribd, accessed December 8, 2025, https://www.scribd.com/document/656829781/BAD-BOY
+44. Understanding the Push-Pull Dynamic in Relationships - Psych Central, accessed December 8, 2025, https://psychcentral.com/relationships/ways-to-overcome-a-push-pull-dynamic-in-your-relationship
+45. Push-Pull Method of Flirting: Best Techniques + Examples - wikiHow, accessed December 8, 2025, https://www.wikihow.com/Push-Pull-Method
+46. Tactics Tuesdays: Push-Pull for Getting Girls, accessed December 8, 2025, https://www.girlschase.com/comment/83784
+47. Building Jealousy in Sarging Techniques | PDF - Scribd, accessed December 8, 2025, https://www.scribd.com/document/244314037/Tyler-Durden-and-Mystery-Building-Jealousy-Into-a-Sarge

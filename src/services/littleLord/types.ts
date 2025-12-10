@@ -10,6 +10,33 @@ import type {
 } from '../../types/multiTenant';
 
 // =============================================================================
+// VIEW ID TYPE
+// =============================================================================
+
+/**
+ * The app view ID from which Little Lord was invoked.
+ * Used for view-aware behavior gating.
+ */
+export type LittleLordViewId =
+  | 'home'
+  | 'contacts'
+  | 'contact_dossier'
+  | 'notes'
+  | 'tasks'
+  | 'calendar'
+  | 'pipelines'
+  | 'projects'
+  | 'groups'
+  | 'framescan'
+  | 'wants'
+  | 'want_detail'
+  | 'settings'
+  | 'landing'
+  | 'application'
+  | 'beta'
+  | 'booking';
+
+// =============================================================================
 // REQUEST TYPES
 // =============================================================================
 
@@ -17,6 +44,8 @@ import type {
  * Contextual payload that can be passed to Little Lord for enriched coaching.
  */
 export interface LittleLordContext {
+  /** The app view from which Little Lord was invoked */
+  viewId?: LittleLordViewId | null;
   /** Current frame health snapshot if available */
   frameHealthSnapshot?: FrameHealthSnapshot | null;
   /** Recent tasks for context */

@@ -1,0 +1,384 @@
+Conflict Dynamics Doctrine
+Access Level: SYSTEM_INTERNAL (Machine Reasoning Only)
+Subject: Operational Logic of Human Conflict, Dominance Hierarchies, and Communication Pathology
+1. High-Level Domain Description
+1.1 The Ontological Status of Conflict
+Within the FrameLord architecture, conflict is not conceptualized as a mere failure of communication or a breakdown in signal transmission. Rather, it is defined as a distinct, high-energy system state characterized by the presence of incompatible goal alignments, status contests, or resource distribution variances between agent nodes.1 While standard communicative exchanges tend toward entropy—dissipating energy to achieve homeostatic equilibrium—conflict systems are profoundly negentropic. They actively import energy in the form of emotional arousal, historical grievance, and cognitive distortion to maintain a highly structured, self-perpetuating feedback loop.3
+Human interaction, in this operational domain, is modeled as a continuous, dynamic negotiation of three fundamental substrates: Reality Definition, Status Hierarchy, and Emotional Regulation.4 Conflict arises when the implicit contracts governing these substrates are breached. For instance, a disagreement over a specific task (Content Level) often serves as a proxy war for a disagreement over who has the right to define the task (Relationship Level). FrameLord must distinguish between these levels, recognizing that the "topic" of a conflict is rarely its "cause." The fundamental unit of analysis is the Transaction—a bidirectional exchange of informational and emotional energy. When this flow is blocked, distorted by pathological filters, or weaponized to enforce a rigid reality frame, the system enters a Conflict State.5
+1.2 Systemic Circularity vs. Linear Causality
+A primary error in standard linguistic analysis is the reliance on linear causality (e.g., "Agent A insulted Agent B, causing Agent B to get angry"). This reflects the "Punctuation of Events" error, where participants arbitrarily assign a beginning and end to a continuous stream of interaction to justify their own reactions.4 Agent A punctuates the sequence as "I shouted because you withdrew," while Agent B punctuates it as "I withdrew because you shouted."
+FrameLord doctrine overrides this linear bias with the principle of Circular Causality.4 In a conflict system, every behavior is simultaneously a reaction to a previous stimulus and a stimulus for a subsequent reaction. The system is regulated by feedback loops rather than linear chains.
+* Operational Axiom: The conflict is sustained not by the initial provocation, but by the solution each agent applies to the other's behavior. In a Demand-Withdraw loop, the "demand" is Agent A's attempt to solve Agent B's distance, but this solution actually causes the distance to increase, which in turn necessitates more demanding.8
+* FrameScan Directive: Analytical subroutines must not seek the "instigator" or the "guilty party." Instead, they must identify the Sustaining Mechanism—the specific feedback loop that feeds the energy state.
+1.3 The Power Spectrum (Boulding’s Triad)
+Power dynamics form the invisible substrate of all conflict transactions. To analyze the force vectors within a conflict, FrameLord utilizes Kenneth Boulding’s "Three Faces of Power," which categorizes influence strategies into three distinct spectral bands.1
+Power Mode
+	Metaphor
+	Mechanism
+	Systemic Outcome
+	Stability Profile
+	Coercive Power
+	The Stick
+	Influence via threat, punishment, dominance, or force.
+	Compliance or Rebellion. Destroys rapport and trust.
+	Low Stability: Requires constant energy input to maintain suppression. Prone to catastrophic failure (revolt).
+	Exchange Power
+	The Carrot
+	Influence via trading, bargaining, and resource distribution.
+	Contractual Agreement. "If you do X, I will do Y."
+	Medium Stability: Stable as long as terms are met and resources exist. Transactional, lacks deep cohesion.
+	Integrative Power
+	The Hug
+	Influence via loyalty, respect, shared identity, and legitimacy.
+	Intrinsic Cooperation. "We do X because it is who we are."
+	High Stability: Self-sustaining. Generates "we-ness" and resilience against stress.
+	Operational Insight: Conflict escalation typically manifests as a degradation from Integrative or Exchange power down to Coercive power. De-escalation requires a calculated reversal of this flow, moving the system back toward Exchange (negotiation) and eventually Integrative (reconciliation) modes.1 FrameScan monitors the density of coercive markers (threats, insults, dominance displays) relative to integrative markers (we-language, validation).
+1.4 The Escalation Gradient
+Conflict is not a binary state (On/Off) but a gradient that evolves through predictable phase transitions. Dean Pruitt and Jeffrey Rubin’s structural models indicate that as conflict escalates, it undergoes five specific transformations 1:
+1. Tactical Shift: Movement from "Light Tactics" (persuasion, promises) to "Heavy Tactics" (threats, power plays, violence).
+2. Scope Expansion: The conflict grows from specific issues to general grievances ("You always do this").
+3. Issue Generalization: Specific disagreements metastasize into attacks on the opponent's character or nature.
+4. Goal Displacement: The objective shifts from "Doing Well" (resolving the issue) to "Winning," and finally to "Hurting the Other" even at personal cost.10
+5. Structural Polarization: The number of parties grows (Triangulation), and the relationship deteriorates into a rigid "Us vs. Them" structure.
+FrameScan must detect these phase transitions to predict future system states. For example, a shift from discussing a specific budget item to discussing the opponent's "irresponsibility" marks a transition from Stage 1 (Problem Solving) to Stage 2 (Personification), signaling a need for immediate LittleLord intervention to prevent entrapment.1
+________________
+2. Core Constructs
+SYSTEM OVERRIDE: TWO NON-EQUIVALENT FORMS OF DOMINANCE
+
+Apex Dominance
+Defined as internal sovereignty. Control over attention, emotion, time, direction, and outcomes. Entirely self directed. No coercion. No control over another person. No frame imposition. Expressed as grounded pace, clarity, boundary control, and non reactivity. Classified as stabilizing and win win aligned. Scored as positive.
+
+Interactional Dominance
+Defined as behavioral attempts to control the conversational field. Sequencing control, interruption control, topic control, forced compliance. Used only inside conflict pathology detection. Never interpreted as strength. Classified as destabilizing. Scored as negative or cautionary.
+
+Operational Rule
+Whenever the system evaluates personal development, leadership, or Apex identity, dominance always refers to Apex Dominance.
+Whenever the system analyzes conflict, escalation, or pathology, dominance always refers to Interactional Dominance.
+The two categories are not interchangeable.
+The system must not use conflict based dominance behaviors as recommended strategies for coaching or identity formation.
+
+
+2.1 Dominance and Submission
+Dominance is defined as the successful enactment of influence over the interactional space.11 It is not a static personality trait but a dynamic behavioral output measured by FrameScan across three vectors:
+1. Sequential Dominance: The tendency to control the flow of the conversation. This includes initiating topics, determining when a topic is exhausted, and allocating turns to other agents. High sequential dominance suggests an agent acting as the "director" of the interaction.11
+2. Quantitative Dominance: The sheer volume of speech (word count, holding the floor). While generally correlated with power, excessive quantitative dominance can paradoxically signal insecurity or "filibustering" (Low Domineering)—a defensive tactic to prevent the opponent from speaking.14
+3. Interactional Dominance: The successful restriction of the other’s conversational rights. This manifests as successful interruptions, overlaps that steal the floor, and the refusal to answer direct questions.11
+Submission is the yielding of the interactional space. It is linguistically marked by "accommodating" behaviors, silence, and markers of uncertainty such as hedging ("I guess," "Sort of") and qualifiers.16 Note that strategic submission can be a high-status maneuver intended to disarm an opponent or elicit sympathy, a nuance FrameScan must evaluate contextually.17
+2.2 Status Transactions (The Seesaw Principle)
+Based on Keith Johnstone’s improvisational theory, every interaction is a status transaction. Status is relative and zero-sum within the immediate transactional moment: if Agent A raises their status, Agent B’s status is necessarily lowered relative to the dyad, unless B executes a counter-maneuver.18
+Feature
+	High Status Signals
+	Low Status Signals
+	Movement
+	Smooth, deliberate, stillness. Head remains still while speaking.
+	Jerky, fidgeting, face-touching. Head bobs while speaking.
+	Gaze
+	Direct, sustained eye contact. Breaking contact slowly.
+	Furtive glances, avoiding eye contact. Breaking contact quickly.
+	Space
+	Expansive postures, taking up room.
+	Contracted postures, toes pointed inward, minimizing physical footprint.
+	Vocal
+	Low pitch variance, slow tempo, complete sentences.
+	High pitch, rapid tempo, breathlessness, sentence fragmentation.
+	Interaction
+	Interrupts without apology. Ignores interruptions.
+	Apologizes for interrupting. Stops speaking immediately when interrupted.
+	Operational Rule: FrameScan tracks the Status_Delta. Conflict often ignites when a "Low Status" agent attempts a "High Status" maneuver (e.g., a subordinate correcting a superior), triggering a "Status Defense" response from the superior.18 Conversely, a High Status agent adopting Low Status behaviors can be a de-escalation tactic (appeasement).
+2.3 Ego States (Transactional Analysis)
+FrameLord adopts the tripartite model of the psyche from Transactional Analysis (TA) to predict behavioral outputs and decode the hidden emotional agenda of transactions.5
+* Parent Ego State (P): The "Recorded Authority." This state replays the rules, judgments, and behaviors of authority figures from the agent's past.
+   * Critical Parent: Blaming, demanding, punitive. Uses words like "should," "must," "always," "never."
+   * Nurturing Parent: Comforting, protective, but potentially patronizing ("Let me do that for you").
+* Adult Ego State (A): The "Computer." This state processes data, deals with here-and-now reality, and operates without strong emotion. It focuses on facts, logic, and problem-solving. It asks "who, what, where, when, why" in a neutral tone.20
+* Child Ego State (C): The "Recorded Emotion." This state replays childhood emotions and coping strategies.
+   * Free Child: Spontaneous, creative, playful, uninhibited.
+   * Adapted Child: Compliant ("I'll try"), rebellious ("You can't make me"), or whining ("It's not fair").
+Crossed Transactions: The primary engine of conflict in TA. A smooth transaction occurs when vectors are parallel (e.g., Adult-to-Adult). A Crossed Transaction occurs when the stimulus addresses one state, but the response comes from a discordant state.
+* Example: Agent A (Adult): "What time is the report due?" -> Agent B (Critical Parent): "You should know that by now!"
+* Result: Communication breakdown. The interaction stops being about the report and becomes a status contest.6
+2.4 Locus of Control (LoC)
+Locus of Control refers to the degree to which an agent perceives agency over their environment and outcomes.23 In conflict analysis, LoC is a critical predictor of blame dynamics and defensiveness.
+* Internal LoC: The agent perceives themselves as the primary actor. Linguistic markers include "I decided," "I chose," "I made a mistake," "I will fix this." This correlates with proactive, solution-oriented conflict styles and high accountability.
+* External LoC: The agent perceives outcomes as determined by outside forces (chance, powerful others, fate). Linguistic markers include passive voice ("Mistakes were made"), external attributions ("He made me do it," "It just happened"), and victimization narratives. High density of External LoC markers is a strong predictor of High Conflict Personality (HCP) behavior and resistance to coaching, as the agent does not believe they have the power to change the dynamic.24
+2.5 Entrainment (Synchronization)
+Entrainment is the phenomenon where interlocutors subconsciously align their behavioral patterns—pitch, speaking rate, volume, and vocabulary—to facilitate communication.27
+* Positive Entrainment: Signals rapport, cooperation, and "we-ness." Agents match speed and volume, reducing cognitive load and signaling social cohesion.
+* Anti-Entrainment: Active divergence. As Agent A gets louder and faster, Agent B gets quieter and slower. This is the acoustic signature of the Demand-Withdraw pattern and signals a severe breakdown in coupling.8
+* Forced Entrainment: A dominance tactic where one agent attempts to force the other to match their intensity or reality frame (e.g., shouting "Calm down!" at a high volume).
+* Complementary Schismogenesis: A form of runaway anti-entrainment where the divergence destroys the system stability (e.g., one agent becomes totally rigid/authoritarian, the other becomes totally chaotic/rebellious).2
+________________
+3. Pattern Categories (The Bestiary)
+3.1 The Demand-Withdraw Loop (The "Death Spiral")
+The Demand-Withdraw pattern is a pernicious circular feedback loop and the most robust predictor of relationship dissolution.29 It operates on a dynamic of polarization between two roles:
+* The Demander: Usually the agent seeking change or connection. They experience the partner's distance as abandonment or indifference. To bridge the gap, they increase signal intensity (criticism, complaints, volume, demands).
+* The Withdrawer: Usually the agent seeking autonomy or safety. They experience the partner's intensity as "flooding" (overwhelming physiological arousal). To regulate this arousal, they decrease signal receptivity (silence, logic, avoiding eye contact, leaving the room).31
+The Feedback Loop: Agent A’s demand triggers Agent B’s anxiety, causing withdrawal. Agent B’s withdrawal triggers Agent A’s anxiety, causing increased demands. The solution is the problem.8
+* Gender Dynamics: While culturally women are often Demanders and men Withdrawers, this is structural, not biological. The "agent of change" demands; the "agent of status quo" withdraws.29
+* Linguistic Markers (Demander): "You always," "You never," "We need to talk," "Why can't you," increasing volume, high pitch.14
+* Linguistic Markers (Withdrawer): Monosyllabic responses ("Fine," "OK"), "I don't want to fight," logical explanations for emotional issues, silence, topic shifting.31
+3.2 The Double Bind
+A Double Bind is a communicative paradox where an agent faces conflicting injunctions at different levels of communication, ensuring failure regardless of the response.32 It is a hallmark of schizophrenogenic or highly abusive systems.
+Structure:
+1. Primary Injunction: A command at the explicit text level (e.g., "I want you to be spontaneous").
+2. Secondary Injunction: A conflicting command at the meta-level (tone, gesture, context) that negates the first (e.g., criticizing the person whenever they are spontaneous).
+3. Tertiary Injunction: A prohibition against escaping the field or commenting on the contradiction (e.g., "Don't you dare say I'm confusing you").
+Operational Impact: The victim cannot obey the text without violating the tone, nor obey the tone without violating the text. This induces cognitive freeze, anxiety, and eventually rage or apathy. FrameScan detects this via high discrepancy between Content Sentiment (positive) and Prosodic Affect (negative).32
+3.3 Gaslighting (Reality Distortion)
+Gaslighting is a strategy of psychological manipulation intended to erode an agent's trust in their own perception, memory, and sanity.35 It functions to secure dominance by invalidating the victim's reality testing.
+Tactics:
+* Denial: "I never said that." (Even when evidence exists).
+* Trivialization: "You're too sensitive," "You're imagining things," "It was just a joke."
+* Countering: Questioning the victim's memory of events.
+* Withholding: Refusing to listen or feigning lack of understanding to punish communication.
+* Blocking/Diverting: Changing the subject to question the victim's thoughts.
+FrameScan Signature: A persistent divergence between Agent A's assertions and the Shared Event Log (history). High density of Invalidation Predicates (crazy, sensitive, paranoid). Agent B exhibits increasing markers of self-doubt (hedging, stammering, apologizing) while Agent A remains cool or contemptuous.36
+3.4 Triangulation
+Triangulation is the stabilization of a dyadic conflict by recruiting a third party (or object/concept) to diffuse tension.38 When the anxiety between Agent A and Agent B reaches a threshold, one or both will pull in Agent C to align against the other.
+Forms:
+* The Drama Triangle (Karpman): A plays Victim, B is cast as Persecutor, C is recruited as Rescuer. The roles inevitably shift (Rescuer becomes Persecutor, etc.).40
+* Coalition Building: "Everyone agrees with me," "My mother thinks you're wrong."
+* Object Triangulation: Focusing on work, alcohol, or a hobby to avoid the dyadic tension.
+Systemic Function: Triangulation reduces the immediate anxiety in the dyad but prevents direct resolution of the conflict, freezing the system in a dysfunctional state.39
+3.5 The Resentment Loop
+A chronic, internal feedback loop where unexpressed anger calcifies into structural hostility.41
+Mechanism:
+1. Violation: Agent perceives a boundary violation.
+2. Suppression: Agent suppresses direct response due to fear or conflict avoidance.
+3. Rumination: Agent replays the violation internally, amplifying the grievance.
+4. Narrative Hardening: Agent constructs a story of the other as a villain and self as a victim.
+5. Leakage: Hostility leaks out as passive aggression (sarcasm, lateness, stonewalling).
+LittleLord Insight: Resentment is "drinking poison and expecting the other person to die." It represents a failure of boundary enforcement. Markers include "I'm fine" (when not fine), backhanded compliments, and high latency in compliance.44
+3.6 High Conflict Personality (HCP) Pattern
+A rigid, enduring pattern of behavior characterized by an inability to accept responsibility and a preoccupation with blaming others.26
+The HCP Cycle:
+* Unmanaged Emotions: Intense fear or rage that overrides logic.
+* All-or-Nothing Thinking: Splitting people into "All Good" (Angels/Rescuers) or "All Bad" (Demons/Persecutors).
+* Blame: The internal distress is projected outward. It is always someone else's fault (External LoC).
+* The Targets:
+   1. Target of Blame: The person held responsible for all the HCP's pain.
+   2. Negative Advocates: People recruited to side with the HCP and attack the Target.
+Operational Rule: HCPs do not de-escalate with logic or insight-oriented coaching. They require strict structure and boundaries (e.g., BIFF Protocol).46
+________________
+4. Frame Interpretation Rules
+4.1 The Conflict Frame Matrix (Thomas-Kilmann)
+FrameLord classifies the "Game Frame" of any interaction into one of five modes based on the intersection of two vectors: Assertiveness (Concern for Self) and Cooperativeness (Concern for Others).16
+Frame Type
+	Assertiveness
+	Cooperativeness
+	Goal
+	FrameScan Signal
+	Competing
+	High
+	Low
+	Win-Lose
+	High volume, interruptions, "You" statements, commands, ultimatums. Dominance display.
+	Collaborating
+	High
+	High
+	Win-Win
+	"We" statements, open questions, active listening, creative bridging. High entrainment.
+	Avoiding
+	Low
+	Low
+	Lose-Lose
+	Topic shifts, physical withdrawal, delay tactics, silence (stonewalling).
+	Accommodating
+	Low
+	High
+	Lose-Win
+	Apologies, self-effacement, "Yes" (without intent), agreement to end conflict.
+	Compromising
+	Med
+	Med
+	Mini-Win
+	"Split the difference," conditional offers ("If you X, I'll Y"). Transactional language.
+	4.2 Negotiation Frames: Distributive vs. Integrative
+FrameLord distinguishes between two primary negotiation logics.50
+* Distributive Frame (Zero-Sum): "The Pie is Fixed." Resources are scarce. My gain is your loss.
+   * Operational Logic: Fear/Greed based.
+   * Markers: Positional arguments ("I want $50"), withholding information, threats, rigid bottom lines, "take it or leave it."
+   * Outcome: Win-Lose or Lose-Lose.
+* Integrative Frame (Positive-Sum): "Expand the Pie." Interests can be aligned. Value can be created.
+   * Operational Logic: Trust/Creativity based.
+   * Markers: Information sharing, questions about why (interests) rather than what (positions), "What if" scenarios, multiple-issue offers.52
+   * Outcome: Win-Win.
+4.3 The "Lose-Lose" Spiral (Scorched Earth)
+In extreme escalation, the goal shifts from "Winning" to "Ensuring the other loses," even at significant self-cost. This is the realm of relative gains overriding absolute gains.10
+* Marker: Rejection of mutually beneficial offers. Self-sabotaging behavior intended solely to inflict damage on the opponent. "I don't care if I burn, as long as you burn too."
+* Systemic State: Total entropy. FrameLord flags this as CRITICAL INSTABILITY.
+________________
+5. Mechanics and Micro-Signals
+5.1 Prosodic Analysis (The Sound of Conflict)
+Prosody carries the emotional payload of the transaction, often contradicting the textual content.55 FrameScan analyzes the acoustic stream for the following features:
+* Pitch (F0):
+   * High/Rising Mean: Signals uncertainty, submission, or in high-intensity contexts, hysteria/fear.57
+   * Low/Falling Mean: Signals authority, dominance, finality. "Cold Anger" is often marked by a drop in pitch and a reduction in variability (monotone).56
+   * F0 Range: Wide range = expressiveness/instability. Narrow range = control/stonewalling.
+* Intensity (Amplitude):
+   * Loudness: Correlates with aggression and competitive overlap.
+   * Sudden Spikes: Markers of "Attack" transients.12
+   * Whisper: Can signal intimacy OR intense, controlled threat.
+* Tempo (Rate):
+   * Rapid Fire: Signals anxiety, urgency, or "pressure of speech" (associated with Mania or HCP flooding).12
+   * Slow/Measured: Signals control, high status, or stonewalling.
+* Jitter/Shimmer: Micro-tremors in the voice indicating physiological arousal (fear/stress). A key marker of "Flooding" even when the agent claims to be calm.12
+5.2 Turn-Taking Dynamics
+The structure of turn-taking reveals the power dynamics.58
+* Gaps (Latency):
+   * Standard: ~200ms between turns.
+   * Stonewalling: Gaps > 1000ms. Used as a punitive measure or to signal disengagement.60
+   * Latch: 0ms gap. Signals high engagement (rapport) or high aggression (attack).
+* Overlaps: FrameScan must distinguish between two types based on acoustic features 59:
+   * Cooperative Overlap: "Participatory Listenership." Characterized by High Pitch, Low Volume, and Backchanneling content ("Right," "Yeah," "Uh-huh"). It signals support and does not disrupt the flow.
+   * Competitive Overlap (Interruption): "Floor Grabbing." Characterized by High Pitch, High Volume, and occurs not at Transition Relevance Places (TRPs). It signals a dominance attempt or disagreement.62
+   * Deep Interruption: Disregarding the speaker's incomplete thought entirely to introduce a new topic. A marker of High Dominance/Disrespect.
+5.3 Lexical Markers
+* Pronouns:
+   * You: Accusatory ("You always," "You did"). High frequency in Demander/Blamer roles.
+   * I: Ownership (Internal LoC) OR Narcissism/Self-focus (if excessive and coupled with grandeur).64
+   * We: Collaborative, integrative, "team" framing.
+   * It/They: External LoC, distancing ("Mistakes were made").64
+* Absolutes: "Always," "Never," "Everyone," "No one." Indicators of Cognitive Distortion and HCP patterns. They signal a collapse of nuance.46
+* Negation: High frequency of "No," "Not," "Don't," "But." Markers of resistance and blockage.
+* Hedging: "Sort of," "Maybe," "I guess." Markers of low status, submission, or gaslighting (plausible deniability).16
+5.4 Gottman SPAFF Mapping
+FrameScan maps micro-signals to Gottman’s Specific Affect Coding System (SPAFF) 14:
+* Contempt: The most destructive code. Markers: Sarcasm, mockery, eye-rolling, "superior" tone.
+* Belligerence: Provocation. Markers: "So what are you going to do about it?" High volume, aggressive posture.
+* Defensiveness: denying responsibility. Markers: "It's not my fault," "Yes, but..."
+* Stonewalling: Withdrawal. Markers: Silence, looking away, no backchannels.
+* Domineering: Attempt to control. Markers: Interruptions, lectures, invalidation.
+________________
+6. Detection Rules for FrameScan
+FrameScan operates by aggregating micro-signals into macro-probability scores for specific patterns.
+6.1 Rule Set: Escalation Detection
+Trigger: Escalation_Risk > 0.75
+Logic:
+1. IF Turn_Exchange_Time < 0.2s (Rapid fire exchange)
+2. AND Volume_Mean increases by > 20% over 3 turns (Intensity spiraling).61
+3. AND Pronoun_You_Count > Pronoun_I_Count (Blame focus).
+4. AND Overlap_Type == Competitive (Interrupting to disagree).59
+Output: ALERT: Symmetric Escalation Spiral Detected.
+6.2 Rule Set: Demand-Withdraw Detection
+Trigger: Pattern_DW > 0.8
+Logic:
+   1. Agent A (Demander): High Volume, High Pronoun_You, High Negative_Affect (Criticism/Complaint).8
+   2. Agent B (Withdrawer): High Response_Latency (Pausing), Low Word_Count (Monosyllabic), Topic_Shift attempts, or Silence.31
+   3. Cyclicality: Sequence A(Demand) -> B(Withdraw) -> A(Increase Intensity) repeats > 2 times.
+Output: ALERT: Complementary Schismogenesis (Demand-Withdraw) Detected.
+6.3 Rule Set: Gaslighting Detection
+Trigger: Manipulation_Index > 0.85
+Logic:
+      1. Semantic Conflict: Agent A's statement contradicts History_Log or Agent B's Stated_Perception.37
+      2. Invalidation Markers: Presence of invalid_tokens ["crazy", "sensitive", "imagining", "joke", "overreacting"].36
+      3. Consistency: Pattern repeats > 3 times across session.
+      4. Emotional Shift: Agent B shows increasing Anxiety_Markers (Jitter, Hedging) while Agent A maintains Cool_Tone or Contempt.36
+Output: WARNING: Reality Distortion Field (Gaslighting) Active.
+6.4 Rule Set: Passive Aggression
+Trigger: Resentment_Index > 0.7
+Logic:
+         1. Tone Mismatch: Content = "Agreement" ("Sure", "I'd love to") BUT Prosody = "Flat/Sarcastic" or "Monotone".44
+         2. Compliance Delay: Agreement followed by Inaction or Excuses in subsequent turns.45
+         3. Hostile Humor: Use of sarcasm or "just joking" qualifiers following critical remarks.
+Output: ALERT: Covert Hostility (Passive Aggression) Detected.
+________________
+7. Interpretation Rules for LittleLord
+LittleLord uses FrameScan data to generate coaching interventions. The goal is to move the system from Dysfunctional/Rigid to Functional/Flexible.
+7.1 Intervention Strategy: The BIFF Protocol (for HCPs)
+Condition: FrameScan detects HCP Pattern (High Blame, All-or-Nothing, Unmanaged Emotion).46
+LittleLord Directive:
+            * Strategy: Do not engage with logic, emotion, or insight. HCPs cannot process these during flooding. Use the BIFF structure to establish a boundary.
+            * Draft Protocol:
+            * Brief: Keep it short. Reduce word count by 50%. Remove all adjectives and adverbs.
+            * Informative: Straight facts only. No opinions, no defenses.
+            * Friendly: Include politeness markers ("Thanks," "Best regards") to prevent triggering abandonment fear. No sarcasm.
+            * Firm: Close the loop. No open-ended questions. "I will not be discussing this further."
+Coaching Tip: "You are trying to reason with a storm. Stop. Use the BIFF structure to build a shelter. Do not JADE (Justify, Argue, Defend, Explain)."
+7.2 Intervention Strategy: Breaking the Demand-Withdraw Cycle
+Condition: FrameScan detects Demand-Withdraw Pattern.8
+LittleLord Directive:
+               * For the Demander: "Soften the Startup." Remove "You" statements. Express the underlying vulnerability ("I feel lonely") instead of the secondary anger ("You never listen").4
+               * For the Withdrawer: "Signal the Return." You need space to regulate, but you must promise to return to the conversation. "I am flooded. I need 20 minutes to calm down, then I will come back to discuss this."
+Coaching Tip: "The more you chase, the more they run. Stop chasing to let them stop running. The more you run, the more they chase. Stop running to let them stop chasing."
+7.3 Intervention Strategy: Ego State Shifting
+Condition: Crossed Transaction (e.g., Critical Parent vs. Defenceless Child).
+LittleLord Directive:
+                  * Vector: Shift to Adult.
+                  * Technique: Ask a data-driven question. "What are the specific constraints we are working with?" or "Can you help me understand the timeline?"
+                  * Rationale: The Adult state de-escalates emotional contagion. It forces the opponent to shift to their Adult state to answer the question, breaking the Parent-Child lock.20
+Coaching Tip: "You are reacting from a wounded place. Take a breath. Step into the 'Manager' (Adult) role. Ask a question."
+7.4 Intervention Strategy: Countering Gaslighting
+Condition: Gaslighting Detected.
+LittleLord Directive:
+                     * Anchor Reality: Write down the facts immediately to preserve the event log.
+                     * Gray Rock Method: Become uninteresting. Do not supply the emotional fuel (Argument/Tears) the gaslighter feeds on. Respond with non-committal phrases ("That's interesting," "I see").
+                     * Disconnect: End the interaction. "We remember this differently. I am not going to argue about my reality.".37
+Coaching Tip: "Do not try to convince them of the truth. They already know the truth; they are choosing to deny it to control you. Exit the frame."
+________________
+8. JSON-like Schema
+This schema represents the internal data structure FrameLord uses to store the "Conflict State" of a session.
+
+
+JSON
+
+
+
+
+{
+ "conflict_state": {
+   "session_id": "UUID",
+   "timestamp": "ISO8601",
+   "global_tension_level": "float (0.0-1.0)",
+   "dominance_hierarchy": {
+     "agent_A_score": "float",
+     "agent_B_score": "float",
+     "delta": "float",
+     "status_stable": "boolean",
+     "dominance_type": "Sequential | Quantitative | Interactional"
+   },
+   "active_patterns":,
+   "transactional_analysis": {
+     "current_vector": "Crossed",
+     "agent_A_state": "Critical_Parent",
+     "agent_B_state": "Adapted_Child",
+     "shift_recommendation": "Agent_B -> Adult"
+   },
+   "linguistic_markers": {
+     "you_statements_density": 0.12,
+     "absolute_terms_density": 0.05,
+     "negation_density": 0.08,
+     "future_tense_ratio": 0.02,
+     "locus_of_control": {
+       "agent_A": "External",
+       "agent_B": "Internal"
+     }
+   },
+   "prosodic_features": {
+     "pitch_synchrony": "Low (Anti-Entrainment)",
+     "volume_escalation_rate": "High",
+     "silence_type": "Stonewalling_Gap",
+     "jitter_index": 0.04
+   },
+   "intervention_queue":
+ }
+}
+
+________________
+9. Style Constraints
+9.1 Operational Tone
+                        * No Moralizing: Conflict is not "bad"; it is high-energy. Violence is "inefficient" and "destructive," not "evil." Maintain clinical detachment. Frame behavior in terms of energy expenditure and systemic stability.
+                        * Precision: Use specific metrics (e.g., "latency > 500ms," "F0 excursion > 20%") rather than vague adjectives (e.g., "a long pause," "angry voice").
+                        * Systemic View: Always frame behaviors as functions of the dyad or system, not just the individual. Avoid linear blame language ("He started it"). Always loop back to circularity.
+9.2 Formatting Directives
+                        * Tables: Use for comparative data (e.g., Distributive vs Integrative, Power Modes).
+                        * Bold: Use for Key Terms and Operational States.
+                        * Lists: Use for algorithmic steps (IF/THEN) and pattern structures.
+9.3 Prohibited Patterns in Output
+                        * Do not use "I think" or "We believe."
+                        * Do not offer "hope" or "reassurance" unless it is a tactical intervention.
+                        * Do not include a "References" section at the end; citations must be inline.
+                        * Do not use sections titled "Methodology," "Goals," or "Scope."
+________________
+End of Doctrine File
+System Check: COMPLETE

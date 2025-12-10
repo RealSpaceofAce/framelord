@@ -114,23 +114,40 @@ export interface FrameSampleRewrite {
 }
 
 /**
+ * Status of a FrameScan result.
+ * - "ok": Valid scan with full analysis
+ * - "rejected": Content not suitable for FrameScan (missing context, not human interaction, etc.)
+ */
+export type FrameScanStatus = "ok" | "rejected";
+
+/**
  * Complete result from a frame scan (text or image).
  * This is what the LLM analysis layer produces.
+ *
+ * When status is "rejected":
+ * - rejectionReason contains explanation of why
+ * - axes will be empty
+ * - diagnostics and corrections will have empty arrays
+ * - No FrameScore should be computed
  */
 export interface FrameScanResult {
+  /** Scan status: "ok" for valid scan, "rejected" for invalid content */
+  status: FrameScanStatus;
+  /** Explanation of why the scan was rejected (null if status is "ok") */
+  rejectionReason: string | null;
   /** Whether this is a text or image scan */
   modality: "text" | "image";
   /** The domain context for this scan */
   domain: FrameDomainId;
-  /** Overall frame classification */
+  /** Overall frame classification (meaningful only when status is "ok") */
   overallFrame: "apex" | "slave" | "mixed";
-  /** Overall Win/Win state assessment */
+  /** Overall Win/Win state assessment (meaningful only when status is "ok") */
   overallWinWinState: FrameWinWinState;
-  /** Individual axis scores */
+  /** Individual axis scores (empty when status is "rejected") */
   axes: FrameAxisScore[];
-  /** Diagnostic patterns and evidence */
+  /** Diagnostic patterns and evidence (empty arrays when status is "rejected") */
   diagnostics: FrameScanDiagnostics;
-  /** Recommended corrections */
+  /** Recommended corrections (empty arrays when status is "rejected") */
   corrections: {
     /** Top priority shifts to make */
     topShifts: FrameCorrectionShift[];
@@ -217,6 +234,23 @@ export interface FrameImageScanResult {
   annotations: FrameImageAnnotation[];
   /** Optional URL to annotated image with overlays (from NanoBanana or other service) */
   annotatedImageUrl?: string;
+}
+
+// =============================================================================
+// SCAN CONTEXT
+// =============================================================================
+
+/**
+ * Optional context provided when initiating a FrameScan.
+ * Captures the user's intent, situation, and specific concerns.
+ */
+export interface FrameScanContext {
+  /** What is being scanned (e.g., "Sales email to VP of Sales", "LinkedIn message to prospect") */
+  what: string;
+  /** Array of contact names or IDs mentioned in the scan */
+  who: string[];
+  /** Optional user concern or question (e.g., "I'm worried I sound needy") */
+  userConcern?: string;
 }
 
 // =============================================================================

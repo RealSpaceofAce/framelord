@@ -125,12 +125,12 @@ export const MouseBackground: React.FC = () => {
       constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 2 + 0.5; 
-        this.vx = (Math.random() - 0.5) * 0.5; 
-        this.vy = (Math.random() - 0.5) * 0.5;
+        this.size = Math.random() * 2 + 0.5;
+        this.vx = (Math.random() - 0.5) * 0.2;  // Reduced velocity for slower, floatier motion
+        this.vy = (Math.random() - 0.5) * 0.2;
         this.life = Math.random() * 100;
         this.maxLife = 100 + Math.random() * 100;
-        this.opacity = Math.random() * 0.3 + 0.1; // Reduced opacity for 2D dust to allow 3D to pop
+        this.opacity = Math.random() * 0.25 + 0.08; // Further reduced opacity
         this.density = (Math.random() * 30) + 1;
       }
 
@@ -188,7 +188,8 @@ export const MouseBackground: React.FC = () => {
 
     const initParticles = () => {
       particles = [];
-      const particleCount = (window.innerWidth * window.innerHeight) / 10000;
+      // Further reduced particle density - dividing by 50000 for subtle starfield
+      const particleCount = Math.max(20, (window.innerWidth * window.innerHeight) / 50000);
       for (let i = 0; i < particleCount; i++) {
         particles.push(new Particle());
       }

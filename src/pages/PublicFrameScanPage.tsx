@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { Scan, Lock, Sparkles, ArrowRight, CheckCircle, Info, AlertTriangle } from 'lucide-react';
 import { hasUsedPublicScan, markPublicScanUsed } from '../lib/frameScan/publicScanGate';
 import { appConfig } from '../config/appConfig';
-import { runTextFrameScan, type TextDomainId } from '../lib/frameScan/frameScanLLM';
+import { runTextFrameScan, type TextDomainId, FrameScanRejectionError } from '../lib/frameScan/frameScanLLM';
 import type { FrameScore } from '../lib/frameScan/frameTypes';
 import type { FrameScanUIReport } from '../lib/frameScan/frameReportUI';
 import { CONTACT_ZERO } from '../services/contactStore';
@@ -101,7 +101,13 @@ export const PublicFrameScanPage: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Public scan error:', err);
-      setError(err?.message || 'Failed to run scan');
+
+      // Handle rejection errors with a more helpful message
+      if (err instanceof FrameScanRejectionError) {
+        setError(`Scan rejected: ${err.rejectionReason}`);
+      } else {
+        setError(err?.message || 'Failed to run scan');
+      }
     } finally {
       setIsScanning(false);
     }

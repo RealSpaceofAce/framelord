@@ -13,7 +13,10 @@ import {
 import './AppSidebarSkin.css';
 import { SidebarParticles } from './notes/SidebarParticles';
 import { SparkBorder } from './SparkSystem';
-import { analyzeFrame } from '../lib/llm/geminiService';
+import { runTextFrameScan, type TextDomainId, FrameScanRejectionError } from '../lib/frameScan/frameScanLLM';
+import { getLatestReport, getReportById } from '../services/frameScanReportStore';
+import { useAudio } from '../hooks/useAudio';
+import { showToast } from './Toast';
 import { FrameAnalysisResult } from '../types';
 import { Reveal } from './Reveal';
 import { ContactsView } from './crm/ContactsView';
@@ -53,9 +56,11 @@ import {
 } from '../services/calendarStore';
 import { FrameScanPage } from './crm/FrameScanPage';
 import { FrameScanReportDetail } from './crm/FrameScanReportDetail';
+import { FrameScanReportLayout } from './framescan/FrameScanReportLayout';
 import { FrameScoreTile } from './crm/FrameScoreTile';
 import { PublicFrameScanPage } from '../pages/PublicFrameScanPage';
 import { FrameReportDemoPage } from '../pages/FrameReportDemoPage';
+import { FrameScanContextHelp } from './FrameScanContextHelp';
 import { appConfig } from '../config/appConfig';
 import { getContactZeroReports } from '../services/frameScanReportStore';
 import {
@@ -446,13 +451,20 @@ const ScanView: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
-  const [result, setResult] = useState<FrameAnalysisResult | null>(null);
   const [showContactPicker, setShowContactPicker] = useState(false);
   const [linkedContactId, setLinkedContactId] = useState<string | null>(null);
   const [contactSearchTerm, setContactSearchTerm] = useState('');
   const [cursorPosition, setCursorPosition] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // File upload state
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Audio for scan sounds
+  const { play, stop } = useAudio();
 
   // Savage Mode for FrameScan
   const { isEnabled: isSavageModeEnabled, toggle: toggleSavageMode } = useSavageMode();
@@ -515,26 +527,122 @@ const ScanView: React.FC = () => {
     textareaRef.current?.focus();
   };
 
+  // File upload handlers
+  const processFile = (file: File) => {
+    setUploadedFile(file);
+
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFilePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // For non-images, just store the file name for display
+      setFilePreview(null);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      processFile(e.target.files[0]);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const clearFile = () => {
+    setUploadedFile(null);
+    setFilePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleScan = async () => {
+      if (!input.trim() && !uploadedFile) return;
+
       setLoading(true);
       setIsScanning(true);
       setScanComplete(false);
-      
+
+      // Play start sound and begin hum
+      await play('scan_start');
+      play('scan_hum', { loop: true, volume: 0.2 });
+
       try {
-          // Simulate scanning animation duration
-          await new Promise(resolve => setTimeout(resolve, 4000));
-          
-          const res = await analyzeFrame(input);
-          setResult(res);
+          // Determine domain from linked contact or default to generic
+          const domain: TextDomainId = 'generic';
+
+          // Run the actual FrameScan
+          await runTextFrameScan({
+            domain,
+            content: input.trim(),
+            contactId: linkedContactId || undefined,
+            subjectLabel: 'Dashboard scan',
+          });
+
+          // Stop hum and play success
+          stop('scan_hum');
+          await play('scan_complete');
+
+          // Get the newly created report
+          const latestReport = getLatestReport();
+
           setIsScanning(false);
           setScanComplete(true);
-          
+
+          // Show toast with link to report
+          showToast({
+            type: 'success',
+            title: 'FrameScan complete',
+            message: 'Go to Frame Scans to view the full report',
+          });
+
+          // Clear input after successful scan
+          setInput('');
+          setLinkedContactId(null);
+          clearFile();
+
           // Hide complete message after 5 seconds
           setTimeout(() => setScanComplete(false), 5000);
-      } catch (e) { 
-          console.error(e);
+      } catch (e: any) {
+          console.error('FrameScan error:', e);
+          // Stop hum and play error
+          stop('scan_hum');
+          await play('error');
+
+          // Check if this is a rejection (content not suitable for scan)
+          if (e instanceof FrameScanRejectionError) {
+            showToast({
+              type: 'warning',
+              title: 'Scan Rejected',
+              message: e.rejectionReason,
+            });
+          } else {
+            showToast({
+              type: 'error',
+              title: 'Scan failed',
+              message: e?.message || 'An error occurred during the scan',
+            });
+          }
+
           setIsScanning(false);
-      } 
+      }
       finally { setLoading(false); }
   };
 
@@ -610,6 +718,7 @@ const ScanView: React.FC = () => {
               <div className="flex items-center gap-3">
                   <Scan size={28} className="text-[#4433FF]" />
                   <h2 className="text-3xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-[#737AFF]">FRAME SCAN</h2>
+                  <FrameScanContextHelp iconSize={18} />
               </div>
               <div className="flex items-center gap-4 text-xs font-mono text-[#737AFF]">
                   <div className="flex items-center gap-2">
@@ -650,17 +759,81 @@ const ScanView: React.FC = () => {
             </div>
           )}
 
-          <div className="relative z-10 flex-1">
-              <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={handleInputChange}
-                  placeholder="PASTE TEXT, OR DROP IMAGE/AUDIO/DOCS HERE TO SCAN... Use @ to link a contact for context."
-                  className="w-full h-48 bg-[#0A0A1F]/60 border border-[#4433FF]/30 rounded-lg p-6 text-white placeholder-[#737AFF]/50 focus:outline-none focus:border-[#4433FF] transition-all font-mono text-sm resize-none shadow-inner"
-              />
-              
+          <div
+            className={`relative z-10 flex-1 transition-all duration-200 ${isDragging ? 'scale-[1.02] ring-2 ring-[#4433FF] ring-offset-2 ring-offset-[#0A0A1F]' : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+              {/* File Preview - shown when file is uploaded */}
+              {uploadedFile ? (
+                <div className="w-full h-64 bg-[#0A0A1F]/60 border border-[#4433FF]/50 rounded-lg overflow-hidden relative group/preview">
+                  {/* Image Preview */}
+                  {filePreview && uploadedFile.type.startsWith('image/') ? (
+                    <div className="relative w-full h-full">
+                      <img
+                        src={filePreview}
+                        alt="Preview"
+                        className="w-full h-full object-contain opacity-90 group-hover/preview:opacity-100 transition-opacity"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A1F]/90 to-transparent opacity-0 group-hover/preview:opacity-100 transition-opacity flex flex-col justify-end p-6">
+                        <p className="text-white font-display text-sm mb-1">
+                          <span className="text-[#4433FF]">ANALYSIS MODE:</span> VISUAL FRAME
+                        </p>
+                        <p className="text-[#737AFF] text-xs font-mono truncate">{uploadedFile.name}</p>
+                      </div>
+                      {/* Scanning border animation */}
+                      <div className="absolute inset-0 border-2 border-[#4433FF]/50 rounded-lg pointer-events-none" />
+                      <div className="absolute inset-0 rounded-lg pointer-events-none overflow-hidden">
+                        <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-[#4433FF] to-transparent animate-pulse" style={{ top: '50%' }} />
+                      </div>
+                    </div>
+                  ) : (
+                    /* Non-image file preview */
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-center p-6">
+                        <div className="w-16 h-16 mx-auto mb-4 bg-[#4433FF]/20 rounded-lg flex items-center justify-center border border-[#4433FF]/30">
+                          <FileText size={32} className="text-[#4433FF]" />
+                        </div>
+                        <p className="text-white font-medium text-sm mb-1 truncate max-w-[200px] mx-auto">{uploadedFile.name}</p>
+                        <p className="text-[#737AFF] text-xs">{(uploadedFile.size / 1024).toFixed(1)} KB</p>
+                      </div>
+                    </div>
+                  )}
+                  {/* Clear button */}
+                  <button
+                    onClick={clearFile}
+                    className="absolute top-4 right-4 p-2 bg-black/60 hover:bg-red-500/80 text-white rounded-full transition-colors backdrop-blur-md border border-white/10 z-10"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                /* Textarea - shown when no file */
+                <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={handleInputChange}
+                    placeholder="PASTE TEXT, OR DROP IMAGE/AUDIO/DOCS HERE TO SCAN... Use @ to link a contact for context."
+                    className="w-full h-48 bg-[#0A0A1F]/60 border border-[#4433FF]/30 rounded-lg p-6 text-white placeholder-[#737AFF]/50 focus:outline-none focus:border-[#4433FF] transition-all font-mono text-sm resize-none shadow-inner"
+                />
+              )}
+
+              {/* Context input when file is uploaded */}
+              {uploadedFile && (
+                <div className="mt-3">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Add context: who, what, when, why (e.g., 'My LinkedIn photo, checking if it projects authority')..."
+                    className="w-full bg-[#0A0A1F]/60 border border-[#4433FF]/30 rounded-lg p-4 text-white placeholder-[#737AFF]/50 focus:outline-none focus:border-[#4433FF] font-mono text-sm"
+                  />
+                </div>
+              )}
+
               {/* Contact Picker Dropdown */}
-              {showContactPicker && filteredContacts.length > 0 && (
+              {!uploadedFile && showContactPicker && filteredContacts.length > 0 && (
                 <div className="absolute left-6 top-52 bg-[#1E2028] border border-[#4433FF]/30 rounded-lg shadow-xl z-50 w-64 max-h-48 overflow-auto">
                   {filteredContacts.map(contact => (
                     <button
@@ -679,19 +852,27 @@ const ScanView: React.FC = () => {
                   ))}
                 </div>
               )}
-              
-              <div className="absolute bottom-4 right-4 flex gap-2">
-                  <input type="file" className="hidden" ref={fileInputRef} />
-                  <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 bg-[#4433FF]/20 hover:bg-[#4433FF] border border-[#4433FF] text-white text-xs font-bold px-3 py-1.5 rounded transition-all">
-                      <Upload size={12} /> UPLOAD FILES
-                  </button>
-              </div>
+
+              {/* Upload button - only shown when no file */}
+              {!uploadedFile && (
+                <div className="absolute bottom-4 right-4 flex gap-2">
+                    <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} accept="image/*,application/pdf,.doc,.docx,.txt" />
+                    <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 bg-[#4433FF]/20 hover:bg-[#4433FF] border border-[#4433FF] text-white text-xs font-bold px-3 py-1.5 rounded transition-all">
+                        <Upload size={12} /> UPLOAD FILES
+                    </button>
+                </div>
+              )}
           </div>
 
-          <div className="mt-8 flex justify-center relative z-20">
-              <button 
+          {/* Context reminder microcopy */}
+          <p className="mt-3 text-xs text-[#737AFF]/70 text-center">
+            Briefly describe who, what, when, and why. Scans without context may be rejected.
+          </p>
+
+          <div className="mt-6 flex justify-center relative z-20">
+              <button
                 onClick={handleScan}
-                disabled={loading}
+                disabled={loading || (!input.trim() && !uploadedFile)}
                 className="relative overflow-hidden group/btn px-12 py-5 bg-[#4433FF] rounded-lg text-white font-display font-bold tracking-[0.15em] text-lg shadow-[0_0_30px_rgba(68,51,255,0.6)] hover:scale-105 transition-all disabled:opacity-50"
               >
                   <span className="relative z-10 flex items-center gap-3">
@@ -707,25 +888,19 @@ const ScanView: React.FC = () => {
        </ShootingStarBorder>
        </Reveal>
        
+       {/* Scan Complete Message */}
        <AnimatePresence>
-            {result && (
+            {scanComplete && (
                 <MotionDiv
-                initial={{ opacity: 0, height: 0, y: 30 }}
-                animate={{ opacity: 1, height: 'auto', y: 0 }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                className="mt-12 border-t border-fl-primary/20 pt-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="mt-8 text-center"
                 >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div className="flex flex-col items-center justify-center p-8 bg-fl-navy/30 rounded-xl border border-fl-primary/10 relative overflow-hidden shadow-inner">
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-fl-primary/5 pointer-events-none" />
-                        <span className="text-fl-gray text-xs uppercase tracking-[0.2em] mb-4">
-                           FrameScore
-                        </span>
-                        <div className={`text-7xl font-display font-bold text-[#4433FF] drop-shadow-[0_0_25px_rgba(0,0,0,0.8)]`}>
-                            {result.score}
-                        </div>
-                    </div>
+                <div className="inline-flex items-center gap-3 px-6 py-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                    <span className="text-green-400 font-medium">Scan complete! View report in Frame Scans.</span>
                 </div>
                 </MotionDiv>
             )}
@@ -1812,7 +1987,7 @@ export const Dashboard: React.FC = () => {
         <div className="sidebar-header-zone hidden lg:flex flex-col px-3 pt-4 pb-2">
             {/* Logo row */}
             <div className="flex items-center px-3 mb-4">
-                <Zap size={20} className="text-[#4433FF] mr-3" />
+                <span className="px-2 py-1 rounded-md border border-[#1f2f45] bg-[#0e1a2d]/80 text-[#0043FF] shadow-[0_0_14px_rgba(0,67,255,0.35)] mr-3 text-sm font-bold">[ ]</span>
                 <div className="leading-tight">
                     <h1 className="font-display font-bold text-white text-sm tracking-wider">FRAMELORD</h1>
                     <p className="text-[9px] text-gray-500 tracking-wide">THE OS FOR DOMINANCE</p>
@@ -2019,16 +2194,37 @@ export const Dashboard: React.FC = () => {
                  }}
                />
              )}
-             {currentView === 'FRAMESCAN_REPORT' && selectedReportId && (
-               <FrameScanReportDetail
-                 reportId={selectedReportId}
-                 onBack={handleBackToFrameScans}
-                 onNavigateToContact={(contactId) => {
-                   setSelectedContactId(contactId);
-                   setCurrentView('DOSSIER');
-                 }}
-               />
-             )}
+             {currentView === 'FRAMESCAN_REPORT' && selectedReportId && (() => {
+               const report = getReportById(selectedReportId);
+               if (!report) {
+                 return (
+                   <div style={{ padding: 24, color: '#fff' }}>
+                     <button onClick={handleBackToFrameScans} style={{ marginBottom: 16 }}>← Back</button>
+                     <p>Report not found</p>
+                   </div>
+                 );
+               }
+               return (
+                 <div>
+                   <button
+                     onClick={handleBackToFrameScans}
+                     className="framescan-back-button"
+                   >
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                       <path d="M19 12H5M12 19l-7-7 7-7" />
+                     </svg>
+                     Back to Reports
+                   </button>
+                   <FrameScanReportLayout
+                    report={report}
+                    onNavigateToNote={(noteId) => {
+                      setSelectedNoteId(noteId);
+                      setCurrentView('NOTES');
+                    }}
+                  />
+                 </div>
+               );
+             })()}
              {currentView === 'PUBLIC_SCAN' && (
                <PublicFrameScanPage />
              )}

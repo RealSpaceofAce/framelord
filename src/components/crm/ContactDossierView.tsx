@@ -19,7 +19,7 @@ import {
   Trash2, Paperclip, Image, File, Layout, Scan, Music, GripVertical, Eye, EyeOff, Settings2
 } from 'lucide-react';
 import { getContactById, CONTACT_ZERO, updateContact } from '../../services/contactStore';
-import { getNotesByContactId, getNotesByAuthorId, createNote } from '../../services/noteStore';
+import { getNotesByContactId, getNotesByAuthorId, createNote, getNotesWithMention } from '../../services/noteStore';
 import { getTopicsForContact, getTopicsForAuthor } from '../../services/topicStore';
 import { 
   getInteractionsByContactId, 
@@ -78,6 +78,20 @@ import {
 import { FrameScanContactTab } from './FrameScanContactTab';
 
 const MotionDiv = motion.div as any;
+
+// --- HELPERS ---
+
+/**
+ * Strips HTML tags from content, returning plain text.
+ * Used for note snippets in the dossier view.
+ */
+const stripHtmlTags = (html: string): string => {
+  if (!html) return '';
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+  const text = temp.textContent || temp.innerText || '';
+  return text.replace(/\s+/g, ' ').trim();
+};
 
 // --- PROPS ---
 
@@ -210,9 +224,17 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   const isContactZero = contact.id === CONTACT_ZERO.id;
   const isArchived = contact.status === 'archived';
   
-  // Notes ABOUT this contact
+  // Notes ABOUT this contact (targetContactId === contact.id)
   const notesAboutContact = getNotesByContactId(contact.id);
-  
+
+  // Notes that @MENTION this contact (excludes notes about this contact)
+  const notesMentioningContact = useMemo(() => {
+    if (isContactZero) return []; // Contact Zero doesn't need @mentions to themselves
+    return getNotesWithMention(contact.id).filter(
+      note => note.targetContactId !== contact.id // Exclude notes already shown in "Notes About"
+    );
+  }, [contact.id, isContactZero]);
+
   // Tasks for this contact
   const openTasks = getOpenTasksByContactId(selectedContactId);
   const allTasks = getTasksByContactId(selectedContactId);
@@ -921,10 +943,15 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           </div>
         )}
 
-        {/* MAIN GRID */}
+        {/* MAIN GRID - 4 Zone Layout */}
         <div className="grid grid-cols-1 xl:grid-cols-[320px_1fr_360px] gap-6 items-start">
-        
-        {/* LEFT: Identity Card */}
+
+        {/* ZONE 1: WHO IS THIS - Left sidebar identity */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1 mb-2">
+            <User size={14} className="text-[#8beaff]" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6b92b9]">Zone 1 — Who is this</span>
+          </div>
         <div className={`${glassCard} p-6 relative overflow-hidden ${isContactZero ? 'border-[#2ee0ff66]' : ''}`}>
           <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(31,226,255,0.18),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(122,93,255,0.18),transparent_35%)]" />
           <div className="relative flex flex-col items-center text-center mb-6 gap-2">
@@ -1166,9 +1193,15 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             )}
           </div>
         </div>
+        </div>
+        {/* End Zone 1 */}
 
-        {/* CENTER: Frame Metrics + Topics + Timeline */}
+        {/* ZONE 2 & 3: PROFILE + WHAT'S GOING ON - Center column */}
         <div className="space-y-6">
+          <div className="flex items-center gap-2 px-1 mb-2">
+            <Activity size={14} className="text-[#c49bff]" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6b92b9]">Zone 2 & 3 — Profile & Activity</span>
+          </div>
           {/* Frame Score */}
           <MotionDiv 
             initial={{ scale: 0.95, opacity: 0 }}
@@ -1630,8 +1663,14 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           )}
         </div>
 
-        {/* RIGHT: Notes + Tasks + Tags */}
+        {/* ZONE 4: NEXT ACTIONS - Tasks, Notes, Follow-ups */}
         <div className="space-y-6">
+          {/* Zone 4 Header */}
+          <div className="flex items-center gap-2 px-1 mb-2">
+            <CheckSquare size={14} className="text-[#34f5ff]" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6b92b9]">Zone 4 — Next Actions</span>
+          </div>
+
           {/* Tasks Section */}
           {isWidgetVisible('tasks') && (
           <div className={`${glassCard} p-6`}>
@@ -1837,6 +1876,53 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               </div>
             ) : (
               <p className="text-[#6b92b9] text-sm italic">No notes yet</p>
+            )}
+          </div>
+          )}
+
+          {/* Notes Mentioning This Contact - Only shown for non-Contact Zero */}
+          {!isContactZero && isWidgetVisible('notesMentioning') && (
+          <div className={`${glassCard} p-6`}>
+            <div className="flex items-center gap-2 mb-4">
+              <AtSign size={16} className="text-[#a8e6cf]" />
+              <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">
+                Notes Mentioning {contact.fullName?.split(' ')[0] || 'This Contact'}
+              </h3>
+              <span className="text-[11px] text-[#7fa6d1] ml-auto">{notesMentioningContact.length} total</span>
+            </div>
+
+            {notesMentioningContact.length === 0 ? (
+              <div className="text-center py-4">
+                <AtSign size={24} className="mx-auto text-[#6b92b9]/40 mb-2" />
+                <p className="text-xs text-[#6b92b9]">No notes mention this contact yet</p>
+                <p className="text-[10px] text-[#6b92b9]/60 mt-1">Use @{contact.fullName?.split(' ')[0] || 'Name'} in notes to link them here</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[200px] overflow-y-auto">
+                {notesMentioningContact.slice(0, 5).map((note) => (
+                  <div
+                    key={note.id}
+                    className="border-l-2 border-[#a8e6cf44] pl-3 py-2 hover:bg-white/5 rounded-r cursor-pointer transition-colors"
+                    onClick={() => {
+                      // Navigate to Notes view with this note selected
+                      console.log('[Dossier] Navigate to note:', note.id);
+                    }}
+                    title="Click to view note"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <FileText size={10} className="text-[#a8e6cf]" />
+                      {note.title && (
+                        <span className="text-xs text-white font-medium truncate max-w-[180px]">{note.title}</span>
+                      )}
+                      <span className="text-[10px] text-[#6b92b9] ml-auto">{formatDate(note.createdAt)}</span>
+                    </div>
+                    <p className="text-xs text-white/70 line-clamp-2">{truncate(stripHtmlTags(note.content), 100)}</p>
+                  </div>
+                ))}
+                {notesMentioningContact.length > 5 && (
+                  <p className="text-xs text-[#6b92b9] pl-3 pt-2">+{notesMentioningContact.length - 5} more notes</p>
+                )}
+              </div>
             )}
           </div>
           )}

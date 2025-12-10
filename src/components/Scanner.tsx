@@ -8,6 +8,8 @@ import { Reveal } from './Reveal';
 import { useAudio } from '../hooks/useAudio';
 import { toast } from './Toast';
 import { useSavageMode } from '../hooks/useSavageMode';
+import { FrameScanContextHelp } from './FrameScanContextHelp';
+import ElectricBorder from './ElectricBorder';
 
 // Bypass strict type checking for motion components
 const MotionDiv = motion.div as any;
@@ -257,6 +259,13 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-fl-primary/5 blur-[120px] rounded-full -z-10" />
 
       <Reveal width="100%">
+        <ElectricBorder
+          color="#4433FF"
+          speed={0.8}
+          chaos={0.6}
+          thickness={2}
+          style={{ borderRadius: 16 }}
+        >
         <MotionDiv
             ref={ref}
             onMouseMove={handleMouseMove}
@@ -273,7 +282,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
               repeat: Infinity,
               ease: "easeInOut",
             } : {}}
-            className={`glass-card rounded-2xl p-8 md:p-12 shadow-[0_0_80px_rgba(3,4,18,0.8)] relative overflow-hidden group touch-none transition-all duration-300 border ${loading ? 'border-fl-primary/70 shadow-[0_0_40px_rgba(68,51,255,0.3)]' : 'border-[#1f2f45]'}`}
+            className={`relative bg-[#1a1a2e]/60 backdrop-blur-2xl rounded-2xl p-8 md:p-12 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden group touch-none transition-all duration-300 ${loading ? 'shadow-[0_0_40px_rgba(68,51,255,0.3)]' : ''}`}
         >
             {/* Glossy Reflection Gradient */}
             <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl z-40" />
@@ -327,7 +336,10 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
             )}
 
             <div className="mb-8 text-center transform translate-z-10" style={{ transform: "translateZ(30px)" }}>
-                <h2 className="text-3xl font-display text-white mb-2 tracking-wide">FRAMESCAN</h2>
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <h2 className="text-3xl font-display text-white tracking-wide">FRAMESCAN</h2>
+                  <FrameScanContextHelp iconSize={18} />
+                </div>
                 <p className="text-fl-text">
                   {isSavageMode
                     ? "Upload a photo or paste a draft. No mercy. No excuses."
@@ -421,10 +433,15 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
                          </div>
                     )}
                 </div>
-            
+
+                {/* Context reminder microcopy */}
+                <p className="text-xs text-fl-gray/60 text-center">
+                  Include context: who, what, when, and why. Scans without context may be rejected.
+                </p>
+
                 <div className="flex justify-center">
-                    <Button 
-                        onClick={handleScan} 
+                    <Button
+                        onClick={handleScan}
                         disabled={loading || (!input && !selectedImage)}
                         glow
                         className="w-full md:w-auto min-w-[240px] relative overflow-hidden"
@@ -560,6 +577,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
             )}
             </AnimatePresence>
         </MotionDiv>
+        </ElectricBorder>
       </Reveal>
     </section>
   );

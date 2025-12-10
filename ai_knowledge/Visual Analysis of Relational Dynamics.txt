@@ -1,0 +1,236 @@
+﻿FrameScan: Automated Visual Analysis of Relational Dynamics
+Operational Reference Manual v1.0
+
+================================================================================
+CONTEXT REQUIREMENTS FOR VISUAL SCANS (MANDATORY)
+================================================================================
+
+CRITICAL: The AI MUST refuse to analyze images without sufficient context.
+
+REQUIRED CONTEXT (at least one of the following):
+- WHO: Identity or role of the subject(s) (e.g., "This is my LinkedIn profile photo",
+  "Photo of me and my business partner")
+- WHAT: The nature of the interaction being analyzed (e.g., "Team photo from our
+  company retreat", "Dating app photo I'm considering using")
+- WHEN: Temporal context if relevant (e.g., "First meeting with investor",
+  "After 3 months of dating")
+- WHY: The purpose of the scan (e.g., "I want to understand the power dynamic",
+  "Checking if my body language projects confidence")
+
+AUTOMATIC REJECTION CRITERIA:
+1. Images that are clearly NOT human interactions:
+   - Software screenshots, UI mockups, diagrams
+   - Abstract art, illustrations without humans
+   - Product photos, logos, icons
+   - Memes, charts, graphs, documents
+
+2. Images with no contextual information provided:
+   - If the user provides an image URL with no description
+   - If the context field is empty, generic ("test"), or nonsensical
+
+3. Images that cannot be meaningfully analyzed for relational dynamics:
+   - Single objects with no humans visible
+   - Extremely blurry or unidentifiable content
+   - Text-only images (documents, messages without visual subjects)
+
+REJECTION BEHAVIOR:
+When rejection criteria are met, the scan MUST:
+- Return status: "rejected"
+- Return rejectionReason: A clear explanation of why the scan was rejected
+- NOT fabricate a FrameScore, axes, diagnostics, or corrections
+- NOT attempt to analyze non-human content as if it were a human interaction
+
+NEVER fabricate a FrameScore for content that is not clearly a human, a human
+interaction, or a human-relevant scenario. Reject instead.
+
+================================================================================
+
+1. Purpose, Philosophy, and Limitations
+1.1 Purpose
+The objective of this document is to establish a comprehensive taxonomy of visual cues used to infer relational power dynamics, attraction asymmetries, and dominance hierarchies in still photography. This framework is designed to train the FrameScan AI module to detect, quantify, and score interpersonal dynamics based on geometric and behavioral signals.1
+1.2 What This Model Measures
+This system quantifies the "Unspoken Grammar" of human interaction. It moves beyond sentiment analysis (happy/sad) to structural analysis:
+* Dominance Patterns: Identification of the "Anchor" (high status) vs. the "Satellite" (low status).2
+* Deference Patterns: Visual evidence of one subject compromising their physical integrity to accommodate another.5
+* Attraction Directionality: Vector analysis determining who is seeking validation and who is receiving it.1
+* Space Ownership: Quantification of territorial control within the bounding box.7
+1.3 Limitations
+* Temporal Isolation: Still images represent a split-second slice of a dynamic interaction. Inferences are probabilistic, not deterministic.9
+* Physiological Constraints: Extreme height differences may necessitate mechanical leaning that mimics deference cues. Adjustments must be made for height ratios > 1.15.5
+* Contextual Variance: Formal settings (e.g., diplomatic photos) enforce artificial symmetry that may mask organic dynamics.2
+________________
+2. Core Structural Principle: Vertical Line and Angular Deviation
+2.1 The Conceptual Vertical Line
+The primary reference vector for stability and status is the Gravity Line. In a balanced or high-status stance, the subject’s spinal column (C7 to Sacrum) aligns with the true vertical axis of the environment ($90^\circ$ relative to the horizon). This indicates "Grounding" and self-possession.11
+2.2 Deviation Categories
+* Vertical/Orthogonal (The Anchor): Spinal deviation $< 3^\circ$. The subject holds their position regardless of the partner's proximity. This signals outcome independence and high frame strength.5
+* Convergent Lean (Seeking): Spinal deviation $> 5^\circ$ toward the partner. The subject compromises their center of gravity to close the gap. This signals neediness, deference, or the pursuit of validation.12
+* Divergent Lean (Withdrawal/Status): Spinal deviation away from the partner. If paired with relaxed limbs, this signals indifference or high status (the partner must come to them). If paired with tension, it signals repulsion.2
+2.3 Angular Thresholds
+* Zone I (Stable): $0^\circ - 4^\circ$. Neutral/Dominant.
+* Zone II (Compromised): $5^\circ - 10^\circ$. Moderate deference/Affiliative effort.
+* Zone III (Collapse): $> 10^\circ$. Critical loss of frame. The subject is physically falling into the partner's orbit.12
+2.4 Lower Body Involvement
+* The Base: Status is rooted in the feet. A wide stance (feet > shoulder width) anchors the vertical line.2
+* The Tilt: If the torso leans but the feet remain planted, it indicates a "Reaching" behavior. If the entire body axis tilts from the ankles, it indicates a "Falling" behavior.14
+________________
+3. Ownership of Space
+3.1 Spatial Anchoring
+Analyze the Centroid Stability. The dominant subject typically occupies the center of their own gravity well. Subordinate subjects adjust their coordinates to fit the remaining space.8
+* Metric: Compare the volume of space occupied ($BoundingBox_{Area}$) relative to body size.
+* Displacement: If Subject A remains static and Subject B leans/steps in, Subject A "Holds Frame."6
+3.2 Expansion versus Compression
+* Expansive Posture: Elbows away from ribs, legs spread, chest open. Signals confidence and territorial claim.13
+* Compressive Posture: Elbows tucked into torso, legs crossed (standing), shoulders rolled forward. Signals self-protection, anxiety, or low status.13
+3.3 Encroachment and Annexation
+* Annexation: One subject places limbs or objects into the other's personal zone without resistance.
+* Yielding: The partner leans back or compresses to accommodate the encroachment.2
+3.4 Surface Contact
+* Stabilizers: Leaning on walls, rails, or furniture can signal relaxed dominance (claiming the environment) or insecurity (needing physical support), depending on spinal verticality.13
+________________
+4. Contact Patterns and Touch Dynamics
+4.1 Direction of Touch
+* Unilateral Touch: Person A touches Person B, with no reciprocal touch.
+   * High on Low: Hand on shoulder/neck (Dominance/Guide).1
+   * Low on High: Hand clutching arm/waist (Dependence/Seeking security).2
+* No Contact (The Gap): Visible physical distance suggests lack of intimacy or high social tension.12
+4.2 Types of Touch
+* Possessive/Framing: Hand firmly placed on the waist, hip, or neck. Fingers are spread, indicating ownership.2
+* Tentative/Hovering: The hand is near the partner but not making full contact ("Hover Hand"). There is a visible gap or shadow between palm and skin. This is a critical indicator of low status, fear of rejection, or lack of entitlement.12
+* Clinging: Wrapping arms around the partner's limb or torso, using the partner for physical stability.2
+4.3 Pressure Indicators
+* Compression: Visible indentation of skin or clothing indicates firm, confident touch.
+* Floating: Lack of compression suggests hesitation or performative touch.19
+________________
+5. Limb Placement and Shielding Behaviors
+5.1 Pelvic Region Coverage (Genital Guarding)
+* Self-Shielding: Hands clasped in front of the groin (The "Fig Leaf" position).
+* Object Shielding: Holding a drink, bag, or hat directly over the pelvic region.
+* Interpretation: Signals defensiveness, vulnerability, passivity, or low sexual confidence.12
+5.2 Chest and Abdomen Coverage
+* Ventral Protection: Crossed arms across the chest block access to vital organs. Signals distinct discomfort or defensive boundaries.17
+5.3 Thigh and Leg Positioning
+* Wide Base: Feet apart, knees out. Signals stability and openness.13
+* Narrow/Crossed Base: Feet together or legs crossed while standing. Reduces physical footprint and stability. Signals submission or anxiety.17
+5.4 Hands in Pockets
+* Thumbs Out: Confidence/Relaxed.
+* Thumbs In/Hidden: Withdrawal/Hiding intent.13
+________________
+6. Torso, Hip, and Pelvic Orientation
+6.1 Torso Orientation
+* Convergent (Toward Partner): Indicates interest, attentiveness, or seeking validation.
+* Divergent (Away): Indicates disinterest or independence.
+* Orthogonal (Forward): Indicates confidence and presenting to the external audience.1
+6.2 Hip and Pelvic Vector (The "Box" Metric)
+This is a critical indicator of sexual commitment and attention priority.1
+* Partner-Focused ("Tamed"): The pelvic vector is rotated $> 30^\circ$ toward the partner. The "Box" is directed at the specific individual, signaling exclusivity and submission to the union.12
+* World-Focused ("Untamed"): The pelvic vector is oriented toward the camera or open space ($0^\circ$ rotation relative to the lens). The subject is "presenting" to the general public rather than the partner.
+* The Disconnect: A dynamic where Subject A (Male) rotates hips toward Subject B (Female), while Subject B rotates hips toward the World. This signals asymmetrical investment (Male chasing, Female exhibiting).12
+6.3 Rib Cage Expansion
+* Collapsed: Shoulders forward, chest concave. Low energy/status.
+* Expanded: Scapula retracted, chest convex. High energy/status.2
+________________
+7. Head, Neck, and Facial Indicators
+7.1 Forward Head Posture (FHP)
+* Metric: Horizontal distance between the Tragion (ear canal) and the Acromion (shoulder tip).
+* Interpretation: Significant FHP ("Gamer Neck") signals weakness, poor physical discipline, and submissiveness.22
+* Vertical Alignment: Ear aligned directly over shoulder signals dominance and physical capability.13
+7.2 Head Tilt
+* Canting: Tilting the head to the side exposes the carotid artery. It is a biological signal of submission, trust, or appeasement.2
+* Level Head: Maintaining a level horizon signals authority and lack of need to appease.13
+7.3 Eye Direction (Visual Dominance)
+* Partner Gaze: Looking at the partner while they look away/at the camera signals dependence or admiration.
+* Camera Gaze: Looking at the lens signals confidence and addressing the audience.
+* Visual Dominance Ratio: In dynamic analysis, the dominant subject looks at the partner when speaking, but looks away when listening. The submissive subject looks at the partner when listening.23
+7.4 Facial Tension vs. Appeasement
+* The Appeasement Smile: Mouth open wide, eyebrows raised, excessive teeth ("Soy Face"). Signals a desire to appear harmless and non-threatening (Low Status).11
+* The Stoic Mask: Relaxed jaw, closed or slightly parted lips, neutral brow. Signals emotional control and high status.2
+________________
+8. Clothing, Grooming, and Class Indicators
+8.1 Clothing Fit and Signaling
+* Restrictive vs. Functional: Extremely tight clothing on men (e.g., "Skinny Jeans") can signal restricted movement/fragility.
+* Grooming Asymmetry: A significantly higher level of grooming/fashion effort by one partner compared to the other can indicate who is "competing" for the other's attention.
+________________
+9. Sex Specific and Inversion Patterns
+9.1 Baseline Expectations (Dimorphic Norms)
+* Male Baseline: Expected to exhibit high spatial expansion, verticality, protective touch, and stoicism.12
+* Female Baseline: Expected to exhibit convergent leaning, affiliative head tilt, and hip rotation toward the partner.1
+9.2 Inversion Flags
+* The Leaning Male: A male subject leaning significantly ($>7^\circ$) into a vertical female subject is a Primary Inversion. It signals a reversal of polarity, where the male is the "satellite" seeking validation.12
+* The Protective Female: A female subject placing a guiding hand on the male's back or shoulder, or physically shielding him, signals maternal or dominant framing.1
+________________
+10. Multi-Person and Group Dynamics
+10.1 The Center of Attention
+* Gaze Convergence: Identify the subject who receives the most gaze vectors from others in the group.16
+* Body Orientation: Identify the subject toward whom the majority of pelvic vectors are pointed ("The Sun").
+10.2 The Orbital Model
+* Orbits: Peripheral subjects leaning inward toward a central figure.
+* Bridges: Subjects who physically connect two disparate groups, acting as social conduits.16
+________________
+11. Full Scoring System for FrameScan
+11.1 Individual Metrics (0-100 Scale)
+* Frame Strength: Calculated via Spinal Verticality (weight 50%) + Stance Width (weight 30%) + Head Alignment (weight 20%).
+* Deference Score: Calculated via Degree of Lean Toward Partner ($5^\circ$ = 20pts, $15^\circ$ = 80pts) + Head Canting.
+* Space Ownership: Ratio of Bounding Box Area to Body Mass Index estimation.
+* Protection Score: Presence of Pelvic/Torso shielding (High score = High shielding/Insecurity).
+11.2 Relational Dynamic Classification
+* User Dominant: User Frame > Partner Frame (Delta > 20).
+* Partner Dominant: Partner Frame > User Frame (Delta > 20).
+* Collapsed Dynamic: Both subjects have High Deference Scores (Mutual leaning/clinging).
+* Polarized/Ideal: Male High Frame/Vertical + Female High Deference/Convergent.1
+________________
+12. Output Schema for Downstream Models
+
+
+JSON
+
+
+
+
+{
+ "scan_id": "uuid",
+ "subjects": [
+   {
+     "id": "subject_01",
+     "role": "male_primary",
+     "metrics": {
+       "green_line_angle": 12.5,
+       "lean_direction": "convergent",
+       "pelvic_vector": "partner_focused",
+       "spine_verticality_score": 45,
+       "space_ownership_score": 60,
+       "self_compression_score": 20
+     },
+     "flags": [
+       "convergent_lean_detected",
+       "hover_hand_detected",
+       "forward_head_posture"
+     ],
+     "classification": "satellite"
+   },
+   {
+     "id": "subject_02",
+     "role": "female_primary",
+     "metrics": {
+       "green_line_angle": 2.0,
+       "lean_direction": "neutral",
+       "pelvic_vector": "world_focused",
+       "spine_verticality_score": 95,
+       "space_ownership_score": 85,
+       "self_compression_score": 10
+     },
+     "flags": [
+       "vertical_frame",
+       "untamed_pelvic_orientation"
+     ],
+     "classification": "anchor"
+   }
+ ],
+ "dynamic_analysis": {
+   "relational_polarity": "inverted",
+   "dominant_entity": "subject_02",
+   "attraction_vector": "subject_01 -> subject_02",
+   "tension_level": "moderate",
+   "notes": "Male subject displays significant deference cues (lean, hover hand) while female subject maintains verticality and world-facing pelvic orientation."
+ }
+}
