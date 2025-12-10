@@ -1,0 +1,1799 @@
+/* =============================================================================
+   FRAMESCAN REPORT — Neon HUD Styling
+   =============================================================================
+   Sci-fi dashboard aesthetic matching the mockup: deep space background,
+   cyan chrome borders, glowing gauges, and polished card panels.
+   ALL BLUE/CYAN palette — no green.
+   ============================================================================= */
+
+/* =============================================================================
+   0. COLOR VARIABLES — Blue/Cyan Palette (No Green)
+   ============================================================================= */
+
+:root {
+  /* Background colors */
+  --fs-bg-deep: #020712;
+  --fs-bg-panel: #050c18;
+  --fs-bg-panel-soft: #071425;
+
+  /* Primary blue accents - #0043FF based */
+  --fs-cyan-strong: #0043FF;
+  --fs-cyan-mid: #3366FF;
+  --fs-cyan-soft: #6699FF;
+
+  /* Secondary blue accents */
+  --fs-blue-strong: #0043FF;
+  --fs-blue-soft: #3366FF;
+
+  /* Status colors */
+  --fs-red: #ff3155;
+  --fs-amber: #ffbf3b;
+
+  /* Border colors - #0043FF based */
+  --fs-border-strong: rgba(0, 67, 255, 0.9);
+  --fs-border-soft: rgba(0, 67, 255, 0.6);
+}
+
+/* =============================================================================
+   1. ROOT CONTAINER & GLOBAL STYLES
+   ============================================================================= */
+
+.framescan-report-root {
+  min-height: 100vh;
+  background: var(--fs-bg-deep);
+  background-image: radial-gradient(circle at 50% 0%, #0c1636 0%, var(--fs-bg-deep) 55%, #000000 100%);
+  color: #c6f3ff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  overflow-x: hidden;
+}
+
+.framescan-report-root * {
+  box-sizing: border-box;
+}
+
+/* =============================================================================
+   2. TYPOGRAPHY UTILITIES
+   ============================================================================= */
+
+.fs-label {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 500;
+}
+
+.fs-heading {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 600;
+  color: #0043FF;
+}
+
+/* Section title - consistent style across all cards */
+.framescan-section-title {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0043FF;
+  text-align: left;
+  margin: 0 0 16px 0;
+}
+
+/* =============================================================================
+   3. MAIN CONTENT WRAPPER
+   ============================================================================= */
+
+.framescan-report-content {
+  max-width: 100%;
+  margin: 0;
+  padding: 0 0 24px 0;
+}
+
+@media (max-width: 1200px) {
+  .framescan-report-content {
+    padding: 0 0 20px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .framescan-report-content {
+    padding: 0 0 16px 0;
+  }
+}
+
+/* =============================================================================
+   3.5 OUTER FRAME — Unified chrome panel with corner brackets
+   ============================================================================= */
+
+.framescan-report-frame {
+  position: relative;
+  padding: 24px 40px 56px;
+  margin: 32px auto;
+  max-width: 1440px;
+  background:
+    radial-gradient(circle at 50% 0%, #101a3a 0, #020712 55%, #000000 100%);
+  border-radius: 32px;
+  border: 1px solid rgba(6, 24, 48, 1);
+  box-shadow:
+    0 0 0 1px var(--fs-border-soft),
+    0 0 40px rgba(0, 0, 0, 0.9),
+    0 0 50px rgba(0, 67, 255, 0.25);
+}
+
+/* Corner brackets */
+.framescan-frame-bracket {
+  position: absolute;
+  width: 32px;
+  height: 8px;
+  pointer-events: none;
+}
+
+.framescan-frame-bracket--tl {
+  top: 12px;
+  left: 12px;
+  border-top: 1px solid var(--fs-border-strong);
+  border-left: 1px solid var(--fs-border-strong);
+  opacity: 0.7;
+}
+
+.framescan-frame-bracket--tr {
+  top: 12px;
+  right: 12px;
+  border-top: 1px solid var(--fs-border-strong);
+  border-right: 1px solid var(--fs-border-strong);
+  opacity: 0.7;
+}
+
+.framescan-frame-bracket--bl {
+  bottom: 12px;
+  left: 12px;
+  border-bottom: 1px solid var(--fs-border-strong);
+  border-left: 1px solid var(--fs-border-strong);
+  opacity: 0.7;
+}
+
+.framescan-frame-bracket--br {
+  bottom: 12px;
+  right: 12px;
+  border-bottom: 1px solid var(--fs-border-strong);
+  border-right: 1px solid var(--fs-border-strong);
+  opacity: 0.7;
+}
+
+@media (max-width: 1200px) {
+  .framescan-report-frame {
+    margin: 24px 16px;
+    padding: 20px 28px 48px;
+    border-radius: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .framescan-report-frame {
+    margin: 12px 8px;
+    padding: 16px 16px 40px;
+    border-radius: 16px;
+  }
+
+  .framescan-frame-bracket {
+    display: none;
+  }
+}
+
+/* =============================================================================
+   3.6 IDENTITY HEADER — Brand, console, score band with Aurora
+   ============================================================================= */
+
+/* Aurora wrapper for header */
+.framescan-header-aurora {
+  border-radius: 16px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.framescan-identity-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 32px;
+  padding: 20px 24px;
+  background: transparent;
+  border-bottom: 1px solid rgba(0, 67, 255, 0.2);
+}
+
+/* Left: Brand stack */
+.framescan-identity-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.framescan-brand-small {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--fs-cyan-soft);
+  opacity: 0.8;
+}
+
+.framescan-brand-main {
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-weight: 700;
+  color: var(--fs-cyan-strong);
+  text-shadow: 0 0 16px rgba(0, 67, 255, 0.5);
+}
+
+.framescan-brand-sub {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--fs-cyan-soft);
+  opacity: 0.8;
+}
+
+/* Center: Decorative chrome console */
+.framescan-identity-center {
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--fs-border-soft);
+  background:
+    radial-gradient(circle at 0% 50%, rgba(0, 67, 255, 0.35), transparent 55%),
+    radial-gradient(circle at 100% 50%, rgba(0, 67, 255, 0.35), transparent 55%),
+    linear-gradient(90deg, #050c18, #020712);
+  box-shadow: 0 0 24px rgba(0, 67, 255, 0.38);
+  opacity: 0.95;
+}
+
+/* Right: Score + meta */
+.framescan-identity-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.framescan-identity-score-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.framescan-identity-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 16px;
+}
+
+.framescan-identity-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.framescan-identity-meta-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: rgba(155, 230, 255, 0.5);
+  text-transform: uppercase;
+}
+
+.framescan-identity-meta-value {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(0, 67, 255, 0.9);
+  text-transform: uppercase;
+  font-family: 'SF Mono', ui-monospace, monospace;
+}
+
+.framescan-identity-meta-value--active {
+  color: var(--fs-cyan-strong);
+  text-shadow: 0 0 8px rgba(0, 67, 255, 0.5);
+}
+
+@media (max-width: 1024px) {
+  .framescan-identity-header {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .framescan-identity-left {
+    align-items: center;
+  }
+
+  .framescan-identity-center {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .framescan-identity-right {
+    align-items: center;
+  }
+
+  .framescan-identity-meta {
+    justify-content: center;
+  }
+}
+
+/* =============================================================================
+   4. HEADER TOP BAR
+   ============================================================================= */
+
+.framescan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 48px;
+  background: linear-gradient(180deg, rgba(12, 24, 54, 0.9) 0%, rgba(2, 7, 18, 0.95) 100%);
+  border-bottom: 1px solid rgba(0, 67, 255, 0.3);
+  position: relative;
+}
+
+.framescan-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 67, 255, 0.6), transparent);
+}
+
+@media (max-width: 768px) {
+  .framescan-header {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px 20px;
+  }
+}
+
+/* Left: Product label stack */
+.framescan-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.framescan-header-left .label-framelord {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: #6fb8ff;
+  text-transform: uppercase;
+}
+
+.framescan-header-left .label-framescan {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: #0043FF;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(0, 67, 255, 0.5);
+}
+
+.framescan-header-left .label-dashboard {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: #6fb8ff;
+  text-transform: uppercase;
+}
+
+/* Center: System Status Block */
+.framescan-header-center {
+  flex: 1;
+  max-width: 320px;
+  margin: 0 40px;
+  display: flex;
+  justify-content: center;
+}
+
+.framescan-system-status {
+  padding: 10px 24px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(10, 20, 40, 0.9), rgba(5, 12, 28, 0.95));
+  border: 1px solid rgba(0, 67, 255, 0.3);
+  box-shadow:
+    0 0 16px rgba(0, 67, 255, 0.1),
+    inset 0 0 12px rgba(0, 50, 100, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.system-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.system-status-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: rgba(154, 209, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.system-status-value {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(143, 210, 255, 0.9);
+  font-family: 'SF Mono', ui-monospace, monospace;
+}
+
+.system-status-value--active {
+  color: var(--fs-cyan-strong);
+  text-shadow: 0 0 8px rgba(0, 67, 255, 0.5);
+}
+
+.system-status-value--complete {
+  color: var(--fs-cyan-mid);
+}
+
+/* Legacy console panel (kept for reference) */
+.framescan-header-console {
+  flex: 1;
+  max-width: 500px;
+  height: 44px;
+  margin: 0 40px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(88, 198, 255, 0.15), rgba(10, 16, 40, 0.85), rgba(88, 198, 255, 0.15));
+  border: 1px solid rgba(155, 230, 255, 0.5);
+  box-shadow:
+    0 0 22px rgba(0, 212, 255, 0.3),
+    inset 0 0 20px rgba(0, 100, 180, 0.2);
+  display: none; /* Hidden - using system status block instead */
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.framescan-header-console::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 67, 255, 0.4), transparent);
+  transform: translateY(-50%);
+}
+
+.framescan-header-console .console-text {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: rgba(0, 67, 255, 0.6);
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .framescan-header-console {
+    display: none;
+  }
+}
+
+/* Right: Score + Frame + Metadata block */
+.framescan-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.framescan-score-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Metadata block with stacked rows */
+.framescan-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.framescan-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.framescan-meta-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: rgba(155, 230, 255, 0.5);
+  text-transform: uppercase;
+}
+
+.framescan-meta-value {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(0, 67, 255, 0.9);
+  text-transform: uppercase;
+}
+
+/* Legacy support for status rows */
+.framescan-status-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: rgba(155, 230, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.framescan-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* FrameScore pill */
+.framescan-score-pill {
+  min-width: 56px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0b0b12;
+  text-align: center;
+  box-shadow: 0 0 16px currentColor;
+}
+
+.framescan-score-pill--apex {
+  background: linear-gradient(135deg, #2f7fff, var(--fs-cyan-strong));
+  box-shadow: 0 0 16px rgba(0, 67, 255, 0.5);
+}
+
+.framescan-score-pill--slave {
+  background: linear-gradient(135deg, #ff3155, #d92448);
+  box-shadow: 0 0 16px rgba(255, 49, 85, 0.5);
+}
+
+.framescan-score-pill--mixed {
+  background: linear-gradient(135deg, #ffbf3b, #e5a82e);
+  box-shadow: 0 0 16px rgba(255, 191, 59, 0.5);
+}
+
+/* Frame label */
+.framescan-frame-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid;
+}
+
+.framescan-frame-label--apex {
+  color: var(--fs-cyan-strong);
+  border-color: rgba(0, 67, 255, 0.5);
+  background: rgba(0, 67, 255, 0.1);
+}
+
+.framescan-frame-label--slave {
+  color: #ff4b6a;
+  border-color: rgba(255, 75, 106, 0.5);
+  background: rgba(255, 75, 106, 0.1);
+}
+
+.framescan-frame-label--mixed {
+  color: #ffbf72;
+  border-color: rgba(255, 191, 114, 0.5);
+  background: rgba(255, 191, 114, 0.1);
+}
+
+/* =============================================================================
+   5. CARD CHROME — Base panel styles
+   ============================================================================= */
+
+.framescan-card {
+  background:
+    linear-gradient(180deg, #050c18 0, #020811 65%, #020712 100%);
+  border-radius: 20px;
+  border: 1px solid var(--fs-border-soft);
+  box-shadow:
+    0 0 16px rgba(0, 0, 0, 0.9),
+    0 0 26px rgba(0, 67, 255, 0.25);
+  padding: 24px 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top edge chrome highlight */
+.framescan-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 67, 255, 0.7), transparent);
+}
+
+/* Inner metal highlight overlay */
+.framescan-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(0, 67, 255, 0.5),
+    transparent 40%
+  );
+  mix-blend-mode: screen;
+  opacity: 0.18;
+}
+
+/* =============================================================================
+   5.5 UNIFIED PANEL — Blue/cyan chrome matching CRM and landing page
+   ============================================================================= */
+
+.framescan-panel {
+  position: relative;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #050c18 0, #020811 65%, #020712 100%);
+  border: 1px solid rgba(0, 67, 255, 0.4);
+  box-shadow:
+    0 0 18px rgba(0, 0, 0, 0.9),
+    0 0 24px rgba(0, 67, 255, 0.3);
+  padding: 24px 28px;
+  transition: box-shadow 160ms ease-out, border-color 160ms ease-out, transform 160ms ease-out;
+  overflow: hidden;
+}
+
+.framescan-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 67, 255, 0.7), transparent);
+}
+
+.framescan-panel:hover {
+  border-color: rgba(0, 67, 255, 0.8);
+  box-shadow:
+    0 0 0 1px rgba(0, 67, 255, 0.6),
+    0 0 30px rgba(0, 67, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Active/selected state */
+.framescan-panel--active {
+  border-color: #0043FF;
+  box-shadow:
+    0 0 0 2px #0043FF,
+    0 0 40px rgba(0, 67, 255, 0.8);
+}
+
+/* Card title - left aligned for HUD aesthetic */
+.framescan-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: #0043FF;
+  margin: 0 0 16px 0;
+  text-align: left;
+  text-transform: uppercase;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.framescan-card-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  height: 1px;
+  background: rgba(0, 67, 255, 0.4);
+}
+
+/* =============================================================================
+   6. CORE GRID — 3-column layout
+   ============================================================================= */
+
+.framescan-core-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1.3fr 1.1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 1024px) {
+  .framescan-core-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* =============================================================================
+   7. GAUGE PANELS — S-Axis and System Metrics
+   ============================================================================= */
+
+.framescan-gauge-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.framescan-gauge-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding-top: 8px;
+}
+
+/* Individual gauge item with description */
+.framescan-gauge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.framescan-gauge-description {
+  font-size: 11px;
+  color: rgba(154, 209, 255, 0.7);
+  max-width: 180px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* =============================================================================
+   8. SCAN CHAMBER — Center orb container
+   ============================================================================= */
+
+.framescan-scan-chamber {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  min-height: 360px;
+}
+
+/* ElectricBorder wrapper for chamber */
+.framescan-chamber-electric-wrapper {
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+/* Chamber container with grid ring */
+.framescan-chamber-orb-container {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 1px solid var(--fs-border-strong);
+  box-shadow:
+    0 0 34px rgba(0, 67, 255, 0.6),
+    inset 0 0 28px rgba(8, 24, 64, 0.9);
+  overflow: hidden;
+}
+
+/* Grid overlay for chamber — enhanced pattern */
+.framescan-chamber-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(0, 67, 255, 0.22) 0, transparent 60%),
+    repeating-linear-gradient(#0d2648 0, #0d2648 1px, transparent 1px, transparent 8px),
+    repeating-linear-gradient(90deg, #0d2648 0, #0d2648 1px, transparent 1px, transparent 8px);
+  opacity: 0.4;
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+/* Scanline animation */
+.framescan-chamber-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0, 67, 255, 0.8), transparent);
+  animation: scanline 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes scanline {
+  0%, 100% { top: 20%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 80%; opacity: 0; }
+}
+
+/* HUD status text */
+.framescan-chamber-status {
+  margin-top: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--fs-cyan-soft);
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+/* =============================================================================
+   9. AXIS GAUGE — Glowing dial with needle
+   ============================================================================= */
+
+.axis-gauge-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.axis-gauge-dial {
+  position: relative;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 67, 255, 0.6);
+  box-shadow:
+    0 0 18px rgba(0, 67, 255, 0.35),
+    inset 0 0 20px rgba(0, 80, 150, 0.4);
+  background: radial-gradient(circle at 50% 120%, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.95));
+  overflow: visible;
+}
+
+/* Gauge vignette overlay */
+.axis-gauge-dial::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 120%, transparent 0, #000 80%);
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Dial sizes are now set dynamically via inline styles in the component */
+/* These are fallback dimensions */
+.axis-gauge-dial--large {
+  width: 150px;
+  height: 150px;
+}
+
+.axis-gauge-dial--medium {
+  width: 120px;
+  height: 120px;
+}
+
+.axis-gauge-dial--small {
+  width: 90px;
+  height: 90px;
+}
+
+/* Greyed out state for insufficient context */
+.axis-gauge-dial--insufficient {
+  filter: grayscale(0.8) opacity(0.5);
+}
+
+/* Gauge inner glow */
+.axis-gauge-dial::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, rgba(0, 67, 255, 0.08), transparent 60%);
+  pointer-events: none;
+}
+
+/* Tick marks styling */
+.axis-gauge-tick {
+  stroke: rgba(0, 67, 255, 0.6);
+  stroke-width: 1;
+}
+
+.axis-gauge-tick--major {
+  stroke: rgba(0, 67, 255, 0.9);
+  stroke-width: 2;
+}
+
+/* Needle */
+.axis-gauge-needle {
+  stroke: #0043FF;
+  stroke-width: 2;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(0, 67, 255, 0.8));
+}
+
+/* Needle tip glow */
+.axis-gauge-needle-tip {
+  fill: #0043FF;
+  filter: drop-shadow(0 0 6px rgba(0, 67, 255, 1));
+}
+
+/* Center pivot */
+.axis-gauge-pivot {
+  fill: #0043FF;
+  filter: drop-shadow(0 0 4px rgba(0, 67, 255, 0.8));
+}
+
+/* Labels */
+.axis-gauge-label {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.axis-gauge-label-main {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: #6699FF;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.axis-gauge-label-main--small {
+  font-size: 10px;
+}
+
+/* Band labels with color coding */
+.axis-gauge-label-band {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.axis-gauge-label-band--strong-apex { color: var(--fs-cyan-strong); }
+.axis-gauge-label-band--mild-apex { color: var(--fs-cyan-soft); }
+.axis-gauge-label-band--neutral { color: var(--fs-blue-soft); }
+.axis-gauge-label-band--mild-slave { color: var(--fs-amber); }
+.axis-gauge-label-band--strong-slave { color: var(--fs-red); }
+
+/* Not enough context pill */
+.axis-gauge-insufficient-pill {
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: rgba(255, 49, 85, 0.1);
+  border: 1px solid rgba(255, 49, 85, 0.6);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #ff3155;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* =============================================================================
+   9.5 FRAMESCAN GAUGE — Color-banded gauge component
+   ============================================================================= */
+
+.framescan-gauge-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.framescan-gauge-svg {
+  display: block;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 67, 255, 0.5);
+  box-shadow:
+    0 0 20px rgba(0, 67, 255, 0.3),
+    inset 0 0 16px rgba(0, 80, 150, 0.3);
+}
+
+.framescan-gauge-svg--insufficient {
+  filter: grayscale(0.6) opacity(0.6);
+}
+
+.framescan-gauge-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: #6699FF;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.framescan-gauge-insufficient {
+  margin-top: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255, 49, 85, 0.1);
+  border: 1px solid rgba(255, 49, 85, 0.5);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #ff3155;
+  text-transform: uppercase;
+}
+
+/* =============================================================================
+   10. 9-AXIS BREAKDOWN SECTION
+   ============================================================================= */
+
+.framescan-nine-axis {
+  margin-top: 32px;
+}
+
+.framescan-nine-axis-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: #0043FF;
+  text-transform: uppercase;
+  text-align: left;
+  margin-bottom: 20px;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.framescan-nine-axis-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100px;
+  height: 1px;
+  background: rgba(0, 67, 255, 0.4);
+}
+
+.framescan-nine-axis-subtitle {
+  font-size: 12px;
+  color: rgba(154, 209, 255, 0.7);
+  margin: 0 0 20px 0;
+  font-weight: 400;
+}
+
+.framescan-nine-axis-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .framescan-nine-axis-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .framescan-nine-axis-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Axis card — improved grid alignment */
+.framescan-axis-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 16px;
+  align-items: center;
+  padding: 18px 22px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(28, 63, 108, 0.25), rgba(3, 12, 26, 0.95));
+  border: 1px solid rgba(0, 67, 255, 0.4);
+  box-shadow:
+    0 0 14px rgba(0, 67, 255, 0.25),
+    inset 0 0 12px rgba(0, 80, 150, 0.2);
+  transition: all 0.2s ease;
+}
+
+.framescan-axis-card:hover {
+  border-color: rgba(0, 67, 255, 0.6);
+  box-shadow:
+    0 0 20px rgba(0, 67, 255, 0.35),
+    inset 0 0 12px rgba(0, 80, 150, 0.3);
+}
+
+.framescan-axis-card-gauge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.framescan-axis-card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.framescan-axis-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: #0043FF;
+  text-transform: uppercase;
+  margin: 0 0 6px 0;
+}
+
+.framescan-axis-card-description {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #99BBFF;
+  margin: 0;
+}
+
+/* Insufficient context state for axis card */
+.framescan-axis-card--insufficient .framescan-axis-card-description {
+  color: rgba(255, 120, 140, 0.8);
+  font-style: italic;
+}
+
+/* =============================================================================
+   11. DEEP ANALYSIS / NARRATIVE PANELS
+   ============================================================================= */
+
+.framescan-narratives {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.framescan-narrative-panel {
+  padding: 24px 28px 20px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(13, 38, 71, 0.85), rgba(2, 7, 16, 0.98));
+  border: 1px solid rgba(0, 67, 255, 0.5);
+  box-shadow:
+    0 0 26px rgba(0, 67, 255, 0.25),
+    inset 0 0 20px rgba(0, 80, 150, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.framescan-narrative-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 67, 255, 0.5), transparent);
+}
+
+.framescan-narrative-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: #0043FF;
+  text-transform: uppercase;
+  margin: 0 0 14px 0;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.framescan-narrative-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 1px;
+  background: rgba(0, 67, 255, 0.4);
+}
+
+.framescan-narrative-content {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #cde9ff;
+  white-space: pre-wrap;
+  max-height: 240px;
+  max-width: 70ch;
+  overflow-y: auto;
+}
+
+/* Add spacing between paragraphs */
+.framescan-narrative-content p {
+  margin-bottom: 8px;
+}
+
+/* Custom scrollbar for narrative content */
+.framescan-narrative-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.framescan-narrative-content::-webkit-scrollbar-track {
+  background: rgba(0, 50, 100, 0.2);
+  border-radius: 3px;
+}
+
+.framescan-narrative-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 67, 255, 0.3);
+  border-radius: 3px;
+}
+
+.framescan-narrative-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 67, 255, 0.5);
+}
+
+/* Insufficient context banner */
+.framescan-insufficient-banner {
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: rgba(255, 49, 85, 0.08);
+  border: 1px solid rgba(255, 49, 85, 0.5);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #ff6b82;
+}
+
+/* Compact version for narrative panels - shrinks card height */
+.framescan-insufficient-banner--compact {
+  padding: 10px 14px;
+  font-size: 11px;
+}
+
+/* =============================================================================
+   12. BACK BUTTON
+   ============================================================================= */
+
+.framescan-back-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  padding: 10px 18px;
+  background: rgba(10, 20, 40, 0.9);
+  border: 1px solid rgba(0, 67, 255, 0.4);
+  border-radius: 10px;
+  color: #6699FF;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 12px rgba(0, 67, 255, 0.2);
+}
+
+.framescan-back-button:hover {
+  background: rgba(20, 40, 70, 0.95);
+  border-color: rgba(0, 67, 255, 0.6);
+  color: #0043FF;
+  box-shadow: 0 0 18px rgba(0, 67, 255, 0.4);
+}
+
+.framescan-back-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* =============================================================================
+   13. RESPONSIVE ADJUSTMENTS
+   ============================================================================= */
+
+@media (max-width: 1200px) {
+  .framescan-core-grid {
+    gap: 20px;
+  }
+
+  .framescan-card {
+    padding: 20px 22px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .framescan-report-content {
+    padding: 20px 24px 48px;
+  }
+
+  .framescan-core-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .framescan-scan-chamber {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .framescan-core-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .framescan-chamber-orb-container {
+    width: 240px;
+    height: 240px;
+  }
+
+  .framescan-back-button {
+    top: 10px;
+    left: 10px;
+    padding: 8px 14px;
+    font-size: 11px;
+  }
+}
+
+/* =============================================================================
+   14. SYNTHESIS NOTE CARD
+   ============================================================================= */
+
+.framescan-synthesis-card {
+  margin-top: 40px;
+  margin-bottom: 24px;
+  padding: 28px 32px 24px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, var(--fs-bg-panel), var(--fs-bg-deep) 80%);
+  border: 1px solid var(--fs-border-strong);
+  box-shadow:
+    0 0 20px rgba(0, 67, 255, 0.45),
+    0 0 60px rgba(57, 182, 255, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.framescan-synthesis-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 67, 255, 0.5), transparent);
+}
+
+.framescan-synthesis-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.framescan-synthesis-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--fs-cyan-strong);
+  text-transform: uppercase;
+  text-align: left;
+  margin: 0;
+  position: relative;
+  padding-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+}
+
+.framescan-synthesis-title-sep {
+  color: var(--fs-cyan-soft);
+  opacity: 0.5;
+  margin: 0 4px;
+}
+
+.framescan-synthesis-title-status {
+  color: var(--fs-cyan-mid);
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.framescan-synthesis-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100px;
+  height: 1px;
+  background: rgba(0, 67, 255, 0.4);
+}
+
+/* Toggle wrapper and label */
+.framescan-synthesis-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.framescan-synthesis-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.framescan-synthesis-toggle-text {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--fs-cyan-soft);
+  text-transform: uppercase;
+}
+
+/* Toggle button - matches SavageModeToggle style */
+.framescan-synthesis-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 67, 255, 0.4);
+  background: rgba(0, 20, 40, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.framescan-synthesis-toggle:hover {
+  border-color: rgba(0, 67, 255, 0.6);
+  background: rgba(0, 30, 60, 0.7);
+}
+
+.framescan-synthesis-toggle--active {
+  background: linear-gradient(135deg, rgba(0, 67, 255, 0.5), rgba(0, 67, 255, 0.3));
+  border-color: var(--fs-cyan-strong);
+  box-shadow: 0 0 12px rgba(0, 67, 255, 0.3);
+}
+
+/* Toggle thumb */
+.framescan-synthesis-toggle-thumb {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(100, 150, 200, 0.8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  left: 4px;
+}
+
+.framescan-synthesis-toggle-thumb--active {
+  background: var(--fs-cyan-strong);
+  box-shadow: 0 0 8px rgba(0, 67, 255, 0.6);
+  transform: translateX(20px);
+}
+
+.framescan-synthesis-body {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #cde9ff;
+  text-align: left;
+  white-space: pre-wrap;
+  margin-bottom: 20px;
+  max-height: 300px;
+  max-width: 74ch;
+  overflow-y: auto;
+}
+
+/* Bullet list spacing */
+.framescan-synthesis-body li {
+  margin-bottom: 6px;
+}
+
+.framescan-synthesis-body ul,
+.framescan-synthesis-body ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+/* Custom scrollbar for synthesis body */
+.framescan-synthesis-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.framescan-synthesis-body::-webkit-scrollbar-track {
+  background: rgba(0, 50, 100, 0.2);
+  border-radius: 3px;
+}
+
+.framescan-synthesis-body::-webkit-scrollbar-thumb {
+  background: rgba(0, 67, 255, 0.3);
+  border-radius: 3px;
+}
+
+.framescan-synthesis-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 67, 255, 0.5);
+}
+
+.framescan-synthesis-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 67, 255, 0.15);
+}
+
+/* Add to Notes button — Blue primary action */
+.framescan-add-to-notes-btn {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, rgba(58, 109, 255, 0.3), rgba(58, 109, 255, 0.15));
+  border: 1px solid rgba(58, 109, 255, 0.6);
+  border-radius: 8px;
+  color: var(--fs-cyan-soft);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.framescan-add-to-notes-btn:hover {
+  background: linear-gradient(135deg, rgba(76, 122, 255, 0.4), rgba(58, 109, 255, 0.25));
+  border-color: rgba(0, 67, 255, 0.7);
+  box-shadow: 0 0 16px rgba(0, 67, 255, 0.3);
+}
+
+.framescan-add-to-notes-btn:active {
+  transform: translateY(1px);
+}
+
+.framescan-add-to-notes-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Placeholder state for missing synthesis */
+.framescan-synthesis-placeholder {
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(154, 209, 255, 0.5);
+  font-style: italic;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+/* =============================================================================
+   15. INPUT PREVIEW CARD
+   ============================================================================= */
+
+.framescan-input-preview-card {
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(15, 32, 58, 0.7), rgba(2, 7, 16, 0.95));
+  border: 1px solid rgba(0, 67, 255, 0.35);
+  box-shadow:
+    0 0 18px rgba(0, 190, 255, 0.15),
+    inset 0 0 12px rgba(0, 81, 153, 0.2);
+}
+
+.framescan-input-preview-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: #0043FF;
+  text-transform: uppercase;
+  margin: 0 0 12px 0;
+}
+
+.framescan-input-preview-body {
+  margin-bottom: 8px;
+}
+
+.framescan-input-preview-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #b8deff;
+  margin: 0;
+  font-style: italic;
+  max-width: 80ch;
+}
+
+.framescan-input-preview-image {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.framescan-input-preview-thumbnail {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 67, 255, 0.3);
+}
+
+.framescan-input-preview-placeholder {
+  font-size: 12px;
+  color: rgba(154, 209, 255, 0.6);
+  font-style: italic;
+}
+
+.framescan-input-preview-context {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #6699FF;
+  margin: 0;
+  flex: 1;
+}
+
+.framescan-input-preview-who {
+  margin-top: 10px;
+  font-size: 11px;
+}
+
+.framescan-input-preview-who-label {
+  color: rgba(155, 230, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-right: 6px;
+}
+
+.framescan-input-preview-who-value {
+  color: rgba(0, 67, 255, 0.9);
+}
+
+.framescan-input-preview-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.framescan-view-full-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid rgba(0, 67, 255, 0.4);
+  border-radius: 6px;
+  color: #0043FF;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.framescan-view-full-btn:hover {
+  background: rgba(0, 67, 255, 0.1);
+  border-color: rgba(0, 67, 255, 0.6);
+}
+
+/* =============================================================================
+   16. MODAL
+   ============================================================================= */
+
+.framescan-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.framescan-modal {
+  width: 100%;
+  max-width: 700px;
+  max-height: 80vh;
+  background: linear-gradient(180deg, rgba(12, 28, 52, 0.98), rgba(2, 7, 16, 0.99));
+  border-radius: 16px;
+  border: 1px solid rgba(0, 67, 255, 0.5);
+  box-shadow: 0 0 60px rgba(0, 190, 255, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.framescan-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(0, 67, 255, 0.2);
+}
+
+.framescan-modal-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: #0043FF;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.framescan-modal-close {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid rgba(0, 67, 255, 0.3);
+  border-radius: 6px;
+  color: #0043FF;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.framescan-modal-close:hover {
+  background: rgba(0, 67, 255, 0.1);
+  border-color: rgba(0, 67, 255, 0.5);
+}
+
+.framescan-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.framescan-modal-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #cde9ff;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* =============================================================================
+   17. IMAGE PANEL — Display input image for image scans
+   ============================================================================= */
+
+.framescan-image-section {
+  margin: 24px 0 32px;
+}
+
+.framescan-image-electric-wrapper {
+  border-radius: 24px;
+}
+
+.framescan-image-panel {
+  padding: 24px 28px;
+}
+
+.framescan-image-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  background: rgba(0, 10, 25, 0.5);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 67, 255, 0.15);
+}
+
+.framescan-image {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow:
+    0 0 20px rgba(0, 0, 0, 0.6),
+    0 0 30px rgba(0, 67, 255, 0.15);
+}
+
+@media (max-width: 768px) {
+  .framescan-image-section {
+    margin: 16px 0 24px;
+  }
+
+  .framescan-image-wrapper {
+    padding: 12px;
+  }
+
+  .framescan-image {
+    max-height: 300px;
+  }
+}
