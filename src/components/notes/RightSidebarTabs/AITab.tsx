@@ -214,7 +214,7 @@ export const AITab: React.FC<AITabProps> = ({
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Header with LL Writing Assistant branding */}
+      {/* Header with DocLord Writing Assistant branding */}
       <div className="px-4 py-3 border-b" style={{ borderColor: colors.border, background: `linear-gradient(to right, ${colors.accent}15, transparent)` }}>
         <div className="flex items-center gap-2 mb-2">
           <div className="p-1.5 rounded-lg" style={{ background: `${colors.accent}20`, border: `1px solid ${colors.accent}30` }}>
@@ -222,12 +222,12 @@ export const AITab: React.FC<AITabProps> = ({
           </div>
           <div>
             <h3 className="text-sm font-bold" style={{ color: colors.text }}>
-              LL Writing Assistant
+              DocLord Writing Assistant
             </h3>
           </div>
         </div>
         <p className="text-xs leading-relaxed" style={{ color: colors.textMuted }}>
-          LL can help you tidy drafts, clarify ideas, and suggest improvements. Full writing assistance is a premium feature.
+          I am DocLord, your Apex Frame writing assistant. I help you write and refine documents, sales copy, and personal messages so they carry Apex Frame, Win Win positioning, and clean Dominion tone.
         </p>
       </div>
 

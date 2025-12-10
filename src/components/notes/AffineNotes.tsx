@@ -47,6 +47,8 @@ import {
   Check,
   ScanLine,
   Loader2,
+  Mic,
+  MicOff,
 } from 'lucide-react';
 import { FrameLordNotesSidebarSkin } from './FrameLordNotesSidebarSkin';
 import { MarkdownNoteEditor } from './MarkdownNoteEditor';
@@ -54,6 +56,10 @@ import { BiDirectionalLinks } from './BiDirectionalLinks';
 import { RightSidebar, type RightSidebarTab } from './RightSidebar';
 import { NotesSettings } from './NotesSettings';
 import { JournalWeekStrip } from './JournalWeekStrip';
+import { TemplatePickerModal } from './TemplatePickerModal';
+import { useAudioRecorder } from '../../hooks/useAudioRecorder';
+import { transcribeAudioToText } from '../../services/transcriptionService';
+import { noteTemplates, replaceTemplateVariables, type NoteTemplate } from '../../services/noteTemplates';
 import {
   getAllNotes,
   createNote,
@@ -830,6 +836,10 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact })
               onJournalDateChange={handleJournalDateSelect}
               onClose={() => setSelectedPageId(null)}
               onRefresh={() => setRefreshKey(k => k + 1)}
+              onOpenRightSidebarAI={() => {
+                setRightSidebarOpen(true);
+                setRightSidebarTab('ai');
+              }}
             />
           ) : (
             <DocsListView
@@ -1672,11 +1682,12 @@ interface PageEditorProps {
   onJournalDateChange?: (date: Date) => void;
   onClose: () => void;
   onRefresh: () => void;
+  onOpenRightSidebarAI?: () => void;
 }
 
 const PageEditor: React.FC<PageEditorProps> = ({
   page, theme, colors, sidebarCollapsed, collections, folders, journalDates = [], onToggleSidebar, onToggleRightSidebar, onNavigateToNote, onNavigateToContact, onTitleChange,
-  onToggleTheme, onToggleFavorite, onAddToCollection, onJournalDateChange, onClose, onRefresh,
+  onToggleTheme, onToggleFavorite, onAddToCollection, onJournalDateChange, onClose, onRefresh, onOpenRightSidebarAI,
 }) => {
   const [title, setTitle] = useState(page.title || '');
   const [showInfo, setShowInfo] = useState(false);
@@ -1686,6 +1697,11 @@ const PageEditor: React.FC<PageEditorProps> = ({
   const [tags, setTags] = useState<string[]>(page.tags || []);
   const [newTag, setNewTag] = useState('');
   const [isScanning, setIsScanning] = useState(false);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+
+  // Audio recording
+  const { isRecording, startRecording, stopRecording } = useAudioRecorder();
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   // Journal navigation state
   const isJournal = page.kind === 'log' && page.dateKey;
@@ -1717,29 +1733,114 @@ const PageEditor: React.FC<PageEditorProps> = ({
   // Frame scan handler
   const handleFrameScan = useCallback(async () => {
     if (isScanning) return;
+
+    // Get plain text content from the note
+    const plainText = stripHtml(page.content || '');
+
+    // Validate minimum text length (50 characters)
+    if (plainText.trim().length < 50) {
+      console.warn('[Notes] Not enough text for FrameScan. Minimum 50 characters required.');
+      alert('Not enough text to scan. Please add at least 50 characters of content.');
+      return;
+    }
+
     setIsScanning(true);
 
     try {
-      // Simulate scanning animation for 3 seconds
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Import the FrameScan function
+      const { runTextFrameScan } = await import('../../lib/frameScan');
 
-      // TODO: Integrate with actual frame scan service
-      // For now, show a working placeholder with useful feedback
-      const scanResult = `Frame Scan Analysis:\n\n- Detected ${Math.floor(Math.random() * 5) + 1} visual elements\n- Identified key themes and patterns\n- Ready for AI processing\n\n(Full integration coming soon)`;
+      // Run the FrameScan with the note content
+      const scanResult = await runTextFrameScan({
+        domain: 'generic',
+        content: plainText,
+        contactIds: ['contact_zero'],
+        sourceRef: page.id,
+        subjectLabel: page.title || 'Untitled Note',
+        scanContext: {
+          what: 'Note content analysis',
+          who: ['Self'],
+          userConcern: 'Frame quality check',
+        },
+      });
 
-      // Insert scan result as a new paragraph
-      const currentContent = page.content || '';
-      const newContent = currentContent + '\n\n' + scanResult;
-      updateNote(page.id, { content: newContent });
+      console.log('[Notes] FrameScan complete. Score:', scanResult.frameScore);
+
+      // Redirect to the FrameScan reports page
+      // The scan report is automatically saved by runTextFrameScan
+      // For now, just show success message
+      alert(`FrameScan complete! Overall score: ${Math.round(scanResult.frameScore)}/100. Check the FrameScan tab to view the full report.`);
+
       onRefresh();
+    } catch (error: any) {
+      console.error('[Notes] FrameScan error:', error);
 
-      console.log('Frame Scan complete');
-    } catch (error) {
-      console.error('Frame Scan error:', error);
+      // Show user-friendly error message
+      if (error.message?.includes('throttle') || error.message?.includes('limit')) {
+        alert('Scan limit reached. Please try again later.');
+      } else {
+        alert('FrameScan failed. Please try again.');
+      }
     } finally {
       setIsScanning(false);
     }
   }, [isScanning, page, onRefresh]);
+
+  // Audio recording handler
+  const handleAudioRecord = useCallback(async () => {
+    if (isRecording) {
+      // Stop recording and transcribe
+      setIsTranscribing(true);
+      const audioBlob = await stopRecording();
+
+      if (!audioBlob) {
+        console.error('[Notes] No audio data captured');
+        setIsTranscribing(false);
+        return;
+      }
+
+      // Transcribe the audio
+      const result = await transcribeAudioToText(audioBlob);
+      setIsTranscribing(false);
+
+      if (result.success && result.text) {
+        // Convert audio blob to Data URL for storage
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const audioDataUrl = reader.result as string;
+
+          // Insert audio embed with transcript into note
+          const audioEmbed = `\n\n---\n\n**Audio Recording**\n\n<audio controls src="${audioDataUrl}"></audio>\n\n**Transcript:**\n\n${result.text}\n\n---\n\n`;
+
+          const currentContent = page.content || '';
+          const newContent = currentContent + audioEmbed;
+          updateNote(page.id, { content: newContent });
+          onRefresh();
+
+          console.log('[Notes] Audio recording added to note');
+        };
+        reader.readAsDataURL(audioBlob);
+      } else {
+        console.error('[Notes] Transcription failed:', result.error);
+      }
+    } else {
+      // Start recording
+      await startRecording();
+    }
+  }, [isRecording, stopRecording, startRecording, page, onRefresh]);
+
+  // Template selection handler
+  const handleTemplateSelect = useCallback((template: any) => {
+    // Replace template variables (like {{date}})
+    const processedBody = replaceTemplateVariables(template.content || template.body);
+
+    // Replace current note content with template
+    updateNote(page.id, { content: processedBody });
+    onRefresh();
+    setShowTemplatePicker(false);
+
+    console.log('[Notes] Template applied:', template.name);
+  }, [page.id, onRefresh]);
 
   useEffect(() => {
     setTitle(page.title || '');
@@ -1835,6 +1936,34 @@ const PageEditor: React.FC<PageEditorProps> = ({
           )}
         </div>
         <button onClick={() => setShowInfo(!showInfo)} className="p-1.5 rounded hover:bg-white/10" style={{ color: colors.textMuted }}><Info size={16} /></button>
+        <button
+          onClick={handleAudioRecord}
+          disabled={isTranscribing}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-70 ${
+            isRecording ? 'animate-pulse' : ''
+          }`}
+          style={{
+            background: isRecording ? '#ef4444' : isTranscribing ? '#6366f1' : colors.accent,
+            color: '#fff'
+          }}
+        >
+          {isTranscribing ? (
+            <>
+              <Loader2 size={14} className="animate-spin" />
+              Transcribing...
+            </>
+          ) : isRecording ? (
+            <>
+              <MicOff size={14} />
+              Stop
+            </>
+          ) : (
+            <>
+              <Mic size={14} />
+              Record
+            </>
+          )}
+        </button>
         <button
           onClick={handleFrameScan}
           disabled={isScanning}
@@ -1998,9 +2127,9 @@ const PageEditor: React.FC<PageEditorProps> = ({
               <button
                 onClick={() => {
                   // Open right sidebar with AI tab and focus prompt
-                  setRightSidebarOpen(true);
-                  setRightSidebarTab('ai');
-                  // Focus will be handled by AI tab's input field
+                  if (onOpenRightSidebarAI) {
+                    onOpenRightSidebarAI();
+                  }
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors hover:opacity-80"
                 style={{ background: colors.hover, color: colors.text }}
@@ -2009,8 +2138,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
               </button>
               <button
                 onClick={() => {
-                  // TODO: Implement template picker modal
-                  alert('Template picker coming soon! You can create custom templates and insert them here.');
+                  setShowTemplatePicker(true);
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors hover:opacity-80"
                 style={{ background: colors.hover, color: colors.text }}
@@ -2026,6 +2154,17 @@ const PageEditor: React.FC<PageEditorProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Template Picker Modal */}
+      {showTemplatePicker && (
+        <TemplatePickerModal
+          isOpen={showTemplatePicker}
+          onClose={() => setShowTemplatePicker(false)}
+          onSelectTemplate={handleTemplateSelect}
+          theme={theme === 'dark' ? 'dark' : 'light'}
+          colors={colors}
+        />
+      )}
     </div>
   );
 };

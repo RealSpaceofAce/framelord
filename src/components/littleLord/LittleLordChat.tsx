@@ -7,7 +7,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Loader2, Bot, User, Sparkles, Crown, AlertOctagon, ShieldAlert } from 'lucide-react';
+import { Send, Loader2, Bot, User, Sparkles, Crown, AlertOctagon, ShieldAlert, Mic, MicOff } from 'lucide-react';
+import { useAudioRecorder } from '../../hooks/useAudioRecorder';
+import { transcribeAudioToText } from '../../services/transcriptionService';
 import type { GuardrailViolation } from '../../lib/agents/runLittleLord';
 import {
   createInitialLittleLordMessage,
@@ -88,6 +90,10 @@ export const LittleLordChat: React.FC<LittleLordChatProps> = ({
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+
+  // Audio recording
+  const { isRecording, startRecording, stopRecording, error: recordError } = useAudioRecorder();
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   // Respect gate state
   const [respectViolation, setRespectViolation] = useState<GuardrailViolation | null>(null);
@@ -398,6 +404,38 @@ export const LittleLordChat: React.FC<LittleLordChatProps> = ({
     }
   };
 
+  // Handle audio recording and transcription
+  const handleAudioRecord = async () => {
+    if (isRecording) {
+      // Stop recording and transcribe
+      setIsTranscribing(true);
+      const audioBlob = await stopRecording();
+
+      if (!audioBlob) {
+        console.error('[LittleLord] No audio data captured');
+        setIsTranscribing(false);
+        return;
+      }
+
+      // Transcribe the audio
+      const result = await transcribeAudioToText(audioBlob);
+      setIsTranscribing(false);
+
+      if (result.success && result.text) {
+        // Set transcribed text as input
+        setInput(prev => {
+          const separator = prev.trim() ? ' ' : '';
+          return prev + separator + result.text;
+        });
+      } else {
+        console.error('[LittleLord] Transcription failed:', result.error);
+      }
+    } else {
+      // Start recording
+      await startRecording();
+    }
+  };
+
   // Handle respect gate acknowledgment
   const handleRespectAcknowledge = () => {
     if (respectInput.trim().toUpperCase() === 'AGREE') {
@@ -564,6 +602,26 @@ export const LittleLordChat: React.FC<LittleLordChatProps> = ({
             disabled={isRespectGateActive}
             className="flex-1 bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#4433FF] resize-none disabled:opacity-50"
           />
+          <button
+            onClick={handleAudioRecord}
+            disabled={loading || isTranscribing || isRespectGateActive}
+            className={`px-3 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              isRecording
+                ? 'bg-red-500/20 border border-red-500/50 text-red-400 animate-pulse'
+                : isTranscribing
+                ? 'bg-[#4433FF]/10 text-[#4433FF]/50'
+                : 'bg-[#333] text-gray-400 hover:bg-[#4433FF]/20 hover:text-[#4433FF]'
+            }`}
+            title={isRecording ? 'Stop Recording' : isTranscribing ? 'Transcribing...' : 'Record Audio'}
+          >
+            {isTranscribing ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : isRecording ? (
+              <MicOff size={16} />
+            ) : (
+              <Mic size={16} />
+            )}
+          </button>
           <button
             onClick={handleSend}
             disabled={loading || !input.trim() || isRespectGateActive}

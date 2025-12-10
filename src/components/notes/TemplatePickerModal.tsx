@@ -9,7 +9,8 @@
 // =============================================================================
 
 import React, { useState } from 'react';
-import { FileText, CheckCircle2, X, Calendar, ListChecks, Sparkles, BookOpen, Target } from 'lucide-react';
+import { FileText, CheckCircle2, X, Calendar, ListChecks, Sparkles, BookOpen, Target, Scan, Mail, Users, BookMarked } from 'lucide-react';
+import { noteTemplates as frameLordTemplates } from '../../services/noteTemplates';
 
 // =============================================================================
 // TYPES
@@ -19,9 +20,10 @@ export interface NoteTemplate {
   id: string;
   name: string;
   description: string;
-  icon: React.ReactNode;
-  category: 'productivity' | 'personal' | 'creative' | 'business';
-  content: string;
+  icon?: React.ReactNode;
+  category?: 'productivity' | 'personal' | 'creative' | 'business';
+  content?: string;
+  body?: string;  // Support both content and body fields
 }
 
 export interface TemplatePickerModalProps {
@@ -36,137 +38,48 @@ export interface TemplatePickerModalProps {
 // TEMPLATES
 // =============================================================================
 
-const TEMPLATES: NoteTemplate[] = [
-  {
-    id: 'blank',
-    name: 'Blank Note',
-    description: 'Start with an empty note',
-    icon: <FileText size={24} />,
-    category: 'productivity',
-    content: '',
-  },
-  {
-    id: 'meeting-notes',
-    name: 'Meeting Notes',
-    description: 'Template for meeting minutes',
-    icon: <Calendar size={24} />,
-    category: 'business',
-    content: `# Meeting Notes
+// Map FrameLord templates to include icons and categories
+const TEMPLATES: NoteTemplate[] = frameLordTemplates.map(template => {
+  let icon: React.ReactNode = <FileText size={24} />;
+  let category: 'productivity' | 'personal' | 'creative' | 'business' = 'productivity';
 
-**Date:** ${new Date().toLocaleDateString()}
-**Attendees:**
+  // Assign icons and categories based on template ID
+  switch (template.id) {
+    case 'framescan-summary':
+      icon = <Scan size={24} />;
+      category = 'business';
+      break;
+    case 'sales-outreach':
+      icon = <Mail size={24} />;
+      category = 'business';
+      break;
+    case 'meeting-prep':
+      icon = <Users size={24} />;
+      category = 'business';
+      break;
+    case 'daily-log':
+      icon = <BookMarked size={24} />;
+      category = 'personal';
+      break;
+  }
 
-## Agenda
+  return {
+    ...template,
+    icon,
+    category,
+    content: template.body,  // Map body to content for compatibility
+  };
+});
 
-
-## Discussion
-
-
-## Action Items
-- [ ]
-
-## Next Steps
-
-`,
-  },
-  {
-    id: 'project-plan',
-    name: 'Project Plan',
-    description: 'Outline for project planning',
-    icon: <Target size={24} />,
-    category: 'business',
-    content: `# Project Plan
-
-## Overview
-
-
-## Goals
--
-
-## Timeline
-
-
-## Resources
-
-
-## Milestones
-- [ ]
-
-## Risks & Mitigations
-
-`,
-  },
-  {
-    id: 'daily-log',
-    name: 'Daily Log',
-    description: 'Track your daily activities',
-    icon: <ListChecks size={24} />,
-    category: 'personal',
-    content: `# Daily Log - ${new Date().toLocaleDateString()}
-
-## Top 3 Priorities
-1.
-2.
-3.
-
-## Completed Tasks
-- [ ]
-
-## Notes
-
-
-## Reflections
-
-`,
-  },
-  {
-    id: 'brainstorm',
-    name: 'Brainstorm',
-    description: 'Capture and organize ideas',
-    icon: <Sparkles size={24} />,
-    category: 'creative',
-    content: `# Brainstorm Session
-
-**Topic:**
-
-## Raw Ideas
--
-
-## Organized Thoughts
-
-
-## Next Actions
-- [ ]
-
-`,
-  },
-  {
-    id: 'reading-notes',
-    name: 'Reading Notes',
-    description: 'Take notes while reading',
-    icon: <BookOpen size={24} />,
-    category: 'personal',
-    content: `# Reading Notes
-
-**Title:**
-**Author:**
-**Date:** ${new Date().toLocaleDateString()}
-
-## Key Takeaways
--
-
-## Quotes
-
-
-## Reflections
-
-
-## Action Items
-- [ ]
-
-`,
-  },
-];
+// Add a blank template at the beginning
+TEMPLATES.unshift({
+  id: 'blank',
+  name: 'Blank Note',
+  description: 'Start with an empty note',
+  icon: <FileText size={24} />,
+  category: 'productivity',
+  content: '',
+});
 
 const CATEGORIES = [
   { id: 'all' as const, name: 'All Templates' },

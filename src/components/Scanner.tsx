@@ -3,9 +3,11 @@ import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from
 import { analyzeLandingFrame } from '../lib/frameScan/landingScanAdapter';
 import { FrameAnalysisResult } from '../types';
 import { Button } from './Button';
-import { Loader2, Zap, AlertTriangle, CheckCircle, UploadCloud, Image as ImageIcon, X, ArrowRight, Shield, Scan, Flame } from 'lucide-react';
+import { Loader2, Zap, AlertTriangle, CheckCircle, UploadCloud, Image as ImageIcon, X, ArrowRight, Shield, Scan, Flame, Mic, MicOff } from 'lucide-react';
 import { Reveal } from './Reveal';
 import { useAudio } from '../hooks/useAudio';
+import { useAudioRecorder } from '../hooks/useAudioRecorder';
+import { transcribeAudioToText } from '../services/transcriptionService';
 import { toast } from './Toast';
 import { useSavageMode } from '../hooks/useSavageMode';
 import { FrameScanContextHelp } from './FrameScanContextHelp';
@@ -68,6 +70,10 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
 
   // Audio
   const { play, stop } = useAudio();
+
+  // Audio Recording
+  const { isRecording, startRecording, stopRecording, error: recordError } = useAudioRecorder();
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   // Image State
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -158,6 +164,49 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
     setImageFile(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  // Handle audio recording and transcription
+  const handleAudioRecord = async () => {
+    if (isRecording) {
+      // Stop recording and transcribe
+      setIsTranscribing(true);
+      const audioBlob = await stopRecording();
+
+      if (!audioBlob) {
+        toast.error('Recording Failed', 'No audio data captured');
+        setIsTranscribing(false);
+        return;
+      }
+
+      // Transcribe the audio
+      const result = await transcribeAudioToText(audioBlob);
+      setIsTranscribing(false);
+
+      if (result.success && result.text) {
+        // Append transcribed text to input
+        setInput(prev => {
+          const separator = prev.trim() ? '\n\n' : '';
+          return prev + separator + result.text;
+        });
+        toast.success('Transcription Complete', 'Text added to input');
+      } else {
+        toast.error('Transcription Failed', result.error || 'Could not transcribe audio');
+      }
+    } else {
+      // Start recording
+      await startRecording();
+      if (!recordError) {
+        toast.success('Recording Started', 'Speak now, click again to stop');
+      }
+    }
+  };
+
+  // Show error toast for recording errors
+  useEffect(() => {
+    if (recordError) {
+      toast.error('Recording Error', recordError);
+    }
+  }, [recordError]);
 
   const handleScan = async () => {
     if (!input.trim() && !selectedImage) return;
@@ -372,6 +421,24 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
                                   : 'border-fl-primary/30 focus:border-fl-primary focus:ring-fl-primary'
                               }`}
                           />
+
+                          {/* Guidance for best results */}
+                          <div className="mt-3 p-3 bg-fl-navy/20 border border-fl-primary/20 rounded-lg">
+                            <p className="text-xs font-medium text-fl-gray/80 leading-relaxed">
+                              <span className="text-fl-primary font-semibold">For the sharpest FrameScan result:</span>
+                              <br />
+                              • Say who you are and who they are, plus the relationship and power setup.
+                              <br />
+                              • Say what the situation is and which channel you are using.
+                              <br />
+                              • Say what you want and what is at stake.
+                              <br />
+                              • Paste the exact message or transcript, not a summary.
+                              <br />
+                              • Keep it one coherent interaction, not ten mixed situations.
+                            </p>
+                          </div>
+
                           {/* Validation error message */}
                           {validationError && (
                             <MotionDiv
@@ -403,14 +470,34 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
                     {/* Upload Overlay/Button */}
                     {!selectedImage && (
                         <div className="absolute bottom-4 right-4 flex gap-2">
-                             <input 
-                                type="file" 
-                                ref={fileInputRef} 
-                                onChange={handleFileChange} 
-                                accept="image/*" 
-                                className="hidden" 
+                             <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                accept="image/*"
+                                className="hidden"
                              />
-                             <button 
+                             <button
+                                onClick={handleAudioRecord}
+                                disabled={isTranscribing}
+                                className={`p-2 rounded-md transition-all border ${
+                                  isRecording
+                                    ? 'bg-red-500/20 border-red-500/50 text-red-400 animate-pulse'
+                                    : isTranscribing
+                                    ? 'bg-fl-primary/10 border-fl-primary/20 text-fl-primary/50 cursor-wait'
+                                    : 'bg-fl-primary/10 hover:bg-fl-primary/30 text-fl-primary hover:text-white border-fl-primary/20 hover:border-fl-primary'
+                                }`}
+                                title={isRecording ? 'Stop Recording' : isTranscribing ? 'Transcribing...' : 'Record Audio'}
+                             >
+                                {isTranscribing ? (
+                                  <Loader2 size={20} className="animate-spin" />
+                                ) : isRecording ? (
+                                  <MicOff size={20} />
+                                ) : (
+                                  <Mic size={20} />
+                                )}
+                             </button>
+                             <button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="p-2 bg-fl-primary/10 hover:bg-fl-primary/30 text-fl-primary hover:text-white rounded-md transition-all border border-fl-primary/20 hover:border-fl-primary"
                                 title="Upload Image Analysis"

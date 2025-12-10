@@ -192,6 +192,23 @@ export const PublicFrameScanPage: React.FC = () => {
                 className="w-full h-40 bg-[#1A1A1D] border border-[#333] rounded-lg px-4 py-3 text-white text-sm focus:border-[#4433FF] outline-none resize-none"
                 disabled={isScanning}
               />
+
+              {/* Guidance for best results */}
+              <div className="mt-3 p-3 bg-[#4433FF]/5 border border-[#4433FF]/20 rounded-lg">
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  <span className="text-[#4433FF] font-semibold">For the sharpest FrameScan result:</span>
+                  <br />
+                  • Say who you are and who they are, plus the relationship and power setup.
+                  <br />
+                  • Say what the situation is and which channel you are using.
+                  <br />
+                  • Say what you want and what is at stake.
+                  <br />
+                  • Paste the exact message or transcript, not a summary.
+                  <br />
+                  • Keep it one coherent interaction, not ten mixed situations.
+                </p>
+              </div>
             </div>
             
             <div className="flex items-end gap-4">

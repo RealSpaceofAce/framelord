@@ -5,11 +5,11 @@
 // for a specific contact. Allows triggering new text and image scans.
 // =============================================================================
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Scan, FileText, Image as ImageIcon,
-  Calendar, ChevronRight, Type, Loader2
+  Calendar, ChevronRight, Type, Loader2, Mic, MicOff
 } from 'lucide-react';
 import {
   getReportsForContact,
@@ -17,6 +17,8 @@ import {
   type FrameScanReport
 } from '../../services/frameScanReportStore';
 import { useAudio } from '../../hooks/useAudio';
+import { useAudioRecorder } from '../../hooks/useAudioRecorder';
+import { transcribeAudioToText } from '../../services/transcriptionService';
 import { showToast } from '../Toast';
 import {
   computeCumulativeFrameProfileForContact,
@@ -83,6 +85,10 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
   // Audio for scan sounds
   const { play, stop } = useAudio();
 
+  // Audio recording
+  const { isRecording, startRecording, stopRecording, error: recordError } = useAudioRecorder();
+  const [isTranscribing, setIsTranscribing] = useState(false);
+
   // Guard against double-clicks
   const scanInProgressRef = useRef(false);
 
@@ -109,6 +115,49 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
   const profile = useMemo(() => computeCumulativeFrameProfileForContact(contactId, reports), [contactId, reports]);
 
   const isContactZero = contactId === CONTACT_ZERO.id;
+
+  // Handle audio recording and transcription
+  const handleAudioRecord = async () => {
+    if (isRecording) {
+      // Stop recording and transcribe
+      setIsTranscribing(true);
+      const audioBlob = await stopRecording();
+
+      if (!audioBlob) {
+        showToast({ type: 'error', title: 'Recording Failed', message: 'No audio data captured' });
+        setIsTranscribing(false);
+        return;
+      }
+
+      // Transcribe the audio
+      const result = await transcribeAudioToText(audioBlob);
+      setIsTranscribing(false);
+
+      if (result.success && result.text) {
+        // Append transcribed text to current text content
+        setTextContent(prev => {
+          const separator = prev.trim() ? '\n\n' : '';
+          return prev + separator + result.text;
+        });
+        showToast({ type: 'success', title: 'Transcription Complete', message: 'Text added to input' });
+      } else {
+        showToast({ type: 'error', title: 'Transcription Failed', message: result.error || 'Could not transcribe audio' });
+      }
+    } else {
+      // Start recording
+      await startRecording();
+      if (!recordError) {
+        showToast({ type: 'success', title: 'Recording Started', message: 'Speak now, click again to stop' });
+      }
+    }
+  };
+
+  // Show error toast for recording errors
+  useEffect(() => {
+    if (recordError) {
+      showToast({ type: 'error', title: 'Recording Error', message: recordError });
+    }
+  }, [recordError]);
 
   // Handle text scan with audio and toast
   const handleTextScan = async () => {
@@ -318,16 +367,52 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
 
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Text to Scan</label>
-                <textarea
-                  value={textContent}
-                  onChange={(e) => setTextContent(e.target.value)}
-                  placeholder="Include context: who sent this, what type of communication, when, and why you want to analyze it..."
-                  rows={6}
-                  className="w-full bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#4433FF] resize-none"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Briefly describe who, what, when, and why. Scans without context may be rejected.
-                </p>
+                <div className="relative">
+                  <textarea
+                    value={textContent}
+                    onChange={(e) => setTextContent(e.target.value)}
+                    placeholder="Include context: who sent this, what type of communication, when, and why you want to analyze it..."
+                    rows={6}
+                    className="w-full bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 pr-12 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#4433FF] resize-none"
+                  />
+                  <button
+                    onClick={handleAudioRecord}
+                    disabled={isTranscribing || scanLoading}
+                    className={`absolute bottom-3 right-3 p-2 rounded transition-all ${
+                      isRecording
+                        ? 'bg-red-500/20 border border-red-500/50 text-red-400 animate-pulse'
+                        : isTranscribing
+                        ? 'bg-[#4433FF]/10 border border-[#4433FF]/20 text-[#4433FF]/50 cursor-wait'
+                        : 'bg-[#4433FF]/10 hover:bg-[#4433FF]/30 text-[#4433FF] hover:text-white border border-[#4433FF]/20 hover:border-[#4433FF]'
+                    }`}
+                    title={isRecording ? 'Stop Recording' : isTranscribing ? 'Transcribing...' : 'Record Audio'}
+                  >
+                    {isTranscribing ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : isRecording ? (
+                      <MicOff size={16} />
+                    ) : (
+                      <Mic size={16} />
+                    )}
+                  </button>
+                </div>
+
+                {/* Guidance for best results */}
+                <div className="mt-2 p-3 bg-[#4433FF]/5 border border-[#4433FF]/20 rounded">
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    <span className="text-[#4433FF] font-semibold">For the sharpest FrameScan result:</span>
+                    <br />
+                    • Say who you are and who they are, plus the relationship and power setup.
+                    <br />
+                    • Say what the situation is and which channel you are using.
+                    <br />
+                    • Say what you want and what is at stake.
+                    <br />
+                    • Paste the exact message or transcript, not a summary.
+                    <br />
+                    • Keep it one coherent interaction, not ten mixed situations.
+                  </p>
+                </div>
               </div>
 
               {scanError && (
@@ -407,9 +492,23 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
                   rows={3}
                   className="w-full bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#4433FF] resize-none"
                 />
-                <p className="mt-1 text-xs text-gray-500">
-                  Scans without context may be rejected or less accurate.
-                </p>
+
+                {/* Guidance for best results */}
+                <div className="mt-2 p-3 bg-[#4433FF]/5 border border-[#4433FF]/20 rounded">
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    <span className="text-[#4433FF] font-semibold">For the sharpest FrameScan result:</span>
+                    <br />
+                    • Say who you are and who they are, plus the relationship and power setup.
+                    <br />
+                    • Say what the situation is and which channel you are using.
+                    <br />
+                    • Say what you want and what is at stake.
+                    <br />
+                    • Paste the exact message or transcript, not a summary.
+                    <br />
+                    • Keep it one coherent interaction, not ten mixed situations.
+                  </p>
+                </div>
               </div>
 
               {scanError && (
