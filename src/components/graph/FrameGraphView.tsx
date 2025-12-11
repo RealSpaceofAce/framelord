@@ -9,15 +9,15 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import type { ForceGraphMethods, NodeObject, LinkObject } from 'react-force-graph-2d';
-import { Search, Filter, Target, Maximize2, Minimize2, X } from 'lucide-react';
+import { Search, Filter, Target, Maximize2, Minimize2, X, Expand, Shrink } from 'lucide-react';
 import {
   buildFrameGraphData,
-  type FrameGraphData,
   type FrameGraphNode,
   type GraphNodeType,
+  type GraphLinkType,
 } from '../../services/graph/graphDataBuilder';
 import { createSampleGraphData } from '../../services/graph/graphDevFixtures';
-import { getAllContacts } from '../../services/contactStore';
+import { getAllContacts, CONTACT_ZERO } from '../../services/contactStore';
 import { getAllNotes } from '../../services/noteStore';
 import { getAllTopics } from '../../services/topicStore';
 import { getAllTasks } from '../../services/taskStore';
@@ -32,6 +32,7 @@ interface FrameGraphViewProps {
   selectedContactId?: string;
   onNodeClick?: (node: FrameGraphNode) => void;
   onGraphSelectionChange?: (node: FrameGraphNode | null) => void;
+  onFullScreenChange?: (isFullScreen: boolean) => void;
 }
 
 interface TypeFilter {
@@ -44,31 +45,35 @@ interface TypeFilter {
 }
 
 // =============================================================================
-// STYLING CONSTANTS
+// STYLING CONSTANTS — Muted, coherent palette
 // =============================================================================
 
 const NODE_COLORS: Record<GraphNodeType, string> = {
-  contact_zero: '#ff00ff',      // Magenta - Contact Zero
-  contact: '#4433ff',           // Primary purple - Contacts
-  note: '#00d4ff',              // Cyan - Notes
-  topic: '#00ff88',             // Green - Topics
-  task: '#ffaa00',              // Orange - Tasks
-  interaction: '#ff6b6b',       // Red - Interactions
-  framescan: '#ffd700',         // Gold - FrameScans
+  contact_zero: '#6366f1',    // Indigo accent for Contact Zero
+  contact: '#8b5cf6',         // Soft purple for contacts
+  note: '#64748b',            // Slate for notes
+  topic: '#0ea5e9',           // Sky blue for topics
+  task: '#f59e0b',            // Amber for tasks
+  interaction: '#78716c',     // Stone for interactions
+  framescan: '#a78bfa',       // Light violet for FrameScans
 };
 
-const NODE_SIZES: Record<GraphNodeType, number> = {
-  contact_zero: 12,
-  contact: 8,
-  note: 6,
-  topic: 5,
-  task: 4,
-  interaction: 3,
-  framescan: 7,
+// Tight size range so no node dominates
+const NODE_RADII: Record<GraphNodeType, number> = {
+  contact_zero: 6,            // Slightly larger
+  contact: 4.5,               // Medium
+  note: 3,                    // Small
+  topic: 3.5,                 // Similar to notes
+  task: 2,                    // Tiny
+  interaction: 2,             // Tiny
+  framescan: 4,               // Medium (diamond shape)
 };
 
-const LINK_COLOR = 'rgba(255, 255, 255, 0.1)';
-const HIGHLIGHT_LINK_COLOR = 'rgba(68, 51, 255, 0.6)';
+const BACKGROUND_COLOR = '#0a0a0f';
+const LINK_COLOR = 'rgba(148, 163, 184, 0.25)';           // Visible baseline
+const HIGHLIGHT_LINK_COLOR = 'rgba(99, 102, 241, 0.7)';   // Indigo highlight
+const NOTE_LINK_COLOR = 'rgba(100, 116, 139, 0.4)';       // Slightly brighter for wikilinks
+const FADED_ALPHA = 0.12;
 
 // =============================================================================
 // COMPONENT
@@ -78,8 +83,10 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
   selectedContactId,
   onNodeClick,
   onGraphSelectionChange,
+  onFullScreenChange,
 }) => {
   const graphRef = useRef<ForceGraphMethods>();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // State
   const [searchQuery, setSearchQuery] = useState('');
@@ -97,6 +104,8 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
   const [highlightNodes, setHighlightNodes] = useState(new Set<string>());
   const [highlightLinks, setHighlightLinks] = useState(new Set<string>());
   const [showFilters, setShowFilters] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
   // Build graph data from stores
   const graphData = useMemo(() => {
@@ -173,6 +182,45 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
     };
   }, [graphData, searchQuery, typeFilters]);
 
+  // Measure container and update dimensions
+  const updateDimensions = useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setDimensions({ width: rect.width, height: rect.height });
+    }
+  }, []);
+
+  // Handle resize
+  useEffect(() => {
+    updateDimensions();
+    const handleResize = () => {
+      updateDimensions();
+      // zoomToFit after resize
+      setTimeout(() => {
+        graphRef.current?.zoomToFit(400, 60);
+      }, 100);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [updateDimensions]);
+
+  // zoomToFit on data change, view mode change, or fullscreen change
+  useEffect(() => {
+    if (graphRef.current && filteredGraphData.nodes.length > 0) {
+      setTimeout(() => {
+        graphRef.current?.zoomToFit(400, 60);
+      }, 300);
+    }
+  }, [filteredGraphData, isLocalView, isFullScreen]);
+
+  // Update dimensions when fullscreen changes
+  useEffect(() => {
+    updateDimensions();
+    if (onFullScreenChange) {
+      onFullScreenChange(isFullScreen);
+    }
+  }, [isFullScreen, updateDimensions, onFullScreenChange]);
+
   // Handle node hover
   const handleNodeHover = useCallback((node: NodeObject | null) => {
     setHoveredNode(node);
@@ -187,12 +235,15 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
     const linkIds = new Set<string>();
 
     filteredGraphData.links.forEach(link => {
-      if (link.source === node.id) {
-        neighbors.add(link.target);
+      const sourceId = typeof link.source === 'object' ? (link.source as any).id : link.source;
+      const targetId = typeof link.target === 'object' ? (link.target as any).id : link.target;
+
+      if (sourceId === node.id) {
+        neighbors.add(targetId);
         linkIds.add(link.id);
       }
-      if (link.target === node.id) {
-        neighbors.add(link.source);
+      if (targetId === node.id) {
+        neighbors.add(sourceId);
         linkIds.add(link.id);
       }
     });
@@ -222,129 +273,163 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
     [onNodeClick, onGraphSelectionChange]
   );
 
-  // Render node on canvas
+  // Render node on canvas — Simple shapes only
   const paintNode = useCallback(
     (node: NodeObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const graphNode = node as unknown as FrameGraphNode;
       const isHighlighted = highlightNodes.has(graphNode.id);
       const isHovered = hoveredNode?.id === graphNode.id;
+      const isContactZero = graphNode.type === 'contact_zero';
+      const isFocusedContact = graphNode.contactId === selectedContactId;
 
-      // Determine size based on type and importance
-      const baseSize = NODE_SIZES[graphNode.type] || 5;
-      const importanceMultiplier = Math.sqrt((graphNode.importance || 1) / 10);
-      const size = baseSize * importanceMultiplier;
+      // Get base radius (tight range)
+      const radius = NODE_RADII[graphNode.type] || 3;
 
       // Fade non-highlighted nodes when hovering
       let opacity = 1;
       if (hoveredNode && !isHighlighted) {
-        opacity = 0.2;
+        opacity = FADED_ALPHA;
       }
 
-      // Draw node
       ctx.save();
       ctx.globalAlpha = opacity;
 
-      const color = NODE_COLORS[graphNode.type] || '#ffffff';
-      ctx.fillStyle = color;
+      const color = NODE_COLORS[graphNode.type] || '#64748b';
+      const x = node.x || 0;
+      const y = node.y || 0;
 
-      if (graphNode.type === 'contact_zero') {
-        // Draw Contact Zero as a special star/diamond shape
+      // Draw node based on type
+      if (isContactZero) {
+        // Contact Zero: Double ring (outlined circle)
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5 / globalScale;
         ctx.beginPath();
-        const spikes = 8;
-        const outerRadius = size;
-        const innerRadius = size * 0.5;
-
-        for (let i = 0; i < spikes * 2; i++) {
-          const radius = i % 2 === 0 ? outerRadius : innerRadius;
-          const angle = (Math.PI * i) / spikes;
-          const x = (node.x || 0) + Math.cos(angle) * radius;
-          const y = (node.y || 0) + Math.sin(angle) * radius;
-
-          if (i === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-        ctx.closePath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+        // Inner filled circle
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 0.6, 0, 2 * Math.PI);
         ctx.fill();
       } else if (graphNode.type === 'framescan') {
-        // Draw FrameScans as diamonds
+        // FrameScan: Diamond shape
+        ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.moveTo((node.x || 0), (node.y || 0) - size);
-        ctx.lineTo((node.x || 0) + size, (node.y || 0));
-        ctx.lineTo((node.x || 0), (node.y || 0) + size);
-        ctx.lineTo((node.x || 0) - size, (node.y || 0));
+        ctx.moveTo(x, y - radius);
+        ctx.lineTo(x + radius, y);
+        ctx.lineTo(x, y + radius);
+        ctx.lineTo(x - radius, y);
         ctx.closePath();
         ctx.fill();
-      } else {
-        // Draw regular nodes as circles
+      } else if (graphNode.type === 'topic') {
+        // Topics: Circle with thin outline
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1 / globalScale;
         ctx.beginPath();
-        ctx.arc(node.x || 0, node.y || 0, size, 0, 2 * Math.PI);
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+        // Light fill
+        ctx.fillStyle = color;
+        ctx.globalAlpha = opacity * 0.3;
+        ctx.fill();
+        ctx.globalAlpha = opacity;
+      } else {
+        // All other nodes: Solid circles
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
         ctx.fill();
       }
 
       // Draw highlight ring if hovered
       if (isHovered) {
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2 / globalScale;
+        ctx.lineWidth = 1.5 / globalScale;
         ctx.beginPath();
-        ctx.arc(node.x || 0, node.y || 0, size + 2, 0, 2 * Math.PI);
+        ctx.arc(x, y, radius + 2, 0, 2 * Math.PI);
         ctx.stroke();
       }
 
-      // Draw label if zoomed in enough or if hovered
-      if (globalScale > 1 || isHovered) {
-        ctx.font = `${12 / globalScale}px Inter, sans-serif`;
+      // Label logic: Always show for Contact Zero and focused contact
+      // Show on hover for others
+      const shouldShowLabel = isContactZero || isFocusedContact || isHovered;
+
+      if (shouldShowLabel) {
+        const fontSize = Math.max(10 / globalScale, 3);
+        ctx.font = `${fontSize}px Inter, system-ui, sans-serif`;
+        const labelText = graphNode.label;
+        const textMetrics = ctx.measureText(labelText);
+        const textWidth = textMetrics.width;
+        const textHeight = fontSize;
+        const padding = 3 / globalScale;
+        const labelY = y + radius + 6 / globalScale;
+
+        // Dark background rectangle behind label
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.85)';
+        ctx.fillRect(
+          x - textWidth / 2 - padding,
+          labelY - textHeight / 2 - padding,
+          textWidth + padding * 2,
+          textHeight + padding * 2
+        );
+
+        // Label text
+        ctx.fillStyle = '#e2e8f0';
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(graphNode.label, node.x || 0, (node.y || 0) + size + 4);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(labelText, x, labelY);
       }
 
       ctx.restore();
     },
-    [highlightNodes, hoveredNode]
+    [highlightNodes, hoveredNode, selectedContactId]
   );
 
-  // Paint link
+  // Paint link — Visible structure, highlight on hover
   const paintLink = useCallback(
     (link: LinkObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const graphLink = link as any;
       const isHighlighted = highlightLinks.has(graphLink.id);
+      const isNoteLink = graphLink.type === 'note_note';
 
       ctx.save();
 
+      // Fade non-highlighted links when hovering
       if (hoveredNode && !isHighlighted) {
-        ctx.globalAlpha = 0.1;
+        ctx.globalAlpha = FADED_ALPHA;
+      } else if (isHighlighted) {
+        ctx.globalAlpha = 0.8;
       } else {
-        ctx.globalAlpha = isHighlighted ? 0.6 : 0.15;
+        ctx.globalAlpha = 0.35;
       }
 
-      ctx.strokeStyle = isHighlighted ? HIGHLIGHT_LINK_COLOR : LINK_COLOR;
-      ctx.lineWidth = isHighlighted ? 2 / globalScale : 1 / globalScale;
+      // Color and width
+      if (isHighlighted) {
+        ctx.strokeStyle = HIGHLIGHT_LINK_COLOR;
+        ctx.lineWidth = 1.5 / globalScale;
+      } else if (isNoteLink) {
+        // Wikilink edges slightly more visible
+        ctx.strokeStyle = NOTE_LINK_COLOR;
+        ctx.lineWidth = 1.2 / globalScale;
+      } else {
+        ctx.strokeStyle = LINK_COLOR;
+        ctx.lineWidth = 0.8 / globalScale;
+      }
+
+      const sourceX = typeof link.source === 'object' ? link.source.x : 0;
+      const sourceY = typeof link.source === 'object' ? link.source.y : 0;
+      const targetX = typeof link.target === 'object' ? link.target.x : 0;
+      const targetY = typeof link.target === 'object' ? link.target.y : 0;
 
       ctx.beginPath();
-      ctx.moveTo(link.source.x || 0, link.source.y || 0);
-      ctx.lineTo(link.target.x || 0, link.target.y || 0);
+      ctx.moveTo(sourceX || 0, sourceY || 0);
+      ctx.lineTo(targetX || 0, targetY || 0);
       ctx.stroke();
 
       ctx.restore();
     },
     [highlightLinks, hoveredNode]
   );
-
-  // Center on Contact Zero on mount
-  useEffect(() => {
-    if (graphRef.current && filteredGraphData.nodes.length > 0) {
-      const contactZeroNode = filteredGraphData.nodes.find(n => n.type === 'contact_zero');
-      if (contactZeroNode) {
-        setTimeout(() => {
-          graphRef.current?.centerAt(0, 0, 1000);
-        }, 100);
-      }
-    }
-  }, [filteredGraphData]);
 
   // Toggle type filter
   const toggleTypeFilter = (type: keyof TypeFilter) => {
@@ -353,11 +438,7 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
 
   // Center on Contact Zero
   const centerOnContactZero = () => {
-    const contactZeroNode = filteredGraphData.nodes.find(n => n.type === 'contact_zero');
-    if (contactZeroNode && graphRef.current) {
-      graphRef.current.centerAt(contactZeroNode.x, contactZeroNode.y, 1000);
-      graphRef.current.zoom(2, 1000);
-    }
+    graphRef.current?.zoomToFit(400, 60);
   };
 
   // Center on selected contact
@@ -366,49 +447,69 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
       const contactNode = filteredGraphData.nodes.find(n => n.contactId === selectedContactId);
       if (contactNode) {
         graphRef.current.centerAt(contactNode.x, contactNode.y, 1000);
-        graphRef.current.zoom(2, 1000);
+        graphRef.current.zoom(3, 1000);
       }
     }
   };
 
-  return (
-    <div className="flex flex-col h-full bg-[#030412]">
-      {/* Header */}
-      <div className="flex-shrink-0 border-b border-white/10 bg-[#0a0f1e]/90 backdrop-blur-sm">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-white mb-2">Knowledge Graph</h2>
+  // Toggle full screen
+  const toggleFullScreen = () => {
+    setIsFullScreen(!isFullScreen);
+  };
 
-          {/* Boom Boom Boom Explanation Panel */}
-          <div className="mb-4 p-3 bg-white/5 border border-white/10 rounded-lg space-y-1">
-            <p className="text-sm text-gray-300">
-              <span className="text-white font-semibold">What this is:</span> A live map of your contacts, notes, topics, tasks, interactions, and FrameScan reports.
-            </p>
-            <p className="text-sm text-gray-300">
-              <span className="text-white font-semibold">Why it exists:</span> To show how everything in FrameLord connects around you as Contact Zero.
-            </p>
-            <p className="text-sm text-gray-300">
-              <span className="text-white font-semibold">How to use it:</span> Hover to explore, click nodes to open their detail views, and use filters to focus on specific people, topics, or scans.
-            </p>
+  // Toggle local/global view with zoomToFit
+  const toggleViewMode = () => {
+    setIsLocalView(!isLocalView);
+  };
+
+  return (
+    <div
+      className={`flex flex-col bg-[#0a0a0f] ${
+        isFullScreen
+          ? 'fixed inset-0 z-50'
+          : 'h-full'
+      }`}
+    >
+      {/* Compact Header/Control Panel */}
+      <div className="flex-shrink-0 border-b border-white/10 bg-[#0a0a0f]/95 backdrop-blur-sm">
+        <div className="px-4 py-3">
+          {/* Title row with fullscreen toggle */}
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold text-white">Knowledge Graph</h2>
+            <button
+              onClick={toggleFullScreen}
+              className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+              title={isFullScreen ? 'Exit full screen' : 'Full screen'}
+            >
+              {isFullScreen ? <Shrink size={16} /> : <Expand size={16} />}
+            </button>
           </div>
 
-          {/* Controls */}
-          <div className="flex flex-wrap gap-4 items-center">
+          {/* Compact explanation */}
+          <div className="text-xs text-gray-500 mb-3 space-y-0.5">
+            <p><span className="text-gray-400">What:</span> Live map of contacts, notes, topics, tasks, and scans.</p>
+            <p><span className="text-gray-400">Why:</span> See how everything connects around you.</p>
+            <p><span className="text-gray-400">How:</span> Hover to explore, click to navigate, filter to focus.</p>
+          </div>
+
+          {/* Controls row */}
+          <div className="flex flex-wrap gap-2 items-center">
             {/* Search */}
-            <div className="relative flex-1 min-w-[200px] max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <div className="relative flex-1 min-w-[150px] max-w-xs">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
               <input
                 type="text"
-                placeholder="Search nodes..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#4433ff] transition-colors"
+                className="w-full pl-8 pr-3 py-1.5 text-sm bg-white/5 border border-white/10 rounded-md text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 transition-colors"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
                 >
-                  <X size={16} />
+                  <X size={12} />
                 </button>
               )}
             </div>
@@ -416,114 +517,122 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
             {/* Filter Toggle */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
+              className={`px-3 py-1.5 rounded-md border text-xs transition-colors flex items-center gap-1.5 ${
                 showFilters
-                  ? 'bg-[#4433ff]/20 border-[#4433ff] text-white'
+                  ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
                   : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
               }`}
             >
-              <Filter size={18} />
+              <Filter size={12} />
               Filters
             </button>
 
             {/* View Toggle */}
             <button
-              onClick={() => setIsLocalView(!isLocalView)}
-              className={`px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
+              onClick={toggleViewMode}
+              className={`px-3 py-1.5 rounded-md border text-xs transition-colors flex items-center gap-1.5 ${
                 isLocalView
-                  ? 'bg-[#4433ff]/20 border-[#4433ff] text-white'
+                  ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
                   : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
               }`}
             >
-              {isLocalView ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-              {isLocalView ? 'Local View' : 'Global View'}
+              {isLocalView ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+              {isLocalView ? 'Local' : 'Global'}
             </button>
 
             {/* Center Buttons */}
             <button
               onClick={centerOnContactZero}
-              className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+              className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-md text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1.5"
             >
-              <Target size={18} />
-              Center on You
+              <Target size={12} />
+              Fit
             </button>
 
-            {selectedContactId && (
+            {selectedContactId && selectedContactId !== CONTACT_ZERO.id && (
               <button
                 onClick={centerOnSelectedContact}
-                className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+                className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-md text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1.5"
               >
-                <Target size={18} />
-                Center on Selected
+                <Target size={12} />
+                Focus
               </button>
             )}
+
+            {/* Stats */}
+            <div className="text-xs text-gray-500 ml-auto">
+              <span className="text-gray-400">{filteredGraphData.nodes.length}</span> nodes
+              <span className="mx-1">·</span>
+              <span className="text-gray-400">{filteredGraphData.links.length}</span> links
+            </div>
           </div>
 
-          {/* Type Filters */}
+          {/* Type Filters (collapsible) */}
           {showFilters && (
-            <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-lg">
-              <p className="text-sm text-gray-400 mb-3">Show node types:</p>
-              <div className="flex flex-wrap gap-3">
+            <div className="mt-2 pt-2 border-t border-white/5">
+              <div className="flex flex-wrap gap-1.5">
                 {Object.entries(typeFilters).map(([type, enabled]) => (
                   <button
                     key={type}
                     onClick={() => toggleTypeFilter(type as keyof TypeFilter)}
-                    className={`px-3 py-1 rounded-md border text-sm transition-colors ${
+                    className={`px-2 py-0.5 rounded text-xs transition-colors ${
                       enabled
-                        ? 'bg-[#4433ff]/20 border-[#4433ff] text-white'
-                        : 'bg-white/5 border-white/10 text-gray-500'
+                        ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-300'
+                        : 'bg-white/5 border border-white/10 text-gray-600'
                     }`}
                   >
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                    {type}
                   </button>
                 ))}
               </div>
             </div>
           )}
-
-          {/* Stats */}
-          <div className="mt-4 flex gap-6 text-sm text-gray-400">
-            <span>
-              <span className="text-white font-semibold">{filteredGraphData.nodes.length}</span> nodes
-            </span>
-            <span>
-              <span className="text-white font-semibold">{filteredGraphData.links.length}</span> connections
-            </span>
-          </div>
         </div>
       </div>
 
       {/* Graph Canvas */}
-      <div className="flex-1 relative">
+      <div ref={containerRef} className="flex-1 relative overflow-hidden">
         <ForceGraph2D
           ref={graphRef}
           graphData={filteredGraphData}
+          width={dimensions.width}
+          height={dimensions.height}
           nodeId="id"
-          nodeLabel={(node: any) => `${node.label}${node.subLabel ? ` - ${node.subLabel}` : ''}`}
           nodeCanvasObject={paintNode}
+          nodePointerAreaPaint={(node, color, ctx) => {
+            const radius = NODE_RADII[(node as any).type] || 3;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(node.x || 0, node.y || 0, radius + 3, 0, 2 * Math.PI);
+            ctx.fill();
+          }}
           linkCanvasObject={paintLink}
           onNodeHover={handleNodeHover}
           onNodeClick={handleNodeClick}
-          cooldownTicks={100}
+          cooldownTicks={80}
           enableNodeDrag={true}
           enableZoomInteraction={true}
           enablePanInteraction={true}
-          backgroundColor="#030412"
-          warmupTicks={100}
-          d3VelocityDecay={0.3}
+          backgroundColor={BACKGROUND_COLOR}
+          warmupTicks={50}
+          d3VelocityDecay={0.4}
+          d3AlphaDecay={0.02}
+          onEngineStop={() => {
+            // zoomToFit when simulation settles
+            graphRef.current?.zoomToFit(400, 60);
+          }}
         />
 
-        {/* Legend */}
-        <div className="absolute bottom-4 left-4 bg-[#0a0f1e]/90 backdrop-blur-sm border border-white/10 rounded-lg p-4 max-w-xs">
-          <p className="text-sm font-semibold text-white mb-3">Node Types</p>
-          <div className="space-y-2">
+        {/* Compact Legend */}
+        <div className="absolute bottom-3 left-3 bg-[#0a0a0f]/90 backdrop-blur-sm border border-white/10 rounded-md px-3 py-2">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-gray-500">
             {Object.entries(NODE_COLORS).map(([type, color]) => (
-              <div key={type} className="flex items-center gap-2 text-xs text-gray-400">
+              <div key={type} className="flex items-center gap-1.5">
                 <div
-                  className="w-3 h-3 rounded-full"
+                  className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: color }}
                 />
-                <span>{type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                <span>{type.replace(/_/g, ' ')}</span>
               </div>
             ))}
           </div>

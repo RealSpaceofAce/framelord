@@ -1882,6 +1882,7 @@ export const Dashboard: React.FC = () => {
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(true);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
+  const [isGraphFullScreen, setIsGraphFullScreen] = useState(false);
 
   // ==========================================================================
   // CENTRALIZED SELECTED CONTACT STATE
@@ -2211,6 +2212,15 @@ export const Dashboard: React.FC = () => {
                   } else if (node.type === 'framescan' && node.frameScanId) {
                     setSelectedReportId(node.frameScanId);
                     setCurrentView('FRAMESCAN_REPORT');
+                  }
+                }}
+                onFullScreenChange={(isFullScreen) => {
+                  setIsGraphFullScreen(isFullScreen);
+                  // Hide sidebar when graph goes fullscreen
+                  if (isFullScreen) {
+                    setIsLeftSidebarOpen(false);
+                  } else {
+                    setIsLeftSidebarOpen(true);
                   }
                 }}
               />
