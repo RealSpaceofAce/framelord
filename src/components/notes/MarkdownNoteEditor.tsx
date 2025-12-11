@@ -46,6 +46,7 @@ import { ContactMentionSuggestion } from './ContactMentionSuggestion';
 import { TopicMentionNode } from './extensions/TopicMentionNode';
 import { TopicMentionSuggestion } from './TopicMentionSuggestion';
 import { TweetEmbedNode } from './extensions/TweetEmbedNode';
+import { SlashCommandExtension } from '../../lib/editor/SlashCommandExtension';
 import { Backlinks } from './Backlinks';
 import {
   findNoteByTitle,
@@ -219,6 +220,17 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
       // ResizableImageNode replaces Image - provides drag handles for resizing
       ResizableImageNode,
       TweetEmbedNode,
+      // Slash command menu for block insertion (Notion-style "/" commands)
+      SlashCommandExtension.configure({
+        colors: {
+          bg: colors.bg,
+          border: colors.border,
+          text: colors.text,
+          textMuted: colors.textMuted,
+          hover: colors.hover,
+          accent: colors.accent,
+        },
+      }),
     ],
     content,
     editorProps: {
