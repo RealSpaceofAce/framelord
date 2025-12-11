@@ -32,6 +32,7 @@ export interface FrameScanReport {
   subjectContactIds: string[];          // Array of contact IDs (includes "contact_zero" for self-scans)
   modality: 'text' | 'image' | 'mixed';
   domain: FrameDomainId;
+  customDomainTags?: string[];          // Optional custom domain tags (IDs from customDomainStore)
   context?: FrameScanContext;           // Optional scan context (what, who, userConcern)
   sourceRef?: string;                   // Optional reference to source (note id, image url, etc.)
   rawResult: FrameScanResult;           // The full LLM response
@@ -275,5 +276,53 @@ export const importReportsFromJSON = (json: string): void => {
 export const clearAllReports = (): void => {
   REPORTS = [];
   emitChange();
+};
+
+// =============================================================================
+// CUSTOM DOMAIN TAG OPERATIONS
+// =============================================================================
+
+/**
+ * Add a custom domain tag to a report.
+ * @param reportId - The report to tag
+ * @param customDomainId - The custom domain ID to add
+ */
+export const addCustomDomainTag = (reportId: string, customDomainId: string): void => {
+  const report = getReportById(reportId);
+  if (!report) return;
+
+  const tags = report.customDomainTags || [];
+  if (tags.includes(customDomainId)) return; // Already tagged
+
+  updateFrameScanReport(reportId, {
+    customDomainTags: [...tags, customDomainId],
+  });
+};
+
+/**
+ * Remove a custom domain tag from a report.
+ * @param reportId - The report to untag
+ * @param customDomainId - The custom domain ID to remove
+ */
+export const removeCustomDomainTag = (reportId: string, customDomainId: string): void => {
+  const report = getReportById(reportId);
+  if (!report) return;
+
+  const tags = report.customDomainTags || [];
+  updateFrameScanReport(reportId, {
+    customDomainTags: tags.filter(id => id !== customDomainId),
+  });
+};
+
+/**
+ * Get all reports tagged with a specific custom domain.
+ * @param customDomainId - The custom domain ID to filter by
+ */
+export const getReportsByCustomDomain = (customDomainId: string): FrameScanReport[] => {
+  return REPORTS
+    .filter(r => r.customDomainTags?.includes(customDomainId))
+    .sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 };
 

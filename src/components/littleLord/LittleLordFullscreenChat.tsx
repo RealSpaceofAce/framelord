@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Loader2, Crown, User, Minimize2, X, ShieldAlert } from 'lucide-react';
+import { Send, Loader2, Crown, User, Minimize2, X, ShieldAlert, Mic, MicOff } from 'lucide-react';
 import { LittleLordOrbView, type SpiritState } from './LittleLordOrbView';
 import type { GuardrailViolation } from '../../lib/agents/runLittleLord';
 import {
@@ -19,6 +19,8 @@ import { CONTACT_ZERO } from '../../services/contactStore';
 import { createTask, updateTask } from '../../services/taskStore';
 import { createNote } from '../../services/noteStore';
 import { createInteraction } from '../../services/interactionStore';
+import { useAudioRecorder } from '../../hooks/useAudioRecorder';
+import { transcribeAudioToText } from '../../services/transcriptionService';
 import {
   createWant,
   updateWant,
@@ -84,6 +86,10 @@ export const LittleLordFullscreenChat: React.FC<LittleLordFullscreenChatProps> =
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+
+  // Audio recording
+  const { isRecording, startRecording, stopRecording } = useAudioRecorder();
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   // Respect gate state
   const [respectViolation, setRespectViolation] = useState<GuardrailViolation | null>(null);
@@ -339,6 +345,38 @@ export const LittleLordFullscreenChat: React.FC<LittleLordFullscreenChatProps> =
     }
   };
 
+  // Handle audio recording and transcription
+  const handleAudioRecord = async () => {
+    if (isRecording) {
+      // Stop recording and transcribe
+      setIsTranscribing(true);
+      const audioBlob = await stopRecording();
+
+      if (!audioBlob) {
+        console.error('[LittleLord Fullscreen] No audio data captured');
+        setIsTranscribing(false);
+        return;
+      }
+
+      // Transcribe the audio
+      const result = await transcribeAudioToText(audioBlob);
+      setIsTranscribing(false);
+
+      if (result.success && result.text) {
+        // Set transcribed text as input
+        setInput(prev => {
+          const separator = prev.trim() ? ' ' : '';
+          return prev + separator + result.text;
+        });
+      } else {
+        console.error('[LittleLord Fullscreen] Transcription failed:', result.error);
+      }
+    } else {
+      // Start recording
+      await startRecording();
+    }
+  };
+
   // Respect gate handlers
   const handleRespectAcknowledge = () => {
     if (respectInput.trim().toUpperCase() === 'AGREE') {
@@ -530,7 +568,7 @@ export const LittleLordFullscreenChat: React.FC<LittleLordFullscreenChatProps> =
               {/* Glow effect */}
               <div className="absolute -inset-1 bg-gradient-to-r from-[#4433FF] to-[#6655FF] rounded-2xl opacity-20 group-hover:opacity-30 transition duration-500 blur" />
 
-              <div className="relative flex items-center gap-3 bg-[#1A1A1A]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-2">
+              <div className="relative flex items-center gap-2 bg-[#1A1A1A]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-2">
                 <textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -540,6 +578,26 @@ export const LittleLordFullscreenChat: React.FC<LittleLordFullscreenChatProps> =
                   disabled={isRespectGateActive}
                   className="flex-1 bg-transparent text-white px-3 py-2 focus:outline-none placeholder-gray-500 text-sm resize-none disabled:opacity-50"
                 />
+                <button
+                  onClick={handleAudioRecord}
+                  disabled={isRespectGateActive}
+                  className={`p-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isRecording
+                      ? 'bg-red-500/20 border border-red-500/50 text-red-400 animate-pulse'
+                      : isTranscribing
+                      ? 'bg-[#4433FF]/10 text-[#4433FF]/50'
+                      : 'bg-[#333] text-gray-400 hover:bg-[#4433FF]/20 hover:text-[#4433FF]'
+                  }`}
+                  title={isRecording ? 'Stop Recording' : isTranscribing ? 'Transcribing...' : 'Record Audio'}
+                >
+                  {isTranscribing ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : isRecording ? (
+                    <MicOff size={18} />
+                  ) : (
+                    <Mic size={18} />
+                  )}
+                </button>
                 <button
                   onClick={handleSend}
                   disabled={loading || !input.trim() || isRespectGateActive}

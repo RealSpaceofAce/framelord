@@ -135,6 +135,8 @@ export interface FrameScanResult {
   status: FrameScanStatus;
   /** Explanation of why the scan was rejected (null if status is "ok") */
   rejectionReason: string | null;
+  /** AI-generated descriptive title (3-8 words) summarizing the scan subject */
+  title?: string;
   /** Whether this is a text or image scan */
   modality: "text" | "image";
   /** The domain context for this scan */

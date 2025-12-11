@@ -18,6 +18,7 @@ import Link from '@tiptap/extension-link';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Highlight from '@tiptap/extension-highlight';
+import Image from '@tiptap/extension-image';
 import {
   Bold,
   Italic,
@@ -34,6 +35,8 @@ import {
   Highlighter,
   Undo,
   Redo,
+  Image as ImageIcon,
+  Twitter,
 } from 'lucide-react';
 import { WikiLinkNode } from './extensions/WikiLinkNode';
 import { WikiLinkSuggestion } from './WikiLinkSuggestion';
@@ -41,6 +44,7 @@ import { ContactMentionNode } from './extensions/ContactMentionNode';
 import { ContactMentionSuggestion } from './ContactMentionSuggestion';
 import { TopicMentionNode } from './extensions/TopicMentionNode';
 import { TopicMentionSuggestion } from './TopicMentionSuggestion';
+import { TweetEmbedNode } from './extensions/TweetEmbedNode';
 import { Backlinks } from './Backlinks';
 import {
   findNoteByTitle,
@@ -159,6 +163,10 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
   const [topicPosition, setTopicPosition] = useState<{ top: number; left: number } | null>(null);
   const [topicTriggerStart, setTopicTriggerStart] = useState<number | null>(null);
 
+  // Tweet embed state
+  const [showTweetInput, setShowTweetInput] = useState(false);
+  const [tweetUrl, setTweetUrl] = useState('');
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -207,11 +215,99 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
           console.log('Navigate to topic:', topicId);
         },
       }),
+      Image.configure({
+        inline: true,
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'rounded-lg max-w-full h-auto',
+        },
+      }),
+      TweetEmbedNode,
     ],
     content,
     editorProps: {
       attributes: {
         class: 'prose prose-sm max-w-none focus:outline-none min-h-[200px] px-1',
+      },
+      handleDrop: (view, event, _slice, moved) => {
+        // Handle image drops
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+          const files = Array.from(event.dataTransfer.files);
+          const imageFiles = files.filter(file => file.type.startsWith('image/'));
+
+          if (imageFiles.length > 0) {
+            event.preventDefault();
+
+            imageFiles.forEach(file => {
+              // Check file size (5MB limit)
+              const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+              if (file.size > MAX_SIZE) {
+                alert(`Image "${file.name}" is too large. Maximum size is 5MB.`);
+                return;
+              }
+
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const dataUrl = e.target?.result as string;
+                if (dataUrl && editor) {
+                  // Get drop position
+                  const coordinates = view.posAtCoords({
+                    left: event.clientX,
+                    top: event.clientY,
+                  });
+
+                  if (coordinates) {
+                    // Insert image at drop position
+                    editor.chain().focus().insertContentAt(coordinates.pos, {
+                      type: 'image',
+                      attrs: { src: dataUrl },
+                    }).run();
+                  } else {
+                    // Fallback: insert at current cursor position
+                    editor.chain().focus().setImage({ src: dataUrl }).run();
+                  }
+                }
+              };
+              reader.readAsDataURL(file);
+            });
+
+            return true; // Handled
+          }
+        }
+        return false; // Not handled
+      },
+      handlePaste: (view, event, _slice) => {
+        // Handle pasted images
+        if (event.clipboardData && event.clipboardData.files && event.clipboardData.files.length > 0) {
+          const files = Array.from(event.clipboardData.files);
+          const imageFiles = files.filter(file => file.type.startsWith('image/'));
+
+          if (imageFiles.length > 0) {
+            event.preventDefault();
+
+            imageFiles.forEach(file => {
+              // Check file size (5MB limit)
+              const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+              if (file.size > MAX_SIZE) {
+                alert(`Pasted image is too large. Maximum size is 5MB.`);
+                return;
+              }
+
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const dataUrl = e.target?.result as string;
+                if (dataUrl && editor) {
+                  // Insert image at current cursor position
+                  editor.chain().focus().setImage({ src: dataUrl }).run();
+                }
+              };
+              reader.readAsDataURL(file);
+            });
+
+            return true; // Handled
+          }
+        }
+        return false; // Not handled
       },
       handleKeyDown: (view, event) => {
         // Handle [[ trigger for wiki links
@@ -720,7 +816,127 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
           icon={LinkIcon}
           title="Add Link"
         />
+
+        <Separator />
+
+        {/* Media */}
+        <ToolbarButton
+          onClick={() => {
+            // Create file input
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+              const file = (e.target as HTMLInputElement).files?.[0];
+              if (file) {
+                // Check file size (5MB limit)
+                const MAX_SIZE = 5 * 1024 * 1024;
+                if (file.size > MAX_SIZE) {
+                  alert('Image is too large. Maximum size is 5MB.');
+                  return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                  const dataUrl = e.target?.result as string;
+                  if (dataUrl && editor) {
+                    editor.chain().focus().setImage({ src: dataUrl }).run();
+                  }
+                };
+                reader.readAsDataURL(file);
+              }
+            };
+            input.click();
+          }}
+          icon={ImageIcon}
+          title="Insert Image"
+        />
+        <ToolbarButton
+          onClick={() => setShowTweetInput(true)}
+          icon={Twitter}
+          title="Embed Tweet"
+        />
       </div>
+
+      {/* Tweet URL Input Modal */}
+      {showTweetInput && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            onClick={() => {
+              setShowTweetInput(false);
+              setTweetUrl('');
+            }}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <div
+              className="w-full max-w-md rounded-xl shadow-2xl p-6"
+              style={{ background: colors.bg, border: `1px solid ${colors.border}` }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="font-semibold text-lg mb-2" style={{ color: colors.text }}>
+                Embed Tweet
+              </h3>
+              <p className="text-sm mb-4" style={{ color: colors.textMuted }}>
+                Paste a tweet URL from Twitter/X
+              </p>
+              <input
+                type="text"
+                value={tweetUrl}
+                onChange={(e) => setTweetUrl(e.target.value)}
+                placeholder="https://twitter.com/username/status/123456..."
+                className="w-full px-3 py-2 rounded-lg border mb-4 focus:outline-none focus:ring-2"
+                style={{
+                  background: colors.bg,
+                  borderColor: colors.border,
+                  color: colors.text,
+                }}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && tweetUrl.trim()) {
+                    // Insert tweet embed
+                    if (editor) {
+                      editor.chain().focus().setTweetEmbed({ url: tweetUrl.trim() }).run();
+                      setShowTweetInput(false);
+                      setTweetUrl('');
+                    }
+                  }
+                  if (e.key === 'Escape') {
+                    setShowTweetInput(false);
+                    setTweetUrl('');
+                  }
+                }}
+              />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (tweetUrl.trim() && editor) {
+                      editor.chain().focus().setTweetEmbed({ url: tweetUrl.trim() }).run();
+                      setShowTweetInput(false);
+                      setTweetUrl('');
+                    }
+                  }}
+                  disabled={!tweetUrl.trim()}
+                  className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                  style={{ background: colors.accent, color: '#fff' }}
+                >
+                  Insert Tweet
+                </button>
+                <button
+                  onClick={() => {
+                    setShowTweetInput(false);
+                    setTweetUrl('');
+                  }}
+                  className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  style={{ background: colors.hover, color: colors.text }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Editor Content */}
       <div className="flex-1 overflow-y-auto p-4">

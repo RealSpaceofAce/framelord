@@ -433,26 +433,35 @@ export const AITab: React.FC<AITabProps> = ({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask AI anything..."
+            placeholder={hasWritingAccess ? "Ask AI anything..." : "Upgrade to unlock AI writing assistant"}
             rows={2}
-            className="w-full px-3 py-2 pr-10 rounded-lg text-xs resize-none outline-none border"
+            disabled={!hasWritingAccess}
+            className="w-full px-3 py-2 pr-10 rounded-lg text-xs resize-none outline-none border disabled:cursor-not-allowed"
             style={{
-              background: colors.bg,
+              background: hasWritingAccess ? colors.bg : `${colors.bg}80`,
               borderColor: colors.border,
-              color: colors.text,
+              color: hasWritingAccess ? colors.text : colors.textMuted,
+              opacity: hasWritingAccess ? 1 : 0.6,
             }}
           />
-          <button
-            onClick={() => handleSend()}
-            disabled={loading || !input.trim()}
-            className="absolute right-2 bottom-2 p-1.5 rounded-lg transition-colors disabled:opacity-40"
-            style={{ background: colors.accent, color: '#fff' }}
-          >
-            <Send size={12} />
-          </button>
+          {hasWritingAccess && (
+            <button
+              onClick={() => handleSend()}
+              disabled={loading || !input.trim()}
+              className="absolute right-2 bottom-2 p-1.5 rounded-lg transition-colors disabled:opacity-40"
+              style={{ background: colors.accent, color: '#fff' }}
+            >
+              <Send size={12} />
+            </button>
+          )}
+          {!hasWritingAccess && (
+            <div className="absolute right-2 bottom-2 p-1.5">
+              <Lock size={12} style={{ color: colors.textMuted }} />
+            </div>
+          )}
         </div>
         <p className="text-xs mt-1.5 text-center" style={{ color: colors.textMuted }}>
-          Press Enter to send
+          {hasWritingAccess ? 'Press Enter to send' : 'Upgrade to Pro to unlock AI writing features'}
         </p>
       </div>
     </div>

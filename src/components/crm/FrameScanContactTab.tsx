@@ -567,7 +567,7 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-white">{DOMAIN_LABELS[report.domain]}</div>
+                    <div className="text-sm text-white truncate">{report.title || DOMAIN_LABELS[report.domain]}</div>
                     <div className="text-xs text-gray-500 flex items-center gap-1">
                       <Calendar size={10} />
                       {formatProfileDate(report.createdAt)}

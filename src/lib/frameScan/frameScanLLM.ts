@@ -247,6 +247,14 @@ FIRST: Validate context (see CONTEXT VALIDATION above). If invalid, return rejec
 
 THEN (only if valid):
 
+Generate a descriptive title (3-8 words) that summarizes the scan subject:
+
+For text scans: Include the type of communication and context (e.g., "Sales Email to VP Prospect", "LinkedIn DM Reply to Client", "Cold Outreach on Twitter")
+
+For image scans: Include the visual type and purpose (e.g., "LinkedIn Profile Photo", "Team Photo for Website", "Headshot for Speaking Gig")
+
+Make it specific enough to distinguish this scan from others, but concise.
+
 For each axis in the spec:
 
 Decide an integer score from -3 to +3:
@@ -382,6 +390,7 @@ Output EXACTLY one of these two JSON structures and nothing else:
 {
 "status": "ok",
 "rejectionReason": null,
+"title": "3-8 word descriptive title summarizing the scan (e.g., 'Sales Email to Enterprise Lead', 'Cold DM on Twitter')",
 "modality": "text or image",
 "domain": "one of the domains in the spec",
 "overallFrame": "apex | slave | mixed",
@@ -637,6 +646,9 @@ export async function runTextFrameScan(input: TextFrameScanInput): Promise<Frame
     subjectLabel,
   });
 
+  // Use AI-generated title if available, fallback to subjectLabel
+  const reportTitle = result.title || subjectLabel;
+
   // Save report to store (side effect)
   // Support new contactIds array while maintaining backwards compatibility with contactId
   const subjectContactIds = input.contactIds?.length
@@ -648,6 +660,7 @@ export async function runTextFrameScan(input: TextFrameScanInput): Promise<Frame
       : "contact";
 
   addFrameScanReport({
+    title: reportTitle,
     subjectType,
     subjectContactIds,
     modality: "text",
@@ -749,6 +762,9 @@ export async function runImageFrameScan(input: ImageFrameScanInput): Promise<Fra
     subjectLabel,
   });
 
+  // Use AI-generated title if available, fallback to subjectLabel
+  const reportTitle = result.title || subjectLabel;
+
   // Save report to store (side effect)
   // Support new contactIds array while maintaining backwards compatibility with contactId
   const subjectContactIds = input.contactIds?.length
@@ -760,6 +776,7 @@ export async function runImageFrameScan(input: ImageFrameScanInput): Promise<Fra
       : "contact";
 
   addFrameScanReport({
+    title: reportTitle,
     subjectType,
     subjectContactIds,
     modality: "image",
