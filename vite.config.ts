@@ -20,6 +20,9 @@ export default defineConfig(({ mode }) => {
           '@': path.resolve(__dirname, './src'),
         }
       },
+      optimizeDeps: {
+        include: ['react-force-graph', 'react-force-graph-2d'],
+      },
       build: {
         commonjsOptions: {
           include: [/node_modules/],

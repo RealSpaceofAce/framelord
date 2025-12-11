@@ -377,9 +377,19 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
       <div className="flex-shrink-0 border-b border-white/10 bg-[#0a0f1e]/90 backdrop-blur-sm">
         <div className="p-6">
           <h2 className="text-2xl font-bold text-white mb-2">Knowledge Graph</h2>
-          <p className="text-sm text-gray-400 mb-4">
-            Visual map of your contacts, notes, topics, tasks, interactions, and FrameScan reports
-          </p>
+
+          {/* Boom Boom Boom Explanation Panel */}
+          <div className="mb-4 p-3 bg-white/5 border border-white/10 rounded-lg space-y-1">
+            <p className="text-sm text-gray-300">
+              <span className="text-white font-semibold">What this is:</span> A live map of your contacts, notes, topics, tasks, interactions, and FrameScan reports.
+            </p>
+            <p className="text-sm text-gray-300">
+              <span className="text-white font-semibold">Why it exists:</span> To show how everything in FrameLord connects around you as Contact Zero.
+            </p>
+            <p className="text-sm text-gray-300">
+              <span className="text-white font-semibold">How to use it:</span> Hover to explore, click nodes to open their detail views, and use filters to focus on specific people, topics, or scans.
+            </p>
+          </div>
 
           {/* Controls */}
           <div className="flex flex-wrap gap-4 items-center">
