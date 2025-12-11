@@ -106,6 +106,55 @@ export interface LittleLordEventData {
 }
 
 /**
+ * Want tracking action to log daily entries.
+ */
+export interface LittleLordWantTracking {
+  /** Date in YYYY-MM-DD format */
+  date: string;
+  /** Map of metric slug to value */
+  entries: Record<string, number | boolean>;
+}
+
+/**
+ * Psychometric profile update (partial, merged with existing)
+ */
+export interface LittleLordPsychometricUpdate {
+  communicationStyle?: string;
+  decisionMakingStyle?: string;
+  motivators?: string[];
+  values?: string[];
+  traits?: string[];
+  frameTendencies?: {
+    apexSignals?: string[];
+    slaveSignals?: string[];
+  };
+  relationshipDynamics?: string;
+  pressureResponse?: string;
+  trustMarkers?: {
+    builders?: string[];
+    breakers?: string[];
+  };
+  negotiationStyle?: string;
+  goals?: string[];
+  painPoints?: string[];
+}
+
+/**
+ * Contact update action - creates note and/or updates psychometric profile.
+ */
+export interface LittleLordContactUpdate {
+  /** ID of the contact to update */
+  contactId: string;
+  /** Note to create about this contact */
+  note?: {
+    content: string;
+    title?: string;
+  } | null;
+  /** Psychometric profile updates to merge */
+  psychometric?: LittleLordPsychometricUpdate | null;
+}
+
+/**
  * Response from Little Lord.
  */
 export interface LittleLordResponse {
@@ -113,6 +162,10 @@ export interface LittleLordResponse {
   reply: string;
   /** Optional event data for metrics/analytics */
   event?: LittleLordEventData | null;
+  /** Optional want tracking data to log */
+  want_tracking?: LittleLordWantTracking | null;
+  /** Optional contact update action */
+  contact_update?: LittleLordContactUpdate | null;
 }
 
 // =============================================================================

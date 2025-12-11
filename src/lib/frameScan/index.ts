@@ -133,3 +133,16 @@ export {
   captureCanvasSnapshot,
   extractTextFromCanvas,
 } from "./noteCanvasScan";
+
+// Export Want Tracking penalty calculation
+export {
+  calculateWantTrackingPenalty,
+  getWantTrackingPenalty,
+  applyWantTrackingPenalty,
+  LOOKBACK_DAYS,
+  MIN_TRACKED_DAYS_FOR_FULL_PENALTY,
+  MAX_TOTAL_PENALTY,
+  FAILURE_THRESHOLD,
+  type WantTrackingPenaltyBreakdown,
+  type MetricPenaltyDetail,
+} from "./wantTrackingPenalty";

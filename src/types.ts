@@ -13,6 +13,49 @@ export interface ContactFrameMetrics {
   lastScanAt: string | null;      // ISO timestamp
 }
 
+// --- PSYCHOMETRIC PROFILE ---
+
+/**
+ * Psychometric profile for a contact.
+ * Captured through conversation with Little Lord and FrameScan analysis.
+ */
+export interface ContactPsychometricProfile {
+  /** Communication style (direct, indirect, analytical, emotional) */
+  communicationStyle?: string;
+  /** Decision-making pattern (quick, deliberate, consensus-seeking) */
+  decisionMakingStyle?: string;
+  /** Primary motivators (achievement, affiliation, power, security) */
+  motivators?: string[];
+  /** Values and priorities */
+  values?: string[];
+  /** Personality traits observed */
+  traits?: string[];
+  /** Frame tendencies (Apex vs Slave signals observed) */
+  frameTendencies?: {
+    apexSignals?: string[];
+    slaveSignals?: string[];
+  };
+  /** Relationship dynamics (how they relate to authority, peers, subordinates) */
+  relationshipDynamics?: string;
+  /** Pressure responses (how they behave under stress) */
+  pressureResponse?: string;
+  /** Trust markers (what builds/breaks trust with them) */
+  trustMarkers?: {
+    builders?: string[];
+    breakers?: string[];
+  };
+  /** Negotiation style and tendencies */
+  negotiationStyle?: string;
+  /** Goals and aspirations mentioned */
+  goals?: string[];
+  /** Pain points and frustrations */
+  painPoints?: string[];
+  /** Last updated timestamp */
+  updatedAt?: string;
+  /** Source notes (note IDs that contributed to this profile) */
+  sourceNoteIds?: string[];
+}
+
 // --- CONTACT (THE SPINE) ---
 
 export type RelationshipDomain = 'business' | 'personal' | 'hybrid';
@@ -60,6 +103,8 @@ export interface Contact {
   mentionedInNotes: string[];     // Note IDs where this contact is @mentioned
   engagementEvents: EngagementEvent[]; // Timeline of engagement events
   linkedTopics: string[];         // Topic IDs associated with this contact
+  // Psychometric profile (populated by Little Lord observations)
+  psychometricProfile?: ContactPsychometricProfile;
 }
 
 /** Contact Zero is the user's own record */
@@ -534,4 +579,95 @@ export interface NotificationSettings {
   showTasks: boolean;
   showBillingAlerts: boolean;      // May be mandatory depending on policy
   showCustom: boolean;
+}
+
+// =============================================================================
+// WANT TRACKING — Daily metrics and goal tracking system
+// =============================================================================
+
+/**
+ * Goal type for Want metrics - determines how progress is measured
+ */
+export type WantGoalType = 'at_least' | 'at_most' | 'exact' | 'boolean_days_per_week';
+
+/**
+ * Metric value type - number for quantities, boolean for yes/no tracking
+ */
+export type WantMetricType = 'number' | 'boolean';
+
+/**
+ * WantMetric - A trackable metric/goal defined by the user
+ * Examples: "Hours Worked", "Income", "Workout", "Water"
+ *
+ * The Want Tracking board displays columns for each active metric.
+ * Users can define goals and track daily values against them.
+ */
+export interface WantMetric {
+  id: string;
+  /** Human-readable name (e.g., "Hours Worked", "Income") */
+  name: string;
+  /** Stable key derived from name, used as key in day entries */
+  slug: string;
+  /** Type of value: number for quantities, boolean for yes/no */
+  type: WantMetricType;
+  /** Unit of measurement (e.g., "hrs", "$", "lbs", "cal") */
+  unit?: string;
+  /** How goal progress is measured */
+  goalType: WantGoalType;
+  /** Goal value - meaning depends on goalType */
+  goalValue: number;
+  /** Whether this metric is currently active/visible */
+  isActive: boolean;
+  /** Display order in the board */
+  sortOrder: number;
+  /** Color for the metric (hex or CSS color) */
+  color?: string;
+  /**
+   * FrameScore weight (0-1). Determines how much this metric affects Contact Zero's FrameScore.
+   * - 0 or undefined: Informational only, no impact on FrameScore
+   * - 0.1-1.0: Contributes to FrameScore penalty when below goal
+   * Metrics with frameScoreWeight participate in the tracking penalty calculation.
+   */
+  frameScoreWeight?: number;
+  /** Created timestamp */
+  createdAt: string;
+  /** Last modified timestamp */
+  updatedAt: string;
+}
+
+/**
+ * WantDayEntry - A single day's recorded values across all metrics
+ *
+ * Values are stored in a Record keyed by metric.slug.
+ * This allows flexible addition/removal of metrics without data loss.
+ */
+export interface WantDayEntry {
+  id: string;
+  /** Date in YYYY-MM-DD format (local time) */
+  date: string;
+  /** Values for each metric: { [metric.slug]: number | boolean | null } */
+  values: Record<string, number | boolean | null>;
+  /** Created timestamp */
+  createdAt: string;
+  /** Last modified timestamp */
+  updatedAt: string;
+}
+
+/**
+ * WantTrackingBoard - Container for metrics and day entries
+ *
+ * This is the Want Tracking module's data model. It replaces the old
+ * "Success Tracking" concept with a proper, editable tracking board.
+ */
+export interface WantTrackingBoard {
+  /** All defined metrics */
+  metrics: WantMetric[];
+  /** All day entries - one per date with values for all metrics */
+  days: WantDayEntry[];
+  /** Currently selected month for display (YYYY-MM format) */
+  selectedMonth?: string;
+  /** Whether to show weekends in the board */
+  showWeekends: boolean;
+  /** Last updated timestamp */
+  updatedAt: string;
 }

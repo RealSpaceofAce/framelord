@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Loader2, Crown, User, Minimize2, X, ShieldAlert, Mic, MicOff } from 'lucide-react';
+import { Send, Loader2, Crown, User, Minimize2, X, ShieldAlert, Mic, MicOff, Copy, FileText, Check, PanelLeftClose, PanelRightClose } from 'lucide-react';
 import { LittleLordOrbView, type SpiritState } from './LittleLordOrbView';
 import type { GuardrailViolation } from '../../lib/agents/runLittleLord';
 import {
@@ -90,6 +90,13 @@ export const LittleLordFullscreenChat: React.FC<LittleLordFullscreenChatProps> =
   // Audio recording
   const { isRecording, startRecording, stopRecording } = useAudioRecorder();
   const [isTranscribing, setIsTranscribing] = useState(false);
+
+  // Copy feedback state
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  // Send to notes feedback state
+  const [sentToNotesIndex, setSentToNotesIndex] = useState<number | null>(null);
+  // Chat panel position (left or right)
+  const [chatPanelPosition, setChatPanelPosition] = useState<'left' | 'right'>('right');
 
   // Respect gate state
   const [respectViolation, setRespectViolation] = useState<GuardrailViolation | null>(null);
@@ -396,6 +403,37 @@ export const LittleLordFullscreenChat: React.FC<LittleLordFullscreenChatProps> =
   const isRespectGateActive = respectViolation !== null && !respectAcknowledged;
   const displayName = getLittleLordDisplayName();
 
+  // Copy message to clipboard
+  const handleCopyMessage = async (content: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  // Send message to notes
+  const handleSendToNotes = (content: string, index: number) => {
+    // Generate a simple title from the first line or first 50 chars
+    const firstLine = content.split('\n')[0];
+    const title = firstLine.length > 50
+      ? firstLine.slice(0, 47) + '...'
+      : firstLine || 'LL Note';
+
+    createNote({
+      title,
+      content,
+      targetContactId: CONTACT_ZERO.id,
+      authorContactId: CONTACT_ZERO.id,
+    });
+
+    // Show feedback
+    setSentToNotesIndex(index);
+    setTimeout(() => setSentToNotesIndex(null), 2000);
+  };
+
   return (
     <>
       {/* Inject styles */}
@@ -424,6 +462,13 @@ export const LittleLordFullscreenChat: React.FC<LittleLordFullscreenChatProps> =
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setChatPanelPosition(chatPanelPosition === 'right' ? 'left' : 'right')}
+              className="p-2 hover:bg-white/5 rounded-lg transition-colors text-gray-400 hover:text-[#4433FF]"
+              title={chatPanelPosition === 'right' ? 'Move chat to left' : 'Move chat to right'}
+            >
+              {chatPanelPosition === 'right' ? <PanelLeftClose size={18} /> : <PanelRightClose size={18} />}
+            </button>
+            <button
               onClick={onMinimize}
               className="p-2 hover:bg-white/5 rounded-lg transition-colors text-gray-400 hover:text-white"
               title="Exit fullscreen"
@@ -440,79 +485,176 @@ export const LittleLordFullscreenChat: React.FC<LittleLordFullscreenChatProps> =
           </div>
         </div>
 
-        {/* Main content area */}
-        <div className="relative flex-1 overflow-hidden">
-          {/* Orb - positioned in upper portion */}
-          <div className="absolute top-0 left-0 right-0 h-[60%] flex items-center justify-center pointer-events-auto z-10">
-            <div className="w-full h-full max-w-[500px] max-h-[500px]">
+        {/* Main content area - horizontal layout with orb and chat panel */}
+        <div className={`relative flex-1 flex overflow-hidden ${chatPanelPosition === 'left' ? 'flex-row-reverse' : ''}`}>
+          {/* Orb area - takes remaining space, centered */}
+          <div className="flex-1 flex items-center justify-center">
+            {/* Orb container - needs relative positioning for the absolute orb inside */}
+            <div className="relative w-[600px] h-[600px]">
               <LittleLordOrbView state={spiritState} />
             </div>
           </div>
 
-          {/* Messages - below orb with fade mask */}
-          <div
-            ref={chatScrollRef}
-            className="absolute bottom-0 left-0 right-0 h-[35%] overflow-y-auto ll-message-fade-mask z-20 pointer-events-auto px-4 pb-4"
-          >
-            <div className="max-w-2xl mx-auto space-y-4 pt-8">
-              {messages.map((message, index) => (
-                <MotionDiv
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                  className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
-                >
-                  {/* Avatar */}
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                      message.role === 'assistant'
-                        ? 'bg-[#4433FF]/30 border border-[#4433FF]/50'
-                        : 'bg-white/10'
-                    }`}
+          {/* Chat panel - fixed width */}
+          <div className={`w-[400px] flex flex-col bg-[#0E0E10]/50 backdrop-blur-xl ${chatPanelPosition === 'left' ? 'border-r border-white/10' : 'border-l border-white/10'}`}>
+            {/* Chat messages */}
+            <div
+              ref={chatScrollRef}
+              className="flex-1 overflow-y-auto p-4"
+            >
+              <div className="space-y-4">
+                {messages.map((message, index) => (
+                  <MotionDiv
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.02 }}
+                    className="space-y-2"
                   >
-                    {message.role === 'assistant' ? (
-                      <Crown size={14} className="text-[#4433FF]" />
-                    ) : (
-                      <User size={14} className="text-gray-400" />
-                    )}
-                  </div>
+                    {/* Message row */}
+                    <div className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                      {/* Avatar */}
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                          message.role === 'assistant'
+                            ? 'bg-[#4433FF]/30 border border-[#4433FF]/50'
+                            : 'bg-white/10'
+                        }`}
+                      >
+                        {message.role === 'assistant' ? (
+                          <Crown size={14} className="text-[#4433FF]" />
+                        ) : (
+                          <User size={14} className="text-gray-400" />
+                        )}
+                      </div>
 
-                  {/* Message bubble */}
-                  <div className={`flex-1 ${message.role === 'user' ? 'text-right' : ''}`}>
-                    <div
-                      className={`inline-block px-4 py-3 rounded-2xl text-sm max-w-[85%] backdrop-blur-md ${
-                        message.role === 'assistant'
-                          ? 'bg-white/5 border border-white/10 text-gray-200 text-left'
-                          : 'bg-[#4433FF]/80 text-white'
-                      }`}
-                    >
-                      <div className="whitespace-pre-wrap">{message.content}</div>
-                    </div>
-                  </div>
-                </MotionDiv>
-              ))}
-
-              {/* Loading indicator */}
-              {loading && (
-                <MotionDiv
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex gap-3"
-                >
-                  <div className="w-8 h-8 rounded-full bg-[#4433FF]/30 border border-[#4433FF]/50 flex items-center justify-center">
-                    <Crown size={14} className="text-[#4433FF]" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="inline-block px-4 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
-                        <Loader2 size={14} className="animate-spin" />
-                        Thinking...
+                      {/* Message bubble */}
+                      <div className={`flex-1 ${message.role === 'user' ? 'text-right' : ''}`}>
+                        <div
+                          className={`inline-block px-4 py-3 rounded-2xl text-sm max-w-[90%] ${
+                            message.role === 'assistant'
+                              ? 'bg-white/5 border border-white/10 text-gray-200 text-left'
+                              : 'bg-[#4433FF]/80 text-white'
+                          }`}
+                        >
+                          <div className="whitespace-pre-wrap">{message.content}</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </MotionDiv>
-              )}
+
+                    {/* Action buttons for assistant messages */}
+                    {message.role === 'assistant' && (
+                      <div className="flex items-center gap-2 ml-11">
+                        <button
+                          onClick={() => handleCopyMessage(message.content, index)}
+                          className="flex items-center gap-1.5 px-2 py-1 text-xs text-gray-500 hover:text-[#4433FF] hover:bg-[#4433FF]/10 rounded transition-colors"
+                          title="Copy to clipboard"
+                        >
+                          {copiedIndex === index ? (
+                            <>
+                              <Check size={12} className="text-[#4433FF]" />
+                              <span className="text-[#4433FF]">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={12} />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleSendToNotes(message.content, index)}
+                          className="flex items-center gap-1.5 px-2 py-1 text-xs text-gray-500 hover:text-[#4433FF] hover:bg-[#4433FF]/10 rounded transition-colors"
+                          title="Send to Notes"
+                        >
+                          {sentToNotesIndex === index ? (
+                            <>
+                              <Check size={12} className="text-[#4433FF]" />
+                              <span className="text-[#4433FF]">Saved</span>
+                            </>
+                          ) : (
+                            <>
+                              <FileText size={12} />
+                              <span>Send to Notes</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </MotionDiv>
+                ))}
+
+                {/* Loading indicator */}
+                {loading && (
+                  <MotionDiv
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex gap-3"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-[#4433FF]/30 border border-[#4433FF]/50 flex items-center justify-center">
+                      <Crown size={14} className="text-[#4433FF]" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="inline-block px-4 py-3 rounded-2xl bg-white/5 border border-white/10">
+                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                          <Loader2 size={14} className="animate-spin" />
+                          Thinking...
+                        </div>
+                      </div>
+                    </div>
+                  </MotionDiv>
+                )}
+              </div>
+            </div>
+
+            {/* Input area - inside chat panel */}
+            <div className={`shrink-0 p-4 border-t border-white/10 ${isRespectGateActive ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="relative group">
+                {/* Glow effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#4433FF] to-[#6655FF] rounded-xl opacity-20 group-hover:opacity-30 transition duration-500 blur" />
+
+                <div className="relative flex items-center gap-2 bg-[#1A1A1A]/80 border border-white/10 rounded-xl p-2">
+                  <textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Speak to LL..."
+                    rows={1}
+                    disabled={isRespectGateActive}
+                    className="flex-1 bg-transparent text-white px-3 py-2 focus:outline-none placeholder-gray-500 text-sm resize-none disabled:opacity-50"
+                  />
+                  <button
+                    onClick={handleAudioRecord}
+                    disabled={isRespectGateActive}
+                    className={`p-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                      isRecording
+                        ? 'bg-red-500/20 border border-red-500/50 text-red-400 animate-pulse'
+                        : isTranscribing
+                        ? 'bg-[#4433FF]/10 text-[#4433FF]/50'
+                        : 'bg-[#333] text-gray-400 hover:bg-[#4433FF]/20 hover:text-[#4433FF]'
+                    }`}
+                    title={isRecording ? 'Stop Recording' : isTranscribing ? 'Transcribing...' : 'Record Audio'}
+                  >
+                    {isTranscribing ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : isRecording ? (
+                      <MicOff size={16} />
+                    ) : (
+                      <Mic size={16} />
+                    )}
+                  </button>
+                  <button
+                    onClick={handleSend}
+                    disabled={loading || !input.trim() || isRespectGateActive}
+                    className="p-2.5 bg-[#4433FF] text-white rounded-lg hover:bg-[#5544FF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send size={16} />
+                  </button>
+                </div>
+              </div>
+              <p className="text-[10px] text-gray-600 mt-2 text-center">
+                Press Enter to send
+              </p>
             </div>
           </div>
         </div>
@@ -561,57 +703,6 @@ export const LittleLordFullscreenChat: React.FC<LittleLordFullscreenChatProps> =
           </MotionDiv>
         )}
 
-        {/* Input area */}
-        <div className={`relative z-30 shrink-0 p-4 bg-[#0A0A0A]/80 backdrop-blur-xl border-t border-white/5 ${isRespectGateActive ? 'opacity-50 pointer-events-none' : ''}`}>
-          <div className="max-w-2xl mx-auto">
-            <div className="relative group">
-              {/* Glow effect */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-[#4433FF] to-[#6655FF] rounded-2xl opacity-20 group-hover:opacity-30 transition duration-500 blur" />
-
-              <div className="relative flex items-center gap-2 bg-[#1A1A1A]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-2">
-                <textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Speak to LL..."
-                  rows={1}
-                  disabled={isRespectGateActive}
-                  className="flex-1 bg-transparent text-white px-3 py-2 focus:outline-none placeholder-gray-500 text-sm resize-none disabled:opacity-50"
-                />
-                <button
-                  onClick={handleAudioRecord}
-                  disabled={isRespectGateActive}
-                  className={`p-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                    isRecording
-                      ? 'bg-red-500/20 border border-red-500/50 text-red-400 animate-pulse'
-                      : isTranscribing
-                      ? 'bg-[#4433FF]/10 text-[#4433FF]/50'
-                      : 'bg-[#333] text-gray-400 hover:bg-[#4433FF]/20 hover:text-[#4433FF]'
-                  }`}
-                  title={isRecording ? 'Stop Recording' : isTranscribing ? 'Transcribing...' : 'Record Audio'}
-                >
-                  {isTranscribing ? (
-                    <Loader2 size={18} className="animate-spin" />
-                  ) : isRecording ? (
-                    <MicOff size={18} />
-                  ) : (
-                    <Mic size={18} />
-                  )}
-                </button>
-                <button
-                  onClick={handleSend}
-                  disabled={loading || !input.trim() || isRespectGateActive}
-                  className="p-3 bg-[#4433FF] text-white rounded-xl hover:bg-[#5544FF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Send size={18} />
-                </button>
-              </div>
-            </div>
-            <p className="text-[10px] text-gray-600 mt-2 text-center">
-              Press Enter to send
-            </p>
-          </div>
-        </div>
       </MotionDiv>
     </>
   );

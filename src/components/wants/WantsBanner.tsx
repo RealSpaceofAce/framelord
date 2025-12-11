@@ -20,6 +20,7 @@ import {
   Sparkles,
   Plus,
   ChevronLeft,
+  CalendarCheck,
 } from 'lucide-react';
 import { Aurora } from '../ui/Aurora';
 import { Button } from '../ui/Button';
@@ -31,7 +32,7 @@ const MotionDiv = motion.div as any;
 // TYPES
 // =============================================================================
 
-export type WantsViewMode = 'board' | 'progress' | 'scope' | 'all-steps' | 'settings';
+export type WantsViewMode = 'board' | 'tracking' | 'progress' | 'scope' | 'all-steps' | 'settings';
 
 interface WantsBannerProps {
   /** Currently active view */
@@ -64,6 +65,7 @@ interface NavTab {
 
 export const NAV_TABS: NavTab[] = [
   { id: 'board', label: 'Board', icon: LayoutGrid },
+  { id: 'tracking', label: 'Tracking', icon: CalendarCheck },
   { id: 'all-steps', label: 'All Wants', icon: Layers },
   { id: 'progress', label: 'Progress', icon: TrendingUp },
   { id: 'scope', label: 'Scope', icon: Crosshair },
@@ -86,8 +88,6 @@ export const WantsBanner: React.FC<WantsBannerProps> = ({
   showNav = true,
   showActions = true,
 }) => {
-  // FIXED: Aurora height is now CONSISTENT across all views (250px always)
-  // No more compact mode shrinking - banner stays the same size everywhere
   return (
     <Aurora
       colorStops={['#2B1AFF', '#4433FF', '#3322EE']}
@@ -96,13 +96,11 @@ export const WantsBanner: React.FC<WantsBannerProps> = ({
       speed={0.6}
       className={cn(
         "relative w-full",
-        "min-h-[250px]", // FIXED: Always 250px, no compact variation
+        "min-h-[250px]",
         "bg-gradient-to-b from-[#050508] via-[#080810] to-[#0A0A0F]",
         "border-b border-border/50"
       )}
     >
-      {/* NO TITLE - Pure Aurora gradient only, no text or bars */}
-
       {/* Gradient overlay for smooth blending to background */}
       <div
         className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none"
@@ -128,7 +126,6 @@ export const WantsBannerCompact: React.FC<WantsBannerCompactProps> = ({
   onBack,
   onTalkToLittleLord,
 }) => {
-  // FIXED: Same height as main banner (250px) for consistency across all Wants views
   return (
     <Aurora
       colorStops={['#2B1AFF', '#4433FF', '#3322EE']}
@@ -137,7 +134,7 @@ export const WantsBannerCompact: React.FC<WantsBannerCompactProps> = ({
       speed={0.5}
       className="min-h-[250px] bg-gradient-to-b from-[#050508] via-[#080810] to-[#0A0A0F] border-b border-border/50"
     >
-      <div className="relative z-10 max-w-7xl mx-auto px-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             {onBack && (

@@ -3,6 +3,9 @@
 // =============================================================================
 // Computes a running frame profile based on FrameScan reports.
 //
+// IMPLEMENTED:
+// - Want Tracking penalty for Contact Zero (self-discipline signal)
+//
 // TODO: Future expansions:
 // - Add FrameScoreLedger for event-based score adjustments
 // - Add task-based penalties (missed commitments decrease score)
@@ -11,6 +14,11 @@
 // =============================================================================
 
 import type { FrameScanReport } from '../../services/frameScanReportStore';
+import { CONTACT_ZERO } from '../../services/contactStore';
+import {
+  calculateWantTrackingPenalty,
+  type WantTrackingPenaltyBreakdown,
+} from './wantTrackingPenalty';
 
 // =============================================================================
 // TYPES
@@ -18,13 +26,20 @@ import type { FrameScanReport } from '../../services/frameScanReportStore';
 
 /**
  * Cumulative frame profile for a contact.
- * Currently a simple average; will expand to include ledger events.
+ * For Contact Zero, includes Want Tracking penalty adjustment.
  */
 export interface CumulativeFrameProfile {
   contactId: string;
-  currentFrameScore: number;       // 0 to 100
+  /** Final FrameScore after all adjustments (0 to 100) */
+  currentFrameScore: number;
+  /** Base score before Want Tracking penalty (for Contact Zero) */
+  baseFrameScore?: number;
+  /** Number of scans contributing to the score */
   scansCount: number;
-  lastScanAt?: string;             // ISO timestamp of most recent scan
+  /** ISO timestamp of most recent scan */
+  lastScanAt?: string;
+  /** Want Tracking penalty details (Contact Zero only) */
+  wantTrackingPenalty?: WantTrackingPenaltyBreakdown;
   // TODO: Add these in future iterations
   // pendingPenalties?: number;
   // ledgerAdjustments?: number;
@@ -46,10 +61,10 @@ export interface FrameProfileTrend {
 
 /**
  * Compute cumulative frame profile for a contact based on their scan reports.
- * 
- * Current implementation: Simple average of frameScore across all reports.
- * Future: Will incorporate ledger events and task penalties.
- * 
+ *
+ * For Contact Zero: Applies Want Tracking penalty based on self-defined goals.
+ * For other contacts: Uses simple average of scan scores.
+ *
  * @param contactId - The contact ID to compute profile for
  * @param reports - All FrameScanReports for this contact (pre-filtered)
  * @returns CumulativeFrameProfile with current score and metadata
@@ -58,8 +73,26 @@ export function computeCumulativeFrameProfileForContact(
   contactId: string,
   reports: FrameScanReport[]
 ): CumulativeFrameProfile {
+  const isContactZero = contactId === CONTACT_ZERO.id;
+
   // No reports = default profile
   if (reports.length === 0) {
+    // For Contact Zero with no scans, still calculate tracking penalty
+    if (isContactZero) {
+      const penaltyBreakdown = calculateWantTrackingPenalty();
+      const baseScore = 50; // Neutral default
+      const finalScore = Math.max(0, Math.min(100, baseScore - penaltyBreakdown.totalPenalty));
+
+      return {
+        contactId,
+        currentFrameScore: finalScore,
+        baseFrameScore: baseScore,
+        scansCount: 0,
+        lastScanAt: undefined,
+        wantTrackingPenalty: penaltyBreakdown,
+      };
+    }
+
     return {
       contactId,
       currentFrameScore: 50, // Neutral default
@@ -69,7 +102,7 @@ export function computeCumulativeFrameProfileForContact(
   }
 
   // Sort reports by date (most recent first)
-  const sortedReports = [...reports].sort((a, b) => 
+  const sortedReports = [...reports].sort((a, b) =>
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
@@ -77,12 +110,22 @@ export function computeCumulativeFrameProfileForContact(
   const totalScore = sortedReports.reduce((sum, r) => sum + r.score.frameScore, 0);
   const averageScore = Math.round(totalScore / sortedReports.length);
 
-  // TODO: Apply ledger adjustments here
-  // const adjustedScore = applyLedgerAdjustments(averageScore, contactId);
-  
-  // TODO: Apply task-based penalties here
-  // const finalScore = applyTaskPenalties(adjustedScore, contactId);
+  // For Contact Zero: Apply Want Tracking penalty
+  if (isContactZero) {
+    const penaltyBreakdown = calculateWantTrackingPenalty();
+    const finalScore = Math.max(0, Math.min(100, averageScore - penaltyBreakdown.totalPenalty));
 
+    return {
+      contactId,
+      currentFrameScore: finalScore,
+      baseFrameScore: averageScore,
+      scansCount: sortedReports.length,
+      lastScanAt: sortedReports[0].createdAt,
+      wantTrackingPenalty: penaltyBreakdown,
+    };
+  }
+
+  // For other contacts: No Want Tracking penalty
   return {
     contactId,
     currentFrameScore: Math.max(0, Math.min(100, averageScore)),

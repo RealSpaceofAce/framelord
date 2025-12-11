@@ -28,6 +28,7 @@ import {
   Image,
   Twitter,
   Type,
+  Mic,
 } from 'lucide-react';
 
 // =============================================================================
@@ -165,6 +166,20 @@ const getSuggestionItems = (): SlashCommandItem[] => [
       if (url) {
         editor.chain().focus().setTweetEmbed({ url }).run();
       }
+    },
+  },
+  {
+    title: 'Audio',
+    description: 'Record or upload audio',
+    icon: <Mic size={18} />,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run();
+      // Trigger audio recording workflow
+      // The actual recording is handled by the parent component
+      // Dispatch a custom event that AffineNotes can listen for
+      window.dispatchEvent(new CustomEvent('framelord:record-audio', {
+        detail: { editor },
+      }));
     },
   },
 ];

@@ -13,6 +13,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
+import { DragHandle } from '@tiptap/extension-drag-handle-react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
@@ -21,6 +22,7 @@ import TaskItem from '@tiptap/extension-task-item';
 import Highlight from '@tiptap/extension-highlight';
 // Using custom ResizableImageNode instead of basic Image for resize capability
 import { ResizableImageNode } from './extensions/ResizableImageNode';
+import { AudioEmbedNode } from './extensions/AudioEmbedNode';
 import {
   Bold,
   Italic,
@@ -28,6 +30,8 @@ import {
   Code,
   Link as LinkIcon,
   Highlighter,
+  Plus,
+  GripVertical,
 } from 'lucide-react';
 import { WikiLinkNode } from './extensions/WikiLinkNode';
 import { WikiLinkSuggestion } from './WikiLinkSuggestion';
@@ -37,7 +41,7 @@ import { TopicMentionNode } from './extensions/TopicMentionNode';
 import { TopicMentionSuggestion } from './TopicMentionSuggestion';
 import { TweetEmbedNode } from './extensions/TweetEmbedNode';
 import { SlashCommandExtension } from '../../lib/editor/SlashCommandExtension';
-import { Backlinks } from './Backlinks';
+import { BiDirectionalLinks } from './BiDirectionalLinks';
 import {
   findNoteByTitle,
   createNoteFromWikiLink,
@@ -62,8 +66,8 @@ export interface MarkdownNoteEditorProps {
   content: string;
   /** Called when content changes */
   onContentChange: (content: string) => void;
-  /** Current theme */
-  theme: 'light' | 'gray' | 'dark';
+  /** Current theme (only light/dark supported) */
+  theme: 'light' | 'dark';
   /** Placeholder text */
   placeholder?: string;
   /** Callback when navigating to a linked note */
@@ -78,7 +82,7 @@ export interface MarkdownNoteEditorProps {
 // THEME COLORS
 // =============================================================================
 
-const getThemeColors = (theme: 'light' | 'gray' | 'dark') => {
+const getThemeColors = (theme: 'light' | 'dark') => {
   switch (theme) {
     case 'light':
       return {
@@ -92,29 +96,17 @@ const getThemeColors = (theme: 'light' | 'gray' | 'dark') => {
         toolbar: '#f9fafb',
         active: '#e5e7eb',
       };
-    case 'gray':
-      return {
-        bg: '#1f2023',
-        sidebar: '#17181c',
-        text: '#e5e7eb',
-        textMuted: '#9ca3af',
-        border: '#2d2f36',
-        hover: '#2d2f36',
-        accent: '#6366f1',
-        toolbar: '#17181c',
-        active: '#3d3f46',
-      };
     case 'dark':
     default:
       return {
-        bg: '#0f0f10',
-        sidebar: '#0a0a0b',
+        bg: '#0E0E10',
+        sidebar: '#0A0A0C',
         text: '#f3f4f6',
         textMuted: '#9ca3af',
         border: '#1f2023',
-        hover: '#1f2023',
+        hover: '#1a1a1c',
         accent: '#6366f1',
-        toolbar: '#0a0a0b',
+        toolbar: '#0A0A0C',
         active: '#2d2f36',
       };
   }
@@ -206,6 +198,8 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
       // ResizableImageNode replaces Image - provides drag handles for resizing
       ResizableImageNode,
       TweetEmbedNode,
+      // Audio embed for recorded/uploaded audio with player
+      AudioEmbedNode,
       // Slash command menu for block insertion (Notion-style "/" commands)
       SlashCommandExtension.configure({
         colors: {
@@ -650,6 +644,21 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
     [onNavigateToNote]
   );
 
+  // Listen for audio recorded events to embed audio using TipTap
+  useEffect(() => {
+    const handleAudioRecorded = (e: CustomEvent<{ src: string; title?: string }>) => {
+      if (editor && e.detail.src) {
+        editor.chain().focus().setAudioEmbed({
+          src: e.detail.src,
+          title: e.detail.title || 'Audio Recording'
+        }).run();
+      }
+    };
+
+    window.addEventListener('framelord:audio-recorded', handleAudioRecorded as EventListener);
+    return () => window.removeEventListener('framelord:audio-recorded', handleAudioRecorded as EventListener);
+  }, [editor]);
+
   useEffect(() => {
     const editorElement = editorRef.current?.querySelector('.ProseMirror');
     if (editorElement) {
@@ -694,10 +703,6 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
       {/* Floating Bubble Menu - appears when text is selected */}
       <BubbleMenu
         editor={editor}
-        tippyOptions={{
-          duration: 100,
-          placement: 'top',
-        }}
         className="bubble-menu"
       >
         <div
@@ -752,17 +757,89 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
         </div>
       </BubbleMenu>
 
+      {/* Drag Handle - TipTap style clean icons positioned OUTSIDE content area */}
+      <DragHandle
+        editor={editor}
+        tippyOptions={{
+          // Position to the left of the block, outside the padded content
+          placement: 'left-start',
+          offset: [0, 48], // [skidding, distance] - push further left outside content
+          // Disable animations for snappy feel
+          duration: 0,
+          // Style the container as transparent
+          theme: 'drag-handle',
+        }}
+      >
+        <div
+          className="drag-handle-container"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2px',
+            cursor: 'grab',
+          }}
+        >
+          <button
+            className="drag-handle-btn"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0',
+              border: 'none',
+              background: 'transparent',
+              color: theme === 'light' ? '#9ca3af' : '#525252',
+              cursor: 'pointer',
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = theme === 'light' ? '#374151' : '#9ca3af';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = theme === 'light' ? '#9ca3af' : '#525252';
+            }}
+            onClick={() => {
+              // Add a new paragraph below current block - move to end of block first
+              editor?.chain().focus().selectParentNode().insertContentAt(editor.state.selection.to, { type: 'paragraph' }).run();
+            }}
+            title="Add block below"
+          >
+            <Plus size={18} strokeWidth={1.5} />
+          </button>
+          <div
+            className="drag-handle-grip"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0',
+              color: theme === 'light' ? '#9ca3af' : '#525252',
+              cursor: 'grab',
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = theme === 'light' ? '#374151' : '#9ca3af';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = theme === 'light' ? '#9ca3af' : '#525252';
+            }}
+            title="Drag to move"
+          >
+            <GripVertical size={18} strokeWidth={1.5} />
+          </div>
+        </div>
+      </DragHandle>
+
       {/* Editor Content - Notion-style clean layout */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-6 py-8">
           <EditorContent editor={editor} />
 
-          {/* Backlinks Section */}
+          {/* Bi-Directional Links Section */}
           {showBacklinks && noteId && (
-            <Backlinks
+            <BiDirectionalLinks
               noteId={noteId}
-              colors={colors}
-              onNavigateToNote={onNavigateToNote || (() => {})}
+              onNavigateToNote={onNavigateToNote}
             />
           )}
         </div>
@@ -1051,6 +1128,39 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
         .ProseMirror .topic-mention:hover .mention-text {
           text-decoration: underline;
           text-decoration-color: ${colors.accent};
+        }
+
+        /* Drag Handle Styles - Clean TipTap style */
+        .drag-handle-container {
+          opacity: 1;
+          transition: opacity 0.15s ease;
+        }
+
+        /* Make editor content have room for drag handles on left */
+        .notion-editor .ProseMirror {
+          position: relative;
+          padding-left: 48px;
+          margin-left: -48px;
+        }
+
+        /* TipTap DragHandle - clean floating icons with transparent container */
+        .tippy-box[data-theme='drag-handle'] {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+
+        .tippy-box[data-theme='drag-handle'] .tippy-content {
+          padding: 0 !important;
+        }
+
+        /* Drag handle appears on the left side of content */
+        .drag-handle-container {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          background: transparent;
         }
       `}</style>
     </div>

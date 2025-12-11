@@ -11,12 +11,66 @@
 // REMOVED: want-scope as separate route - scope is now embedded in WantDetailView
 // =============================================================================
 
-import React, { useState, useEffect, useSyncExternalStore, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useSyncExternalStore, useCallback, useMemo, Component, ErrorInfo, ReactNode } from 'react';
+
+// =============================================================================
+// ERROR BOUNDARY — Catches runtime errors and displays them
+// =============================================================================
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+}
+
+class WantsErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('[WantsPage Error]', error, errorInfo);
+    this.setState({ errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-full flex items-center justify-center p-8 bg-background">
+          <div className="max-w-lg text-center">
+            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <h2 className="text-xl font-bold text-foreground mb-2">Wants Page Error</h2>
+            <p className="text-muted-foreground mb-4">Something went wrong loading this page.</p>
+            <pre className="text-left text-xs bg-red-950/50 border border-red-500/30 rounded p-4 overflow-auto max-h-60 text-red-300">
+              {this.state.error?.message}
+              {'\n\n'}
+              {this.state.error?.stack}
+            </pre>
+            <button
+              onClick={() => this.setState({ hasError: false, error: null, errorInfo: null })}
+              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import { WantBoardView } from './WantBoardView';
 import { WantProgressView } from './WantProgressView';
 import { WantDetailView } from './WantDetailView';
 import { WantDetailPanel } from './WantDetailPanel';
 import { GlobalStepsBoardView } from './GlobalStepsBoardView';
+import { WantTrackingBoard } from './WantTrackingBoard';
+import { ConfigureWantsPanel } from './ConfigureWantsPanel';
 import { WantsBanner, NAV_TABS, type WantsViewMode } from './WantsBanner';
 import { Sparkles } from 'lucide-react';
 import CircularGallery from './ui/CircularGallery';
@@ -141,7 +195,7 @@ const ScopeListView: React.FC<ScopeListViewProps> = ({ onSelectWant }) => {
 // =============================================================================
 // SIMPLIFIED: Removed 'want-scope' and 'want-progress' - scope is embedded in detail view
 
-type ViewMode = 'board' | 'progress' | 'scope' | 'all-steps' | 'detail';
+type ViewMode = 'board' | 'tracking' | 'progress' | 'scope' | 'all-steps' | 'detail';
 
 interface WantsPageRoute {
   view: ViewMode;
@@ -167,6 +221,7 @@ export const WantsPage: React.FC<WantsPageProps> = ({ initialWantId, initialRout
     initialRoute?.wantId || initialWantId || null
   );
   const [panelWantId, setPanelWantId] = useState<string | null>(null);
+  const [showConfigureTracking, setShowConfigureTracking] = useState(false);
   // Track which section to focus when entering detail view from scope
   const [detailSection, setDetailSection] = useState<'steps' | 'metrics' | 'scope' | null>(
     initialRoute?.detailSection || null
@@ -207,12 +262,13 @@ export const WantsPage: React.FC<WantsPageProps> = ({ initialWantId, initialRout
   const handleViewChange = (bannerView: WantsViewMode) => {
     const viewMap: Record<WantsViewMode, ViewMode> = {
       'board': 'board',
+      'tracking': 'tracking',
       'progress': 'progress',
       'scope': 'scope',
       'all-steps': 'all-steps',
       'settings': 'board', // Placeholder
     };
-    setViewMode(viewMap[bannerView]);
+    setViewMode(viewMap[bannerView] || 'board');
     setSelectedWantId(null);
     setPanelWantId(null);
     setDetailSection(null);
@@ -242,6 +298,7 @@ export const WantsPage: React.FC<WantsPageProps> = ({ initialWantId, initialRout
   const getActiveBannerView = (): WantsViewMode => {
     const viewMap: Record<ViewMode, WantsViewMode> = {
       'board': 'board',
+      'tracking': 'tracking',
       'progress': 'progress',
       'scope': 'scope',
       'all-steps': 'all-steps',
@@ -342,6 +399,11 @@ export const WantsPage: React.FC<WantsPageProps> = ({ initialWantId, initialRout
         {viewMode === 'board' && (
           <WantBoardView onSelectWant={handleSelectWant} onNewWant={handleNewWant} />
         )}
+        {viewMode === 'tracking' && (
+          <WantTrackingBoard
+            onConfigureMetrics={() => setShowConfigureTracking(true)}
+          />
+        )}
         {viewMode === 'progress' && (
           <WantProgressView onSelectWant={handleSelectWant} />
         )}
@@ -370,8 +432,23 @@ export const WantsPage: React.FC<WantsPageProps> = ({ initialWantId, initialRout
           onNavigateToFullView={handleNavigateToFullView}
         />
       )}
+
+      {/* Configure Tracking Panel */}
+      {showConfigureTracking && (
+        <ConfigureWantsPanel
+          isOpen={showConfigureTracking}
+          onClose={() => setShowConfigureTracking(false)}
+        />
+      )}
     </div>
   );
 };
 
-export default WantsPage;
+// Wrap with error boundary for debugging
+const WantsPageWithErrorBoundary: React.FC<WantsPageProps> = (props) => (
+  <WantsErrorBoundary>
+    <WantsPage {...props} />
+  </WantsErrorBoundary>
+);
+
+export default WantsPageWithErrorBoundary;

@@ -9,7 +9,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { User, FileText, Image, Calendar } from 'lucide-react';
+import { User, FileText, Image, Calendar, ChevronRight, GripVertical } from 'lucide-react';
 import type { FrameScanReport } from '@/services/frameScanReportStore';
 import { formatProfileDate } from '@/lib/frameScan/frameProfile';
 import { cn } from '@/lib/utils';
@@ -68,14 +68,21 @@ export const DraggableReportCard: React.FC<DraggableReportCardProps> = ({
         delay: index * 0.03,
       }}
       className={cn(
-        'bg-[#0E0E0E] border rounded-lg p-4 transition-all cursor-grab active:cursor-grabbing group',
+        'bg-[#0E0E0E] border rounded-lg p-4 transition-all group relative',
         isDragging
           ? 'border-primary shadow-lg shadow-primary/20 z-50'
           : 'border-[#222] hover:border-[#4433FF]/50 hover:bg-[#111]'
       )}
-      {...listeners}
-      {...attributes}
     >
+      {/* Drag Handle - only this part is draggable */}
+      <div
+        {...listeners}
+        {...attributes}
+        className="absolute top-2 left-2 p-1 rounded cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
+        title="Drag to organize"
+      >
+        <GripVertical size={14} />
+      </div>
       <div className="flex items-start gap-3">
         {/* Avatar */}
         <div
@@ -149,15 +156,16 @@ export const DraggableReportCard: React.FC<DraggableReportCardProps> = ({
         </div>
       </div>
 
-      {/* View button on hover */}
+      {/* View Report button - explicitly clickable */}
       <button
         onClick={(e) => {
           e.stopPropagation();
           onView();
         }}
-        className="mt-3 w-full py-2 rounded bg-primary/10 border border-primary/20 text-primary text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/20"
+        className="mt-3 w-full flex items-center justify-end gap-1 text-[#4433FF] hover:text-[#5544FF] transition-colors"
       >
-        View Report
+        <span className="text-sm font-medium">View Report</span>
+        <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
       </button>
     </MotionDiv>
   );

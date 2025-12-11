@@ -1,5 +1,5 @@
 // =============================================================================
-// SUCCESS TRACKING — Notion-style metrics logging table for Wants
+// WANT TRACKING — Notion-style metrics logging table for Wants
 // =============================================================================
 // Features:
 // - Date-based entries (add daily progress)
@@ -67,7 +67,8 @@ const generateDemoData = (): TrackingEntry[] => {
   const entries: TrackingEntry[] = [];
   const today = new Date();
 
-  for (let i = 6; i >= 0; i--) {
+  // Start from 7 days ago up to yesterday (not today, so "New Entry" can add today)
+  for (let i = 7; i >= 1; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
 
@@ -160,7 +161,7 @@ const calculateAggregation = (
 
 export const SuccessTracking: React.FC<SuccessTrackingProps> = ({
   wantId,
-  title = 'Success Tracking',
+  title = 'Want Tracking',
   compact = false,
 }) => {
   const [columns] = useState<TrackingColumn[]>(DEFAULT_COLUMNS);

@@ -487,10 +487,10 @@ export const WantProgressView: React.FC<WantProgressViewProps> = ({ onSelectWant
           {/* Summary Stats */}
           <SummaryStats wants={wants} />
 
-          {/* Success Tracking - Notion-style daily logging table */}
+          {/* Want Tracking - Notion-style daily logging table */}
           <div className="mb-6">
             <SuccessTracking
-              title="Success Tracking"
+              title="Want Tracking"
               compact={false}
             />
           </div>

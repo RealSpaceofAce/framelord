@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 const VERT = `#version 300 es
@@ -153,26 +153,38 @@ export function Aurora({
   propsRef.current = { colorStops, amplitude, blend, speed, time };
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const [webglFailed, setWebglFailed] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const renderer = new Renderer({
-      alpha: true,
-      premultipliedAlpha: true,
-      antialias: true,
-    });
+    let renderer: Renderer;
+
+    try {
+      renderer = new Renderer({
+        alpha: true,
+        premultipliedAlpha: true,
+        antialias: true,
+      });
+    } catch (e) {
+      console.warn('[Aurora] WebGL initialization failed:', e);
+      setWebglFailed(true);
+      return;
+    }
+
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    gl.canvas.style.backgroundColor = 'transparent';
-    gl.canvas.style.width = '100%';
-    gl.canvas.style.height = '100%';
-    gl.canvas.style.position = 'absolute';
-    gl.canvas.style.top = '0';
-    gl.canvas.style.left = '0';
+
+    const canvas = gl.canvas as HTMLCanvasElement;
+    canvas.style.backgroundColor = 'transparent';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
 
     let program: Program;
 
@@ -252,6 +264,22 @@ export function Aurora({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Fallback gradient when WebGL fails
+  if (webglFailed) {
+    return (
+      <div
+        className={cn('relative overflow-hidden', className)}
+        style={{
+          background: `linear-gradient(135deg, ${colorStops[0]} 0%, ${colorStops[1]} 50%, ${colorStops[2]} 100%)`,
+        }}
+      >
+        <div className="relative" style={{ zIndex: 1 }}>
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn('relative overflow-hidden', className)}>

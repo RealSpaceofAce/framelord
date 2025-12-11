@@ -712,6 +712,7 @@ export default function CircularGallery({
   const appRef = useRef<App | null>(null);
   const itemsKeyRef = useRef<string>('');
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [webglFailed, setWebglFailed] = useState(false);
 
   // Create a stable key from items to detect actual content changes
   const itemsKey = items ? items.map(i => `${i.image}:${i.text}`).join('|') : '';
@@ -746,7 +747,7 @@ export default function CircularGallery({
   }, [items]);
 
   useEffect(() => {
-    if (!containerRef.current || !imagesLoaded) return;
+    if (!containerRef.current || !imagesLoaded || webglFailed) return;
 
     // Only recreate if items actually changed or no app exists
     if (appRef.current && itemsKeyRef.current === itemsKey) {
@@ -759,16 +760,23 @@ export default function CircularGallery({
     }
 
     itemsKeyRef.current = itemsKey;
-    appRef.current = new App(containerRef.current, {
-      items,
-      bend,
-      textColor,
-      borderRadius,
-      font,
-      scrollSpeed,
-      scrollEase,
-      onItemClick
-    });
+
+    try {
+      appRef.current = new App(containerRef.current, {
+        items,
+        bend,
+        textColor,
+        borderRadius,
+        font,
+        scrollSpeed,
+        scrollEase,
+        onItemClick
+      });
+    } catch (e) {
+      console.warn('[CircularGallery] WebGL initialization failed:', e);
+      setWebglFailed(true);
+      return;
+    }
 
     return () => {
       if (appRef.current) {
@@ -776,7 +784,33 @@ export default function CircularGallery({
         appRef.current = null;
       }
     };
-  }, [items, itemsKey, imagesLoaded, bend, textColor, borderRadius, font, scrollSpeed, scrollEase, onItemClick]);
+  }, [items, itemsKey, imagesLoaded, webglFailed, bend, textColor, borderRadius, font, scrollSpeed, scrollEase, onItemClick]);
+
+  // Fallback UI when WebGL fails
+  if (webglFailed) {
+    return (
+      <div className="circular-gallery flex items-center justify-center bg-[#0A0A0F] p-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl">
+          {items?.map((item, index) => (
+            <div
+              key={index}
+              onClick={() => onItemClick?.(index)}
+              className="relative group cursor-pointer rounded-lg overflow-hidden border border-[#0043ff]/30 hover:border-[#0043ff]/60 transition-colors"
+            >
+              <img
+                src={item.image}
+                alt={item.text}
+                className="w-full h-32 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-3">
+                <span className="text-white text-sm font-medium">{item.text}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return <div className="circular-gallery" ref={containerRef} />;
 }

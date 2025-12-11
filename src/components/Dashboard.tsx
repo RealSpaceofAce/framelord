@@ -85,6 +85,8 @@ const mapViewToLittleLordViewId = (view: string): LittleLordViewId => {
     'FRAMESCAN': 'framescan',
     'FRAMESCAN_REPORT': 'framescan',
     'WANTS': 'wants',
+    'TRACKING': 'wants',
+    'GRAPH': 'contacts',
     'CONTACTS': 'contacts',
     'TASKS': 'tasks',
     'CALENDAR': 'calendar',
@@ -98,8 +100,10 @@ const mapViewToLittleLordViewId = (view: string): LittleLordViewId => {
 // FrameCanvasPage removed - canvas functionality now integrated into Notes (see REFACTOR_PLAN.md)
 import { AffineNotes } from './notes';
 import { WantsPage } from './wants';
+import { TrackingPage } from '../pages/TrackingPage';
 import { useSavageMode } from '../hooks/useSavageMode';
 import { Flame } from 'lucide-react';
+import { FrameGraphView } from './graph';
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -1869,7 +1873,7 @@ const FrameScoreTileWidget: React.FC = () => {
 };
 
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'DAILY_LOG' | 'INBOX' | 'FOLDER' | 'NOTE_DETAIL' | 'BLOCKSUITE_TEST' | 'WANTS';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'DAILY_LOG' | 'INBOX' | 'FOLDER' | 'NOTE_DETAIL' | 'BLOCKSUITE_TEST' | 'WANTS' | 'TRACKING' | 'GRAPH';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -2076,6 +2080,7 @@ export const Dashboard: React.FC = () => {
             <NavItem active={currentView === 'SCAN'} onClick={() => handleNav('SCAN')} icon={<Scan size={16} />} label="SCAN" />
             <NavItem active={currentView === 'FRAMESCAN' || currentView === 'FRAMESCAN_REPORT'} onClick={() => handleNav('FRAMESCAN')} icon={<Crosshair size={16} />} label="FRAME SCANS" />
             <NavItem active={currentView === 'WANTS'} onClick={() => handleNav('WANTS')} icon={<Target size={16} />} label="WANTS" />
+            <NavItem active={currentView === 'GRAPH'} onClick={() => handleNav('GRAPH')} icon={<GitCommit size={16} />} label="GRAPH" />
             <NavItem active={currentView === 'CONTACTS'} onClick={() => handleNav('CONTACTS')} icon={<Users size={16} />} label="CONTACTS" />
           </div>
         </div>
@@ -2187,8 +2192,31 @@ export const Dashboard: React.FC = () => {
                 initialWantId={selectedWantId || undefined}
               />
             )}
+            {currentView === 'GRAPH' && (
+              <FrameGraphView
+                selectedContactId={selectedContactId}
+                onNodeClick={(node) => {
+                  // Navigate based on node type
+                  if (node.type === 'contact' || node.type === 'contact_zero') {
+                    setSelectedContactId(node.contactId || null);
+                    setCurrentView('DOSSIER');
+                  } else if (node.type === 'note' && node.noteId) {
+                    setSelectedNoteId(node.noteId);
+                    setCurrentView('NOTES');
+                  } else if (node.type === 'topic' && node.topicSlug) {
+                    setSelectedTopicId(node.topicSlug);
+                    setCurrentView('TOPIC');
+                  } else if (node.type === 'task') {
+                    setCurrentView('TASKS');
+                  } else if (node.type === 'framescan' && node.frameScanId) {
+                    setSelectedReportId(node.frameScanId);
+                    setCurrentView('FRAMESCAN_REPORT');
+                  }
+                }}
+              />
+            )}
             {currentView === 'CONTACTS' && (
-               <ContactsView 
+               <ContactsView
                  selectedContactId={selectedContactId}
                  setSelectedContactId={setSelectedContactId}
                  onViewDossier={() => setCurrentView('DOSSIER')}

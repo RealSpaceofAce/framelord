@@ -20,8 +20,9 @@ export interface LittleLordShortcutPreference {
 
 /**
  * Editor theme preference.
+ * Note: 'gray' is removed - only light/dark/system supported.
  */
-export type EditorTheme = 'light' | 'gray' | 'dark' | 'system';
+export type EditorTheme = 'light' | 'dark' | 'system';
 
 /**
  * User-configurable settings, including API key overrides.
@@ -133,11 +134,14 @@ export function setLittleLordShortcut(pref: LittleLordShortcutPreference): void 
 
 /**
  * Get the current editor theme preference.
- * Defaults to 'gray' if not set.
+ * Defaults to 'dark' if not set.
  */
 export function getEditorTheme(): EditorTheme {
   const settings = loadUserSettings();
-  return settings.editorTheme || 'gray';
+  const theme = settings.editorTheme;
+  // Migrate old 'gray' preference to 'dark'
+  if (theme === 'gray' as any) return 'dark';
+  return theme || 'dark';
 }
 
 /**
@@ -149,15 +153,15 @@ export function setEditorTheme(theme: EditorTheme): void {
 
 /**
  * Get the resolved theme (handles 'system' preference).
- * Returns 'light', 'gray', or 'dark' based on system preference if 'system' is selected.
+ * Returns 'light' or 'dark' based on system preference if 'system' is selected.
  */
-export function getResolvedEditorTheme(): 'light' | 'gray' | 'dark' {
+export function getResolvedEditorTheme(): 'light' | 'dark' {
   const theme = getEditorTheme();
   if (theme === 'system') {
     if (typeof window !== 'undefined') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'gray' : 'light';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
-    return 'gray'; // Default to gray on SSR
+    return 'dark'; // Default to dark on SSR
   }
   return theme;
 }

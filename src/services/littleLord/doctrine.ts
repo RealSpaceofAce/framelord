@@ -65,6 +65,80 @@ export const LITTLE_LORD_DOCTRINE = {
             }
           },
           "required": ["topic", "pattern", "severity", "summary"]
+        },
+        "want_tracking": {
+          "type": ["object", "null"],
+          "description": "Optional action to log daily Want Tracking entries. Use when user reports what they did that day (workout, hours worked, etc).",
+          "properties": {
+            "date": {
+              "type": "string",
+              "description": "Date in YYYY-MM-DD format. Use today's date if user says 'today', yesterday's if 'yesterday'."
+            },
+            "entries": {
+              "type": "object",
+              "description": "Map of metric slug to value. Use metric slugs from trackingMetrics context. Boolean metrics use true/false, numeric use numbers.",
+              "additionalProperties": {
+                "type": ["number", "boolean"]
+              }
+            }
+          },
+          "required": ["date", "entries"]
+        },
+        "contact_update": {
+          "type": ["object", "null"],
+          "description": "Optional action to update contact information when user mentions insights about a contact. Creates a note and/or updates psychometric profile.",
+          "properties": {
+            "contactId": {
+              "type": "string",
+              "description": "ID of the contact to update. Use ID from knownContacts context."
+            },
+            "note": {
+              "type": ["object", "null"],
+              "description": "Create a note about this contact with the insight.",
+              "properties": {
+                "content": {
+                  "type": "string",
+                  "description": "The note content - insight about the contact."
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Short title for the note (optional)."
+                }
+              },
+              "required": ["content"]
+            },
+            "psychometric": {
+              "type": ["object", "null"],
+              "description": "Psychometric profile updates to merge with existing profile.",
+              "properties": {
+                "communicationStyle": { "type": "string" },
+                "decisionMakingStyle": { "type": "string" },
+                "motivators": { "type": "array", "items": { "type": "string" } },
+                "values": { "type": "array", "items": { "type": "string" } },
+                "traits": { "type": "array", "items": { "type": "string" } },
+                "frameTendencies": {
+                  "type": "object",
+                  "properties": {
+                    "apexSignals": { "type": "array", "items": { "type": "string" } },
+                    "slaveSignals": { "type": "array", "items": { "type": "string" } }
+                  }
+                },
+                "relationshipDynamics": { "type": "string" },
+                "pressureResponse": { "type": "string" },
+                "trustMarkers": {
+                  "type": "object",
+                  "properties": {
+                    "builders": { "type": "array", "items": { "type": "string" } },
+                    "breakers": { "type": "array", "items": { "type": "string" } }
+                  }
+                },
+                "negotiationStyle": { "type": "string" },
+                "goals": { "type": "array", "items": { "type": "string" } },
+                "painPoints": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "required": ["contactId"]
         }
       },
       "required": ["reply"]

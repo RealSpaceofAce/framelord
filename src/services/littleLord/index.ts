@@ -38,6 +38,19 @@ import {
   type MetricDomain,
   type MetricType,
 } from '../metricsStore';
+import {
+  getActiveMetrics,
+  handleLittleLordEvent,
+  type WantTrackingEvent,
+} from '../wantTrackingStore';
+import {
+  getAllContacts,
+  getContactById as getContactByIdFromStore,
+  updateContact,
+  findContactByName,
+} from '../contactStore';
+import { createNote } from '../noteStore';
+import type { ContactPsychometricProfile } from '../../types';
 
 // Re-export view behavior functions for external use
 export {
@@ -112,8 +125,27 @@ You must respond with a JSON object matching this schema:
     "pattern": "RECURRING_STUCK | FRAME_COLLAPSE | NEEDY_BEHAVIOR | AVOIDANCE",
     "severity": "LOW | MEDIUM | HIGH",
     "summary": "1-3 sentence admin-facing summary"
+  } OR null,
+  "want_tracking": {
+    "date": "YYYY-MM-DD",
+    "entries": { "metric_slug": number | boolean, ... }
   } OR null
 }
+
+WANT TRACKING:
+When user reports what they did (workout, hours worked, income, sleep, etc), log it via want_tracking.
+- Use metric slugs from trackingMetrics in context
+- Use today's date for "today", yesterday's for "yesterday"
+- Boolean metrics: true/false, Numeric metrics: numbers
+- Only include metrics user mentioned
+
+CONTACT UPDATES:
+When user mentions insights about a contact (their personality, communication style, motivations, behavior patterns, etc), use contact_update to:
+1. Create a note about that contact with the insight
+2. Update their psychometric profile with relevant data
+- Use contact IDs from knownContacts context
+- If user mentions a name, try to match it to a known contact
+- Capture: communication style, decision style, motivators, values, traits, frame signals (Apex/Slave), relationship dynamics, pressure response, trust markers, negotiation style, goals, pain points
 
 EVENT EMISSION RULES:
 ${doctrine.event_emission_rules.rules.map(rule =>
@@ -137,6 +169,14 @@ ${viewContextSection}`;
 // =============================================================================
 
 /**
+ * Get today's date in YYYY-MM-DD format.
+ */
+function getTodayDate(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/**
  * Build an enriched payload for the LLM including user context.
  */
 function buildContextPayload(request: LittleLordRequest): Record<string, unknown> {
@@ -146,11 +186,40 @@ function buildContextPayload(request: LittleLordRequest): Record<string, unknown
     tenantId,
     userId,
     userMessage,
+    todayDate: getTodayDate(),
   };
 
   // Add recent context if provided
   if (recentContext) {
     payload.recentContext = recentContext;
+  }
+
+  // Add Want Tracking metrics context for Contact Zero
+  const activeMetrics = getActiveMetrics();
+  if (activeMetrics.length > 0) {
+    payload.trackingMetrics = activeMetrics.map(m => ({
+      slug: m.slug,
+      name: m.name,
+      type: m.type,
+      unit: m.unit || null,
+      goalType: m.goalType,
+      goalValue: m.goalValue,
+    }));
+  }
+
+  // Add known contacts for matching user mentions
+  const allContacts = getAllContacts();
+  if (allContacts.length > 0) {
+    payload.knownContacts = allContacts
+      .filter(c => c.id !== CONTACT_ZERO.id) // Exclude Contact Zero
+      .slice(0, 50) // Limit to prevent context overflow
+      .map(c => ({
+        id: c.id,
+        name: c.fullName,
+        role: c.relationshipRole || null,
+        domain: c.relationshipDomain || null,
+        company: c.company || null,
+      }));
   }
 
   // If a contact is selected, add their frame data
@@ -257,7 +326,210 @@ function validateLittleLordResponse(obj: unknown): LittleLordResponse {
     }
   }
 
+  // Validate want_tracking if present
+  if (response.want_tracking !== null && response.want_tracking !== undefined) {
+    const tracking = response.want_tracking as Record<string, unknown>;
+
+    if (
+      typeof tracking.date === 'string' &&
+      typeof tracking.entries === 'object' &&
+      tracking.entries !== null
+    ) {
+      // Validate date format (YYYY-MM-DD)
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (dateRegex.test(tracking.date)) {
+        // Validate entries - each value must be number or boolean
+        const entries = tracking.entries as Record<string, unknown>;
+        const validatedEntries: Record<string, number | boolean> = {};
+        let hasValidEntries = false;
+
+        for (const [key, value] of Object.entries(entries)) {
+          if (typeof value === 'number' || typeof value === 'boolean') {
+            validatedEntries[key] = value;
+            hasValidEntries = true;
+          }
+        }
+
+        if (hasValidEntries) {
+          result.want_tracking = {
+            date: tracking.date,
+            entries: validatedEntries,
+          };
+        }
+      }
+    }
+  }
+
+  // Validate contact_update if present
+  if (response.contact_update !== null && response.contact_update !== undefined) {
+    const contactUpdate = response.contact_update as Record<string, unknown>;
+
+    if (typeof contactUpdate.contactId === 'string') {
+      const validatedUpdate: LittleLordResponse['contact_update'] = {
+        contactId: contactUpdate.contactId,
+      };
+
+      // Validate note if present
+      if (contactUpdate.note && typeof contactUpdate.note === 'object') {
+        const note = contactUpdate.note as Record<string, unknown>;
+        if (typeof note.content === 'string') {
+          validatedUpdate.note = {
+            content: note.content,
+            title: typeof note.title === 'string' ? note.title : undefined,
+          };
+        }
+      }
+
+      // Validate psychometric if present
+      if (contactUpdate.psychometric && typeof contactUpdate.psychometric === 'object') {
+        const psych = contactUpdate.psychometric as Record<string, unknown>;
+        const validatedPsych: LittleLordResponse['contact_update']['psychometric'] = {};
+        let hasPsychData = false;
+
+        // String fields
+        for (const field of ['communicationStyle', 'decisionMakingStyle', 'relationshipDynamics', 'pressureResponse', 'negotiationStyle'] as const) {
+          if (typeof psych[field] === 'string') {
+            (validatedPsych as any)[field] = psych[field];
+            hasPsychData = true;
+          }
+        }
+
+        // Array fields
+        for (const field of ['motivators', 'values', 'traits', 'goals', 'painPoints'] as const) {
+          if (Array.isArray(psych[field])) {
+            (validatedPsych as any)[field] = (psych[field] as unknown[]).filter(v => typeof v === 'string');
+            hasPsychData = true;
+          }
+        }
+
+        // Nested object: frameTendencies
+        if (psych.frameTendencies && typeof psych.frameTendencies === 'object') {
+          const ft = psych.frameTendencies as Record<string, unknown>;
+          validatedPsych.frameTendencies = {};
+          if (Array.isArray(ft.apexSignals)) {
+            validatedPsych.frameTendencies.apexSignals = (ft.apexSignals as unknown[]).filter(v => typeof v === 'string') as string[];
+            hasPsychData = true;
+          }
+          if (Array.isArray(ft.slaveSignals)) {
+            validatedPsych.frameTendencies.slaveSignals = (ft.slaveSignals as unknown[]).filter(v => typeof v === 'string') as string[];
+            hasPsychData = true;
+          }
+        }
+
+        // Nested object: trustMarkers
+        if (psych.trustMarkers && typeof psych.trustMarkers === 'object') {
+          const tm = psych.trustMarkers as Record<string, unknown>;
+          validatedPsych.trustMarkers = {};
+          if (Array.isArray(tm.builders)) {
+            validatedPsych.trustMarkers.builders = (tm.builders as unknown[]).filter(v => typeof v === 'string') as string[];
+            hasPsychData = true;
+          }
+          if (Array.isArray(tm.breakers)) {
+            validatedPsych.trustMarkers.breakers = (tm.breakers as unknown[]).filter(v => typeof v === 'string') as string[];
+            hasPsychData = true;
+          }
+        }
+
+        if (hasPsychData) {
+          validatedUpdate.psychometric = validatedPsych;
+        }
+      }
+
+      // Only include if we have note or psychometric data
+      if (validatedUpdate.note || validatedUpdate.psychometric) {
+        result.contact_update = validatedUpdate;
+      }
+    }
+  }
+
   return result;
+}
+
+// =============================================================================
+// CONTACT UPDATE HANDLER
+// =============================================================================
+
+/**
+ * Process a contact_update action from Little Lord response.
+ * Creates note and/or updates psychometric profile.
+ */
+function processContactUpdate(contactUpdate: NonNullable<LittleLordResponse['contact_update']>): void {
+  const { contactId, note, psychometric } = contactUpdate;
+
+  // Verify contact exists
+  const contact = getContactByIdFromStore(contactId);
+  if (!contact) {
+    console.warn('[Little Lord] Contact not found for update:', contactId);
+    return;
+  }
+
+  let noteId: string | undefined;
+
+  // Create note if provided
+  if (note) {
+    const newNote = createNote({
+      title: note.title || `LL Insight: ${contact.fullName}`,
+      content: note.content,
+      kind: 'note',
+      targetContactIds: [contactId],
+      tags: ['little-lord-insight'],
+    });
+    noteId = newNote.id;
+    console.log('[Little Lord] Created note for contact:', contact.fullName, 'noteId:', noteId);
+  }
+
+  // Update psychometric profile if provided
+  if (psychometric) {
+    const existingProfile = contact.psychometricProfile || {};
+    const now = new Date().toISOString();
+
+    // Merge arrays (append new items, dedupe)
+    const mergeArrays = (existing: string[] | undefined, newItems: string[] | undefined): string[] | undefined => {
+      if (!newItems || newItems.length === 0) return existing;
+      if (!existing) return newItems;
+      const combined = [...existing, ...newItems];
+      return [...new Set(combined)];
+    };
+
+    // Build updated profile
+    const updatedProfile: ContactPsychometricProfile = {
+      ...existingProfile,
+      // Override string fields if provided
+      communicationStyle: psychometric.communicationStyle || existingProfile.communicationStyle,
+      decisionMakingStyle: psychometric.decisionMakingStyle || existingProfile.decisionMakingStyle,
+      relationshipDynamics: psychometric.relationshipDynamics || existingProfile.relationshipDynamics,
+      pressureResponse: psychometric.pressureResponse || existingProfile.pressureResponse,
+      negotiationStyle: psychometric.negotiationStyle || existingProfile.negotiationStyle,
+      // Merge arrays
+      motivators: mergeArrays(existingProfile.motivators, psychometric.motivators),
+      values: mergeArrays(existingProfile.values, psychometric.values),
+      traits: mergeArrays(existingProfile.traits, psychometric.traits),
+      goals: mergeArrays(existingProfile.goals, psychometric.goals),
+      painPoints: mergeArrays(existingProfile.painPoints, psychometric.painPoints),
+      // Merge nested objects
+      frameTendencies: {
+        apexSignals: mergeArrays(existingProfile.frameTendencies?.apexSignals, psychometric.frameTendencies?.apexSignals),
+        slaveSignals: mergeArrays(existingProfile.frameTendencies?.slaveSignals, psychometric.frameTendencies?.slaveSignals),
+      },
+      trustMarkers: {
+        builders: mergeArrays(existingProfile.trustMarkers?.builders, psychometric.trustMarkers?.builders),
+        breakers: mergeArrays(existingProfile.trustMarkers?.breakers, psychometric.trustMarkers?.breakers),
+      },
+      // Update metadata
+      updatedAt: now,
+      sourceNoteIds: noteId
+        ? mergeArrays(existingProfile.sourceNoteIds, [noteId])
+        : existingProfile.sourceNoteIds,
+    };
+
+    // Update the contact
+    updateContact({
+      ...contact,
+      psychometricProfile: updatedProfile,
+    });
+
+    console.log('[Little Lord] Updated psychometric profile for:', contact.fullName);
+  }
 }
 
 // =============================================================================
@@ -299,6 +571,25 @@ export async function invokeLittleLord(
 
     // Parse and validate response
     const response = parseLittleLordResponse(rawText);
+
+    // Process want_tracking action if present
+    if (response.want_tracking) {
+      const event: WantTrackingEvent = {
+        type: 'want_tracking.log_day',
+        payload: {
+          date: response.want_tracking.date,
+          entries: response.want_tracking.entries,
+        },
+      };
+      handleLittleLordEvent(event);
+      console.log('[Little Lord] Processed want_tracking:', response.want_tracking);
+    }
+
+    // Process contact_update action if present
+    if (response.contact_update) {
+      processContactUpdate(response.contact_update);
+      console.log('[Little Lord] Processed contact_update:', response.contact_update.contactId);
+    }
 
     return response;
   } catch (error: any) {
@@ -371,6 +662,25 @@ export async function invokeLittleLordWithHistory(
     // Parse and validate response
     const response = parseLittleLordResponse(rawText);
 
+    // Process want_tracking action if present
+    if (response.want_tracking) {
+      const event: WantTrackingEvent = {
+        type: 'want_tracking.log_day',
+        payload: {
+          date: response.want_tracking.date,
+          entries: response.want_tracking.entries,
+        },
+      };
+      handleLittleLordEvent(event);
+      console.log('[Little Lord] Processed want_tracking:', response.want_tracking);
+    }
+
+    // Process contact_update action if present
+    if (response.contact_update) {
+      processContactUpdate(response.contact_update);
+      console.log('[Little Lord] Processed contact_update:', response.contact_update.contactId);
+    }
+
     return response;
   } catch (error: any) {
     console.error('Little Lord invocation error:', error);
@@ -419,7 +729,7 @@ What's on your mind?`,
   if (isContactZero) {
     return {
       role: 'assistant',
-      content: `I am DocLord, your Apex Frame writing assistant. I help you write and refine documents, sales copy, and personal messages so they carry Apex Frame, Win-Win positioning, and clean Dominion tone.
+      content: `I'm LL, your Apex Frame mentor. I help you move from Slave Frame to Apex Frame — installing Win-Win positioning and clean Dominion.
 
 What's on your mind?`,
       timestamp: new Date().toISOString(),

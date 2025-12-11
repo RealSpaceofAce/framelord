@@ -4,12 +4,12 @@
 // All functionality is implemented and working:
 // - Sidebar: All docs, Journals, Trash with proper filtering
 // - Main view: Docs/Collections/Tags tabs with list/grid view
-// - Editor: Title, icons, Info section, theme toggle, favorites
+// - Editor: Title, icons, theme toggle, favorites
 // - Folders: Drag-drop notes into folders, persisted in state
 // - Collections: Create and manage collections of notes
 // =============================================================================
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   FileText,
   Calendar,
@@ -21,10 +21,10 @@ import {
   MoreHorizontal,
   ChevronRight,
   ChevronDown,
+  ChevronLeft,
   PanelLeft,
   PanelRight,
   GitBranch,
-  Info,
   Settings,
   Bell,
   Sparkles,
@@ -35,7 +35,6 @@ import {
   Grid3X3,
   LayoutGrid,
   List,
-  Smile,
   Tag,
   Folder,
   GripVertical,
@@ -49,6 +48,8 @@ import {
   Loader2,
   Mic,
   MicOff,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { FrameLordNotesSidebarSkin } from './FrameLordNotesSidebarSkin';
 import { MarkdownNoteEditor } from './MarkdownNoteEditor';
@@ -163,7 +164,11 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact })
   const [refreshKey, setRefreshKey] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'gray' | 'dark'>(getResolvedEditorTheme());
+  const [theme, setTheme] = useState<'light' | 'dark'>(getResolvedEditorTheme());
+
+  // Navigation history for back/forward
+  const [navHistory, setNavHistory] = useState<string[]>([]);
+  const [navIndex, setNavIndex] = useState(-1);
   const [showSettings, setShowSettings] = useState(false);
 
   // Folder state with localStorage persistence
@@ -445,10 +450,38 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact })
   }, []);
 
   const handleThemeToggle = useCallback(() => {
-    const newTheme = theme === 'light' ? 'gray' : theme === 'gray' ? 'dark' : 'light';
+    const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     setEditorTheme(newTheme);
   }, [theme]);
+
+  // Navigation handlers for back/forward
+  const handleNavBack = useCallback(() => {
+    if (navIndex > 0) {
+      const newIndex = navIndex - 1;
+      setNavIndex(newIndex);
+      setSelectedPageId(navHistory[newIndex]);
+    }
+  }, [navIndex, navHistory]);
+
+  const handleNavForward = useCallback(() => {
+    if (navIndex < navHistory.length - 1) {
+      const newIndex = navIndex + 1;
+      setNavIndex(newIndex);
+      setSelectedPageId(navHistory[newIndex]);
+    }
+  }, [navIndex, navHistory]);
+
+  // Track page navigation in history
+  useEffect(() => {
+    if (selectedPageId && selectedPageId !== navHistory[navIndex]) {
+      // Truncate forward history if we navigate while in the middle
+      const newHistory = navHistory.slice(0, navIndex + 1);
+      newHistory.push(selectedPageId);
+      setNavHistory(newHistory);
+      setNavIndex(newHistory.length - 1);
+    }
+  }, [selectedPageId]);
 
   // Folder handlers
   const handleCreateFolder = useCallback(() => {
@@ -563,8 +596,8 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact })
     setSelectedPageId(journal.id);
   }, []);
 
-  // Theme colors - BRAND PALETTE: Pure black #000000, blue #0043ff accent
-  // IMPORTANT: All dark mode backgrounds should be #000000 or nearly invisible variants
+  // Theme colors - BRAND PALETTE
+  // Dark mode uses #0E0E10 (not pure black), light mode uses white
   const colors = useMemo(() => {
     if (theme === 'light') {
       return {
@@ -577,25 +610,14 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact })
         active: '#e8f4ff',
         accent: '#0043ff',
       };
-    } else if (theme === 'gray') {
-      return {
-        bg: '#1f1f23',
-        sidebar: '#1f1f23',
-        border: '#3f3f46',
-        text: '#fafafa',
-        textMuted: '#a1a1aa',
-        hover: '#27272a',
-        active: '#6366f120',
-        accent: '#6366f1',
-      };
     } else {
       return {
-        bg: '#000000',
-        sidebar: '#000000',
-        border: '#1c1c1c',
-        text: '#ffffff',
+        bg: '#0E0E10',
+        sidebar: '#0A0A0C',
+        border: '#1f2023',
+        text: '#f3f4f6',
         textMuted: '#888888',
-        hover: '#0a0a0a',
+        hover: '#1a1a1c',
         active: '#0043ff20',
         accent: '#0043ff',
       };
@@ -825,6 +847,8 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact })
               collections={collections}
               folders={folders}
               journalDates={journalDates}
+              canGoBack={navIndex > 0}
+              canGoForward={navIndex < navHistory.length - 1}
               onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
               onToggleRightSidebar={() => setRightSidebarOpen(!rightSidebarOpen)}
               onNavigateToNote={handleNavigateToNote}
@@ -840,6 +864,8 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact })
                 setRightSidebarOpen(true);
                 setRightSidebarTab('ai');
               }}
+              onNavBack={handleNavBack}
+              onNavForward={handleNavForward}
             />
           ) : (
             <DocsListView
@@ -911,10 +937,10 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact })
         onThemeChange={(newTheme) => {
           // Resolve 'system' to actual theme
           const resolvedTheme = newTheme === 'system'
-            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'gray' : 'light')
-            : newTheme;
-          setTheme(resolvedTheme);
-          setEditorTheme(newTheme); // Store the preference (can be 'system')
+            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : newTheme === 'gray' ? 'dark' : newTheme; // Migrate 'gray' to 'dark'
+          setTheme(resolvedTheme as 'light' | 'dark');
+          setEditorTheme(newTheme === 'gray' ? 'dark' : newTheme); // Store the preference (can be 'system')
         }}
       />
     </div>
@@ -1665,12 +1691,14 @@ const EmptyState: React.FC<{ isTrash: boolean; onNewPage: () => void; colors: Re
 
 interface PageEditorProps {
   page: Note;
-  theme: 'light' | 'gray' | 'dark';
+  theme: 'light' | 'dark';
   colors: Record<string, string>;
   sidebarCollapsed: boolean;
   collections: Collection[];
   folders: FolderItem[];
   journalDates?: string[];
+  canGoBack: boolean;
+  canGoForward: boolean;
   onToggleSidebar: () => void;
   onToggleRightSidebar: () => void;
   onNavigateToNote: (noteId: string) => void;
@@ -1683,16 +1711,15 @@ interface PageEditorProps {
   onClose: () => void;
   onRefresh: () => void;
   onOpenRightSidebarAI?: () => void;
+  onNavBack: () => void;
+  onNavForward: () => void;
 }
 
 const PageEditor: React.FC<PageEditorProps> = ({
-  page, theme, colors, sidebarCollapsed, collections, folders, journalDates = [], onToggleSidebar, onToggleRightSidebar, onNavigateToNote, onNavigateToContact, onTitleChange,
-  onToggleTheme, onToggleFavorite, onAddToCollection, onJournalDateChange, onClose, onRefresh, onOpenRightSidebarAI,
+  page, theme, colors, sidebarCollapsed, collections, folders, journalDates = [], canGoBack, canGoForward, onToggleSidebar, onToggleRightSidebar, onNavigateToNote, onNavigateToContact, onTitleChange,
+  onToggleTheme, onToggleFavorite, onAddToCollection, onJournalDateChange, onClose, onRefresh, onOpenRightSidebarAI, onNavBack, onNavForward,
 }) => {
   const [title, setTitle] = useState(page.title || '');
-  const [showInfo, setShowInfo] = useState(false);
-  const [icon, setIcon] = useState(page.icon || '');
-  const [showIconPicker, setShowIconPicker] = useState(false);
   const [showCollectionMenu, setShowCollectionMenu] = useState(false);
   const [tags, setTags] = useState<string[]>(page.tags || []);
   const [newTag, setNewTag] = useState('');
@@ -1809,19 +1836,31 @@ const PageEditor: React.FC<PageEditorProps> = ({
         reader.onloadend = () => {
           const audioDataUrl = reader.result as string;
 
-          // Insert audio embed with transcript into note
-          const audioEmbed = `\n\n---\n\n**Audio Recording**\n\n<audio controls src="${audioDataUrl}"></audio>\n\n**Transcript:**\n\n${result.text}\n\n---\n\n`;
+          // Dispatch event to TipTap editor to embed audio using AudioEmbedNode
+          window.dispatchEvent(new CustomEvent('framelord:audio-recorded', {
+            detail: {
+              src: audioDataUrl,
+              title: `Recording ${new Date().toLocaleTimeString()}`
+            }
+          }));
 
-          const currentContent = page.content || '';
-          const newContent = currentContent + audioEmbed;
-          updateNote(page.id, { content: newContent });
-          onRefresh();
-
-          console.log('[Notes] Audio recording added to note');
+          console.log('[Notes] Audio recording dispatched to TipTap editor');
         };
         reader.readAsDataURL(audioBlob);
       } else {
         console.error('[Notes] Transcription failed:', result.error);
+        // Even if transcription fails, still embed the audio
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const audioDataUrl = reader.result as string;
+          window.dispatchEvent(new CustomEvent('framelord:audio-recorded', {
+            detail: {
+              src: audioDataUrl,
+              title: `Recording ${new Date().toLocaleTimeString()}`
+            }
+          }));
+        };
+        reader.readAsDataURL(audioBlob);
       }
     } else {
       // Start recording
@@ -1844,20 +1883,25 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
   useEffect(() => {
     setTitle(page.title || '');
-    setIcon(page.icon || '');
     setTags(page.tags || []);
-  }, [page.id, page.title, page.icon, page.tags]);
+  }, [page.id, page.title, page.tags]);
+
+  // Listen for slash command audio trigger
+  useEffect(() => {
+    const handleSlashAudio = () => {
+      if (!isRecording && !isTranscribing) {
+        handleAudioRecord();
+      }
+    };
+
+    window.addEventListener('framelord:record-audio', handleSlashAudio);
+    return () => window.removeEventListener('framelord:record-audio', handleSlashAudio);
+  }, [isRecording, isTranscribing, handleAudioRecord]);
 
   const handleTitleBlur = () => {
     if (title !== page.title) onTitleChange(title);
   };
 
-  const handleSetIcon = (newIcon: string) => {
-    setIcon(newIcon);
-    updateNote(page.id, { icon: newIcon });
-    setShowIconPicker(false);
-    onRefresh();
-  };
 
   const handleAddTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -1906,6 +1950,38 @@ const PageEditor: React.FC<PageEditorProps> = ({
         )}
 
         <div className="flex-1" />
+
+        {/* Back/Forward Navigation & Theme Toggle - TipTap Style */}
+        <div className="flex items-center gap-1 mr-2">
+          <button
+            onClick={onNavBack}
+            disabled={!canGoBack}
+            className="p-1.5 rounded hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ color: colors.textMuted }}
+            title="Go back"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            onClick={onNavForward}
+            disabled={!canGoForward}
+            className="p-1.5 rounded hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ color: colors.textMuted }}
+            title="Go forward"
+          >
+            <ChevronRight size={16} />
+          </button>
+          <div className="w-px h-4 mx-1" style={{ background: colors.border }} />
+          <button
+            onClick={onToggleTheme}
+            className="p-1.5 rounded hover:bg-white/10 transition-colors"
+            style={{ color: colors.textMuted }}
+            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          >
+            {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+          </button>
+        </div>
+
         <button onClick={onToggleFavorite} className="p-1.5 rounded hover:bg-white/10">
           <Star size={16} fill={page.isPinned ? colors.accent : 'none'} style={{ color: page.isPinned ? colors.accent : colors.textMuted }} />
         </button>
@@ -1935,7 +2011,6 @@ const PageEditor: React.FC<PageEditorProps> = ({
             </div>
           )}
         </div>
-        <button onClick={() => setShowInfo(!showInfo)} className="p-1.5 rounded hover:bg-white/10" style={{ color: colors.textMuted }}><Info size={16} /></button>
         <button
           onClick={handleAudioRecord}
           disabled={isTranscribing}
@@ -1997,28 +2072,6 @@ const PageEditor: React.FC<PageEditorProps> = ({
           />
         )}
         <div className="max-w-3xl mx-auto px-6 py-8">
-          {/* Icon Picker */}
-          <div className="relative inline-block mb-2">
-            <button onClick={() => setShowIconPicker(!showIconPicker)} className="flex items-center gap-1.5 text-sm hover:opacity-80 transition-opacity" style={{ color: colors.textMuted }}>
-              {icon ? <span className="text-4xl leading-none" style={{ opacity: 1 }}>{icon}</span> : <><Smile size={16} /> Add icon</>}
-            </button>
-            {showIconPicker && (
-              <>
-                {/* Click-outside overlay */}
-                <div className="fixed inset-0 z-40" onClick={() => setShowIconPicker(false)} />
-                {/* Emoji picker popup */}
-                <div className="absolute left-0 top-full mt-1 z-50 p-3 rounded-lg shadow-xl grid grid-cols-8 gap-2 max-h-72 overflow-y-auto w-80" style={{ background: colors.sidebar, border: `1px solid ${colors.border}` }}>
-                  {EMOJI_OPTIONS.map(emoji => (
-                    <button key={emoji} onClick={() => handleSetIcon(emoji)} className="p-2 text-2xl hover:bg-white/10 rounded transition-colors" style={{ opacity: 1 }} title={emoji}>{emoji}</button>
-                  ))}
-                  {icon && (
-                    <button onClick={() => handleSetIcon('')} className="col-span-8 text-xs py-2 mt-1 hover:bg-white/10 rounded border-t" style={{ color: colors.textMuted, borderColor: colors.border }}>Remove icon</button>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-
           {/* Title */}
           {isJournal ? (
             <div className="mb-4">
@@ -2067,44 +2120,6 @@ const PageEditor: React.FC<PageEditorProps> = ({
               style={{ color: colors.textMuted }}
             />
           </div>
-
-          {/* Info Section */}
-          <button onClick={() => setShowInfo(!showInfo)} className="flex items-center justify-between w-full py-2 text-sm mb-4" style={{ color: colors.textMuted }}>
-            <span>Info</span>
-            <ChevronRight size={14} className={`transition-transform ${showInfo ? 'rotate-90' : ''}`} />
-          </button>
-          {showInfo && (
-            <div className="mb-4 p-4 rounded-lg text-sm space-y-3" style={{ background: colors.hover }}>
-              <div className="flex justify-between items-center">
-                <span style={{ color: colors.textMuted }}>Created</span>
-                <span style={{ color: colors.text }}>{new Date(page.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span style={{ color: colors.textMuted }}>Updated</span>
-                <span style={{ color: colors.text }}>{new Date(page.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span style={{ color: colors.textMuted }}>Doc type</span>
-                <span style={{ color: colors.text }}>{page.kind === 'log' ? 'Journal' : 'Doc'}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span style={{ color: colors.textMuted }}>Folder</span>
-                <span style={{ color: colors.text }}>{page.folderId ? folders.find(f => f.id === page.folderId)?.name || page.folderId : 'Inbox'}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span style={{ color: colors.textMuted }}>Tags</span>
-                <span style={{ color: colors.text }}>{tags.length > 0 ? tags.join(', ') : 'None'}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span style={{ color: colors.textMuted }}>View mode</span>
-                <span style={{ color: colors.text }}>Page</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span style={{ color: colors.textMuted }}>Favorited</span>
-                <span style={{ color: colors.text }}>{page.isPinned ? 'Yes' : 'No'}</span>
-              </div>
-            </div>
-          )}
 
           {/* Editor Content */}
           <div className="min-h-[300px]" style={{ background: colors.bg }}>
