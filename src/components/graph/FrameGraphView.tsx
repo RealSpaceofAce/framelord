@@ -69,11 +69,12 @@ const NODE_RADII: Record<GraphNodeType, number> = {
   framescan: 4,               // Medium (diamond shape)
 };
 
-const BACKGROUND_COLOR = '#0a0a0f';
-const LINK_COLOR = 'rgba(148, 163, 184, 0.25)';           // Visible baseline
-const HIGHLIGHT_LINK_COLOR = 'rgba(99, 102, 241, 0.7)';   // Indigo highlight
-const NOTE_LINK_COLOR = 'rgba(100, 116, 139, 0.4)';       // Slightly brighter for wikilinks
-const FADED_ALPHA = 0.12;
+const BACKGROUND_COLOR = '#080810';
+// Obsidian-style: lines always clearly visible
+const LINK_COLOR = 'rgba(136, 136, 170, 0.5)';            // More visible baseline (Obsidian uses ~50% opacity)
+const HIGHLIGHT_LINK_COLOR = 'rgba(147, 130, 255, 0.9)';  // Bright highlight on hover
+const NOTE_LINK_COLOR = 'rgba(160, 160, 200, 0.6)';       // Wikilinks slightly brighter
+const FADED_ALPHA = 0.15;
 
 // =============================================================================
 // COMPONENT
@@ -273,7 +274,7 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
     [onNodeClick, onGraphSelectionChange]
   );
 
-  // Render node on canvas — Simple shapes only
+  // Render node on canvas — Obsidian-style with glow
   const paintNode = useCallback(
     (node: NodeObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const graphNode = node as unknown as FrameGraphNode;
@@ -298,55 +299,57 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
       const x = node.x || 0;
       const y = node.y || 0;
 
-      // Draw node based on type
+      // Obsidian-style subtle glow effect
+      if (isHovered || isHighlighted) {
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 8;
+      }
+
+      // Draw node based on type - all filled circles like Obsidian
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Contact Zero gets an extra outer ring
       if (isContactZero) {
-        // Contact Zero: Double ring (outlined circle)
+        ctx.shadowBlur = 0;
         ctx.strokeStyle = color;
         ctx.lineWidth = 1.5 / globalScale;
         ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.arc(x, y, radius + 2, 0, 2 * Math.PI);
         ctx.stroke();
-        // Inner filled circle
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(x, y, radius * 0.6, 0, 2 * Math.PI);
-        ctx.fill();
-      } else if (graphNode.type === 'framescan') {
-        // FrameScan: Diamond shape
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.moveTo(x, y - radius);
-        ctx.lineTo(x + radius, y);
-        ctx.lineTo(x, y + radius);
-        ctx.lineTo(x - radius, y);
-        ctx.closePath();
-        ctx.fill();
-      } else if (graphNode.type === 'topic') {
-        // Topics: Circle with thin outline
-        ctx.strokeStyle = color;
+      }
+
+      // FrameScan gets a small indicator mark
+      if (graphNode.type === 'framescan') {
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
         ctx.lineWidth = 1 / globalScale;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, 2 * Math.PI);
         ctx.stroke();
-        // Light fill
-        ctx.fillStyle = color;
-        ctx.globalAlpha = opacity * 0.3;
-        ctx.fill();
-        ctx.globalAlpha = opacity;
-      } else {
-        // All other nodes: Solid circles
-        ctx.fillStyle = color;
+      }
+
+      // Topics get outline
+      if (graphNode.type === 'topic') {
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 0.8 / globalScale;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, 2 * Math.PI);
-        ctx.fill();
+        ctx.stroke();
       }
+
+      // Clear shadow for highlight ring
+      ctx.shadowBlur = 0;
 
       // Draw highlight ring if hovered
       if (isHovered) {
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 1.5 / globalScale;
         ctx.beginPath();
-        ctx.arc(x, y, radius + 2, 0, 2 * Math.PI);
+        ctx.arc(x, y, radius + 3, 0, 2 * Math.PI);
         ctx.stroke();
       }
 
@@ -362,10 +365,10 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
         const textWidth = textMetrics.width;
         const textHeight = fontSize;
         const padding = 3 / globalScale;
-        const labelY = y + radius + 6 / globalScale;
+        const labelY = y + radius + 8 / globalScale;
 
         // Dark background rectangle behind label
-        ctx.fillStyle = 'rgba(10, 10, 15, 0.85)';
+        ctx.fillStyle = 'rgba(8, 8, 16, 0.9)';
         ctx.fillRect(
           x - textWidth / 2 - padding,
           labelY - textHeight / 2 - padding,
@@ -385,7 +388,7 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
     [highlightNodes, hoveredNode, selectedContactId]
   );
 
-  // Paint link — Visible structure, highlight on hover
+  // Paint link — Obsidian-style: always visible, highlight on hover
   const paintLink = useCallback(
     (link: LinkObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const graphLink = link as any;
@@ -394,26 +397,27 @@ export const FrameGraphView: React.FC<FrameGraphViewProps> = ({
 
       ctx.save();
 
-      // Fade non-highlighted links when hovering
+      // Obsidian-style: links always visible, fade others on hover
       if (hoveredNode && !isHighlighted) {
         ctx.globalAlpha = FADED_ALPHA;
       } else if (isHighlighted) {
-        ctx.globalAlpha = 0.8;
+        ctx.globalAlpha = 1;
       } else {
-        ctx.globalAlpha = 0.35;
+        // Default: clearly visible (Obsidian keeps lines at ~50-60% opacity)
+        ctx.globalAlpha = 0.55;
       }
 
-      // Color and width
+      // Color and width - thicker lines like Obsidian
       if (isHighlighted) {
         ctx.strokeStyle = HIGHLIGHT_LINK_COLOR;
-        ctx.lineWidth = 1.5 / globalScale;
+        ctx.lineWidth = 2 / globalScale;
       } else if (isNoteLink) {
         // Wikilink edges slightly more visible
         ctx.strokeStyle = NOTE_LINK_COLOR;
         ctx.lineWidth = 1.2 / globalScale;
       } else {
         ctx.strokeStyle = LINK_COLOR;
-        ctx.lineWidth = 0.8 / globalScale;
+        ctx.lineWidth = 1 / globalScale;
       }
 
       const sourceX = typeof link.source === 'object' ? link.source.x : 0;
