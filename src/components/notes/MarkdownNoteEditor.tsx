@@ -12,6 +12,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
@@ -24,20 +25,9 @@ import {
   Bold,
   Italic,
   Strikethrough,
-  List,
-  ListOrdered,
-  CheckSquare,
-  Heading1,
-  Heading2,
-  Heading3,
   Code,
-  Quote,
   Link as LinkIcon,
   Highlighter,
-  Undo,
-  Redo,
-  Image as ImageIcon,
-  Twitter,
 } from 'lucide-react';
 import { WikiLinkNode } from './extensions/WikiLinkNode';
 import { WikiLinkSuggestion } from './WikiLinkSuggestion';
@@ -164,10 +154,6 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
   const [topicQuery, setTopicQuery] = useState('');
   const [topicPosition, setTopicPosition] = useState<{ top: number; left: number } | null>(null);
   const [topicTriggerStart, setTopicTriggerStart] = useState<number | null>(null);
-
-  // Tweet embed state
-  const [showTweetInput, setShowTweetInput] = useState(false);
-  const [tweetUrl, setTweetUrl] = useState('');
 
   const editor = useEditor({
     extensions: [
@@ -678,8 +664,8 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
     );
   }
 
-  // Toolbar button component
-  const ToolbarButton = ({
+  // Bubble menu button component
+  const BubbleButton = ({
     onClick,
     isActive,
     icon: Icon,
@@ -695,269 +681,91 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
       className="p-1.5 rounded transition-colors"
       style={{
         background: isActive ? colors.active : 'transparent',
-        color: isActive ? colors.accent : colors.textMuted,
+        color: isActive ? colors.accent : colors.text,
       }}
       title={title}
     >
-      <Icon size={16} />
+      <Icon size={14} />
     </button>
   );
 
-  const Separator = () => (
-    <div className="w-px h-5 mx-1" style={{ background: colors.border }} />
-  );
-
   return (
-    <div className="flex flex-col h-full" ref={editorRef}>
-      {/* Toolbar */}
-      <div
-        className="flex items-center gap-0.5 px-2 py-1.5 border-b sticky top-0 z-10 flex-wrap"
-        style={{ background: colors.toolbar, borderColor: colors.border }}
+    <div className="flex flex-col h-full notion-editor" ref={editorRef}>
+      {/* Floating Bubble Menu - appears when text is selected */}
+      <BubbleMenu
+        editor={editor}
+        tippyOptions={{
+          duration: 100,
+          placement: 'top',
+        }}
+        className="bubble-menu"
       >
-        {/* Undo/Redo */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().undo().run()}
-          icon={Undo}
-          title="Undo"
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().redo().run()}
-          icon={Redo}
-          title="Redo"
-        />
-
-        <Separator />
-
-        {/* Text formatting */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          isActive={editor.isActive('bold')}
-          icon={Bold}
-          title="Bold (Cmd+B)"
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          isActive={editor.isActive('italic')}
-          icon={Italic}
-          title="Italic (Cmd+I)"
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          isActive={editor.isActive('strike')}
-          icon={Strikethrough}
-          title="Strikethrough"
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHighlight().run()}
-          isActive={editor.isActive('highlight')}
-          icon={Highlighter}
-          title="Highlight"
-        />
-
-        <Separator />
-
-        {/* Headings */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          isActive={editor.isActive('heading', { level: 1 })}
-          icon={Heading1}
-          title="Heading 1"
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          isActive={editor.isActive('heading', { level: 2 })}
-          icon={Heading2}
-          title="Heading 2"
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          isActive={editor.isActive('heading', { level: 3 })}
-          icon={Heading3}
-          title="Heading 3"
-        />
-
-        <Separator />
-
-        {/* Lists */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          isActive={editor.isActive('bulletList')}
-          icon={List}
-          title="Bullet List"
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          isActive={editor.isActive('orderedList')}
-          icon={ListOrdered}
-          title="Numbered List"
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleTaskList().run()}
-          isActive={editor.isActive('taskList')}
-          icon={CheckSquare}
-          title="Task List"
-        />
-
-        <Separator />
-
-        {/* Block elements */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          isActive={editor.isActive('blockquote')}
-          icon={Quote}
-          title="Quote"
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          isActive={editor.isActive('codeBlock')}
-          icon={Code}
-          title="Code Block"
-        />
-        <ToolbarButton
-          onClick={() => {
-            const url = window.prompt('Enter URL:');
-            if (url) {
-              editor.chain().focus().setLink({ href: url }).run();
-            }
+        <div
+          className="flex items-center gap-0.5 px-1 py-1 rounded-lg shadow-xl"
+          style={{
+            background: colors.bg,
+            border: `1px solid ${colors.border}`,
           }}
-          isActive={editor.isActive('link')}
-          icon={LinkIcon}
-          title="Add Link"
-        />
-
-        <Separator />
-
-        {/* Media */}
-        <ToolbarButton
-          onClick={() => {
-            // Create file input
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = (e) => {
-              const file = (e.target as HTMLInputElement).files?.[0];
-              if (file) {
-                // Check file size (5MB limit)
-                const MAX_SIZE = 5 * 1024 * 1024;
-                if (file.size > MAX_SIZE) {
-                  alert('Image is too large. Maximum size is 5MB.');
-                  return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                  const dataUrl = e.target?.result as string;
-                  if (dataUrl && editor) {
-                    editor.chain().focus().setResizableImage({ src: dataUrl }).run();
-                  }
-                };
-                reader.readAsDataURL(file);
-              }
-            };
-            input.click();
-          }}
-          icon={ImageIcon}
-          title="Insert Resizable Image"
-        />
-        <ToolbarButton
-          onClick={() => setShowTweetInput(true)}
-          icon={Twitter}
-          title="Embed Tweet"
-        />
-      </div>
-
-      {/* Tweet URL Input Modal */}
-      {showTweetInput && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+        >
+          <BubbleButton
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            isActive={editor.isActive('bold')}
+            icon={Bold}
+            title="Bold (Cmd+B)"
+          />
+          <BubbleButton
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            isActive={editor.isActive('italic')}
+            icon={Italic}
+            title="Italic (Cmd+I)"
+          />
+          <BubbleButton
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            isActive={editor.isActive('strike')}
+            icon={Strikethrough}
+            title="Strikethrough"
+          />
+          <BubbleButton
+            onClick={() => editor.chain().focus().toggleCode().run()}
+            isActive={editor.isActive('code')}
+            icon={Code}
+            title="Inline Code"
+          />
+          <BubbleButton
+            onClick={() => editor.chain().focus().toggleHighlight().run()}
+            isActive={editor.isActive('highlight')}
+            icon={Highlighter}
+            title="Highlight"
+          />
+          <div className="w-px h-4 mx-1" style={{ background: colors.border }} />
+          <BubbleButton
             onClick={() => {
-              setShowTweetInput(false);
-              setTweetUrl('');
+              const url = window.prompt('Enter URL:');
+              if (url) {
+                editor.chain().focus().setLink({ href: url }).run();
+              }
             }}
+            isActive={editor.isActive('link')}
+            icon={LinkIcon}
+            title="Add Link"
           />
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div
-              className="w-full max-w-md rounded-xl shadow-2xl p-6"
-              style={{ background: colors.bg, border: `1px solid ${colors.border}` }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="font-semibold text-lg mb-2" style={{ color: colors.text }}>
-                Embed Tweet
-              </h3>
-              <p className="text-sm mb-4" style={{ color: colors.textMuted }}>
-                Paste a tweet URL from Twitter/X
-              </p>
-              <input
-                type="text"
-                value={tweetUrl}
-                onChange={(e) => setTweetUrl(e.target.value)}
-                placeholder="https://twitter.com/username/status/123456..."
-                className="w-full px-3 py-2 rounded-lg border mb-4 focus:outline-none focus:ring-2"
-                style={{
-                  background: colors.bg,
-                  borderColor: colors.border,
-                  color: colors.text,
-                }}
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && tweetUrl.trim()) {
-                    // Insert tweet embed
-                    if (editor) {
-                      editor.chain().focus().setTweetEmbed({ url: tweetUrl.trim() }).run();
-                      setShowTweetInput(false);
-                      setTweetUrl('');
-                    }
-                  }
-                  if (e.key === 'Escape') {
-                    setShowTweetInput(false);
-                    setTweetUrl('');
-                  }
-                }}
-              />
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    if (tweetUrl.trim() && editor) {
-                      editor.chain().focus().setTweetEmbed({ url: tweetUrl.trim() }).run();
-                      setShowTweetInput(false);
-                      setTweetUrl('');
-                    }
-                  }}
-                  disabled={!tweetUrl.trim()}
-                  className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                  style={{ background: colors.accent, color: '#fff' }}
-                >
-                  Insert Tweet
-                </button>
-                <button
-                  onClick={() => {
-                    setShowTweetInput(false);
-                    setTweetUrl('');
-                  }}
-                  className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                  style={{ background: colors.hover, color: colors.text }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+        </div>
+      </BubbleMenu>
 
-      {/* Editor Content */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <EditorContent editor={editor} />
+      {/* Editor Content - Notion-style clean layout */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto px-6 py-8">
+          <EditorContent editor={editor} />
 
-        {/* Backlinks Section */}
-        {showBacklinks && noteId && (
-          <Backlinks
-            noteId={noteId}
-            colors={colors}
-            onNavigateToNote={onNavigateToNote || (() => {})}
-          />
-        )}
+          {/* Backlinks Section */}
+          {showBacklinks && noteId && (
+            <Backlinks
+              noteId={noteId}
+              colors={colors}
+              onNavigateToNote={onNavigateToNote || (() => {})}
+            />
+          )}
+        </div>
       </div>
 
       {/* Wiki Link Suggestion Popup */}
