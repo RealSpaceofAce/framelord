@@ -31,6 +31,7 @@ import { useFrameScanFolderStore } from '../../services/frameScanFolderStore';
 import { useCustomDomainStore } from '../../services/customDomainStore';
 import { addCustomDomainTag, removeCustomDomainTag } from '../../services/frameScanReportStore';
 import { cn } from '@/lib/utils';
+import { ReportGrid } from './ReportGrid';
 
 const MotionDiv = motion.div as any;
 
@@ -93,6 +94,7 @@ export const FrameScanPage: React.FC<FrameScanPageProps> = ({
     removeReportFromFolder,
     deleteFolder,
     selectFolder,
+    renameFolder,
   } = useFrameScanFolderStore();
 
   // Custom domain store
@@ -258,10 +260,16 @@ export const FrameScanPage: React.FC<FrameScanPageProps> = ({
         {viewMode === 'allContacts' && (
           <AllContactsView
             reports={filteredReports}
+            folders={folders}
             onViewReport={onViewReport}
             onNavigateToContact={onNavigateToContact}
             getContactName={getContactName}
             getContactAvatar={getContactAvatar}
+            onCreateFolder={createFolder}
+            onAddReportToFolder={addReportToFolder}
+            onRemoveReportFromFolder={removeReportFromFolder}
+            onDeleteFolder={deleteFolder}
+            onRenameFolder={renameFolder}
           />
         )}
 
@@ -324,21 +332,33 @@ export const FrameScanPage: React.FC<FrameScanPageProps> = ({
 // VIEW COMPONENTS
 // =============================================================================
 
-// All Contacts View - Grouped list of reports by contact
+// All Contacts View - Grid view with drag-and-drop folder organization
 interface AllContactsViewProps {
   reports: FrameScanReport[];
+  folders: any[];
   onViewReport: (reportId: string) => void;
   onNavigateToContact?: (contactId: string) => void;
   getContactName: (contactId: string) => string;
   getContactAvatar: (contactId: string) => string | undefined;
+  onCreateFolder: (name: string, reportIds?: string[]) => void;
+  onAddReportToFolder: (folderId: string, reportId: string) => void;
+  onRemoveReportFromFolder: (folderId: string, reportId: string) => void;
+  onDeleteFolder: (folderId: string) => void;
+  onRenameFolder: (folderId: string, newName: string) => void;
 }
 
 const AllContactsView: React.FC<AllContactsViewProps> = ({
   reports,
+  folders,
   onViewReport,
   onNavigateToContact,
   getContactName,
   getContactAvatar,
+  onCreateFolder,
+  onAddReportToFolder,
+  onRemoveReportFromFolder,
+  onDeleteFolder,
+  onRenameFolder,
 }) => {
   if (reports.length === 0) {
     return (
@@ -353,24 +373,20 @@ const AllContactsView: React.FC<AllContactsViewProps> = ({
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-4 text-sm text-muted-foreground">
-        {reports.length} report{reports.length !== 1 ? 's' : ''}
-      </div>
-      <div className="space-y-3">
-        {reports.map((report, index) => (
-          <ReportCard
-            key={report.id}
-            report={report}
-            index={index}
-            onView={() => onViewReport(report.id)}
-            onNavigateToContact={onNavigateToContact}
-            getContactName={getContactName}
-            getContactAvatar={getContactAvatar}
-            showFolderActions={true}
-          />
-        ))}
-      </div>
+    <div className="h-full overflow-y-auto">
+      <ReportGrid
+        reports={reports}
+        folders={folders}
+        onViewReport={onViewReport}
+        onNavigateToContact={onNavigateToContact}
+        getContactName={getContactName}
+        getContactAvatar={getContactAvatar}
+        onCreateFolder={onCreateFolder}
+        onAddReportToFolder={onAddReportToFolder}
+        onRemoveReportFromFolder={onRemoveReportFromFolder}
+        onDeleteFolder={onDeleteFolder}
+        onRenameFolder={onRenameFolder}
+      />
     </div>
   );
 };

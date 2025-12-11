@@ -17,7 +17,7 @@ export interface FrameScanFolder {
 interface FrameScanFolderState {
   folders: FrameScanFolder[];
   selectedFolderId: string | null;
-  createFolder: (name: string) => FrameScanFolder;
+  createFolder: (name: string, reportIds?: string[]) => FrameScanFolder;
   addReportToFolder: (folderId: string, reportId: string) => void;
   removeReportFromFolder: (folderId: string, reportId: string) => void;
   deleteFolder: (folderId: string) => void;
@@ -29,12 +29,12 @@ export const useFrameScanFolderStore = create<FrameScanFolderState>((set, get) =
   folders: [],
   selectedFolderId: null,
 
-  createFolder: (name: string) => {
+  createFolder: (name: string, reportIds?: string[]) => {
     const newFolder: FrameScanFolder = {
       id: `folder_${Date.now()}`,
       name,
       createdAt: new Date().toISOString(),
-      reportIds: [],
+      reportIds: reportIds || [],
     };
     set((state) => ({ folders: [...state.folders, newFolder] }));
     return newFolder;
