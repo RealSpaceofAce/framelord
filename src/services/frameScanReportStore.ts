@@ -16,6 +16,11 @@ import type {
 } from '../lib/frameScan/frameTypes';
 import type { FrameScanUIReport } from '../lib/frameScan/frameReportUI';
 import { CONTACT_ZERO } from './contactStore';
+import {
+  addFrameScanAsPsychometricEvidence,
+  updateFrameScanAsPsychometricEvidence,
+  removeFrameScanFromPsychometricEvidence,
+} from './psychometricFrameScanAdapter';
 
 // =============================================================================
 // TYPES
@@ -136,6 +141,10 @@ export const addFrameScanReport = (
   REPORTS = [newReport, ...REPORTS];
   console.log('[FrameScanStore] Added report, total count:', REPORTS.length, 'listeners:', listeners.size);
   emitChange();
+
+  // Feed into psychometric evidence pool
+  addFrameScanAsPsychometricEvidence(newReport);
+
   return newReport;
 };
 
@@ -157,6 +166,10 @@ export const updateFrameScanReport = (
 
   console.log('[FrameScanStore] Updated report:', id);
   emitChange();
+
+  // Update psychometric evidence pool
+  updateFrameScanAsPsychometricEvidence(REPORTS[index]);
+
   return REPORTS[index];
 };
 
@@ -167,6 +180,9 @@ export const deleteFrameScanReport = (id: string): boolean => {
   const initialLength = REPORTS.length;
   REPORTS = REPORTS.filter(r => r.id !== id);
   if (REPORTS.length < initialLength) {
+    // Remove from psychometric evidence pool
+    removeFrameScanFromPsychometricEvidence(id);
+
     emitChange();
     return true;
   }

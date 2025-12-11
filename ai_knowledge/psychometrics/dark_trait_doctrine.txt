@@ -1,0 +1,286 @@
+DARK_TRAIT_DOCTRINE.text: Operational Framework for High-Fidelity Behavioral Risk Inference
+1.0 Executive Mandate and Operational Scope
+1.1 Mission Objective: The Dynamic Intelligence Paradigm
+The FrameLord Customer Relationship Management (CRM) system represents a fundamental architectural shift from static data aggregation to Dynamic Behavioral Intelligence (DBI). Traditional CRM systems act as passive repositories for demographic and transactional data—names, dates, and deal sizes. FrameLord, specifically through the implementation of this Dark Trait Inference Engine (DTIE), transitions into an active defense system. Its mandate is to speculatively infer, score, and communicate the probability of high-risk interpersonal behaviors within the user’s professional network.
+The operational environment of modern enterprise is a landscape of "messy" data: fragmented email threads, slack channel oscillations, negotiation logs, and recorded call metadata. Buried within this unstructured noise are the faint, persistent signals of the Dark Triad—Narcissism, Machiavellianism, and Psychopathy. These traits, while clinically defined, manifest operationally as Reputational Fragility, Strategic Deceit, and Norm-Violating Risk Tolerance. The DTIE serves as the "Early Warning Radar" for these risks, enabling the user—whether a sales executive, procurement officer, or HR director—to adopt defensive postures before psychological or financial capital is extracted.1
+1.2 The "Clinical Firewall": Operational vs. Diagnostic Inference
+A foundational tenet of this doctrine is the Clinical Firewall. The FrameLord system is a pattern-recognition engine, not a diagnostic instrument. It is strictly prohibited from rendering clinical diagnoses (e.g., "User X has Narcissistic Personality Disorder"). Such assessments require clinical interviews, history taking, and standardized testing by licensed professionals, none of which are available to a CRM algorithm.3
+Instead, the DTIE infers Operational Risk Phenotypes. We are not identifying "Psychopaths"; we are identifying "High-Callousness/Low-Remorse Behavioral Patterns." We are not identifying "Narcissists"; we are identifying "High-Entitlement/Validation-Seeking Communication Styles." This semantic and logical distinction is critical for legal defensibility and ethical operation. The system scores Risk, not Pathology. The output is always probabilistic, contextual, and focused on the implication of the behavior for business outcomes, such as negotiation failure, contract breach, or toxic culture generation.4
+1.3 The Data Ingestion "Sensor Grid"
+The DTIE operates on a "Sensor Grid" that ingests data across three distinct modalities of user interaction. The system’s efficacy relies on the fusion of these disparate signals into a coherent Bayesian Belief Network.
+1. Linguistic Telemetry (Text): The primary signal carrier. NLP models parse emails, chat logs, and tickets for specific lexical markers derived from LIWC (Linguistic Inquiry and Word Count) categories associated with the Dark Triad, such as high rates of first-person singular pronouns (Narcissism), hedge words (Machiavellianism), and negative emotion words without anxiety (Psychopathy).6
+2. Prosodic & Acoustic Telemetry (Voice): Where integration allows (e.g., VoIP recordings), the system analyzes "how" things are said. Pitch variability, jitter, shimmer, silence duration, and interruption rates are potent markers of dominance, deception, and emotional dysregulation.7
+3. Behavioral Metadata (Action): The "Digital Body Language." This includes response latency patterns (Power Plays), negotiation cadence (Exploding Offers), and transactional history (Churn/Concession patterns). These meta-signals often reveal the strategic intent that language attempts to conceal.9
+This doctrine defines the governing logic for synthesizing these inputs into the Dark Risk Index (DRI), a dynamic score that evolves with every interaction.
+________________
+2.0 Theoretical Architecture: The Operational Dark Triad
+To build a machine-readable inference model, the abstract psychological constructs of the Dark Triad must be decomposed into observable, quantifiable operational behaviors. We utilize the "Antagonistic Core" hypothesis, which posits that all three traits share a common foundation of low Agreeableness (callousness) and variable Conscientiousness/Neuroticism.11
+2.1 Narcissism: The "Reputational Fragility" Vector
+2.1.1 Operational Phenomenology
+In the corporate theater, Narcissism is not merely vanity; it is a structural obsession with hierarchy and validation. The corporate narcissist functions as a "Fragile Visionary." They are often high-performing and charismatic but possess a brittle ego structure that reacts explosively to criticism. The operational risk they pose is Volatility. A narcissist can be a powerful ally when their ego is stroked, but they will burn bridges instantly if they perceive a "Narcissistic Injury" (a slight to their self-image).13
+2.1.2 Behavioral Markers & Signal Clusters
+The DTIE scans for a cluster of signals we term "Grandiosity and Entitlement."
+* Linguistic Marker - The "Agency" Shift: Narcissists tend to use high rates of First-Person Singular pronouns ("I," "Me," "My") when describing successes ("I delivered the Q3 results"). Crucially, this shifts to passive voice or diffuse plural pronouns ("Mistakes were made," "We encountered issues") during failure events. This "Agency Asymmetry" is a high-fidelity marker.6
+* Behavioral Marker - The "Validation Trap": Frequent "fishing" for compliments in professional correspondence (e.g., "I assume you saw my keynote? thoughts?").
+* Acoustic Marker - "Floor Holding": In audio analysis, high Narcissism scores correlate with excessive "Talk Time" ratios and a high frequency of interruptions, signaling a need for social dominance.8
+2.1.3 Business Risk Implication
+* Over-Promising: Propensity to agree to unrealistic deliverables to secure immediate admiration.
+* Team Destabilization: Tendency to create "In-Groups" (sycophants) and "Out-Groups" (scapegoats), destroying team cohesion.
+* Negotiation Rigidity: Inability to back down from a position because concession is equated with humiliation.
+2.2 Machiavellianism: The "Strategic Deceit" Vector
+2.2.1 Operational Phenomenology
+Machiavellianism is characterized by a cynical, pragmatic disregard for morality and a focus on self-interest and personal gain. Unlike the narcissist, the Machiavellian does not need to be the center of attention; they need to be the center of control. They are "The Operator." Their operational signature is Ambiguity. They thrive in the gray areas of contracts and the unwritten rules of office politics. They are low on empathy but high on "Cognitive Empathy"—the ability to understand others' emotions solely to manipulate them.2
+2.2.2 Behavioral Markers & Signal Clusters
+The DTIE scans for the "Calculated Ambiguity" cluster.
+* Linguistic Marker - "Hedge" Density: High frequency of tentative language ("It appears," "Maybe," "To the best of my knowledge") in contexts where certainty is expected. This preserves plausible deniability.15
+* Behavioral Marker - "Information Asymmetry": The deliberate withholding of information. This manifests as "Slow-Rolling" responses (strategic latency) or using "BCC" extensively (Triangulation) to manage different versions of the truth for different audiences.16
+* Negotiation Marker - "The Nibble": A specific tactic where small, extra concessions are demanded after the deal is ostensibly closed, exploiting the other party's desire to finalize.18
+2.2.3 Business Risk Implication
+* Contractual "Sandbagging": Hiding critical flaws or costs until the counter-party is locked in.
+* Alliance Shifting: Loyalties are transactional. They will abandon a partner/vendor the moment the utility curve inverts.
+* Toxic Culture: They breed an environment of paranoia where information is hoarded rather than shared.
+2.3 Psychopathy: The "Norm-Violating" Vector
+2.3.1 Operational Phenomenology
+Corporate Psychopathy is defined by Impulsivity, Callousness, and a profound Lack of Remorse. While criminal psychopaths violate legal norms, corporate psychopaths violate social and ethical norms. They are "The Risk Engine." They are often fearless, charming, and decisive, which can simulate leadership, but their decision-making is uninhibited by the potential for human collateral damage. They treat people as "fungible assets" in the most literal sense.2
+2.3.2 Behavioral Markers & Signal Clusters
+The DTIE scans for the "Callous/Impulsive" cluster.
+* Linguistic Marker - "Emotional Poverty": A lower frequency of emotional words (especially anxiety or fear words) and a higher frequency of instrumental/causal words ("because," "so," "therefore") used to rationalize harmful actions. They describe human suffering (e.g., layoffs) in purely mechanistic or bureaucratic terms.20
+* Behavioral Marker - "Risk Anomalies": A track record of high-stakes decisions made with insufficient data latency (Impulsivity).
+* Interpersonal Marker - "The Gaslight": A pattern of denying objective reality ("I never said that") even when presented with evidence. This is distinct from lying; it is an epistemological attack on the victim's sanity.22
+2.3.3 Business Risk Implication
+* Fraud and Compliance: High probability of cutting corners or violating regulations if the reward/risk ratio looks favorable.
+* Workplace Harassment: A tendency toward bullying, often disguised as "high standards" or "tough management."
+* Exploitative Negotiation: Use of "Exploding Offers" (ultimatums) and threats to force immediate compliance without due diligence.
+________________
+3.0 Signal Intelligence: The Sensor Grid Implementation
+FrameLord's detection capabilities rely on specific, pre-trained classifiers. We utilize a Multi-Modal Sensor Grid to capture the "messy" data of human interaction.
+3.1 Textual Analytics: The "Lexicon of Shadows"
+Text is the most abundant data source in CRM systems (Email, Slack, Notes). The NLP layer utilizes Dictionary-Based Feature Extraction combined with Contextual Embedding Models (e.g., BERT finetuned on corporate corpora).
+3.1.1 The Pronoun Matrix (Narcissism Detection)
+Research indicates that narcissism is not just about using "I"; it is about the ratio of self-reference to collective-reference in specific contexts.
+* Algorithm: $R_{agency} = \frac{Count(FPS)}{Count(FPP)}$
+   * Where $FPS$ = First-Person Singular (I, me, my, mine)
+   * Where $FPP$ = First-Person Plural (we, us, our, ours)
+* Context Trigger: The system calculates $R_{agency}$ specifically within sentences containing "Success Verbs" (achieved, won, delivered, completed). A high ratio (> 3.0) suggests Credit-Claiming. Conversely, in sentences containing "Failure Verbs" (delayed, missed, failed, error), a low ratio (< 0.5) suggests Blame-Shifting.6
+3.1.2 The "Absolutist" Index (Gaslighting/Rigidity)
+Dark Trait individuals, particularly those exhibiting Narcissistic or Psychopathic traits, often employ "Splitting" (Black-and-White thinking) and Gaslighting.
+* Target Lexicon: "Always," "Never," "Everyone," "No one," "Totally," "Impossible," "Undeniable."
+* Operational Logic: A high density of Absolutist terms in a dispute resolution thread acts as a "Reality Distortion" flag. It indicates a refusal to acknowledge nuance or the other party's perspective.24
+* Gaslighting Syntax: The system scans for the sequence:
+   1. User Statement: [Expression of Concern]
+   2. Target Response: [Invalidation Phrase] ("You're too sensitive," "You're imagining things") + ("That never happened").
+This specific syntactical chain triggers a Critical Warning for Gaslighting.22
+3.1.3 The "Tentative" & "Exclusive" Index (Deception)
+Machiavellian deceit leaves linguistic fingerprints.
+   * Tentative Words: "Maybe," "Perhaps," "Guess." High usage correlates with an attempt to avoid accountability or commitment.
+   * Exclusive Words: "But," "Except," "Without." Truth-tellers use these to distinguish what did happen from what didn't. Liars use fewer exclusive words because inventing complex negations is cognitively taxing. A sudden drop in Exclusive Word usage in a sensitive thread suggests Deception Risk.15
+3.2 Acoustic & Prosodic Analytics: The "Voice of Deceit"
+When voice data is available (Integrations with Gong, Chorus, Zoom), FrameLord analyzes the physics of speech.
+3.2.1 Pitch and Jitter Analysis
+   * Narcissism: Often correlates with high Pitch Variability (dynamic, charismatic range) and high volume.
+   * Psychopathy/Machiavellianism: Can manifest as "Predatory Stare" in audio form—low Pitch Variability (monotone), slow Speech Rate, and high Articulatory Precision. This "cold" delivery is a dominance tactic designed to unsettle the listener.7
+   * Micro-Tremors (Jitter): High frequency vocal tremors often indicate stress (deception leakage) in normal individuals. However, Psychopaths may show abnormally low stress markers during high-stakes lies (the "Duping Delight" or physiological under-arousal).27
+3.2.2 Temporal Dynamics (Turn-Taking)
+   * Interruption Rate: Narcissists interrupt to regain the floor.
+   * Latency Asymmetry: Machiavellians may use "Strategic Silence"—abnormally long pauses after a counter-offer—to induce anxiety and force the other party to fill the silence with a concession.28
+3.3 Behavioral Metadata: The "Action Trace"
+3.3.1 The "Responsiveness Decay" Curve
+Narcissists demand immediate attention (Entitlement) but often provide delayed responses to others (Control).
+   * Metric: Latency_Asymmetry_Index = (Target_Response_Time / User_Response_Time).
+   * Logic: If the Target demands < 1 hour response times from the User but averages > 24 hours to respond themselves, this asymmetry scores points on the Dominance/Control vector.29
+3.3.2 Negotiation Artifacts
+   * The "Exploding Offer": Identification of deadlines set < 24 hours from the offer time.
+   * The "Lowball" Anchor: Identification of opening offers > 2 Standard Deviations below the Market_Mean_Price.
+   * The "Nibble": Identification of new requirements added after the Deal_Stage metadata has moved to "Contract Sent" or "Closed Won".16
+________________
+4.0 The Inference Engine: Algorithmic Doctrine
+The raw signals must be processed to separate "State" (Temporary Stress) from "Trait" (Personality). We employ a Bayesian Belief Updating Model fortified with Volatility Analysis and Time-Decay.
+4.1 Bayesian Belief Updating Model
+The system treats the "Dark Trait" status of a user not as a binary label, but as a Probabilistic Belief that is continuously updated with new evidence.
+
+
+$$P(Trait|Evidence) = \frac{P(Evidence|Trait) \cdot P(Trait)}{P(Evidence)}$$
+   * P(Trait) [Prior]: The baseline probability. We set this based on role. C-Suite executives and Sales Leaders have higher baselines for Narcissism and Psychopathy than administrative staff, based on research indicating these professions attract such traits.2
+   * P(Evidence|Trait) [Likelihood]: The probability of observing a specific marker (e.g., "Gaslighting Syntax") given the user is High-Risk. This is derived from our Marker Library (see Section 6).
+   * Update Cycle: Every interaction (email, call) is an "Observation" that updates the Posterior Probability. A single aggressive email shifts the probability slightly; a pattern shifts it decisively.30
+4.2 Volatility Analysis: State vs. Trait Differentiation
+A critical requirement is distinguishing Situational Stress from Characterological Risk.
+   * The Volatility Hypothesis: Traits are stable; States are volatile.
+   * Algorithm: We calculate the Standard Deviation of the Dark Risk Score (DRI) over a rolling 90-day window.
+   * High Mean / Low Volatility: The user consistently exhibits dark behaviors. Diagnosis: Trait Risk (High Confidence).
+   * High Mean / High Volatility: The user spikes into dark behaviors during specific windows (e.g., End of Quarter) but returns to baseline. Diagnosis: Situational Stress (Low Trait Confidence).
+   * Operational Output: If Volatility is High, the system flags "Stress Monitor" rather than "Dark Trait Risk".4
+4.3 The "Forgiveness" Protocol: Time-Decay Functions
+Behavioral data has a "shelf life." A rude email from 2 years ago should not permanently condemn a user. We apply Exponential Decay to the risk score contribution of every event.
+
+
+$$Score_t = Score_{initial} \cdot e^{-\lambda t}$$
+   * $\lambda$ (Decay Constant): This varies by the severity of the marker.
+   * Low Severity (e.g., Rude Tone): High $\lambda$ (Fast decay, half-life ~7 days).
+   * High Severity (e.g., Ethical Breach/Fraud Marker): Low $\lambda$ (Slow decay, half-life ~1 year).
+   * Reinforcement Logic: If a behavior is repeated within the half-life window, the Decay Constant $\lambda$ for subsequent events decreases, making the score "stickier" and harder to shed. This models the entrenchment of a reputation.9
+________________
+5.0 Scoring Matrices: The Dark Risk Index (DRI)
+The system outputs a composite score, the Dark Risk Index (DRI), comprised of three sub-vectors. This score is normalized to a 0-100 scale.
+5.1 Composite Score Components
+Sub-Score Vector
+	Psychological Correlate
+	Key Input Signals
+	Weighting
+	Dominance Score (DS)
+	Narcissism
+	Agency_Asymmetry, Absolutist_Index, Interruption_Rate, Title_Usage
+	30%
+	Deception Score (CS)
+	Machiavellianism
+	Hedge_Density, Exclusive_Word_Drop, Latency_Asymmetry, Triangulation_Events
+	35%
+	Callousness Score (KS)
+	Psychopathy
+	Emotional_Poverty, Negative_Sentiment_Human, Aggression_Intensity, Remorse_Absence
+	35%
+	5.2 Risk Tiers and System Responses
+DRI Range
+	Risk Tier
+	Definition
+	System Response Protocol
+	0 - 20
+	Green (Low)
+	Cooperative, normative behavior.
+	No Action. Standard CRM operation.
+	21 - 50
+	Yellow (Situational)
+	Occasional aggression or manipulation, likely stress-driven.
+	"Stress Monitor": Highlight potential stress triggers (e.g., "User is in End-of-Quarter window").
+	51 - 80
+	Orange (Tactical)
+	Consistent use of hardball tactics. Likely "Tough Negotiator" or sub-clinical Dark Triad.
+	"Tactical Alert": Enable Counter-Measure suggestions (see Section 7).
+	81 - 100
+	Red (Critical)
+	High probability of destructive personality traits. High risk of fraud, abuse, or reputational damage.
+	"Defense Protocol": High-priority alert. Recommend escalation to Legal/Management. Recommend "No-Solo-Engagement" rule.
+	5.3 Anomaly Detection (Unsupervised)
+In addition to the static tiers, FrameLord runs Isolation Forests on user behavior.
+   * Scenario: A user who typically scores a DRI of 15 (Very Safe) suddenly sends an email with a DRI score of 90.
+   * Output: "Behavioral Anomaly Detected." This suggests a specific crisis (personal life crisis, account takeover, or "mask slip"). This is distinct from a chronically high score and requires a different response (empathy/inquiry rather than defense).34
+________________
+6.0 Operational Counter-Measures: The "Playbook"
+The ultimate value of FrameLord is not just identifying the risk, but neutralizing it. The system provides Actionable Intelligence via "Counter-Measure Cards" displayed in the CRM interface.
+6.1 Defense Against Narcissism: "The Ego Firewall"
+   * Diagnosis: "High Validation Needs detected. Risk of Narcissistic Injury."
+   * Strategy: "Strategic Stroking & Private Correction."
+   * Concept: Narcissists need to feel they are the smartest person in the room. Publicly correcting them causes "Rage" (deal rupture).
+   * Script: "That is a brilliant insight, [Name]. Building on your idea, we might also consider [Correction]."
+   * Protocol: Never argue facts in public channels (Slack/Reply All). Move corrections to 1-on-1 channels to preserve their "Face".13
+6.2 Defense Against Machiavellianism: "The Sunlight Protocol"
+   * Diagnosis: "Strategic Ambiguity and Triangulation detected."
+   * Strategy: "Radical Transparency & Documentation."
+   * Concept: Machiavellians thrive in the dark (unrecorded calls, side-deals). They hate the "Paper Trail."
+   * Script: "Just to ensure we are 100% aligned, I've summarized our discussion below. Please confirm by if this matches your understanding."
+   * Protocol: If they attempt to move a group thread to a private channel ("Let's take this offline"), the user is prompted to loop the group back in ("Let's keep the team in the loop so everyone is on the same page"). FrameLord automates the "Summary Email" draft.36
+6.3 Defense Against Psychopathy: "The Gray Rock Method"
+   * Diagnosis: "High Callousness and Intimidation detected."
+   * Strategy: "The Gray Rock."
+   * Concept: Psychopaths (and high-conflict personalities) feed on emotional reaction (drama). The defense is to become as boring and unreactive as a gray rock.
+   * Script: Use minimal, factual, non-emotional language. "I received your request. The contract states X. We will proceed with X."
+   * Protocol: Do not Justify, Argue, Defend, or Explain (JADE). FrameLord highlights emotional adjectives in the user's own draft and suggests removing them to lower the "Drama Surface Area".38
+6.4 Defense Against Gaslighting: "The Reality Anchor"
+   * Diagnosis: "Epistemic Sabotage detected (Gaslighting)."
+   * Strategy: "The Reality Anchor."
+   * Concept: Re-assert objective reality without engaging in the emotional debate.
+   * Script: "I have a different recollection. According to the email dated, the agreement was X. I have attached it here for reference."
+   * Protocol: FrameLord automatically surfaces the "Contradictory Evidence" (the past email or log) when a Gaslighting marker is detected, allowing the user to attach it instantly.40
+________________
+7.0 Ethics, Governance, and Compliance
+The deployment of a "Personality Surveillance" system carries profound ethical risks. This section details the Safety Interlocks required to prevent abuse and ensure regulatory compliance.
+7.1 The "Right to Explanation" (GDPR Art. 22)
+Under GDPR Article 22, individuals have the right not to be subject to a decision based solely on automated processing.
+   * Mandate: The DRI score is Advisory Intelligence Only. It must never be the sole trigger for an automated adverse action (e.g., denying a loan, firing an employee).
+   * Implementation: Every High-Risk flag must be accompanied by an "Explainability Card" showing the specific linguistic and behavioral evidence (e.g., "Flagged due to: 4x increase in Absolutist Language, 3x Latency Asymmetry"). This empowers the human operator to validate or reject the inference.42
+7.2 Bias Mitigation: The "Cultural Normalization" Filter
+Algorithmic bias is a critical failure mode. "Directness" in Dutch or German business culture may score as "Callousness" (Psychopathy) in a US-trained model. "High Context" indirectness in East Asian cultures may score as "Ambiguity" (Machiavellianism).
+   * Protocol: FrameLord applies Geo-Cultural Baselines. The "Aggression Threshold" is adjusted based on the User_Locale.
+   * Non-Native Safety: If the system detects low "Linguistic Fluency" (syntax errors typical of non-native speakers), the confidence interval for "Linguistic Markers" is widened, requiring a higher density of evidence to trigger a flag.44
+7.3 The "Mirror" Function: Self-Regulation
+To prevent the tool from being a weapon of surveillance, it is also a tool of reflection.
+   * Feature: The system scores the User as well.
+   * Feedback: "Warning: Your recent emails score high on the Callousness vector. You may be triggering defensive reactions in your clients."
+   * Goal: Behavioral hygiene. Promoting self-awareness in the user reduces the overall toxicity of the network.5
+7.4 Data Privacy & Retention
+   * Encryption: All behavioral profiles are encrypted at rest.
+   * RBAC: Access is strictly Role-Based. A peer cannot see a peer's DRI score. Only designated Risk Officers or the individual themselves (via Mirror) can access the raw data.
+   * Retention: "Right to be Forgotten" applies to behavioral scores. If a user exhibits no Dark Trait markers for 12 months, their DRI is reset to the baseline.
+________________
+8.0 Doctrine Summary
+The FrameLord Dark Trait Inference Engine is not a judge; it is a geiger counter for relational toxicity. By identifying the operational signatures of Narcissism, Machiavellianism, and Psychopathy—and distinguishing them from mere stress—it empowers the enterprise to navigate the human terrain with eyes wide open.
+This doctrine establishes the boundaries: Detect behavior, not pathology. Score risk, not souls. Suggest defense, not offense. In the high-stakes arena of modern business, where personality is often the hidden variable in success or failure, FrameLord provides the decisive informational advantage.
+________________
+Appendix A: The Dark Risk Index (DRI) Scoring Matrix
+Operational Profile
+	Primary Linguistic Signal
+	Behavioral Meta-Signal
+	Business Threat Vector
+	FrameLord Defense Protocol
+	Narcissism
+	High Agency_Asymmetry (I/We shift); Absolutist words ("Always/Never"); Status terms.
+	High Urgency demands; "Reply All" shaming; High Interruption Rate.
+	Bridge Burning: Will terminate deals over perceived slights. Scope Creep: Over-promising.
+	"The Stroke": Public validation, private correction. Frame concessions as their idea.
+	Machiavellianism
+	High Hedge_Density; Passive voice; "Non-denial denials"; Nominalization.
+	Strategic Silence; Withholding data; Nibbling concessions; Shifting alliances.
+	The Long Con: Hidden clauses; Unbalanced contracts; Internal sabotage.
+	"The Paper Trail": Relentless documentation. Neutral restatement of facts. "Trust but verify."
+	Psychopathy
+	High Instrumental_Aggression; Low Emotional words; Bureaucratic euphemisms for harm.
+	"Exploding Offers"; Ignoring boundaries; Norm violation (e.g., 3 AM calls); Gaslighting.
+	Fraud/Compliance: High risk of illegal activity. Toxic Culture: Bullying/Harassment.
+	"The Gray Rock": Zero emotional engagement. Strict boundary enforcement. Minimize contact.
+	________________
+Appendix B: Linguistic Marker Library (Operational Examples)
+
+
+Marker Category
+	Risk Type
+	Example Phrase / Pattern
+	Operational Interpretation
+	Source ID
+	Reality Distortion
+	Gaslighting (N/P)
+	"You're overreacting," "That never happened," "You're too sensitive."
+	Attempt to invalidate victim's perception to gain control.
+	23
+	Credit/Blame Shift
+	Narcissism
+	Success: "I spearheaded the win." Failure: "The team struggled with execution."
+	Asymmetrical attribution of value. High Ego Risk.
+	1
+	Strategic Ambiguity
+	Machiavellianism
+	"It's under consideration," "We'll see," "Perhaps," "To the best of my knowledge."
+	Avoiding commitment to retain leverage.
+	15
+	Instrumental Threat
+	Psychopathy
+	"It would be unfortunate if..." "I can't protect you from..."
+	Veiled coercion using "external" forces as the threat.
+	16
+	The "Nibble"
+	Machiavellianism
+	"Just one small thing..." (after agreement).
+	Exploiting the desire to close to extract extra value.
+	18
+	False Victimhood
+	Narcissism
+	"After all I've done for you," "I'm being persecuted."
+	Guilt-tripping to force compliance.
+	24
+	Passive-Aggressive
+	Machiavellianism
+	"Per my last email," "Thanks in advance," "As previously discussed."
+	Veiled hostility and dominance signaling.
+	38
+	________________
+________________
+________________

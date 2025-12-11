@@ -1,0 +1,456 @@
+BIG_FIVE_DOCTRINE.md
+1.0 META-PROTOCOL: SYSTEM OVERVIEW AND OPERATIONAL BOUNDARIES
+1.1 Doctrine Purpose and Architectural Scope
+This document constitutes the foundational logic kernel for the FrameLord Customer Relationship Management (CRM) Artificial Intelligence subsystem. It is designed exclusively for internal consumption by the AI signal processing engine. The primary objective is to govern the autonomous interpretation of unstructured communication artifacts—spanning informal sales notes, email bodies, voice transcripts, and calendar metadata—to construct and iteratively update dynamic psychometric profiles based on the Five-Factor Model (Big Five/OCEAN).1
+The FrameLord Psychometric Engine operates as a speculative pattern recognition system, not a clinical diagnostic tool. Its function is to convert the "messy" reality of human interpersonal data into structured, probabilistic vectors that optimize commercial outcomes, such as predicting churn risk, tailoring negotiation communication styles, and automating relationship maintenance.3 The system must treat every derived profile as a fluid probability state,
+
+
+$$P(Trait|Evidence)$$
+, rather than a static biological truth. All psychometric scores are subject to continuous Bayesian updating as new evidence is ingested, adhering to the principle that personality expression is context-dependent and temporally evolving.5
+This doctrine establishes the signal extraction rules, scoring algorithms, and ethical guardrails necessary to deploy personality profiling in a high-stakes business environment. It bridges the gap between academic psychometrics and operational CRM utility, translating abstract psychological concepts into executable code and actionable business intelligence.
+1.2 Operational Constraints & Ethical Guardrails
+The deployment of automated personality profiling carries significant ethical and operational risks. To mitigate "hallucinations" of personality traits and prevent the misuse of psychometric data, the following constraints are hard-coded into the system's decision logic:
+1. Non-Clinical Classification Taxonomy: The system is strictly prohibited from generating, logging, or displaying clinical, pathological, or medical terminology. Terms such as "bipolar," "depressed," "narcissistic," or "obsessive" are blacklisted. The AI must map these behavioral patterns to neutral, operational descriptors suitable for a professional workplace context. For example, "Neuroticism" is internally processed but externally rendered as "Sentiment Volatility" or "Stress Sensitivity".7 "Low Agreeableness" is not labeled as "hostile" but as "Competition-Oriented" or "Negotiation-Ready".9
+2. The "State vs. Trait" Distinction: The system must algorithmically distinguish between a temporary emotional state (Mood) and a stable personality characteristic (Trait). A client exhibiting anger during a critical service outage is experiencing a state; a client exhibiting anger during a routine check-in is displaying a trait. The system utilizes context-aware weighting to discount signals generated during high-stress anomaly events.7
+3. Speculative Disclaimer & Confidence Intervals: No psychometric score is absolute. All user-facing representations of this data must be accompanied by a Confidence Score ($Conf$), visually represented as a confidence interval or opacity gradient. The system shall not present a trait prediction as a certainty ($Conf = 1.0$) unless the data density exceeds the strict thresholds defined in Section 4.3.12
+4. Role Normalization: Behavioral analysis must account for the professional role of the subject. A "Compliance Officer" using rigid, detail-oriented language is exhibiting role-congruent behavior, which may not strictly indicate high trait Conscientiousness in a personal context. The system applies a dampening coefficient to signals that are highly correlated with the subject's job title.14
+1.3 The FrameLord Psychometric Vector
+For every unique entity (contact or user) in the CRM, the system maintains a 5-dimensional probabilistic vector. This vector represents the current "best guess" of the entity's personality configuration.
+
+
+$$P_{entity} = \langle O, C, E, A, N \rangle$$
+Where each variable in the tuple is a floating-point value between 0.0 (Low) and 1.0 (High). Each dimension is inextricably paired with a meta-metric tuple containing the Confidence Score ($Conf$) and the Volatility Index ($Vol$), derived from the volume, consistency, and recency of the analyzed data.12
+________________
+2.0 TRAIT DEFINITIONS AND SIGNAL EXTRACTION DOCTRINE
+The core of the FrameLord engine relies on the precise definition of the Big Five traits within a business context. The academic definitions of these traits must be adapted to the specific signaling environment of corporate communication—emails, meetings, and negotiations. The following sections detail the operational definitions, behavioral clusters, and signal dictionaries for each trait.
+2.1 O - Openness to Experience (The Innovation Vector)
+Operational Definition:
+In the FrameLord CRM context, Openness to Experience quantifies a contact's receptiveness to novelty, complexity, and abstraction versus their preference for familiarity, routine, and concrete implementation. This vector is the primary predictor of a lead's "Early Adopter" status, their willingness to tolerate beta-stage products, and their decision-making speed regarding unproven solutions. It also dictates their preferred communication style: conceptual and future-oriented vs. tactical and present-oriented.1
+2.1.1 Behavioral Clusters & Workplace Manifestations
+
+
+Level
+	Work Behavior & Decision Making
+	Social Interaction & Communication
+	Conflict & Negotiation Style
+	High (0.7-1.0)
+	The Visionary. Bored by routine maintenance. Actively seeks "transformational" shifts. Adopts tools early but resists rigid implementation plans. Prone to "scope creep" by constantly adding new ideas. 17
+	Intellectualizes. Seeks debate on abstract concepts. Uses metaphor, humor, and rich vocabulary. Values "interesting" over "efficient." 19
+	Integrating. Seeks "win-win" scenarios via novel solution architecture. Resists binary ultimatums. Will trade price for innovation or exclusivity. 19
+	Medium (0.4-0.6)
+	The Pragmatist. Balances innovation with utility. Will adopt new tools if the ROI is proven by data. Skeptical of "hype" but open to "upgrades."
+	Balanced Professional. Standard rapport. Discusses concrete business needs but can entertain strategic "what ifs."
+	Compromising. Willing to trade novel concessions for stability or price. Focuses on practical resolution.
+	Low (0.0-0.3)
+	The Traditionalist. Process-oriented. Prefers legacy systems and "tried-and-true" methods. Requires extensive social proof and case studies before changing workflows. Dislikes ambiguity. 17
+	Literal. Concrete, skeptical of "fluff" or "vision." Prefers agendas, minutes, and written confirmation. "Just the facts."
+	Avoiding/Rigid. Sticks strictly to the contract text. Uncomfortable with creative financing or non-standard terms. Views change as risk. 20
+	2.1.2 Linguistic Indicators (Signal Dictionary)
+The AI parses text streams for high-value tokens and semantic structures that indicate Openness.
+* High-Signal Keywords (High O): Concept, perspective, imagine, theory, potential, aesthetic, design, transform, experiment, beta, why, possibility, nuance, evolution, horizon, reinvent, hypothesis. 2
+* High-Signal Keywords (Low O): Standard, proven, routine, tradition, efficient, concrete, fix, protocol, history, usual, tried-and-true, specifications, manual, compliance, normal, maintain. 18
+* Structural Markers (Text):
+   * High O: Complex sentence structures, frequent use of parenthetical digressions, hypothetical phrasing ("What if we..."), use of analogies and metaphors ("It's like an ecosystem..."). 22
+   * Low O: Simple declarative sentences, list-heavy formatting, absence of abstract nouns, focus on chronological order and past precedence. 21
+2.1.3 CRM Frames (Contextual Signals)
+Context is critical. A specific behavior in a specific context (Frame) carries higher diagnostic weight.
+* The "Feature Request" Frame:
+   * Signal: Contact requests a feature that does not exist, suggests a modification to the roadmap, or asks "What's coming next year?"
+   * Weight: +0.15 to Openness.
+   * Reasoning: Indicates forward-thinking and desire for novelty.17
+* The "Legacy" Frame:
+   * Signal: Contact refuses migration to a new version despite feature parity, citing "it works fine as is" or "we don't want to retrain."
+   * Weight: -0.20 to Openness (Low O).
+   * Reasoning: Indicates adherence to routine and resistance to change.18
+* The "Strategic" Frame:
+   * Signal: Emails focus on "5-year plans," "industry shifts," or "philosophy" rather than "quarterly pricing" or "bug fixes."
+   * Weight: +0.10 to Openness.
+________________
+2.2 C - Conscientiousness (The Execution Vector)
+Operational Definition:
+Conscientiousness measures the tendency toward organization, reliability, discipline, and goal-directed behavior. In a CRM context, this is the single strongest predictor of deal velocity, adherence to "next steps," payment reliability, and general account health. It acts as a proxy for "Professional Diligence." However, extremely high Conscientiousness can correlate with rigidity and a lack of agility in fast-moving deals.1
+2.2.1 Behavioral Clusters & Workplace Manifestations
+
+
+Level
+	Work Behavior & Decision Making
+	Social Interaction & Communication
+	Conflict & Negotiation Style
+	High (0.7-1.0)
+	The Architect. Hyper-organized, punctual, zero-inbox, detail-oriented. Requires clear agendas before meetings. Dislikes spontaneity. Follows through on every "action item." 16
+	Formal. Polite, mindful of time, structured. Rarely initiates non-work chat unless scheduled. Values brevity and clarity. 27
+	Process-Driven. Relies on logic, data, and contractual obligation. Risk-averse. Will kill a deal if the paperwork isn't perfect. 28
+	Medium (0.4-0.6)
+	The Operator. Generally reliable but may miss minor details. Flexible with deadlines if communicated in advance. Prioritizes "done" over "perfect."
+	Balanced. Capable of small talk but returns to business quickly.
+	Pragmatic. Focuses on the outcome rather than the strict process. Willing to bend rules slightly to close.
+	Low (0.0-0.3)
+	The Ideator/Chaotic. Procrastinates, disorganized, focuses on "big picture" at expense of detail. Often late to meetings. Emails are messy or sparse. 25
+	Casual. Spontaneous, may "ghost" for weeks and reappear suddenly. Informal tone.
+	Chaotic/Flexible. Prone to last-minute changes. Ignores details until a crisis occurs. Negotiation is fluid and often undocumented. 29
+	2.2.2 Linguistic Indicators (Signal Dictionary)
+* High-Signal Keywords (High C): Schedule, deadline, plan, agenda, review, confirm, ensure, process, metrics, deliverables, timeline, budget, audit, verify, complete, responsible, detail. 2
+* High-Signal Keywords (Low C): Ish, maybe, soon, later, whenever, flexible, forgot, missed, loose, rough, brainstorming, whatever, chaos, messy. 2
+* Structural Markers (Text/Email):
+   * High C: High usage of bullet points, numbered lists, specific timestamps (e.g., "Tuesday at 2:00 PM EST" vs "Tuesday afternoon"), absence of typos, clear and descriptive subject lines. 30
+   * Low C: Run-on sentences, informal capitalization (all lowercase), missing subject lines, multiple "sent from my iPhone" post-scripts, vague temporal markers ("Let's chat sometime"). 30
+2.2.3 CRM Frames (Contextual Signals)
+* The "Meeting" Frame:
+   * Signal: Contact confirms meeting >24 hours in advance, requests an agenda, and joins exactly on time.
+   * Weight: +0.05 to Conscientiousness.
+   * Signal: Contact reschedules <1 hour before, joins >5 minutes late without notice, or is a "no-show."
+   * Weight: -0.25 to Conscientiousness (Low C).
+* The "Follow-Up" Frame:
+   * Signal: Contact responds to "action items" with completion confirmation within the agreed timeframe.
+   * Weight: +0.15 to Conscientiousness.
+* The "Paperwork" Frame:
+   * Signal: Contact returns redlines or signed contracts with precise naming conventions and structured feedback.
+   * Weight: +0.10 to Conscientiousness.
+________________
+2.3 E - Extraversion (The Social Velocity Vector)
+Operational Definition:
+Extraversion defines the quantity and intensity of interpersonal interaction a subject seeks. In CRM, this defines the contact's preference for communication channels (Synchronous Call vs. Asynchronous Email), their influence within their own organization (Network Density), and their energy response to high-frequency interaction. It is a critical vector for determining the "Sales Cadence".1
+2.3.1 Behavioral Clusters & Workplace Manifestations
+
+
+Level
+	Work Behavior & Decision Making
+	Social Interaction & Communication
+	Conflict & Negotiation Style
+	High (0.7-1.0)
+	The Broadcaster. Prefers calls/Zoom over reading. Dominates meetings. "Think out loud" processing style. Energized by activity and rapid exchange. 18
+	Warm/Expressive. Uses superlatives ("Awesome," "Amazing"). High usage of emojis and exclamation points. Seeks personal connection. 21
+	Domineering/Persuasive. Uses charisma to sway outcomes. Assertive and vocal. Comfortable with verbal confrontation. 34
+	Medium (0.4-0.6)
+	The Connector. Comfortable with calls but appreciates email for documentation. Can lead a meeting but happy to listen.
+	Professional Warmth. Uses standard social pleasantries.
+	Balanced. Can assert needs but listens to counter-arguments.
+	Low (0.0-0.3)
+	The Analyst. Prefers async text/email. Exhausted by back-to-back meetings. Deliberate thinker—needs time to process before responding. 18
+	Reserved. Formal, brief. "Straight to business." Avoids small talk. 36
+	Reserved/Writing. Avoids real-time verbal confrontation. Prefers to negotiate via email where they can control the message. 34
+	2.3.2 Linguistic Indicators (Signal Dictionary)
+* High-Signal Keywords (High E): Call, chat, discuss, connect, excited, great, love, team, everyone, reach out, let's, together, incredible, awesome, hey. 21
+* High-Signal Keywords (Low E): Review, email, send, analyze, process, think, consider, solo, independent, focus, quiet, perusal, attached. 36
+* Acoustic/Voice Markers (Transcripts):
+   * High E: High words-per-minute (WPM) rate, frequent interruptions (overlap/backchanneling), higher pitch variance (dynamic range), frequent laughter. 35
+   * Low E: Long pauses (>1.5s) before responding, low WPM, monotonic pitch, fewer interruptions, silence during listening phases. 38
+* Structural Markers:
+   * High E: Multiple recipients in "To/CC" (inclusive), frequent use of "We/Us" (Social focus), informal greetings ("Hey guys"). 21
+   * Low E: Single recipient, frequent use of "I/Me" or passive voice to remove self from the sentence. 38
+2.3.3 CRM Frames (Contextual Signals)
+* The "Channel" Frame:
+   * Signal: Contact responds to a detailed email with "Call me" or "Let's hop on a Zoom."
+   * Weight: +0.20 to Extraversion.
+   * Signal: Contact responds to a voicemail with an email.
+   * Weight: -0.10 to Extraversion (Low E).
+* The "Network" Frame:
+   * Signal: Contact voluntarily adds 3+ colleagues to a thread without being asked.
+   * Weight: +0.15 to Extraversion.
+________________
+2.4 A - Agreeableness (The Alignment Vector)
+Operational Definition:
+Agreeableness measures the tendency toward cooperation, empathy, and social harmony versus competitiveness, skepticism, and challenging behavior. In sales, this measures the ease of rapport building vs. the likelihood of "hardball" negotiation tactics. Note: High Agreeableness is not always positive in a buyer; it correlates with "People Pleasing" and a reluctance to deliver bad news (e.g., that the deal is dead).1
+2.4.1 Behavioral Clusters & Workplace Manifestations
+
+
+Level
+	Work Behavior & Decision Making
+	Social Interaction & Communication
+	Conflict & Negotiation Style
+	High (0.7-1.0)
+	The Collaborator. Collaborative, trusting, accepts "standard terms." Risk of over-promising. Reluctant to criticize product failures directly. 9
+	Empathetic. Uses "hedging" language (e.g., "I think," "Maybe"). Apologizes often. Asks about your day. 38
+	Accommodating. Prioritizes relationship over transaction value. Vulnerable to being "steamrolled" but loyal. 34
+	Medium (0.4-0.6)
+	The Professional. Courteous but firm. Will push back on unreasonable requests. Values fairness over harmony.
+	Civil. Maintains boundaries.
+	Collaborative. Seeks fairness. Will negotiate but aims for a reasonable middle ground.
+	Low (0.0-0.3)
+	The Challenger. Competitive, skeptical, "Shark" type. Negotiates every line item. Direct and blunt. Views skepticism as intelligence. 9
+	Cold/Direct. Terse. Uses absolutes. Low use of social niceties. "Cut to the chase." 10
+	Competing. Views negotiation as zero-sum. Willing to churn to prove a point. Unafraid of tension. 20
+	2.4.2 Linguistic Indicators (Signal Dictionary)
+* High-Signal Keywords (High A): Help, support, agree, appreciate, thanks, maybe, perhaps, feel, sorry, together, fair, wonderful, kind, understand. 21
+* High-Signal Keywords (Low A): Wrong, demand, unacceptable, issue, error, ridiculous, competitor, price, fail, claim, dispute, prove, leverage, obviously. 21
+* Structural Markers:
+   * High A: Use of hedging ("It seems that...", "I might suggest"), high frequency of "Thank you," longer words but shorter sentences (politeness). 38
+   * Low A: Imperative sentences ("Fix this," "Send the report"), use of profanity, aggressive punctuation (!!), all caps. 10
+2.4.3 CRM Frames (Contextual Signals)
+* The "Complaint" Frame:
+   * Signal: Contact reports a bug with "No worries, just wanted to flag this."
+   * Weight: +0.15 to Agreeableness.
+   * Signal: Contact reports a bug with "This is unacceptable/incompetence."
+   * Weight: -0.30 to Agreeableness (Low A).
+* The "Pricing" Frame:
+   * Signal: Accepts quote without redlines.
+   * Weight: +0.20 to Agreeableness.
+   * Signal: Demands a discount >20% immediately.
+   * Weight: -0.15 to Agreeableness.
+________________
+2.5 N - Neuroticism (The Stability Index)
+Operational Definition:
+Neuroticism measures sensitivity to stress, negative emotion, and volatility. In CRM, this is the "Maintenance Score" or "Anxiety Index." High N contacts require frequent reassurance, react explosively to minor service interruptions, and are prone to "churn due to anxiety." Low N contacts act as stabilizing forces during crises.1
+2.5.1 Behavioral Clusters & Workplace Manifestations
+
+
+Level
+	Work Behavior & Decision Making
+	Social Interaction & Communication
+	Conflict & Negotiation Style
+	High (0.7-1.0)
+	The Worrier. Anxious about deadlines/failure. Micro-manages to control fear. Reacts poorly to ambiguity. "The sky is falling." 7
+	Volatile. Moody, defensive, seeks validation. High sentiment volatility (oscillation between happy/angry). 41
+	Reactive/Avoiding. Escalates quickly under stress (panic) or withdraws entirely (paralysis). 7
+	Medium (0.4-0.6)
+	The Realist. Experiences stress but functions professionally. Expresses concern appropriate to the situation.
+	Responsive. Typical range of emotion.
+	Responsive. Voices concern but seeks solutions.
+	Low (0.0-0.3)
+	The Rock. Stoic, resilient, "Cool under pressure." Unphased by bugs or delays. Confidence can be mistaken for detachment. 8
+	Calm. Consistent, predictable, steady. 18
+	Stable. Rational problem solving. De-escalates others. 41
+	2.5.2 Linguistic Indicators (Signal Dictionary)
+* High-Signal Keywords (High N): Worried, concerned, nervous, hate, afraid, risk, disaster, urgent, fail, stress, annoyed, problem, impossible, panic, upset, fault. 21
+* High-Signal Keywords (Low N): Fine, handle, calm, steady, relax, solution, manage, stable, confident, easy, under control, fixable. 18
+* Structural Markers:
+   * High N: Rapid shifts in sentiment (e.g., Happy email at 9AM, Angry email at 10AM), excessive use of "Urgent" markers in subject lines, self-referential distress ("I am worried that..."), punctuation flooding (???). 8
+   * Low N: Consistent sentiment score over time, short/concise sentence length during crises, absence of emotional adjectives. 41
+2.5.3 CRM Frames (Contextual Signals)
+* The "Downtime" Frame:
+   * Signal: System outage occurs. Contact emails every 10 minutes asking for updates.
+   * Weight: +0.30 to Neuroticism.
+   * Signal: Contact sends one email: "Let me know when it's back."
+   * Weight: -0.20 to Neuroticism (Low N).
+* The "Support" Frame:
+   * Signal: Contact uses "escalate" or "manager" in the first email of a thread.
+   * Weight: +0.20 to Neuroticism.
+________________
+3.0 SIGNAL EXTRACTION AND PROCESSING RULES
+To ensure the integrity of the psychometric profiles, FrameLord employs a rigorous data processing pipeline. This section defines the hierarchy of data sources and the rules for filtering noise from signal.
+3.1 Data Source Hierarchy
+Not all data is created equal. The system extracts signals from three primary sources, weighted by their fidelity and capacity to reveal "true" personality versus "performative" behavior.4
+
+
+Source Type
+	Signal Weight
+	Primary Traits Extracted
+	Rationale
+	Voice Transcripts
+	1.5x (High)
+	Extraversion, Neuroticism, Agreeableness
+	Voice contains acoustic data (pitch, speed, pause) and unfiltered linguistic choices. It is harder to "edit" voice in real-time than text, leaking more personality cues. 38
+	Direct Email
+	1.0x (Medium)
+	Conscientiousness, Openness, Agreeableness
+	Emails contain structural markers (formatting, typos) and relational keywords. However, they are edited and curated, representing the "idealized" self. 30
+	CRM Notes
+	0.6x (Low)
+	Explicit Tags (All)
+	Second-hand observations by sales reps (e.g., "Client was angry"). High noise due to rep bias. Used only for explicit behavioral tagging (e.g., "Client was late").
+	3.2 Signal-to-Noise Filtering Protocols
+To prevent the "hallucination" of personality traits from irrelevant data, the system must aggressively filter noise.
+* Rule 3.2.1: The Boilerplate Filter. The NLP engine must identify and excise email signatures, legal disclaimers, privacy policy footers, and automated "Out of Office" replies. These blocks inflate word counts without adding psychometric signal, diluting the density of the analysis.4
+* Rule 3.2.2: The "Short Text" Nullification. Texts, chats, or emails under 15 words are discarded from vocabulary analysis unless they contain high-valence emotive keywords (e.g., "This is garbage"). Short transactional responses ("Ok," "Confirmed," "On it") are processed only as Conscientiousness signals (Responsiveness), not for Openness or Neuroticism.3
+* Rule 3.2.3: Role Normalization. The system must adjust its baseline expectations based on the contact's job title (if known). Personality expression is often constrained by professional role norms.
+   * Logic: If Job_Title == "Accountant" OR "Compliance", dampen Low-Openness signals by 30%. (It is their job to be rigid; it may not reflect their trait personality).
+   * Logic: If Job_Title == "Sales" OR "PR", dampen High-Extraversion signals by 30%. (They are paid to be outgoing; true trait Extraversion requires higher thresholds).1
+3.3 Contextual Weighting (The "State vs. Trait" Differentiation)
+We must distinguish between a temporary state (Mood) and a permanent trait (Personality). The system applies a "Context Mask" to data based on the current account status.7
+* Crisis Mode Mask: If Account_Status == "Outage" or "Severity 1 Ticket Open":
+   * Neuroticism signals are discounted by 50% (Everyone is stressed during an outage; anxiety here is situational).
+   * Agreeableness signals are discounted by 30% (Frustration is expected).
+* Negotiation Mode Mask: If Deal_Stage == "Contract Negotiation" or "Closing":
+   * Agreeableness signals (Low) are discounted by 40% (Hard negotiation is a tactic, not necessarily a personality trait).
+   * Conscientiousness signals are weighted 1.2x (Attention to contract detail is critical here).
+* Baseline (BAU): The most valuable signals occur during "Business as Usual" operations. Signals collected during routine check-ins or idle chatter are weighted 1.0x and considered the "True North" for personality profiling.
+________________
+4.0 SCORING AND CONFIDENCE ENGINE
+4.1 The Scoring Scale (0-1)
+Traits are stored as floating-point values to allow for granular Bayesian updating. For user-facing display, these are bucketed into three tiers:
+* 0.00 - 0.30: Low Expression (e.g., Introverted, Rigid, Stoic).
+* 0.31 - 0.69: Medium/Ambivalent Expression (Situational, Balanced).
+* 0.70 - 1.00: High Expression (e.g., Extroverted, Visionary, Anxious).
+4.2 Bayesian Belief Updating Logic
+We utilize a Bayesian update model where the current profile is the Prior, and new textual evidence is the Likelihood. This allows the profile to evolve over time while resisting volatility from single outlier data points.5
+The update formula for a trait $T$ given new evidence $E$ is:
+
+
+$$P(T | E) = \frac{P(E | T) \cdot P(T)}{P(E)}$$
+* Initialization: All profiles begin at 0.5 (Neutral) with Conf = 0.0. This represents maximum entropy/uncertainty.6
+* Plasticity vs. Rigidity: The degree of score shift is determined by the Signal Strength ($S$) and the Current Confidence ($C$).
+   * If Confidence is Low ($C < 0.3$), the model is Plastic: New evidence shifts the score drastically.
+   * If Confidence is High ($C > 0.8$), the model is Rigid: New evidence shifts the score marginally, requiring a sustained pattern to move the needle.46
+4.3 Confidence Scoring ($Conf$)
+The Confidence Score is a critical metric that prevents the AI from presenting weak guesses as facts. It is a function of data density, source variety, and signal consistency.12
+
+
+$$Conf = \min\left(1.0, \frac{\log(\text{TotalWordCount})}{K} \cdot \text{ConsistencyFactor} \cdot \text{SourceDiversity}\right)$$
+* WordCount Threshold: A minimum of 500 words of analyzed text is required to reach Conf > 0.5. (Constant $K$ is set to normalize 2000 words to 1.0).3
+* Consistency Factor: If signals are contradictory (e.g., a highly polite email body but a rude/aggressive voice transcript), the Consistency Factor drops, lowering the overall Confidence.
+* Source Diversity: Data from a single channel (e.g., only Email) caps Confidence at 0.8. Multi-channel data (Email + Voice) allows Confidence to approach 1.0.
+4.4 Evidence Aging (Decay Function)
+Personality is stable, but evidence becomes stale. A client's behavior during a startup phase 2 years ago may not reflect their behavior as a mature executive today. Signals older than 18 months are subjected to a decay function.11
+
+
+$$SignalWeight_t = SignalWeight_0 \cdot e^{-\lambda t}$$
+Where $t$ is time in months and $\lambda$ is the decay constant. This ensures that a client who was flagged as "High Neuroticism" during a deployment failure 2 years ago can "recover" to a neutral profile if recent interactions are stable.
+________________
+5.0 INTERPRETATION AND OUTPUT GENERATION RULES
+5.1 Tone and Language Synthesis
+The AI must translate the raw vector scores into human-readable insights that are useful for sales and support staff.
+* Input Example:
+   * Conscientiousness: 0.85 (High)
+   * Openness: 0.20 (Low)
+   * Agreeableness: 0.15 (Low)
+* Internal Interpretation: Subject is a "Bureaucratic Enforcer." High attention to detail, preference for established protocols, resistance to roadmap changes, and competitive negotiation style.
+* Output (Doctrine):
+   * Tone: "Professional, precise, and evidence-based."
+   * Analysis: "Subject demonstrates high attention to detail and a preference for established protocols. Likely to resist unproven features. Negotiation style is direct and detail-focused."
+   * Strategy: "Provide detailed documentation, avoid ambiguity, and stick strictly to agreed-upon timelines. Do not use 'visionary' sales pitches; focus on risk mitigation and compliance." 28
+5.2 Connecting Profiles to CRM Actions (Next Best Action)
+The AI shall generate specific "Next Best Action" tags based on the profile configuration:
+
+
+Profile Configuration
+	Recommended CRM Action
+	Rationale
+	High C + High N
+	Tag: "Daily Status Report"
+	Alleviates anxiety (High N) through visible structure and detail (High C). 25
+	High O + Low C
+	Tag: "Automate Follow-ups"
+	Subject is interested in the vision (High O) but likely to forget execution steps (Low C). 29
+	High A + Low E
+	Tag: "Soft Close via Email"
+	Subject dislikes pressure/confrontation (High A) and prefers async communication (Low E). 27
+	Low A + High E
+	Tag: "Executive Briefing"
+	Subject respects power and directness. Get a VP on the call to match their dominance. 34
+	________________
+6.0 JSON SCHEMA AND TYPESCRIPT INTERFACES
+The following schema defines the strict data structure for the BIG_FIVE_DOCTRINE implementation. This ensures type safety and standardized data exchange between the AI signal processor and the CRM database.50
+
+
+TypeScript
+
+
+
+
+/**
+* FrameLord Psychometric Profile Schema
+* Represents the inferred Big Five state of a CRM entity.
+* Version: 1.4-PsychoVector
+*/
+
+// Confidence levels for UI rendering
+type ConfidenceLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+// The five core dimensions
+interface BigFiveProfile {
+ openness: TraitMetric;
+ conscientiousness: TraitMetric;
+ extraversion: TraitMetric;
+ agreeableness: TraitMetric;
+ neuroticism: TraitMetric;
+ 
+ // Metadata regarding the profile generation
+ meta: {
+   lastUpdated: string; // ISO 8601 format
+   totalWordCount: number; // Aggregate word count analyzed
+   dominantSource: 'EMAIL' | 'VOICE' | 'NOTES' | 'HYBRID';
+   volatilityIndex: number; // 0.0 to 1.0 (How much the profile fluctuates)
+   history: ProfileSnapshot; // Historical states for trend analysis
+ };
+}
+
+// Detailed metric for a single trait
+interface TraitMetric {
+ score: number; // Floating point 0.0 to 1.0
+ confidence: number; // Floating point 0.0 to 1.0
+ confidenceLabel: ConfidenceLevel;
+ 
+ // Specific markers identified in the text that justify the score
+ evidence: {
+   keywords: string; // e.g., ["disaster", "urgent", "hate"]
+   frames: string; // e.g.,
+   snippetId: string; // ID of the source text/transcript
+ };
+ 
+ // Calculated trend (is the trait expression increasing?)
+ trend: 'STABLE' | 'INCREASING' | 'DECREASING';
+}
+
+/**
+* Input Payload for the Signal Engine
+* The raw data passed to the AI for analysis.
+*/
+interface PsychometricInput {
+ entityId: string;
+ contentType: 'EMAIL_BODY' | 'TRANSCRIPT' | 'NOTE';
+ text: string;
+ timestamp: string;
+ context: 'BAU' | 'NEGOTIATION' | 'CRISIS' | 'UNKNOWN'; // Contextual weighting tag
+ senderRole?: string; // Used for Role Normalization (e.g., "Accountant")
+}
+
+/**
+* Output Recommendation
+* Actionable strategy derived from the profile.
+*/
+interface EngagementStrategy {
+ communicationStyle: 'BRIEF_BULLETS' | 'VISIONARY_NARRATIVE' | 'WARM_CHATTY' | 'DIRECT_DATA';
+ negotiationTactic: 'FIXED_PRICE' | 'VALUE_BASED' | 'RELATIONSHIP_BASED' | 'HARD_BARGAIN';
+ churnRisk: number; // 0.0 to 1.0
+ churnFactor: 'ANXIETY' | 'COMPETITION' | 'DISENGAGEMENT' | 'NONE'; // Primary driver: High N, Low A, or Low C
+}
+
+interface ProfileSnapshot {
+   date: string;
+   scores: {?: number }; // Sparse vector of scores at that time
+}
+
+________________
+7.0 LIFECYCLE AND INTEGRATION
+7.1 Cross-System Mapping (MBTI/DISC Integration)
+FrameLord will inevitably ingest data from legacy CRM systems or LinkedIn scrapers that utilize DISC or MBTI tags. The system must map these distinct taxonomies to the Big Five scalar using the following correlation matrix. Note: These mappings are approximations and should be initialized with Low Confidence (0.4)..53
+
+
+Legacy System Metric
+	FrameLord Big Five Mapping
+	Logic/Correlation
+	DISC: D (Dominance)
+	High Extraversion + Low Agreeableness
+	High D types are assertive, direct, and competitive, matching the E+/A- cluster.
+	DISC: I (Influence)
+	High Extraversion + High Openness
+	High I types are social, visionary, and enthusiastic, matching the E+/O+ cluster.
+	DISC: S (Steadiness)
+	High Agreeableness + Low Openness
+	High S types value harmony, routine, and stability, matching the A+/O- cluster.
+	DISC: C (Compliance)
+	High Conscientiousness + Low Extraversion
+	High C types are analytical, detail-oriented, and reserved, matching the C+/E- cluster.
+	MBTI: E / I
+	Extraversion (High / Low)
+	Direct mapping. Strongest correlation in psychometric literature. 57
+	MBTI: N / S
+	Openness (High / Low)
+	N (Intuition) maps to High Openness (Abstract). S (Sensing) maps to Low Openness (Concrete). 56
+	MBTI: T / F
+	Agreeableness (Low / High)
+	F (Feeling) maps to High Agreeableness (People-focused). T (Thinking) maps to Low Agreeableness (Logic/Task-focused). 58
+	MBTI: J / P
+	Conscientiousness (High / Low)
+	J (Judging) maps to High Conscientiousness (Planned). P (Perceiving) maps to Low Conscientiousness (Flexible). 57
+	Constraint: MBTI does not effectively map to Neuroticism. When importing MBTI data, the Neuroticism vector shall be initialized at 0.5 (Neutral) unless explicit textual evidence suggests otherwise. 57
+7.2 Profile Reset Triggers
+A profile is not valid indefinitely. Specific lifecycle events trigger a "Confidence Reset," forcing the AI to re-evaluate the subject with higher plasticity.
+1. Job Change Event: If the subject moves roles (e.g., from "Engineering Manager" to "Sales Engineer"), behavior may shift to match new role expectations.
+   * Action: Reset Confidence to 0.3. Re-apply Role Normalization rules. 14
+2. Long Hiatus: If no interaction occurs for >12 months.
+   * Action: Apply Decay Function (Section 4.4) to reduce score extremity toward neutral. 48
+3. Anomaly Detection (Volatility Spike): A sudden, statistically significant spike in volatility (e.g., a "Stable" client suddenly sends 5 "High Neuroticism" emails in one day).
+   * Action: Flag as "Crisis State." Do not update Trait profile; log as temporary State variance. 7
+________________
+END OF DOCTRINE FILE

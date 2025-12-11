@@ -16,6 +16,10 @@ import {
   getContactById,
 } from './contactStore';
 import {
+  addNoteAsPsychometricEvidence,
+  updateNoteAsPsychometricEvidence,
+} from './psychometricNoteAdapter';
+import {
   getOrCreateTopic,
   linkNoteToTopic,
   addNoteToTopic,
@@ -473,6 +477,9 @@ export const createNote = (params: {
     processNoteLinks(newNote);
   }
 
+  // Add note content as psychometric evidence for target contacts
+  addNoteAsPsychometricEvidence(newNote);
+
   return newNote;
 };
 
@@ -538,6 +545,11 @@ export const updateNote = (
   if (updates.content) {
     processNoteTopics(MOCK_NOTES[index]);
     processNoteLinks(MOCK_NOTES[index]);
+  }
+
+  // Update psychometric evidence if content or target contacts changed
+  if (updates.content || updates.targetContactIds) {
+    updateNoteAsPsychometricEvidence(MOCK_NOTES[index]);
   }
 
   return MOCK_NOTES[index];

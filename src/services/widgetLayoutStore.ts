@@ -8,6 +8,7 @@ export type WidgetId =
   | 'timeline'
   | 'keyDates'
   | 'frameScan'
+  | 'aiProfile' // Big Five psychometric profile
   | 'tasks'
   | 'projects'
   | 'notes'
@@ -44,23 +45,24 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
   // Primary 4-zone widgets - visible by default
   { id: 'tags', visible: true, order: 0 },           // Zone 1: Identity
   { id: 'frameScan', visible: true, order: 1 },      // Zone 2: Frame & Scans
-  { id: 'keyDates', visible: true, order: 2 },       // Zone 2: Frame & Scans
-  { id: 'timeline', visible: true, order: 3 },       // Zone 3: Timeline
-  { id: 'tasks', visible: true, order: 4 },          // Zone 4: Next Actions
-  { id: 'notes', visible: true, order: 5 },          // Zone 4: Notes
-  { id: 'notesMentioning', visible: true, order: 6 }, // Zone 4: Notes mentioning
+  { id: 'aiProfile', visible: true, order: 2 },      // Zone 2: AI Profile (Big Five)
+  { id: 'keyDates', visible: true, order: 3 },       // Zone 2: Frame & Scans
+  { id: 'timeline', visible: true, order: 4 },       // Zone 3: Timeline
+  { id: 'tasks', visible: true, order: 5 },          // Zone 4: Next Actions
+  { id: 'notes', visible: true, order: 6 },          // Zone 4: Notes
+  { id: 'notesMentioning', visible: true, order: 7 }, // Zone 4: Notes mentioning
 
   // Secondary widgets - hidden by default (reduce clutter)
-  { id: 'projects', visible: false, order: 7 },
-  { id: 'attachments', visible: false, order: 8 },
-  { id: 'statsSummary', visible: false, order: 9 },
+  { id: 'projects', visible: false, order: 8 },
+  { id: 'attachments', visible: false, order: 9 },
+  { id: 'statsSummary', visible: false, order: 10 },
 
   // Contact Zero only widgets
-  { id: 'openTasksOwed', visible: true, order: 10 },
-  { id: 'upcomingTasks', visible: true, order: 11 },
-  { id: 'topics', visible: false, order: 12 },       // Hidden by default
-  { id: 'activityFeed', visible: false, order: 13 }, // Hidden by default
-  { id: 'lastInteractions', visible: false, order: 14 },
+  { id: 'openTasksOwed', visible: true, order: 11 },
+  { id: 'upcomingTasks', visible: true, order: 12 },
+  { id: 'topics', visible: false, order: 13 },       // Hidden by default
+  { id: 'activityFeed', visible: false, order: 14 }, // Hidden by default
+  { id: 'lastInteractions', visible: false, order: 15 },
 ];
 
 // In-memory storage

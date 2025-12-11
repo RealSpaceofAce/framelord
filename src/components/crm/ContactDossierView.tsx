@@ -76,6 +76,7 @@ import {
   WidgetConfig,
 } from '../../services/widgetLayoutStore';
 import { FrameScanContactTab } from './FrameScanContactTab';
+import { AIProfileWidget } from './AIProfileWidget';
 
 const MotionDiv = motion.div as any;
 
@@ -1658,6 +1659,16 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               contactId={selectedContactId}
               contactName={contact.fullName}
               onViewReport={(reportId) => onNavigateToFrameScanReport?.(reportId)}
+            />
+          </div>
+          )}
+
+          {/* AI Profile Section - Big Five Psychometric Profile */}
+          {isWidgetVisible('aiProfile') && !isContactZero && (
+          <div className={`${glassCard} p-4`}>
+            <AIProfileWidget
+              contactId={selectedContactId}
+              contactName={contact.fullName}
             />
           </div>
           )}
