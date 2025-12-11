@@ -216,19 +216,14 @@ export const AITab: React.FC<AITabProps> = ({
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header with DocLord Writing Assistant branding */}
       <div className="px-4 py-3 border-b" style={{ borderColor: colors.border, background: `linear-gradient(to right, ${colors.accent}15, transparent)` }}>
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg" style={{ background: `${colors.accent}20`, border: `1px solid ${colors.accent}30` }}>
             <Crown size={14} style={{ color: colors.accent }} />
           </div>
-          <div>
-            <h3 className="text-sm font-bold" style={{ color: colors.text }}>
-              DocLord Writing Assistant
-            </h3>
-          </div>
+          <h3 className="text-sm font-bold" style={{ color: colors.text }}>
+            DocLord Writing Assistant
+          </h3>
         </div>
-        <p className="text-xs leading-relaxed" style={{ color: colors.textMuted }}>
-          I am DocLord, your Apex Frame writing assistant. I help you write and refine documents, sales copy, and personal messages so they carry Apex Frame, Win Win positioning, and clean Dominion tone.
-        </p>
       </div>
 
       {/* Suggestion Buttons */}

@@ -419,13 +419,7 @@ What's on your mind?`,
   if (isContactZero) {
     return {
       role: 'assistant',
-      content: `I'm LL, your Apex Frame coach. I help you move from Slave Frame to Apex Frame, install Win-Win, and reclaim Dominion Will to Power.
-
-You can ask me about:
-• Your frame patterns and where you're stuck
-• Specific relationships or business situations
-• How to handle shame, resentment, or avoidance
-• Concrete next moves that build your Dominion
+      content: `I am DocLord, your Apex Frame writing assistant. I help you write and refine documents, sales copy, and personal messages so they carry Apex Frame, Win-Win positioning, and clean Dominion tone.
 
 What's on your mind?`,
       timestamp: new Date().toISOString(),

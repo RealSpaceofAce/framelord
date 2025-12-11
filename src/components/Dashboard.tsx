@@ -480,10 +480,12 @@ const ScanView: React.FC = () => {
       if (audioBlob) {
         setIsTranscribing(true);
         try {
-          const transcription = await transcribeAudioToText(audioBlob);
-          if (transcription) {
-            setInput(prev => prev ? `${prev}\n\n${transcription}` : transcription);
+          const result = await transcribeAudioToText(audioBlob);
+          if (result.success && result.text) {
+            setInput(prev => prev ? `${prev}\n\n${result.text}` : result.text);
             showToast({ type: 'success', title: 'Transcription complete', message: 'Audio has been converted to text' });
+          } else {
+            showToast({ type: 'error', title: 'Transcription failed', message: result.error || 'Could not transcribe audio' });
           }
         } catch (err) {
           console.error('Transcription error:', err);
