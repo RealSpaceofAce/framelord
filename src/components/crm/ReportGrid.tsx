@@ -11,6 +11,7 @@
 import React, { useState } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCenter } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FolderPlus } from 'lucide-react';
 import type { FrameScanReport } from '@/services/frameScanReportStore';
 import type { FrameScanFolder } from '@/services/frameScanFolderStore';
 import type { FrameDomainId } from '@/lib/frameScan/frameTypes';
@@ -110,6 +111,13 @@ export const ReportGrid: React.FC<ReportGridProps> = ({
     }
   };
 
+  // Open dialog for creating an empty folder directly
+  const handleOpenCreateEmptyFolder = () => {
+    setPendingFolderReports([]);
+    setNewFolderName('New Folder');
+    setShowFolderNameDialog(true);
+  };
+
   const toggleFolderExpansion = (folderId: string) => {
     setExpandedFolders(prev => {
       const next = new Set(prev);
@@ -134,9 +142,20 @@ export const ReportGrid: React.FC<ReportGridProps> = ({
         collisionDetection={closestCenter}
       >
         <div className="p-6 max-w-6xl mx-auto">
-          <div className="mb-4 text-sm text-muted-foreground">
-            {reports.length} report{reports.length !== 1 ? 's' : ''} •{' '}
-            {folders.length} folder{folders.length !== 1 ? 's' : ''}
+          <div className="mb-4 flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              {reports.length} report{reports.length !== 1 ? 's' : ''} •{' '}
+              {folders.length} folder{folders.length !== 1 ? 's' : ''}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleOpenCreateEmptyFolder}
+              className="gap-1.5 text-[#4433FF] hover:text-[#5544FF] hover:bg-[#4433FF]/10"
+            >
+              <FolderPlus size={14} />
+              New Folder
+            </Button>
           </div>
 
           {/* Grid Layout */}
