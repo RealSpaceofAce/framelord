@@ -1057,13 +1057,13 @@ const FrameIntegrityWidget: React.FC = () => {
                     </div>
 
                     {/* Frame Leaks */}
-                    <div className="p-3 border border-orange-500/50 bg-[#000000] rounded">
+                    <div className="p-3 border border-[#0043ff]/50 bg-[#000000] rounded">
                         <div className="flex items-center gap-1.5 mb-1">
-                            <div className="w-1.5 h-1.5 bg-orange-500 rounded-sm" />
-                            <span className="text-[10px] text-orange-500 font-bold uppercase tracking-wider font-mono">Frame Leaks</span>
+                            <div className="w-1.5 h-1.5 bg-[#0043ff] rounded-sm" />
+                            <span className="text-[10px] text-[#0043ff] font-bold uppercase tracking-wider font-mono">Frame Leaks</span>
                         </div>
-                        <div className="text-3xl font-display font-bold text-orange-500">{frameLeaks}</div>
-                        <div className="text-[9px] text-orange-500/60 font-mono">[INCONGRUENT]</div>
+                        <div className="text-3xl font-display font-bold text-[#0043ff]">{frameLeaks}</div>
+                        <div className="text-[9px] text-[#0043ff]/60 font-mono">[INCONGRUENT]</div>
                     </div>
                 </div>
 
@@ -1133,7 +1133,7 @@ const RebelsRankingWidget: React.FC = () => {
                     <h3 className="text-xs font-bold uppercase tracking-widest">Rebels Ranking</h3>
                 </div>
                 {newCount > 0 && (
-                    <div className="text-[9px] bg-[#333] text-orange-500 px-2 py-0.5 rounded font-bold border border-orange-500/30">
+                    <div className="text-[9px] bg-[#333] text-[#0043ff] px-2 py-0.5 rounded font-bold border border-[#0043ff]/30">
                         {newCount} NEW
                     </div>
                 )}
@@ -1163,7 +1163,7 @@ const RebelsRankingWidget: React.FC = () => {
                                 <div>
                                     <div className="text-xs font-bold text-white">
                                         {contact.fullName.toUpperCase()} 
-                                        {contact.isNew && <span className="ml-1 text-orange-500">🆕</span>}
+                                        {contact.isNew && <span className="ml-1 text-[#0043ff]">🆕</span>}
                                     </div>
                                     <div className="text-[9px] text-gray-500">
                                         {contact.streak > 0 ? `${contact.streak} WEEK${contact.streak > 1 ? 'S' : ''} STREAK 🔥` : 'NEW REBEL'}
@@ -1382,7 +1382,7 @@ const DashboardOverview: React.FC = () => {
                         <div className="flex justify-between items-start">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-2 h-2 rounded-full bg-orange-500" />
+                                    <div className="w-2 h-2 rounded-full bg-[#0043ff]" />
                                     <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Frame Leaks</h3>
                                 </div>
                                 <div className="text-5xl font-display font-bold text-white">{leaks}</div>
@@ -1391,7 +1391,7 @@ const DashboardOverview: React.FC = () => {
                         </div>
                         <div className="flex items-center justify-between mt-4">
                             <span className="text-xs text-gray-600">IN VALIDATION TRAPS</span>
-                            <TrendingDown size={20} className="text-orange-500" />
+                            <TrendingDown size={20} className="text-[#0043ff]" />
                         </div>
                     </div>
                 </SparkBorder>
@@ -1437,7 +1437,7 @@ const DashboardOverview: React.FC = () => {
                         <div className="flex gap-6 text-[10px] font-bold uppercase tracking-wider">
                             <div className="flex items-center gap-2 text-blue-500"><div className="w-2 h-2 rotate-45 bg-blue-500" /> Scans</div>
                             <div className="flex items-center gap-2 text-purple-500"><div className="w-2 h-2 rotate-45 bg-purple-500" /> Actions</div>
-                            <div className="flex items-center gap-2 text-orange-500"><div className="w-2 h-2 rotate-45 bg-orange-500" /> Score</div>
+                            <div className="flex items-center gap-2 text-[#0043ff]"><div className="w-2 h-2 rotate-45 bg-[#0043ff]" /> Score</div>
                         </div>
                     </div>
 
@@ -1742,10 +1742,10 @@ const DashboardOverview: React.FC = () => {
                                         </div>
                                         <div className="flex flex-col gap-1">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rotate-45 bg-orange-500" />
+                                                <div className="w-2 h-2 rotate-45 bg-[#0043ff]" />
                                                 <span className="text-[9px] text-gray-500 uppercase tracking-wider">Score</span>
                                             </div>
-                                            <div className="text-2xl font-display font-bold text-orange-400">
+                                            <div className="text-2xl font-display font-bold text-[#5577ff]">
                                                 {selectedDataPoint.score}
                                             </div>
                                         </div>
@@ -1761,7 +1761,7 @@ const DashboardOverview: React.FC = () => {
             <SparkBorder>
                 <div className="bg-[#000000] border border-[#1c1c1c] rounded-xl p-6 relative overflow-hidden">
                     <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-2 text-orange-500">
+                        <div className="flex items-center gap-2 text-[#0043ff]">
                             <Briefcase size={16} />
                             <h3 className="text-xs font-bold uppercase tracking-widest">Cases / Workload</h3>
                         </div>
