@@ -18,7 +18,8 @@ import Link from '@tiptap/extension-link';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Highlight from '@tiptap/extension-highlight';
-import Image from '@tiptap/extension-image';
+// Using custom ResizableImageNode instead of basic Image for resize capability
+import { ResizableImageNode } from './extensions/ResizableImageNode';
 import {
   Bold,
   Italic,
@@ -215,13 +216,8 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
           console.log('Navigate to topic:', topicId);
         },
       }),
-      Image.configure({
-        inline: true,
-        allowBase64: true,
-        HTMLAttributes: {
-          class: 'rounded-lg max-w-full h-auto',
-        },
-      }),
+      // ResizableImageNode replaces Image - provides drag handles for resizing
+      ResizableImageNode,
       TweetEmbedNode,
     ],
     content,
@@ -257,14 +253,14 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
                   });
 
                   if (coordinates) {
-                    // Insert image at drop position
+                    // Insert resizable image at drop position
                     editor.chain().focus().insertContentAt(coordinates.pos, {
-                      type: 'image',
+                      type: 'resizableImage',
                       attrs: { src: dataUrl },
                     }).run();
                   } else {
                     // Fallback: insert at current cursor position
-                    editor.chain().focus().setImage({ src: dataUrl }).run();
+                    editor.chain().focus().setResizableImage({ src: dataUrl }).run();
                   }
                 }
               };
@@ -297,8 +293,8 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
               reader.onload = (e) => {
                 const dataUrl = e.target?.result as string;
                 if (dataUrl && editor) {
-                  // Insert image at current cursor position
-                  editor.chain().focus().setImage({ src: dataUrl }).run();
+                  // Insert resizable image at current cursor position
+                  editor.chain().focus().setResizableImage({ src: dataUrl }).run();
                 }
               };
               reader.readAsDataURL(file);
@@ -840,7 +836,7 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
                 reader.onload = (e) => {
                   const dataUrl = e.target?.result as string;
                   if (dataUrl && editor) {
-                    editor.chain().focus().setImage({ src: dataUrl }).run();
+                    editor.chain().focus().setResizableImage({ src: dataUrl }).run();
                   }
                 };
                 reader.readAsDataURL(file);
@@ -849,7 +845,7 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
             input.click();
           }}
           icon={ImageIcon}
-          title="Insert Image"
+          title="Insert Resizable Image"
         />
         <ToolbarButton
           onClick={() => setShowTweetInput(true)}

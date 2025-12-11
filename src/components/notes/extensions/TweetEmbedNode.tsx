@@ -5,12 +5,17 @@
 // - Parse tweet/X URLs to extract tweet ID
 // - Render styled tweet card with link to original
 // - Support both twitter.com and x.com URLs
+// - PASTE-TO-EMBED: Automatically embeds when pasting Twitter/X URLs
 // =============================================================================
 
-import { Node, mergeAttributes } from '@tiptap/core';
+import { Node, mergeAttributes, nodePasteRule } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
+
+// Regex patterns for matching Twitter/X URLs
+const TWITTER_URL_REGEX = /https?:\/\/(twitter\.com|x\.com)\/[^/]+\/status\/\d+/g;
+const TWITTER_URL_REGEX_GLOBAL = /https?:\/\/(twitter\.com|x\.com)\/[^/]+\/status\/\d+/gi;
 
 // =============================================================================
 // TYPES
@@ -224,6 +229,28 @@ export const TweetEmbedNode = Node.create({
           });
         },
     };
+  },
+
+  /**
+   * PASTE-TO-EMBED: Automatically convert pasted Twitter/X URLs into embedded tweets
+   * No modal needed - just paste and it embeds!
+   */
+  addPasteRules() {
+    return [
+      nodePasteRule({
+        find: TWITTER_URL_REGEX_GLOBAL,
+        type: this.type,
+        getAttributes: (match) => {
+          const url = match[0];
+          const parsed = parseTweetUrl(url);
+          return {
+            url,
+            tweetId: parsed.tweetId,
+            author: parsed.author,
+          };
+        },
+      }),
+    ];
   },
 });
 
