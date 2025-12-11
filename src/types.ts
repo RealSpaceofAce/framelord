@@ -75,6 +75,32 @@ export interface EngagementEvent {
   description?: string;           // Human-readable description
 }
 
+/**
+ * Contact profile gathered during intake assessment.
+ * Stored on Contact Zero to personalize the system.
+ * Extended to capture full Tier 1 intake data.
+ */
+export interface ContactIntakeProfile {
+  /** Brief bio statement from intake (t1_identity) */
+  bio?: string;
+  /** Work context description from intake (t1_work_context) */
+  workContext?: string;
+  /** Primary vision/outcome from want discovery (t1_want_discovery_1) */
+  primaryVision?: string;
+  /** List of wants/outcomes from want discovery (t1_want_discovery_2) */
+  wants?: string[];
+  /** Key constraint or blocker (t1_constraint) */
+  keyConstraint?: string;
+  /** Additional notes from closing question (t1_closing) */
+  notes?: string;
+  /** Self-rated frame score 1-10 (t1_self_rating) */
+  selfRating?: number;
+  /** When this profile was created */
+  createdAt?: string;
+  /** When this profile was last updated */
+  updatedAt?: string;
+}
+
 export interface Contact {
   id: string;
   fullName: string;
@@ -105,6 +131,12 @@ export interface Contact {
   linkedTopics: string[];         // Topic IDs associated with this contact
   // Psychometric profile (populated by Little Lord observations)
   psychometricProfile?: ContactPsychometricProfile;
+  // Intake-gathered profile (populated during intake assessment)
+  contactProfile?: ContactIntakeProfile;
+  // Initial wants extracted from intake want discovery questions
+  initialWants?: string[];
+  // Intake gateway - timestamp of first Tier 1 completion (null means not completed)
+  firstIntakeCompletedAt?: string | null;
 }
 
 /** Contact Zero is the user's own record */

@@ -1,0 +1,751 @@
+{
+  "version": "1.0.0",
+  "description": "Psycholinguistic Architecture specification for FrameLord business frame analysis",
+  "axes": [
+    {
+      "id": "locus_of_control",
+      "name": "Locus of Control",
+      "description": "Degree to which user attributes outcomes to their own actions (internal) vs. external forces (external)",
+      "scaleMin": 0,
+      "scaleMax": 100,
+      "lowMeaning": "External attribution, blame shifting, victimhood",
+      "highMeaning": "Internal attribution, ownership, agency"
+    },
+    {
+      "id": "motivation_direction",
+      "name": "Motivation Direction",
+      "description": "Balance between moving towards goals vs. away from problems",
+      "scaleMin": 0,
+      "scaleMax": 100,
+      "lowMeaning": "Away-from motivated (problem focus, avoidance, fear-driven)",
+      "highMeaning": "Towards motivated (goal focus, accumulation, growth-driven)"
+    },
+    {
+      "id": "process_clarity",
+      "name": "Process Clarity",
+      "description": "Degree of structured methodology vs. chaotic improvisation",
+      "scaleMin": 0,
+      "scaleMax": 100,
+      "lowMeaning": "Chaotic, no structure, improvisation, 'it depends'",
+      "highMeaning": "Clear, sequential, structured, repeatable process"
+    },
+    {
+      "id": "linguistic_authority",
+      "name": "Linguistic Authority",
+      "description": "Use of command language vs. powerless language markers",
+      "scaleMin": 0,
+      "scaleMax": 100,
+      "lowMeaning": "Hedges, minimizers, tag questions, seeking permission",
+      "highMeaning": "Direct, commanding, certain, declarative"
+    },
+    {
+      "id": "pricing_confidence",
+      "name": "Pricing Confidence",
+      "description": "Comfort level with money and value conversations",
+      "scaleMin": 0,
+      "scaleMax": 100,
+      "lowMeaning": "Shame, avoidance, apologetic, euphemistic",
+      "highMeaning": "Direct, value-anchored, unapologetic"
+    },
+    {
+      "id": "status_frame",
+      "name": "Status Frame",
+      "description": "Power dynamics in interactions (Supplicant < Analyst < Power)",
+      "scaleMin": 0,
+      "scaleMax": 100,
+      "lowMeaning": "Supplicant Frame (seeking permission, low status)",
+      "midMeaning": "Analyst Frame (data-driven, neutral)",
+      "highMeaning": "Power Frame (prize frame, high status)"
+    },
+    {
+      "id": "boundary_control",
+      "name": "Boundary Control",
+      "description": "Ability to enforce limits and handle conflict",
+      "scaleMin": 0,
+      "scaleMax": 100,
+      "lowMeaning": "Conflict avoidance, passive aggression, boundary leaks",
+      "highMeaning": "Direct, firm boundaries, comfortable with tension"
+    },
+    {
+      "id": "operational_congruence",
+      "name": "Operational Congruence",
+      "description": "Alignment between stated goals and actual behaviors (say-do gap)",
+      "scaleMin": 0,
+      "scaleMax": 100,
+      "lowMeaning": "Say-do gap, temporal gaps, avoidance behaviors",
+      "highMeaning": "High alignment, accountability, specific actions"
+    },
+    {
+      "id": "frame_strength",
+      "name": "Frame Strength",
+      "description": "Overall dominance of Power vs. Analyst vs. Supplicant patterns",
+      "scaleMin": 0,
+      "scaleMax": 100,
+      "lowMeaning": "Supplicant/Analyst frame dominance",
+      "highMeaning": "Power frame dominance"
+    }
+  ],
+  "flags": [
+    {
+      "code": "AGENCY_WARNING",
+      "description": "High passive voice density, external attribution dominance - user believes they have no control over outcomes",
+      "severity": "critical",
+      "triggerDetectors": ["passive_voice", "external_attribution"],
+      "affectsAxes": ["locus_of_control", "linguistic_authority"]
+    },
+    {
+      "code": "LOCUS_EXTERNAL",
+      "description": "User attributes outcomes to luck/others, feels pressured by obligation rather than internal choice",
+      "severity": "warn",
+      "triggerDetectors": ["external_attribution", "modal_necessity"],
+      "affectsAxes": ["locus_of_control"]
+    },
+    {
+      "code": "FRAME_STATUS_BETA",
+      "description": "User operates from low status, seeking permission/validation through hedges and tag questions",
+      "severity": "warn",
+      "triggerDetectors": ["hedge_density", "tag_questions"],
+      "affectsAxes": ["linguistic_authority", "status_frame"]
+    },
+    {
+      "code": "PRICING_SHAME",
+      "description": "User has internalized negative money scripts, shows discomfort with value through apologetic/euphemistic language",
+      "severity": "warn",
+      "triggerDetectors": ["money_apology", "price_euphemism", "minimizer"],
+      "affectsAxes": ["pricing_confidence"]
+    },
+    {
+      "code": "WEALTH_RESENTMENT",
+      "description": "User resents wealth, uses negative adjectives for high-price providers, likely sabotages own pricing",
+      "severity": "info",
+      "triggerDetectors": ["wealth_adjective_test"],
+      "affectsAxes": ["pricing_confidence"]
+    },
+    {
+      "code": "JUSTIFICATION_LOOP",
+      "description": "User lacks confidence in value, immediately explains features after stating price",
+      "severity": "warn",
+      "triggerDetectors": ["price_justification"],
+      "affectsAxes": ["pricing_confidence", "linguistic_authority"]
+    },
+    {
+      "code": "IMPOSTER_SYNDROME",
+      "description": "User doesn't internalize success, attributes to luck/timing, fears being 'found out'",
+      "severity": "warn",
+      "triggerDetectors": ["success_attribution", "minimizer"],
+      "affectsAxes": ["locus_of_control", "status_frame"]
+    },
+    {
+      "code": "SUPPLICANT_FRAME",
+      "description": "User operates from low power, gives away frame control through permission-seeking and acquiescence",
+      "severity": "critical",
+      "triggerDetectors": ["supplicant_language", "boundary_acquiescence"],
+      "affectsAxes": ["status_frame", "boundary_control", "frame_strength"]
+    },
+    {
+      "code": "BOUNDARY_LEAK",
+      "description": "Conflict avoidance, fear of client loss, acquiescence to unreasonable demands",
+      "severity": "warn",
+      "triggerDetectors": ["boundary_acquiescence", "conflict_avoidance_pattern"],
+      "affectsAxes": ["boundary_control", "status_frame"]
+    },
+    {
+      "code": "GAP_DETECTED",
+      "description": "Say-do gap between stated goals and actual behaviors, temporal gaps indicating avoidance",
+      "severity": "critical",
+      "triggerDetectors": ["temporal_gap", "text_bridge"],
+      "affectsAxes": ["operational_congruence"]
+    },
+    {
+      "code": "CALL_RELUCTANCE",
+      "description": "Fear of rejection, social anxiety around outreach, 'bothering people' language",
+      "severity": "critical",
+      "triggerDetectors": ["temporal_gap", "avoidance_language"],
+      "affectsAxes": ["operational_congruence", "boundary_control"]
+    },
+    {
+      "code": "CONFLICT_AVOIDANCE",
+      "description": "User avoids necessary confrontations through passive aggressive or indirect communication",
+      "severity": "warn",
+      "triggerDetectors": ["passive_aggressive_pattern", "conflict_avoidance_pattern"],
+      "affectsAxes": ["boundary_control"]
+    },
+    {
+      "code": "PASSIVE_AGGRESSION",
+      "description": "User expresses frustration indirectly through low status communication patterns",
+      "severity": "warn",
+      "triggerDetectors": ["passive_aggressive_pattern"],
+      "affectsAxes": ["boundary_control", "linguistic_authority"]
+    },
+    {
+      "code": "DISTORTION_ALERT",
+      "description": "User has limiting beliefs creating distorted reality through universal quantifiers",
+      "severity": "info",
+      "triggerDetectors": ["universal_quantifier"],
+      "affectsAxes": ["locus_of_control"]
+    },
+    {
+      "code": "INTEGRITY_CHECK",
+      "description": "Possible deception, distancing, or lack of conviction through pronoun divergence",
+      "severity": "info",
+      "triggerDetectors": ["pronoun_divergence"],
+      "affectsAxes": ["operational_congruence"]
+    },
+    {
+      "code": "STATIC_FRAME",
+      "description": "User views problems as static states rather than processes they can change",
+      "severity": "info",
+      "triggerDetectors": ["nominalization"],
+      "affectsAxes": ["operational_congruence"]
+    },
+    {
+      "code": "COMMITMENT_SOFT",
+      "description": "User lacks true commitment, uses future tense without dates, wishful thinking",
+      "severity": "info",
+      "triggerDetectors": ["vague_future"],
+      "affectsAxes": ["operational_congruence"]
+    }
+  ],
+  "detectors": [
+    {
+      "id": "passive_voice",
+      "name": "Passive Voice Detector",
+      "description": "Identifies passive voice constructions that obscure agency",
+      "patternHints": ["was/were + past participle", "be verb + past participle without agent", "mistakes were made", "deadline was missed"],
+      "effects": [
+        { "axisId": "locus_of_control", "direction": "down", "weight": 5 },
+        { "axisId": "linguistic_authority", "direction": "down", "weight": 3 },
+        { "flagCode": "AGENCY_WARNING", "condition": "density > 0.15" }
+      ]
+    },
+    {
+      "id": "pronoun_density",
+      "name": "Pronoun Density Analysis",
+      "description": "Calculates first-person pronoun usage relative to total words",
+      "patternHints": ["I", "me", "my", "mine"],
+      "effects": [
+        { "axisId": "locus_of_control", "direction": "varies", "weight": 3 }
+      ]
+    },
+    {
+      "id": "pronoun_divergence",
+      "name": "Pronoun Divergence Detector",
+      "description": "Identifies shifts from first-person to third-person pronouns at critical moments",
+      "patternHints": ["I -> we/they shift", "my -> our/their shift"],
+      "effects": [
+        { "axisId": "operational_congruence", "direction": "down", "weight": 4 },
+        { "flagCode": "INTEGRITY_CHECK", "condition": "shift detected in critical context" }
+      ]
+    },
+    {
+      "id": "hedge_density",
+      "name": "Hedge Density Calculator",
+      "description": "Counts hedges and minimizers indicating low confidence",
+      "patternHints": ["just", "kind of", "sort of", "basically", "probably", "maybe", "I think", "I hope"],
+      "effects": [
+        { "axisId": "linguistic_authority", "direction": "down", "weight": 5 },
+        { "axisId": "pricing_confidence", "direction": "down", "weight": 3 },
+        { "flagCode": "FRAME_STATUS_BETA", "condition": "density > 0.05" }
+      ]
+    },
+    {
+      "id": "temporal_gap",
+      "name": "Temporal Gap Detector",
+      "description": "Identifies time bridges that hide unproductive periods",
+      "patternHints": ["then", "later", "after a while", "eventually", "next thing I knew", "then it was"],
+      "effects": [
+        { "axisId": "operational_congruence", "direction": "down", "weight": 5 },
+        { "flagCode": "GAP_DETECTED", "condition": "gaps > 2 in work narrative" },
+        { "flagCode": "CALL_RELUCTANCE", "condition": "gap during prospecting hours" }
+      ]
+    },
+    {
+      "id": "text_bridge",
+      "name": "Text Bridge Analyzer",
+      "description": "Similar to temporal gaps, identifies narrative bridges that skip details",
+      "patternHints": ["and then", "subsequently", "after that"],
+      "effects": [
+        { "axisId": "operational_congruence", "direction": "down", "weight": 4 },
+        { "flagCode": "GAP_DETECTED", "condition": "bridges > 2" }
+      ]
+    },
+    {
+      "id": "universal_quantifier",
+      "name": "Universal Quantifier Detector",
+      "description": "Identifies overgeneralizations that indicate limiting beliefs",
+      "patternHints": ["always", "never", "everyone", "nobody", "all", "none"],
+      "effects": [
+        { "axisId": "locus_of_control", "direction": "down", "weight": 3 },
+        { "flagCode": "DISTORTION_ALERT", "condition": "count > 3 in response" }
+      ]
+    },
+    {
+      "id": "modal_necessity",
+      "name": "Modal Necessity Detector",
+      "description": "Identifies modal operators of necessity indicating external pressure",
+      "patternHints": ["have to", "must", "need to", "should"],
+      "effects": [
+        { "axisId": "locus_of_control", "direction": "down", "weight": 4 },
+        { "flagCode": "LOCUS_EXTERNAL", "condition": "necessity > possibility by 3x" }
+      ]
+    },
+    {
+      "id": "modal_possibility",
+      "name": "Modal Possibility Detector",
+      "description": "Identifies modal operators of possibility indicating choice",
+      "patternHints": ["can", "could", "might", "may", "want to", "choose to"],
+      "effects": [
+        { "axisId": "locus_of_control", "direction": "up", "weight": 2 }
+      ]
+    },
+    {
+      "id": "nominalization",
+      "name": "Nominalization Detector",
+      "description": "Identifies verbs turned into nouns, removing action from language",
+      "patternHints": ["the communication was", "the performance was", "relationship", "decision", "management"],
+      "effects": [
+        { "axisId": "operational_congruence", "direction": "down", "weight": 3 },
+        { "flagCode": "STATIC_FRAME", "condition": "density > 0.03" }
+      ]
+    },
+    {
+      "id": "tag_questions",
+      "name": "Tag Question Detector",
+      "description": "Identifies tag questions that seek validation",
+      "patternHints": ["...right?", "...doesn't it?", "...don't you think?", "...isn't it?", "...you know?"],
+      "effects": [
+        { "axisId": "linguistic_authority", "direction": "down", "weight": 5 },
+        { "axisId": "status_frame", "direction": "down", "weight": 4 },
+        { "flagCode": "SUPPLICANT_FRAME", "condition": "count > 1" }
+      ]
+    },
+    {
+      "id": "towards_language",
+      "name": "Towards Language Detector",
+      "description": "Identifies motivation language focused on goals and accumulation",
+      "patternHints": ["get", "achieve", "build", "create", "launch", "acquire", "grow", "expand", "win"],
+      "effects": [
+        { "axisId": "motivation_direction", "direction": "up", "weight": 4 }
+      ]
+    },
+    {
+      "id": "away_language",
+      "name": "Away Language Detector",
+      "description": "Identifies motivation language focused on avoidance and problems",
+      "patternHints": ["stop", "avoid", "fix", "prevent", "reduce", "eliminate", "escape", "get rid of"],
+      "effects": [
+        { "axisId": "motivation_direction", "direction": "down", "weight": 4 }
+      ]
+    },
+    {
+      "id": "external_attribution",
+      "name": "External Attribution Detector",
+      "description": "Identifies attribution of outcomes to external factors",
+      "patternHints": ["the client was", "the market shifted", "they ghosted", "it wasn't the right time", "luck", "timing"],
+      "effects": [
+        { "axisId": "locus_of_control", "direction": "down", "weight": 5 },
+        { "flagCode": "LOCUS_EXTERNAL", "condition": "external > internal attribution" },
+        { "flagCode": "IMPOSTER_SYNDROME", "condition": "external attribution for success" }
+      ]
+    },
+    {
+      "id": "internal_attribution",
+      "name": "Internal Attribution Detector",
+      "description": "Identifies attribution of outcomes to own actions",
+      "patternHints": ["I failed to", "I didn't", "I missed", "I should have", "I navigated", "I built"],
+      "effects": [
+        { "axisId": "locus_of_control", "direction": "up", "weight": 5 }
+      ]
+    },
+    {
+      "id": "supplicant_language",
+      "name": "Supplicant Language Detector",
+      "description": "Identifies low-status, permission-seeking language patterns",
+      "patternHints": ["just checking in", "is now a good time?", "does that make sense?", "I hope", "sorry to bother"],
+      "effects": [
+        { "axisId": "status_frame", "direction": "down", "weight": 5 },
+        { "axisId": "frame_strength", "direction": "down", "weight": 5 },
+        { "flagCode": "SUPPLICANT_FRAME", "condition": "density > 0.1" }
+      ]
+    },
+    {
+      "id": "power_language",
+      "name": "Power Language Detector",
+      "description": "Identifies high-status, commanding language patterns",
+      "patternHints": ["brevity", "direct commands", "lack of justification", "humor", "defiance"],
+      "effects": [
+        { "axisId": "status_frame", "direction": "up", "weight": 5 },
+        { "axisId": "frame_strength", "direction": "up", "weight": 5 }
+      ]
+    },
+    {
+      "id": "minimizer",
+      "name": "Minimizer Detector",
+      "description": "Identifies language that minimizes value or apologizes for asking",
+      "patternHints": ["just $", "only costs", "small fee", "affordable", "cheap", "tiny", "little"],
+      "effects": [
+        { "axisId": "pricing_confidence", "direction": "down", "weight": 5 },
+        { "axisId": "linguistic_authority", "direction": "down", "weight": 3 },
+        { "flagCode": "PRICING_SHAME", "condition": "count > 2 in pricing context" }
+      ]
+    },
+    {
+      "id": "money_apology",
+      "name": "Money Apology Detector",
+      "description": "Identifies apologetic language around pricing",
+      "patternHints": ["I hope you understand", "I'm sorry but", "unfortunately", "regret to inform"],
+      "effects": [
+        { "axisId": "pricing_confidence", "direction": "down", "weight": 5 },
+        { "flagCode": "PRICING_SHAME", "condition": "detected in pricing context" }
+      ]
+    },
+    {
+      "id": "price_euphemism",
+      "name": "Price Euphemism Detector",
+      "description": "Identifies euphemistic language that avoids direct pricing terms",
+      "patternHints": ["investment", "contribution", "participation", "avoiding stating numbers directly"],
+      "effects": [
+        { "axisId": "pricing_confidence", "direction": "down", "weight": 3 },
+        { "flagCode": "PRICING_SHAME", "condition": "excessive euphemism" }
+      ]
+    },
+    {
+      "id": "price_justification",
+      "name": "Price Justification Detector",
+      "description": "Identifies immediate feature explanation after price statement",
+      "patternHints": ["$X because", "$X and you get", "price includes"],
+      "effects": [
+        { "axisId": "pricing_confidence", "direction": "down", "weight": 4 },
+        { "flagCode": "JUSTIFICATION_LOOP", "condition": "detected" }
+      ]
+    },
+    {
+      "id": "wealth_adjective_test",
+      "name": "Wealth Adjective Test Analyzer",
+      "description": "Analyzes adjectives used to describe high-price providers",
+      "patternHints": ["greedy", "arrogant", "crooks", "lucky", "smart", "valued", "experts", "leaders"],
+      "effects": [
+        { "axisId": "pricing_confidence", "direction": "varies", "weight": 5 },
+        { "flagCode": "WEALTH_RESENTMENT", "condition": "negative adjectives dominant" }
+      ]
+    },
+    {
+      "id": "success_attribution",
+      "name": "Success Attribution Analyzer",
+      "description": "Analyzes whether user attributes success to self or external factors",
+      "patternHints": ["I did", "we got lucky", "timing", "they needed it", "I navigated"],
+      "effects": [
+        { "axisId": "locus_of_control", "direction": "varies", "weight": 5 },
+        { "flagCode": "IMPOSTER_SYNDROME", "condition": "external attribution for success" }
+      ]
+    },
+    {
+      "id": "boundary_acquiescence",
+      "name": "Boundary Acquiescence Detector",
+      "description": "Identifies acquiescence to unreasonable demands",
+      "patternHints": ["I'll make time", "sure, no problem", "of course", "right away"],
+      "effects": [
+        { "axisId": "boundary_control", "direction": "down", "weight": 5 },
+        { "axisId": "status_frame", "direction": "down", "weight": 3 },
+        { "flagCode": "BOUNDARY_LEAK", "condition": "detected in inappropriate context" },
+        { "flagCode": "SUPPLICANT_FRAME", "condition": "pattern > 2" }
+      ]
+    },
+    {
+      "id": "boundary_enforcement",
+      "name": "Boundary Enforcement Detector",
+      "description": "Identifies firm boundary statements",
+      "patternHints": ["I am booked until", "I can speak at", "please settle by", "to avoid interruption"],
+      "effects": [
+        { "axisId": "boundary_control", "direction": "up", "weight": 5 },
+        { "axisId": "status_frame", "direction": "up", "weight": 3 }
+      ]
+    },
+    {
+      "id": "passive_aggressive_pattern",
+      "name": "Passive Aggressive Pattern Detector",
+      "description": "Identifies indirect expression of frustration",
+      "patternHints": ["just wondering if", "just checking if", "per my last email"],
+      "effects": [
+        { "axisId": "boundary_control", "direction": "down", "weight": 4 },
+        { "axisId": "linguistic_authority", "direction": "down", "weight": 3 },
+        { "flagCode": "PASSIVE_AGGRESSION", "condition": "detected" },
+        { "flagCode": "CONFLICT_AVOIDANCE", "condition": "pattern > 1" }
+      ]
+    },
+    {
+      "id": "conflict_avoidance_pattern",
+      "name": "Conflict Avoidance Pattern Detector",
+      "description": "Identifies patterns indicating fear of confrontation",
+      "patternHints": ["I don't want to upset", "I don't want to be pushy", "I don't want to bother"],
+      "effects": [
+        { "axisId": "boundary_control", "direction": "down", "weight": 5 },
+        { "flagCode": "CONFLICT_AVOIDANCE", "condition": "detected" }
+      ]
+    },
+    {
+      "id": "avoidance_language",
+      "name": "Avoidance Language Detector",
+      "description": "Identifies language indicating call reluctance or prospecting avoidance",
+      "patternHints": ["bothering people", "interrupting", "cold calling is hard", "rejection"],
+      "effects": [
+        { "axisId": "operational_congruence", "direction": "down", "weight": 4 },
+        { "flagCode": "CALL_RELUCTANCE", "condition": "detected" }
+      ]
+    },
+    {
+      "id": "vague_future",
+      "name": "Vague Future Tense Detector",
+      "description": "Identifies future commitments without specific dates",
+      "patternHints": ["will try", "going to", "plan to", "hope to", "intend to"],
+      "effects": [
+        { "axisId": "operational_congruence", "direction": "down", "weight": 3 },
+        { "flagCode": "COMMITMENT_SOFT", "condition": "no dates provided" }
+      ]
+    },
+    {
+      "id": "sequential_markers",
+      "name": "Sequential Marker Detector",
+      "description": "Identifies clear sequential process language",
+      "patternHints": ["first", "second", "third", "then", "next", "finally"],
+      "effects": [
+        { "axisId": "process_clarity", "direction": "up", "weight": 5 }
+      ]
+    },
+    {
+      "id": "conditional_language",
+      "name": "Conditional Language Detector",
+      "description": "Identifies conditional/tentative language indicating lack of process",
+      "patternHints": ["it depends", "usually", "sometimes", "if", "maybe", "try"],
+      "effects": [
+        { "axisId": "process_clarity", "direction": "down", "weight": 4 }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "t1_identity",
+      "tier": 1,
+      "module": null,
+      "prompt": "In one or two sentences, tell me who you are and what you do for a living.",
+      "questionType": "identity",
+      "minLength": 40,
+      "maxLength": 400,
+      "hint": "Keep it brief—name, role, industry.",
+      "targetAxes": [],
+      "targetFlags": [],
+      "storeAs": "contactProfile.bio"
+    },
+    {
+      "id": "t1_work_context",
+      "tier": 1,
+      "module": null,
+      "prompt": "What kind of work or projects occupy most of your time right now?",
+      "questionType": "context",
+      "minLength": 40,
+      "maxLength": 600,
+      "hint": "Describe your day-to-day responsibilities.",
+      "targetAxes": [],
+      "targetFlags": [],
+      "storeAs": "contactProfile.workContext"
+    },
+    {
+      "id": "t1_want_discovery_1",
+      "tier": 1,
+      "module": null,
+      "prompt": "If FrameLord works perfectly for you, what does your life or business look like six months from now?",
+      "questionType": "want",
+      "minLength": 80,
+      "maxLength": 800,
+      "hint": "Paint a vivid picture of your ideal outcome.",
+      "targetAxes": ["motivation_direction"],
+      "targetFlags": [],
+      "storeAs": "initialWants"
+    },
+    {
+      "id": "t1_want_discovery_2",
+      "tier": 1,
+      "module": null,
+      "prompt": "List three specific things you want to achieve, change, or stop doing.",
+      "questionType": "list",
+      "minLength": 40,
+      "maxLength": 600,
+      "hint": "Be specific—numbers, names, dates if you have them.",
+      "targetAxes": ["motivation_direction"],
+      "targetFlags": [],
+      "storeAs": "initialWants"
+    },
+    {
+      "id": "t1_locus_failure",
+      "tier": 1,
+      "module": null,
+      "prompt": "Describe the last significant deal or project that didn't go your way. What was the primary factor that caused the outcome?",
+      "questionType": "narrative",
+      "minLength": 80,
+      "maxLength": 800,
+      "hint": "Walk through what happened step by step.",
+      "targetAxes": ["locus_of_control", "linguistic_authority"],
+      "targetFlags": ["AGENCY_WARNING", "LOCUS_EXTERNAL"]
+    },
+    {
+      "id": "t1_motivation_goal",
+      "tier": 1,
+      "module": null,
+      "prompt": "What is the single most important change you want to see in your business over the next 90 days?",
+      "questionType": "goal",
+      "minLength": 80,
+      "maxLength": 800,
+      "hint": "Focus on one priority, not a list.",
+      "targetAxes": ["motivation_direction"],
+      "targetFlags": []
+    },
+    {
+      "id": "t1_process_sales",
+      "tier": 1,
+      "module": null,
+      "prompt": "Walk me through your typical sales or influence process from first contact to commitment.",
+      "questionType": "process",
+      "minLength": 80,
+      "maxLength": 800,
+      "hint": "Describe the steps you usually follow.",
+      "targetAxes": ["process_clarity", "operational_congruence"],
+      "targetFlags": ["GAP_DETECTED", "COMMITMENT_SOFT"]
+    },
+    {
+      "id": "t1_constraint",
+      "tier": 1,
+      "module": null,
+      "prompt": "What is the one habit, pattern, or constraint that you suspect is holding you back the most?",
+      "questionType": "constraint",
+      "minLength": 80,
+      "maxLength": 800,
+      "hint": "Be honest—this stays between you and the system.",
+      "targetAxes": ["locus_of_control", "operational_congruence"],
+      "targetFlags": ["GAP_DETECTED", "AGENCY_WARNING"]
+    },
+    {
+      "id": "t1_closing",
+      "tier": 1,
+      "module": null,
+      "prompt": "Is there anything else you think the system should know about you before we begin?",
+      "questionType": "optional",
+      "minLength": 0,
+      "maxLength": 800,
+      "hint": "Skip if nothing comes to mind.",
+      "targetAxes": [],
+      "targetFlags": [],
+      "optional": true
+    },
+    {
+      "id": "t1_self_rating",
+      "tier": 1,
+      "module": null,
+      "prompt": "Without being modest, how strong is your current frame in real life?",
+      "questionType": "self_rating",
+      "inputType": "slider",
+      "minValue": 1,
+      "maxValue": 10,
+      "minLength": 0,
+      "maxLength": 0,
+      "hint": "1 = fragile, 10 = Apex. Be honest with yourself.",
+      "targetAxes": [],
+      "targetFlags": []
+    },
+    {
+      "id": "t2_money_double_price",
+      "tier": 2,
+      "module": "money",
+      "prompt": "Imagine you must double your price tomorrow. Write the email you would send to your best client explaining this change.",
+      "targetAxes": ["pricing_confidence", "linguistic_authority"],
+      "targetFlags": ["PRICING_SHAME", "JUSTIFICATION_LOOP"]
+    },
+    {
+      "id": "t2_money_origin",
+      "tier": 2,
+      "module": "money",
+      "prompt": "What is your earliest memory of your family discussing money? How does that memory surface physically when you send an invoice today?",
+      "targetAxes": ["pricing_confidence"],
+      "targetFlags": ["PRICING_SHAME", "WEALTH_RESENTMENT"]
+    },
+    {
+      "id": "t2_money_objection",
+      "tier": 2,
+      "module": "money",
+      "prompt": "If a client says 'That's too expensive,' what is the literal first thought that flashes in your mind?",
+      "targetAxes": ["pricing_confidence", "status_frame"],
+      "targetFlags": ["SUPPLICANT_FRAME"]
+    },
+    {
+      "id": "t2_money_adjective",
+      "tier": 2,
+      "module": "money",
+      "prompt": "Complete this sentence: 'People who charge high prices are _______.'",
+      "targetAxes": ["pricing_confidence"],
+      "targetFlags": ["WEALTH_RESENTMENT"]
+    },
+    {
+      "id": "t2_money_delivery",
+      "tier": 2,
+      "module": "money",
+      "prompt": "When you state your price, do you pause and wait, or do you immediately explain the features?",
+      "targetAxes": ["pricing_confidence", "status_frame"],
+      "targetFlags": ["JUSTIFICATION_LOOP"]
+    },
+    {
+      "id": "t2_authority_success",
+      "tier": 2,
+      "module": "authority",
+      "prompt": "Describe a recent success you achieved. How much of that result was due to your specific skill, and how much was due to luck or timing?",
+      "targetAxes": ["locus_of_control", "status_frame"],
+      "targetFlags": ["IMPOSTER_SYNDROME", "LOCUS_EXTERNAL"]
+    },
+    {
+      "id": "t2_authority_prize",
+      "tier": 2,
+      "module": "authority",
+      "prompt": "When you enter a meeting with a high-net-worth prospect, who is the 'Prize' in the room? Why?",
+      "targetAxes": ["status_frame"],
+      "targetFlags": ["SUPPLICANT_FRAME", "FRAME_STATUS_BETA"]
+    },
+    {
+      "id": "t2_authority_boundary",
+      "tier": 2,
+      "module": "authority",
+      "prompt": "A client demands you jump on a call immediately, disrupting your schedule. You have no urgent meetings, but you intended to do deep work. What do you say?",
+      "targetAxes": ["boundary_control", "status_frame"],
+      "targetFlags": ["BOUNDARY_LEAK", "CONFLICT_AVOIDANCE"]
+    },
+    {
+      "id": "t2_authority_biggest_win",
+      "tier": 2,
+      "module": "authority",
+      "prompt": "Why did you win your biggest deal?",
+      "targetAxes": ["locus_of_control"],
+      "targetFlags": ["LOCUS_EXTERNAL"]
+    },
+    {
+      "id": "t2_operations_day_recon",
+      "tier": 2,
+      "module": "operations",
+      "prompt": "Walk me through yesterday, step-by-step, from the moment you started work to the moment you finished. Be specific.",
+      "targetAxes": ["operational_congruence"],
+      "targetFlags": ["GAP_DETECTED", "CALL_RELUCTANCE"]
+    },
+    {
+      "id": "t2_operations_commitment",
+      "tier": 2,
+      "module": "operations",
+      "prompt": "You mentioned you want to reach [Goal X]. What is the one thing you know you should be doing to get there, but haven't done in the last week?",
+      "targetAxes": ["operational_congruence", "locus_of_control"],
+      "targetFlags": ["GAP_DETECTED", "LOCUS_EXTERNAL"]
+    },
+    {
+      "id": "t2_operations_conflict",
+      "tier": 2,
+      "module": "operations",
+      "prompt": "A client is late on an invoice. Draft the reminder text.",
+      "targetAxes": ["boundary_control"],
+      "targetFlags": ["CONFLICT_AVOIDANCE", "PASSIVE_AGGRESSION"]
+    }
+  ]
+}

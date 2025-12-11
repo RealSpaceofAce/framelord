@@ -37,6 +37,8 @@ export const CONTACT_ZERO: ContactZero = ensureContactCRMFields({
   company: 'FrameLord',
   title: 'Founder & CEO',
   location: 'San Francisco, CA',
+  // Intake gateway - null means user has not completed Tier 1 yet
+  firstIntakeCompletedAt: null,
 }) as ContactZero;
 
 // --- INTERNAL CONTACTS ARRAY ---
@@ -391,6 +393,8 @@ export const createContact = (input: {
     mentionedInNotes: [],
     engagementEvents: [],
     linkedTopics: [],
+    // Intake gateway - null means not completed
+    firstIntakeCompletedAt: null,
   };
 
   CONTACTS.push(newContact);

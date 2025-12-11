@@ -14,6 +14,7 @@ import { ArrowRight, MessageSquare, Terminal, ChevronDown, Calendar } from 'luci
 import { ApplicationPage } from './components/ApplicationPage';
 import { BetaPage } from './components/BetaPage';
 import { Dashboard } from './components/Dashboard';
+import { IntakeFlow } from './components/intake';
 import {
   TermsOfService,
   PrivacyPolicy,
@@ -22,6 +23,8 @@ import {
 } from './components/legal';
 import { ToastProvider } from './components/Toast';
 import type { UserScope } from './types/multiTenant';
+import { CONTACT_ZERO } from './services/contactStore';
+import { needsTier1Intake } from './lib/intakeGate';
 
 const MotionDiv = motion.div as any;
 const MotionNav = motion.nav as any;
@@ -94,6 +97,7 @@ type AppView =
   | 'beta'
   | 'dashboard'
   | 'booking'
+  | 'intake'
   | 'terms'
   | 'privacy'
   | 'acceptable-use'
@@ -102,6 +106,14 @@ type AppView =
 const App: React.FC = () => {
   // Set default to 'landing' for the main landing page
   const [currentView, setCurrentView] = useState<AppView>('landing');
+
+  // Intake Gate: Redirect to intake if user needs Tier 1 and tries to access dashboard
+  React.useEffect(() => {
+    if (currentView === 'dashboard' && needsTier1Intake(CONTACT_ZERO.id)) {
+      console.log('[App] User needs Tier 1 intake, redirecting to intake flow');
+      setCurrentView('intake');
+    }
+  }, [currentView]);
 
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 500], [1, 0]);
@@ -156,6 +168,11 @@ const App: React.FC = () => {
   const navigateToDPA = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setCurrentView('dpa');
+  };
+
+  const navigateToIntake = () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setCurrentView('intake');
   };
 
   const scrollToScanner = () => {
@@ -381,6 +398,23 @@ const App: React.FC = () => {
             >
                 <DataProcessingAddendum onBack={navigateToHome} />
             </MotionDiv>
+        ) : currentView === 'intake' ? (
+            <MotionDiv
+                key="intake"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.05 }}
+                transition={{ duration: 0.5 }}
+            >
+                <IntakeFlow
+                    contactId={CONTACT_ZERO.id}
+                    onAbandon={navigateToHome}
+                    onEnterDashboard={navigateToDashboard}
+                    onComplete={(metrics) => {
+                        console.log('Intake complete:', metrics);
+                    }}
+                />
+            </MotionDiv>
         ) : (
             <MotionDiv
                 key="dashboard"
@@ -436,6 +470,10 @@ const App: React.FC = () => {
             <div className="w-px h-4 bg-fl-gray/30 mx-2" />
             <button onClick={navigateToDashboard} className="text-green-500 hover:text-white transition-colors interactive text-xs uppercase tracking-wider">
                 Dashboard (Dev)
+            </button>
+            <div className="w-px h-4 bg-fl-gray/30 mx-2" />
+            <button onClick={navigateToIntake} className="text-purple-500 hover:text-white transition-colors interactive text-xs uppercase tracking-wider">
+                Intake (Dev)
             </button>
           </div>
 

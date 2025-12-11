@@ -11,7 +11,8 @@ import {
   Building2, Users, AlertTriangle, FlaskConical, FileDown, ScrollText,
   ShieldCheck, ChevronRight, Search, Filter, MoreHorizontal, RefreshCw,
   Mail, Clock, CheckCircle, XCircle, AlertCircle, UserPlus, Ban, Play,
-  Target, Calendar, BarChart3, Activity, Radio, User
+  Target, Calendar, BarChart3, Activity, Radio, User, ClipboardList, Eye,
+  ChevronDown, ChevronUp
 } from 'lucide-react';
 import type { UserScope, AdminActionType } from '../../types/multiTenant';
 import {
@@ -56,12 +57,15 @@ import {
   getRequestStatusLabel,
   getRequestStatusColor 
 } from '../../stores/dataRequestStore';
-import { 
-  getFilteredAuditLogs, 
+import {
+  getFilteredAuditLogs,
   getAllActionTypes,
-  getActionTypeLabel 
+  getActionTypeLabel
 } from '../../stores/adminAuditStore';
 import { recordAdminAction } from '../../stores/adminAuditStore';
+import { getAllSessions, getSessionById } from '../../services/intakeStore';
+import { getContactById } from '../../services/contactStore';
+import type { IntakeSession, Answer } from '../../types/businessFrame';
 
 const MotionDiv = motion.div as any;
 
@@ -69,19 +73,20 @@ const MotionDiv = motion.div as any;
 // TYPES
 // =============================================================================
 
-type AdminTab = 
-  | 'tenants' 
-  | 'users' 
+type AdminTab =
+  | 'tenants'
+  | 'users'
   | 'coaching-apps'
   | 'beta-apps'
   | 'pending-calls'
-  | 'struggling' 
+  | 'struggling'
+  | 'intake-sessions'
   | 'usage-analytics'
   | 'enterprise-usage'
   | 'user-usage'
   | 'frame-score-analytics'
-  | 'data-requests' 
-  | 'logs' 
+  | 'data-requests'
+  | 'logs'
   | 'staff-roles'
   | 'broadcast';
 
@@ -125,6 +130,7 @@ export const PlatformAdminPortal: React.FC<PlatformAdminPortalProps> = ({
     { id: 'beta-apps', label: 'Beta Apps', icon: <FlaskConical size={16} /> },
     { id: 'pending-calls', label: 'Pending Calls', icon: <Calendar size={16} /> },
     { id: 'struggling', label: 'Struggling Users', icon: <AlertTriangle size={16} /> },
+    { id: 'intake-sessions', label: 'Intake Sessions', icon: <ClipboardList size={16} /> },
     { id: 'usage-analytics', label: 'Usage Analytics', icon: <Activity size={16} /> },
     { id: 'enterprise-usage', label: 'Enterprise Usage', icon: <BarChart3 size={16} /> },
     { id: 'user-usage', label: 'User Usage', icon: <User size={16} /> },
@@ -227,6 +233,9 @@ export const PlatformAdminPortal: React.FC<PlatformAdminPortalProps> = ({
               )}
               {activeTab === 'struggling' && (
                 <StrugglingUsersPanel userScope={userScope} searchQuery={searchQuery} />
+              )}
+              {activeTab === 'intake-sessions' && (
+                <IntakeSessionsPanel userScope={userScope} searchQuery={searchQuery} />
               )}
               {activeTab === 'usage-analytics' && (
                 <UsageAnalyticsPanel userScope={userScope} />
@@ -456,6 +465,201 @@ const StrugglingUsersPanel: React.FC<{ userScope: UserScope; searchQuery: string
               </div>
             </div>
           ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// INTAKE SESSIONS PANEL
+// =============================================================================
+
+const IntakeSessionsPanel: React.FC<{ userScope: UserScope; searchQuery: string }> = ({
+  userScope,
+  searchQuery,
+}) => {
+  const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
+
+  const sessions = useMemo(() => {
+    const all = getAllSessions();
+    if (!searchQuery) return all;
+    const q = searchQuery.toLowerCase();
+    return all.filter(s => {
+      const contact = getContactById(s.contactId);
+      return (
+        s.id.toLowerCase().includes(q) ||
+        s.contactId.toLowerCase().includes(q) ||
+        (contact?.fullName?.toLowerCase().includes(q))
+      );
+    });
+  }, [searchQuery]);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'in_progress':
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'abandoned':
+        return 'bg-red-500/20 text-red-400 border-red-500/30';
+      default:
+        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+    }
+  };
+
+  const toggleSession = (sessionId: string) => {
+    setExpandedSessionId(prev => prev === sessionId ? null : sessionId);
+  };
+
+  return (
+    <div>
+      <div className="px-4 py-3 border-b border-[#2A2A2A]">
+        <h3 className="text-sm font-bold text-white">Intake Sessions ({sessions.length})</h3>
+        <p className="text-xs text-gray-500 mt-1">All Q/A from Tier 1 and Tier 2 intake flows</p>
+      </div>
+      <div className="divide-y divide-[#1A1A1D]">
+        {sessions.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">No intake sessions found</div>
+        ) : (
+          sessions.map(session => {
+            const contact = getContactById(session.contactId);
+            const isExpanded = expandedSessionId === session.id;
+
+            return (
+              <div key={session.id} className="bg-[#0E0E0E]">
+                {/* Session Header */}
+                <div
+                  className="p-4 hover:bg-[#1A1A1D] transition-colors cursor-pointer"
+                  onClick={() => toggleSession(session.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        {isExpanded ? (
+                          <ChevronUp size={16} className="text-gray-500" />
+                        ) : (
+                          <ChevronDown size={16} className="text-gray-500" />
+                        )}
+                        <div>
+                          <div className="text-sm font-medium text-white">
+                            {contact?.fullName || session.contactId}
+                          </div>
+                          <div className="text-xs text-gray-500 font-mono">{session.id}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs px-2 py-1 bg-[#4433FF]/20 text-[#4433FF] rounded border border-[#4433FF]/30">
+                        Tier {session.tier}
+                      </span>
+                      <span className={`text-xs px-2 py-1 rounded border ${getStatusColor(session.status)}`}>
+                        {session.status.replace('_', ' ')}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {session.answers.length} answers
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    Started: {new Date(session.startedAt).toLocaleString()}
+                    {session.completedAt && (
+                      <> • Completed: {new Date(session.completedAt).toLocaleString()}</>
+                    )}
+                  </div>
+                </div>
+
+                {/* Expanded Q/A Detail */}
+                {isExpanded && (
+                  <div className="border-t border-[#2A2A2A] bg-[#0A0A0A]">
+                    <div className="p-4">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                        Questions & Answers
+                      </h4>
+                      {session.answers.length === 0 ? (
+                        <p className="text-sm text-gray-500">No answers recorded yet</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {session.answers.map((answer, idx) => (
+                            <div key={answer.id} className="bg-[#1A1A1D] rounded-lg p-3 border border-[#2A2A2A]">
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs px-1.5 py-0.5 bg-[#4433FF]/20 text-[#4433FF] rounded font-mono">
+                                    Q{idx + 1}
+                                  </span>
+                                  <span className="text-xs text-gray-500">{answer.questionId}</span>
+                                </div>
+                                <span className="text-xs px-2 py-0.5 bg-[#2A2A2A] text-gray-400 rounded">
+                                  {answer.inputType}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-300 mb-2">{answer.questionText}</p>
+                              <div className="bg-[#0E0E0E] rounded p-2 border border-[#333]">
+                                <p className="text-sm text-white whitespace-pre-wrap">{answer.rawText}</p>
+                              </div>
+                              <div className="mt-2 text-xs text-gray-500">
+                                Answered: {new Date(answer.answeredAt).toLocaleString()}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Session Metrics */}
+                      {session.metrics && (
+                        <div className="mt-4 pt-4 border-t border-[#2A2A2A]">
+                          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                            Analysis Metrics
+                          </h4>
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="bg-[#1A1A1D] rounded p-2 border border-[#2A2A2A]">
+                              <div className="text-xs text-gray-500">Frame Score</div>
+                              <div className="text-lg font-bold text-white">
+                                {session.metrics.overallFrameScore}
+                              </div>
+                            </div>
+                            <div className="bg-[#1A1A1D] rounded p-2 border border-[#2A2A2A]">
+                              <div className="text-xs text-gray-500">Frame Type</div>
+                              <div className="text-sm font-medium text-white capitalize">
+                                {session.metrics.frameType}
+                              </div>
+                            </div>
+                            <div className="bg-[#1A1A1D] rounded p-2 border border-[#2A2A2A]">
+                              <div className="text-xs text-gray-500">Self Rating</div>
+                              <div className="text-lg font-bold text-white">
+                                {session.metrics.selfRatedFrameScore ?? '—'}
+                              </div>
+                            </div>
+                          </div>
+                          {session.metrics.activeFlags.length > 0 && (
+                            <div className="mt-3">
+                              <div className="text-xs text-gray-500 mb-1">Active Flags</div>
+                              <div className="flex flex-wrap gap-1">
+                                {session.metrics.activeFlags.map(flag => (
+                                  <span
+                                    key={flag.code}
+                                    className={`text-xs px-2 py-0.5 rounded ${
+                                      flag.severity === 'critical'
+                                        ? 'bg-red-500/20 text-red-400'
+                                        : flag.severity === 'warn'
+                                        ? 'bg-yellow-500/20 text-yellow-400'
+                                        : 'bg-gray-500/20 text-gray-400'
+                                    }`}
+                                  >
+                                    {flag.code}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
     </div>
