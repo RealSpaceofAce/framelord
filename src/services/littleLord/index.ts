@@ -419,7 +419,7 @@ What's on your mind?`,
   if (isContactZero) {
     return {
       role: 'assistant',
-      content: `I'm Little Lord, your Apex Frame coach. I'm here to help you move from Slave Frame to Apex Frame, install Win-Win, and reclaim Dominion Will to Power.
+      content: `I'm LL, your Apex Frame coach. I help you move from Slave Frame to Apex Frame, install Win-Win, and reclaim Dominion Will to Power.
 
 You can ask me about:
 • Your frame patterns and where you're stuck

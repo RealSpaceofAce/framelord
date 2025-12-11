@@ -8,7 +8,7 @@ import {
   Menu, ExternalLink, Shield, Lock,
   Plus, MoreHorizontal, X, Folder, ChevronDown,
   Upload, Image as ImageIcon, FileText, ArrowRight, AlertTriangle, Lightbulb,
-  CheckCircle, Loader2, Paperclip, Mic, FileCode, Crosshair, Binary, Terminal, Cpu, GitCommit, Briefcase, Camera, Notebook, ArrowLeft, Clock as ClockIcon, User, Calendar, Target
+  CheckCircle, Loader2, Paperclip, Mic, MicOff, FileCode, Crosshair, Binary, Terminal, Cpu, GitCommit, Briefcase, Camera, Notebook, ArrowLeft, Clock as ClockIcon, User, Calendar, Target
 } from 'lucide-react';
 import './AppSidebarSkin.css';
 import { SidebarParticles } from './notes/SidebarParticles';
@@ -16,6 +16,8 @@ import { SparkBorder } from './SparkSystem';
 import { runTextFrameScan, type TextDomainId, FrameScanRejectionError } from '../lib/frameScan/frameScanLLM';
 import { getLatestReport, getReportById } from '../services/frameScanReportStore';
 import { useAudio } from '../hooks/useAudio';
+import { useAudioRecorder } from '../hooks/useAudioRecorder';
+import { transcribeAudioToText } from '../services/transcriptionService';
 import { showToast } from './Toast';
 import { FrameAnalysisResult } from '../types';
 import { Reveal } from './Reveal';
@@ -466,6 +468,42 @@ const ScanView: React.FC = () => {
   // Audio for scan sounds
   const { play, stop } = useAudio();
 
+  // Audio recording for voice input
+  const { isRecording, startRecording, stopRecording, error: recordError } = useAudioRecorder();
+  const [isTranscribing, setIsTranscribing] = useState(false);
+
+  // Handle audio recording for voice-to-text
+  const handleAudioRecord = async () => {
+    if (isRecording) {
+      // Stop recording and transcribe
+      const audioBlob = await stopRecording();
+      if (audioBlob) {
+        setIsTranscribing(true);
+        try {
+          const transcription = await transcribeAudioToText(audioBlob);
+          if (transcription) {
+            setInput(prev => prev ? `${prev}\n\n${transcription}` : transcription);
+            showToast({ type: 'success', title: 'Transcription complete', message: 'Audio has been converted to text' });
+          }
+        } catch (err) {
+          console.error('Transcription error:', err);
+          showToast({ type: 'error', title: 'Transcription failed', message: 'Could not transcribe audio' });
+        } finally {
+          setIsTranscribing(false);
+        }
+      }
+    } else {
+      // Start recording
+      try {
+        await startRecording();
+        showToast({ type: 'info', title: 'Recording', message: 'Speak now...' });
+      } catch (err) {
+        console.error('Recording error:', err);
+        showToast({ type: 'error', title: 'Microphone error', message: 'Could not access microphone' });
+      }
+    }
+  };
+
   // Savage Mode for FrameScan
   const { isEnabled: isSavageModeEnabled, toggle: toggleSavageMode } = useSavageMode();
 
@@ -853,10 +891,31 @@ const ScanView: React.FC = () => {
                 </div>
               )}
 
-              {/* Upload button - only shown when no file */}
+              {/* Upload and Mic buttons - only shown when no file */}
               {!uploadedFile && (
                 <div className="absolute bottom-4 right-4 flex gap-2">
                     <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} accept="image/*,application/pdf,.doc,.docx,.txt" />
+                    {/* Microphone button */}
+                    <button
+                      onClick={handleAudioRecord}
+                      disabled={isTranscribing}
+                      className={`flex items-center gap-2 border text-white text-xs font-bold px-3 py-1.5 rounded transition-all ${
+                        isRecording
+                          ? 'bg-red-500/80 border-red-500 animate-pulse'
+                          : isTranscribing
+                          ? 'bg-[#4433FF]/20 border-[#4433FF] opacity-50'
+                          : 'bg-[#4433FF]/20 hover:bg-[#4433FF] border-[#4433FF]'
+                      }`}
+                      title={isRecording ? 'Stop recording' : isTranscribing ? 'Transcribing...' : 'Record audio'}
+                    >
+                      {isTranscribing ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : isRecording ? (
+                        <MicOff size={12} />
+                      ) : (
+                        <Mic size={12} />
+                      )}
+                    </button>
                     <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 bg-[#4433FF]/20 hover:bg-[#4433FF] border border-[#4433FF] text-white text-xs font-bold px-3 py-1.5 rounded transition-all">
                         <Upload size={12} /> UPLOAD FILES
                     </button>

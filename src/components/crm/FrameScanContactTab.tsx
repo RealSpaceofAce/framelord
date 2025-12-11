@@ -27,7 +27,6 @@ import {
 import { runTextFrameScan, runImageFrameScan, type TextDomainId, type ImageDomainId, FrameScanRejectionError } from '../../lib/frameScan/frameScanLLM';
 import type { FrameDomainId } from '../../lib/frameScan/frameTypes';
 import { CONTACT_ZERO } from '../../services/contactStore';
-import { LittleLordChat } from '../littleLord';
 import { FrameScanContextHelp } from '../FrameScanContextHelp';
 
 const MotionDiv = motion.div as any;
@@ -585,16 +584,6 @@ export const FrameScanContactTab: React.FC<FrameScanContactTabProps> = ({
           )}
         </div>
 
-        {/* Little Lord Chat Section */}
-        <LittleLordChat
-          tenantId="default_tenant"
-          userId={CONTACT_ZERO.id}
-          context={{
-            selectedContactId: contactId,
-          }}
-          height="300px"
-          showHeader={true}
-        />
       </div>
     </div>
   );
