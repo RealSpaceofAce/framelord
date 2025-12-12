@@ -399,8 +399,11 @@ const App: React.FC = () => {
 
                     <Reveal delay={0.6}>
                         <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
-                            <Button glow onClick={() => setShowDemoVideo(true)} className="group flex items-center gap-2 interactive">
-                                <MessageSquare size={18} /> View Demo
+                            <Button glow onClick={scrollToPricing} className="group flex items-center gap-2 interactive">
+                                <ArrowRight size={18} /> Get Access
+                            </Button>
+                            <Button variant="outline" onClick={() => setShowDemoVideo(true)} className="group flex items-center gap-2 interactive">
+                                <MessageSquare size={18} /> Watch Demo
                             </Button>
                         </div>
                     </Reveal>
@@ -563,52 +566,61 @@ const App: React.FC = () => {
       {/* Footer - Hide on Dashboard and Login to maintain OS feel */}
       {currentView !== 'dashboard' && currentView !== 'login' && (
       <footer className="relative bg-fl-black border-t border-white/5 py-12 z-10">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-col gap-2">
-             <div className="font-display font-bold text-lg tracking-widest text-white flex items-center gap-2">
-                <Terminal size={18} className="text-fl-primary" /> FRAMELORD
+        <div className="max-w-7xl mx-auto px-6 flex flex-col gap-8">
+          {/* Main Footer Row */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            {/* Logo Section */}
+            <div className="flex flex-col gap-2">
+               <div className="font-display font-bold text-lg tracking-widest text-white flex items-center gap-2">
+                  <Terminal size={18} className="text-fl-primary" /> FRAMELORD
+              </div>
+              <p className="text-fl-gray text-xs max-w-xs">
+                  Clinical authority diagnostics for high-stakes communication.
+              </p>
             </div>
-            <p className="text-fl-gray text-xs max-w-xs">
-                Clinical authority diagnostics for high-stakes communication.
-            </p>
+
+            {/* Production Links */}
+            <div className="text-fl-gray text-sm flex gap-6 items-center flex-wrap justify-center">
+              <button onClick={navigateToPrivacy} className="hover:text-white transition-colors interactive">Privacy</button>
+              <button onClick={navigateToTerms} className="hover:text-white transition-colors interactive">Terms</button>
+              <button onClick={navigateToAcceptableUse} className="hover:text-white transition-colors interactive">Acceptable Use</button>
+              <button onClick={navigateToDPA} className="hover:text-white transition-colors interactive">DPA</button>
+              <a href="https://twitter.com/framelord" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors interactive">Twitter</a>
+              <div className="w-px h-4 bg-fl-gray/30 mx-2" />
+              <button onClick={navigateToLogin} className="text-fl-primary hover:text-white transition-colors interactive">Login</button>
+            </div>
+
+            {/* Copyright */}
+            <div className="text-fl-gray text-xs">
+              © 2026 FrameLord Systems. All rights reserved.
+            </div>
           </div>
 
-          <div className="text-fl-gray text-sm flex gap-6 items-center flex-wrap justify-center">
-            {/* Legal Links */}
-            <button onClick={navigateToPrivacy} className="hover:text-white transition-colors interactive">Privacy</button>
-            <button onClick={navigateToTerms} className="hover:text-white transition-colors interactive">Terms</button>
-            <button onClick={navigateToAcceptableUse} className="hover:text-white transition-colors interactive">Acceptable Use</button>
-            <button onClick={navigateToDPA} className="hover:text-white transition-colors interactive">DPA</button>
-            <a href="https://twitter.com/framelord" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors interactive">Twitter</a>
-            <div className="w-px h-4 bg-fl-gray/30 mx-2" />
-            <button onClick={navigateToApp} className="text-fl-primary hover:text-white transition-colors interactive text-xs uppercase tracking-wider">
-                Application Page (Dev)
-            </button>
-            <div className="w-px h-4 bg-fl-gray/30 mx-2" />
-            <button onClick={navigateToBooking} className="text-yellow-500 hover:text-white transition-colors interactive text-xs uppercase tracking-wider flex items-center gap-1">
-                <Calendar size={12} /> Booking (Dev)
-            </button>
-            <div className="w-px h-4 bg-fl-gray/30 mx-2" />
-            <button onClick={navigateToBeta} className="text-fl-secondary hover:text-white transition-colors interactive text-xs uppercase tracking-wider">
-                Beta Program (Dev)
-            </button>
-            <div className="w-px h-4 bg-fl-gray/30 mx-2" />
-            <button onClick={navigateToDashboardDev} className="text-green-500 hover:text-white transition-colors interactive text-xs uppercase tracking-wider">
-                Dashboard (Dev)
-            </button>
-            <div className="w-px h-4 bg-fl-gray/30 mx-2" />
-            <button onClick={navigateToIntake} className="text-purple-500 hover:text-white transition-colors interactive text-xs uppercase tracking-wider">
-                Intake (Dev)
-            </button>
-            <div className="w-px h-4 bg-fl-gray/30 mx-2" />
-            <button onClick={navigateToLogin} className="text-cyan-500 hover:text-white transition-colors interactive text-xs uppercase tracking-wider">
-                Login (Dev)
-            </button>
-          </div>
-
-          <div className="text-fl-gray text-xs">
-            © 2026 FrameLord Systems. All rights reserved.
-          </div>
+          {/* Dev Tools Section - Only visible in development */}
+          {import.meta.env.DEV && (
+            <div className="border-t border-white/5 pt-6">
+              <div className="flex flex-col items-center gap-3">
+                <span className="text-fl-gray/50 text-[10px] uppercase tracking-widest">Developer Tools</span>
+                <div className="text-fl-gray text-xs flex gap-4 items-center flex-wrap justify-center">
+                  <button onClick={navigateToApp} className="text-fl-primary/70 hover:text-fl-primary transition-colors interactive">
+                    Application
+                  </button>
+                  <button onClick={navigateToBooking} className="text-yellow-500/70 hover:text-yellow-500 transition-colors interactive flex items-center gap-1">
+                    <Calendar size={10} /> Booking
+                  </button>
+                  <button onClick={navigateToBeta} className="text-fl-secondary/70 hover:text-fl-secondary transition-colors interactive">
+                    Beta Program
+                  </button>
+                  <button onClick={navigateToDashboardDev} className="text-green-500/70 hover:text-green-500 transition-colors interactive">
+                    Dashboard
+                  </button>
+                  <button onClick={navigateToIntake} className="text-purple-500/70 hover:text-purple-500 transition-colors interactive">
+                    Intake
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </footer>
       )}
