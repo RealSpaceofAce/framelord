@@ -6,9 +6,10 @@
 // - What do they want
 // - What is their weakness
 // - What was the last notable thing that happened
+// Supports in-place editing of personal intel fields.
 // =============================================================================
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Eye,
   Target,
@@ -17,11 +18,15 @@ import {
   Brain,
   Lock,
   ChevronRight,
+  Edit2,
+  Save,
+  X,
+  Sparkles,
 } from 'lucide-react';
 
 // Stores
-import { getContactById } from '@/services/contactStore';
-import { getInteractionsByContactId } from '@/services/interactionStore';
+import { getContactById, updatePersonalIntel, getPersonalIntel } from '@/services/contactStore';
+import { getInteractionsByContactId, getLastNotableInteractionForContact } from '@/services/interactionStore';
 import { getNotesByContactId } from '@/services/noteStore';
 import { getReportsForContact } from '@/services/frameScanReportStore';
 import { psychometricStore } from '@/services/psychometricStore';
@@ -31,6 +36,8 @@ interface PersonalIntelCardProps {
   contactId: string;
   tier?: 'free' | 'basic' | 'pro' | 'elite';
   onExpandClick?: () => void;
+  onRefresh?: () => void;
+  onNavigateToTimeline?: (interactionId?: string) => void;
 }
 
 // User tier for gating
@@ -59,32 +66,91 @@ const LockedOverlay: React.FC<{ requiredTier: UserTier; currentTier: UserTier }>
 };
 
 /**
+ * Editable Intel Section
+ */
+const EditableIntelSection: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  placeholder: string;
+  isEditing: boolean;
+  editValue: string;
+  onEditValueChange: (value: string) => void;
+}> = ({ icon, label, value, placeholder, isEditing, editValue, onEditValueChange }) => {
+  return (
+    <div className="p-3 bg-[#0a111d] rounded-lg border border-[#112035]">
+      <div className="flex items-center gap-2 mb-1.5">
+        {icon}
+        <span className="text-[10px] font-semibold text-gray-400 uppercase">{label}</span>
+      </div>
+      {isEditing ? (
+        <textarea
+          value={editValue}
+          onChange={(e) => onEditValueChange(e.target.value)}
+          placeholder={placeholder}
+          rows={2}
+          className="w-full bg-transparent text-sm text-white placeholder-gray-600 border border-[#1b2c45] rounded px-2 py-1 focus:outline-none focus:border-[#4433FF] resize-none"
+        />
+      ) : (
+        <p className="text-sm text-white">
+          {value || <span className="text-gray-500 italic">{placeholder}</span>}
+        </p>
+      )}
+    </div>
+  );
+};
+
+/**
  * Personal Intel Card Component
  */
 export const PersonalIntelCard: React.FC<PersonalIntelCardProps> = ({
   contactId,
   tier = 'pro',
   onExpandClick,
+  onRefresh,
+  onNavigateToTimeline,
 }) => {
-  const contact = getContactById(contactId);
+  const [isEditing, setIsEditing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Get fresh data on each render or when refreshKey changes
+  const contact = useMemo(() => getContactById(contactId), [contactId, refreshKey]);
+  const personalIntel = useMemo(() => getPersonalIntel(contactId), [contactId, refreshKey]);
   const profile = psychometricStore.getProfile(contactId);
 
-  // Get recent interactions for "last notable thing"
-  const interactions = useMemo(() => {
-    return getInteractionsByContactId(contactId)
-      .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())
-      .slice(0, 3);
-  }, [contactId]);
+  // Edit form state
+  const [editHowTheySpeak, setEditHowTheySpeak] = useState(personalIntel?.howTheySpeak || '');
+  const [editWatchFor, setEditWatchFor] = useState(personalIntel?.watchFor || '');
 
-  // Get notes for context
-  const notes = useMemo(() => {
-    return getNotesByContactId(contactId).slice(0, 3);
-  }, [contactId]);
+  // Get last notable interaction
+  const lastNotable = useMemo(() => {
+    return getLastNotableInteractionForContact(contactId);
+  }, [contactId, refreshKey]);
 
-  // Get FrameScan reports
-  const reports = useMemo(() => {
-    return getReportsForContact(contactId).slice(0, 3);
-  }, [contactId]);
+  // Reset edit values when entering edit mode
+  const handleStartEditing = () => {
+    setEditHowTheySpeak(personalIntel?.howTheySpeak || '');
+    setEditWatchFor(personalIntel?.watchFor || '');
+    setIsEditing(true);
+  };
+
+  // Save changes
+  const handleSave = () => {
+    updatePersonalIntel(contactId, {
+      howTheySpeak: editHowTheySpeak.trim() || undefined,
+      watchFor: editWatchFor.trim() || undefined,
+    });
+    setIsEditing(false);
+    setRefreshKey(k => k + 1);
+    onRefresh?.();
+  };
+
+  // Cancel editing
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditHowTheySpeak(personalIntel?.howTheySpeak || '');
+    setEditWatchFor(personalIntel?.watchFor || '');
+  };
 
   if (!contact) {
     return (
@@ -94,20 +160,24 @@ export const PersonalIntelCard: React.FC<PersonalIntelCardProps> = ({
     );
   }
 
-  // Derive intel from available data
-  const communicationStyle = profile?.bigFive ? (
+  // Derive intel from psychometric data if no manual intel
+  const derivedCommunicationStyle = profile?.bigFive ? (
     profile.bigFive.extraversion > 0.6 ? 'Direct and energetic communicator' :
     profile.bigFive.extraversion < 0.4 ? 'Reserved, prefers written communication' :
     'Balanced communication style'
   ) : null;
 
-  const potentialTriggers = profile?.bigFive ? (
+  const derivedWatchFor = profile?.bigFive ? (
     profile.bigFive.neuroticism > 0.6 ? 'May be sensitive to criticism or pressure' :
     profile.bigFive.agreeableness < 0.4 ? 'May push back on soft approaches' :
     null
   ) : null;
 
-  const lastNotable = interactions[0];
+  // Use manual intel if available, otherwise derived
+  const howTheySpeak = personalIntel?.howTheySpeak || derivedCommunicationStyle || '';
+  const watchFor = personalIntel?.watchFor || derivedWatchFor || '';
+
+  const hasAnyData = howTheySpeak || watchFor || (contact.tags && contact.tags.length > 0) || lastNotable;
 
   return (
     <div className="relative bg-[#0c1424]/80 border border-[#1b2c45] rounded-xl p-4">
@@ -119,42 +189,74 @@ export const PersonalIntelCard: React.FC<PersonalIntelCardProps> = ({
           <Brain size={14} className="text-purple-400" />
           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Personal Intel</span>
         </div>
-        {onExpandClick && (
-          <button
-            onClick={onExpandClick}
-            className="text-xs text-[#4433FF] hover:text-white flex items-center gap-1"
-          >
-            Expand <ChevronRight size={14} />
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {isEditing ? (
+            <>
+              <button
+                onClick={handleCancel}
+                className="p-1.5 text-gray-400 hover:text-white hover:bg-[#1b2c45] rounded transition-colors"
+                title="Cancel"
+              >
+                <X size={14} />
+              </button>
+              <button
+                onClick={handleSave}
+                className="p-1.5 text-green-400 hover:text-white hover:bg-green-500/20 rounded transition-colors"
+                title="Save"
+              >
+                <Save size={14} />
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={handleStartEditing}
+                className="p-1.5 text-gray-400 hover:text-[#4433FF] hover:bg-[#1b2c45] rounded transition-colors"
+                title="Edit intel"
+              >
+                <Edit2 size={14} />
+              </button>
+              {onExpandClick && (
+                <button
+                  onClick={onExpandClick}
+                  className="text-xs text-[#4433FF] hover:text-white flex items-center gap-1"
+                >
+                  Expand <ChevronRight size={14} />
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* Intel Sections */}
       <div className="space-y-3">
-        {/* Communication Style */}
-        <div className="p-3 bg-[#0a111d] rounded-lg border border-[#112035]">
-          <div className="flex items-center gap-2 mb-1.5">
-            <Eye size={12} className="text-blue-400" />
-            <span className="text-[10px] font-semibold text-gray-400 uppercase">How they speak</span>
-          </div>
-          <p className="text-sm text-white">
-            {communicationStyle || 'Not enough data yet'}
-          </p>
-        </div>
+        {/* Communication Style - Editable */}
+        <EditableIntelSection
+          icon={<Eye size={12} className="text-blue-400" />}
+          label="How they speak"
+          value={howTheySpeak}
+          placeholder="Not enough data yet"
+          isEditing={isEditing}
+          editValue={editHowTheySpeak}
+          onEditValueChange={setEditHowTheySpeak}
+        />
 
-        {/* Triggers/Sensitivities */}
-        {potentialTriggers && (
-          <div className="p-3 bg-[#0a111d] rounded-lg border border-[#112035]">
-            <div className="flex items-center gap-2 mb-1.5">
-              <AlertTriangle size={12} className="text-yellow-400" />
-              <span className="text-[10px] font-semibold text-gray-400 uppercase">Watch for</span>
-            </div>
-            <p className="text-sm text-white">{potentialTriggers}</p>
-          </div>
+        {/* Watch For - Editable */}
+        {(watchFor || isEditing) && (
+          <EditableIntelSection
+            icon={<AlertTriangle size={12} className="text-yellow-400" />}
+            label="Watch for"
+            value={watchFor}
+            placeholder="Triggers, sensitivities..."
+            isEditing={isEditing}
+            editValue={editWatchFor}
+            onEditValueChange={setEditWatchFor}
+          />
         )}
 
-        {/* What they want (from contact tags/notes) */}
-        {contact.tags && contact.tags.length > 0 && (
+        {/* Tagged Interests (from contact tags) - Read only for now */}
+        {contact.tags && contact.tags.length > 0 && !isEditing && (
           <div className="p-3 bg-[#0a111d] rounded-lg border border-[#112035]">
             <div className="flex items-center gap-2 mb-1.5">
               <Target size={12} className="text-green-400" />
@@ -174,25 +276,31 @@ export const PersonalIntelCard: React.FC<PersonalIntelCardProps> = ({
         )}
 
         {/* Last Notable Interaction */}
-        {lastNotable && (
-          <div className="p-3 bg-[#0a111d] rounded-lg border border-[#112035]">
+        {lastNotable && !isEditing && (
+          <div
+            className="p-3 bg-[#0a111d] rounded-lg border border-[#112035] cursor-pointer hover:border-[#4433FF]/50 transition-colors"
+            onClick={() => onNavigateToTimeline?.(lastNotable.id)}
+          >
             <div className="flex items-center gap-2 mb-1.5">
               <History size={12} className="text-cyan-400" />
               <span className="text-[10px] font-semibold text-gray-400 uppercase">Last notable</span>
+              {lastNotable.isNotable && (
+                <span className="text-[8px] px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded uppercase">Notable</span>
+              )}
             </div>
             <p className="text-sm text-white line-clamp-2">{lastNotable.summary}</p>
             <p className="text-[10px] text-gray-500 mt-1">
-              {new Date(lastNotable.occurredAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {lastNotable.type} · {new Date(lastNotable.occurredAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </p>
           </div>
         )}
 
         {/* Empty state */}
-        {!communicationStyle && !potentialTriggers && (!contact.tags || contact.tags.length === 0) && !lastNotable && (
+        {!hasAnyData && !isEditing && (
           <div className="text-center py-4">
             <p className="text-sm text-gray-500">No intel gathered yet</p>
             <p className="text-[10px] text-gray-600 mt-1">
-              Add notes and interactions to build intelligence
+              Click edit to add intelligence about this contact
             </p>
           </div>
         )}

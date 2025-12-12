@@ -137,6 +137,25 @@ export interface Contact {
   initialWants?: string[];
   // Intake gateway - timestamp of first Tier 1 completion (null means not completed)
   firstIntakeCompletedAt?: string | null;
+  // Personal intel - user-editable intelligence about this contact
+  personalIntel?: ContactPersonalIntel;
+}
+
+/**
+ * Personal intelligence about a contact.
+ * User-editable fields for capturing insights about how to interact with them.
+ */
+export interface ContactPersonalIntel {
+  /** How they communicate (style, pace, preferences) */
+  howTheySpeak?: string;
+  /** What to watch for (triggers, sensitivities) */
+  watchFor?: string;
+  /** What they want (goals, desires) */
+  whatTheyWant?: string;
+  /** Additional notes or observations */
+  notes?: string;
+  /** Last updated timestamp */
+  updatedAt?: string;
 }
 
 /** Contact Zero is the user's own record */
@@ -314,6 +333,8 @@ export interface NoteTopic {
 // --- INTERACTION ---
 
 export type InteractionType = 'call' | 'meeting' | 'message' | 'email' | 'dm' | 'other';
+export type InteractionDirection = 'inbound' | 'outbound' | 'outbound_draft';
+export type InteractionSource = 'quick_action' | 'manual' | 'system';
 
 export interface InteractionAttachment {
   id: string;
@@ -331,6 +352,10 @@ export interface Interaction {
   type: InteractionType;
   occurredAt: string;             // ISO timestamp
   summary: string;
+  direction?: InteractionDirection;  // Direction of the interaction
+  source?: InteractionSource;        // How the interaction was logged
+  isNotable?: boolean;               // Flag for important interactions
+  affectsFrame?: boolean;            // Whether this interaction affects frame dynamics
   attachments?: InteractionAttachment[];
 }
 

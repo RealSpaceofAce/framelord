@@ -1095,13 +1095,17 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               setNewTaskTitle(title);
             }}
             onLogInteraction={() => {
-              // Scroll to interaction form or open modal
+              // Refresh data after interaction logged
+              setRefreshKey(k => k + 1);
             }}
-            onNavigateToGraph={() => {
-              // Navigate to graph view
+            onRefresh={() => {
+              // Refresh all data
+              setRefreshKey(k => k + 1);
             }}
-            onExpandPersonality={() => {
-              // Navigate to expanded personality view
+            onNavigateToDossier={(contactId) => {
+              if (setSelectedContactId) {
+                setSelectedContactId(contactId);
+              }
             }}
           />
         ) : (

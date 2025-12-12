@@ -27,6 +27,7 @@ interface MiniGraphCardProps {
   contactId: string;
   plan?: PlanTier;
   onExpandClick?: () => void;
+  onNavigateToDossier?: (contactId: string) => void;
 }
 
 interface ConnectionNode {
@@ -74,6 +75,7 @@ export const MiniGraphCard: React.FC<MiniGraphCardProps> = ({
   contactId,
   plan = 'beta_plus',
   onExpandClick,
+  onNavigateToDossier,
 }) => {
   const contact = getContactById(contactId);
 
@@ -197,7 +199,10 @@ export const MiniGraphCard: React.FC<MiniGraphCardProps> = ({
           {connections.slice(0, 3).map(connection => (
             <div
               key={connection.id}
-              className="flex items-center justify-between text-xs"
+              className={`flex items-center justify-between text-xs p-1.5 rounded-lg -mx-1.5 ${
+                onNavigateToDossier ? 'cursor-pointer hover:bg-[#1b2c45]/50' : ''
+              }`}
+              onClick={() => onNavigateToDossier?.(connection.id)}
             >
               <span className="text-gray-300 truncate">{connection.name}</span>
               <span className="text-[10px] text-gray-500">

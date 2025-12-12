@@ -5,7 +5,7 @@
 // Interactions track calls, meetings, messages, emails, DMs, etc. with contacts.
 // =============================================================================
 
-import { Interaction, InteractionType, InteractionAttachment } from '../types';
+import { Interaction, InteractionType, InteractionAttachment, InteractionDirection, InteractionSource } from '../types';
 import { CONTACT_ZERO } from './contactStore';
 
 // --- MOCK INTERACTIONS ---
@@ -294,5 +294,83 @@ export const removeAttachmentFromInteraction = (interactionId: string, attachmen
   }
 
   interaction.attachments = interaction.attachments.filter(a => a.id !== attachmentId);
+};
+
+/**
+ * Log an interaction automatically from quick actions.
+ * Creates a minimal interaction with source tracking.
+ */
+export const logAutoInteraction = (params: {
+  contactId: string;
+  type: InteractionType;
+  direction: InteractionDirection;
+  source: InteractionSource;
+  summary?: string;
+}): Interaction => {
+  const summaryMap: Record<InteractionType, string> = {
+    call: 'Initiated call',
+    meeting: 'Scheduled meeting',
+    message: 'Sent message',
+    email: 'Drafted email',
+    dm: 'Sent DM',
+    other: 'Quick action',
+  };
+
+  const newInteraction: Interaction = {
+    id: generateInteractionId(),
+    contactId: params.contactId,
+    authorContactId: CONTACT_ZERO.id,
+    type: params.type,
+    summary: params.summary || summaryMap[params.type],
+    occurredAt: new Date().toISOString(),
+    direction: params.direction,
+    source: params.source,
+  };
+
+  MOCK_INTERACTIONS = [newInteraction, ...MOCK_INTERACTIONS];
+  return newInteraction;
+};
+
+/**
+ * Get the last notable interaction for a contact.
+ * Falls back to most recent interaction if no notable ones exist.
+ */
+export const getLastNotableInteractionForContact = (contactId: string): Interaction | null => {
+  const interactions = getInteractionsByContactId(contactId);
+
+  // First try to find notable interactions
+  const notableInteraction = interactions.find(i => i.isNotable === true);
+  if (notableInteraction) {
+    return notableInteraction;
+  }
+
+  // Fall back to most recent interaction
+  return interactions[0] || null;
+};
+
+/**
+ * Toggle the isNotable flag on an interaction.
+ */
+export const toggleInteractionNotable = (interactionId: string): void => {
+  const interaction = getInteractionById(interactionId);
+  if (!interaction) {
+    console.warn(`Interaction with id ${interactionId} not found`);
+    return;
+  }
+
+  interaction.isNotable = !interaction.isNotable;
+};
+
+/**
+ * Set the isNotable flag on an interaction.
+ */
+export const setInteractionNotable = (interactionId: string, isNotable: boolean): void => {
+  const interaction = getInteractionById(interactionId);
+  if (!interaction) {
+    console.warn(`Interaction with id ${interactionId} not found`);
+    return;
+  }
+
+  interaction.isNotable = isNotable;
 };
 

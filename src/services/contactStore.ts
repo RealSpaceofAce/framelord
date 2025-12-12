@@ -644,6 +644,53 @@ export const getContactsForTopic = (topicId: string): Contact[] => {
   );
 };
 
+// =============================================================================
+// PERSONAL INTEL HELPERS
+// =============================================================================
+
+/**
+ * Update personal intel for a contact.
+ * Merges the patch with existing intel and updates the timestamp.
+ * @param contactId - The contact ID
+ * @param patch - Partial personal intel to merge
+ */
+export const updatePersonalIntel = (
+  contactId: string,
+  patch: Partial<import('../types').ContactPersonalIntel>
+): void => {
+  const contact = getContactById(contactId);
+  if (!contact) {
+    console.warn(`Contact with id ${contactId} not found`);
+    return;
+  }
+
+  const existingIntel = contact.personalIntel || {};
+  const updatedIntel = {
+    ...existingIntel,
+    ...patch,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const updatedContact: Contact = {
+    ...contact,
+    personalIntel: updatedIntel,
+  };
+
+  updateContact(updatedContact);
+};
+
+/**
+ * Get personal intel for a contact.
+ * @param contactId - The contact ID
+ * @returns The personal intel or undefined
+ */
+export const getPersonalIntel = (
+  contactId: string
+): import('../types').ContactPersonalIntel | undefined => {
+  const contact = getContactById(contactId);
+  return contact?.personalIntel;
+};
+
 // --- LEGACY EXPORT (for backward compatibility) ---
 // Export MOCK_CONTACTS as an alias to CONTACTS for any code that still references it
 export const MOCK_CONTACTS = CONTACTS;

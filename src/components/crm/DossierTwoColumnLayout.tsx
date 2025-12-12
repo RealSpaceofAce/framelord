@@ -25,12 +25,17 @@ import {
   canUseFeature,
 } from '@/config/planConfig';
 
+// Stores
+import { getContactById } from '@/services/contactStore';
+import { logAutoInteraction } from '@/services/interactionStore';
+
 // Card Components
 import { PersonalIntelCard } from './PersonalIntelCard';
 import { MiniGraphCard } from './MiniGraphCard';
 import { PersonalityAndTestsCard } from './PersonalityAndTestsCard';
 import { NextMoveCard } from './NextMoveCard';
 import { CallAnalyzerCard } from './CallAnalyzerCard';
+import { LogInteractionModal } from './LogInteractionModal';
 
 // Types
 type DossierTab = 'timeline' | 'notes' | 'tasks' | 'framescan';
@@ -50,6 +55,9 @@ interface DossierTwoColumnLayoutProps {
   onExpandPersonality?: () => void;
   onUploadCall?: () => void;
   onExpandCalls?: () => void;
+  onNavigateToFrameScan?: () => void;
+  onRefresh?: () => void;
+  onNavigateToDossier?: (contactId: string) => void;
 }
 
 /**
@@ -85,10 +93,16 @@ const ControlButton: React.FC<{
   icon: React.ReactNode;
   label: string;
   onClick?: () => void;
-}> = ({ icon, label, onClick }) => (
+  disabled?: boolean;
+}> = ({ icon, label, onClick, disabled }) => (
   <button
     onClick={onClick}
-    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-300 bg-[#0a111d] border border-[#1b2c45] rounded-lg hover:border-[#4433FF] hover:text-white transition-colors"
+    disabled={disabled}
+    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-[#0a111d] border border-[#1b2c45] rounded-lg transition-colors ${
+      disabled
+        ? 'text-gray-600 cursor-not-allowed opacity-50'
+        : 'text-gray-300 hover:border-[#4433FF] hover:text-white'
+    }`}
   >
     {icon}
     {label}
@@ -111,8 +125,14 @@ export const DossierTwoColumnLayout: React.FC<DossierTwoColumnLayoutProps> = ({
   onExpandPersonality,
   onUploadCall,
   onExpandCalls,
+  onNavigateToFrameScan,
+  onRefresh,
+  onNavigateToDossier,
 }) => {
   const [activeTab, setActiveTab] = useState<DossierTab>('timeline');
+  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+
+  const contact = getContactById(contactId);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -129,8 +149,96 @@ export const DossierTwoColumnLayout: React.FC<DossierTwoColumnLayoutProps> = ({
     }
   };
 
+  // Quick action handlers
+  const handleCall = () => {
+    if (!contact) return;
+
+    // Log the interaction
+    logAutoInteraction({
+      contactId,
+      type: 'call',
+      direction: 'outbound',
+      source: 'quick_action',
+    });
+
+    // Trigger the phone call
+    if (contact.phone) {
+      window.location.href = `tel:${contact.phone}`;
+    }
+
+    // Refresh timeline
+    onRefresh?.();
+  };
+
+  const handleMessage = () => {
+    if (!contact) return;
+
+    // Log the interaction
+    logAutoInteraction({
+      contactId,
+      type: 'message',
+      direction: 'outbound',
+      source: 'quick_action',
+    });
+
+    // Trigger SMS
+    if (contact.phone) {
+      window.location.href = `sms:${contact.phone}`;
+    }
+
+    // Refresh timeline
+    onRefresh?.();
+  };
+
+  const handleEmail = () => {
+    if (!contact) return;
+
+    // Log the interaction
+    logAutoInteraction({
+      contactId,
+      type: 'email',
+      direction: 'outbound_draft',
+      source: 'quick_action',
+    });
+
+    // Trigger mailto
+    if (contact.email) {
+      const subject = encodeURIComponent(`Regarding: ${contact.fullName}`);
+      window.location.href = `mailto:${contact.email}?subject=${subject}`;
+    }
+
+    // Refresh timeline
+    onRefresh?.();
+  };
+
+  const handleLogInteraction = () => {
+    setIsLogModalOpen(true);
+  };
+
+  const handleFrameScan = () => {
+    // If there's a navigation handler, use it
+    if (onNavigateToFrameScan) {
+      onNavigateToFrameScan();
+    } else {
+      // Otherwise just switch to the FrameScan tab
+      setActiveTab('framescan');
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Log Interaction Modal */}
+      <LogInteractionModal
+        isOpen={isLogModalOpen}
+        onClose={() => setIsLogModalOpen(false)}
+        contactId={contactId}
+        contactName={contact?.fullName || 'Contact'}
+        onSuccess={() => {
+          onRefresh?.();
+          onLogInteraction?.();
+        }}
+      />
+
       {/* LEFT COLUMN - Tabbed Content */}
       <div className="lg:col-span-2 space-y-0">
         {/* Control Deck */}
@@ -139,27 +247,30 @@ export const DossierTwoColumnLayout: React.FC<DossierTwoColumnLayoutProps> = ({
             <ControlButton
               icon={<Phone size={14} />}
               label="Call"
-              onClick={() => {}}
+              onClick={handleCall}
+              disabled={!contact?.phone}
             />
             <ControlButton
               icon={<MessageSquare size={14} />}
               label="Message"
-              onClick={() => {}}
+              onClick={handleMessage}
+              disabled={!contact?.phone}
             />
             <ControlButton
               icon={<Mail size={14} />}
               label="Email"
-              onClick={() => {}}
+              onClick={handleEmail}
+              disabled={!contact?.email}
             />
             <ControlButton
               icon={<FileSignature size={14} />}
               label="Log"
-              onClick={onLogInteraction}
+              onClick={handleLogInteraction}
             />
             <ControlButton
               icon={<Scan size={14} />}
               label="FrameScan"
-              onClick={() => setActiveTab('framescan')}
+              onClick={handleFrameScan}
             />
           </div>
         </div>
@@ -208,6 +319,8 @@ export const DossierTwoColumnLayout: React.FC<DossierTwoColumnLayoutProps> = ({
         <PersonalIntelCard
           contactId={contactId}
           tier={plan as any}
+          onRefresh={onRefresh}
+          onNavigateToTimeline={() => setActiveTab('timeline')}
         />
 
         {/* Mini Graph Card */}
@@ -215,6 +328,7 @@ export const DossierTwoColumnLayout: React.FC<DossierTwoColumnLayoutProps> = ({
           contactId={contactId}
           plan={plan}
           onExpandClick={onNavigateToGraph}
+          onNavigateToDossier={onNavigateToDossier}
         />
 
         {/* Personality & Tests Card */}
@@ -229,7 +343,7 @@ export const DossierTwoColumnLayout: React.FC<DossierTwoColumnLayoutProps> = ({
           contactId={contactId}
           tier={plan as any}
           onCreateTask={onCreateTask}
-          onLogInteraction={onLogInteraction}
+          onLogInteraction={handleLogInteraction}
         />
 
         {/* Call Analyzer Card */}
