@@ -64,6 +64,9 @@ import {
 // Types
 import type { Task } from '@/types';
 
+// Components
+import { ContactDetailsCard } from './ContactDetailsCard';
+
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -932,6 +935,14 @@ export const ContactZeroView: React.FC<ContactZeroViewProps> = ({
               {PLAN_NAMES[userPlan]}
             </span>
           </div>
+        </div>
+
+        {/* MY CONTACT DETAILS - Personal info card for Contact Zero */}
+        <div className="max-w-md">
+          <ContactDetailsCard
+            contactId={contact.id}
+            onRefresh={() => {}}
+          />
         </div>
 
         {/* PRE-FLIGHT BRIEFING */}

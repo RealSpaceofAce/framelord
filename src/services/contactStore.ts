@@ -39,6 +39,22 @@ export const CONTACT_ZERO: ContactZero = ensureContactCRMFields({
   location: 'San Francisco, CA',
   // Intake gateway - null means user has not completed Tier 1 yet
   firstIntakeCompletedAt: null,
+  // Personal details
+  personal: {
+    primaryEmail: 'grimson@framelord.ai',
+    primaryPhone: '+1 555 000 0000',
+    location: 'San Francisco, CA',
+    timeZone: 'America/Los_Angeles',
+    birthday: '1985-03-15',
+    kidsCount: 0,
+    maritalStatus: 'single',
+    favoriteColor: 'Electric Blue',
+    favoriteDrink: 'Espresso',
+    socialProfiles: [
+      { label: 'X', handle: '@grimson', url: 'https://x.com/grimson' },
+      { label: 'LinkedIn', url: 'https://linkedin.com/in/grimson' },
+    ],
+  },
 }) as ContactZero;
 
 // --- INTERNAL CONTACTS ARRAY ---
@@ -72,6 +88,21 @@ let CONTACTS: Contact[] = [
     mentionedInNotes: [],
     engagementEvents: [],
     linkedTopics: [],
+    personal: {
+      primaryEmail: 'sarah.c@techcorp.com',
+      primaryPhone: '+1 555 0192',
+      location: 'New York, NY',
+      timeZone: 'America/New_York',
+      birthday: '1988-07-22',
+      kidsCount: 2,
+      maritalStatus: 'married',
+      favoriteColor: 'Teal',
+      favoriteDrink: 'Green Tea',
+      socialProfiles: [
+        { label: 'LinkedIn', url: 'https://linkedin.com/in/sarahchen' },
+        { label: 'X', handle: '@sarahchen_tech', url: 'https://x.com/sarahchen_tech' },
+      ],
+    },
   },
   {
     id: 'c_marcus_johnson',
@@ -96,6 +127,22 @@ let CONTACTS: Contact[] = [
     mentionedInNotes: [],
     engagementEvents: [],
     linkedTopics: [],
+    personal: {
+      primaryEmail: 'marcus.j@acmecorp.io',
+      primaryPhone: '+1 555 0834',
+      location: 'Austin, TX',
+      timeZone: 'America/Chicago',
+      birthday: '1982-11-03',
+      kidsCount: 1,
+      maritalStatus: 'married',
+      favoriteColor: 'Navy Blue',
+      favoriteDrink: 'Bourbon Old Fashioned',
+      personalNotes: 'Loves BBQ. Bring him brisket recommendations.',
+      socialProfiles: [
+        { label: 'LinkedIn', url: 'https://linkedin.com/in/marcusjohnson' },
+        { label: 'GitHub', handle: '@mjohnson', url: 'https://github.com/mjohnson' },
+      ],
+    },
   },
   {
     id: 'c_elena_rodriguez',

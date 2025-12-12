@@ -78,6 +78,7 @@ import {
 import { FrameScanContactTab } from './FrameScanContactTab';
 import { AIProfileWidget } from './AIProfileWidget';
 import { DossierTwoColumnLayout } from './DossierTwoColumnLayout';
+import { ContactDetailsCard } from './ContactDetailsCard';
 import { getCurrentUserPlan } from '@/config/planConfig';
 
 const MotionDiv = motion.div as any;
@@ -1360,6 +1361,13 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
             )}
           </div>
         </div>
+
+        {/* Contact Details Card */}
+        <ContactDetailsCard
+          contactId={selectedContactId}
+          onExpandClick={() => setIsEditing(true)}
+          onRefresh={() => setRefreshKey(k => k + 1)}
+        />
         </div>
         {/* End Zone 1 */}
 

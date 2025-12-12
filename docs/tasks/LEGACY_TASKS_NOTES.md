@@ -176,6 +176,38 @@ The theme toggle now syncs between Notes editor and global app theme:
 - Task row click → Contact Dossier
 - Contact row click → Contact Dossier
 
+---
+
+## Enhancement: Task Creation (2025-12-11)
+
+### NotesTasksView Now Includes Task Creator
+
+The embedded task list now has full task creation capabilities:
+
+**Features:**
+- "New Task" button in header
+- Task title input (with Enter key support)
+- Contact picker dropdown with search
+- Due date picker (optional)
+- Create button
+
+**UI Flow:**
+1. Click "New Task" button → Form appears
+2. Enter task title (required)
+3. Select contact (defaults to Contact Zero)
+4. Optionally set due date
+5. Click "Create Task" or press Enter
+6. Form closes, task list refreshes
+
+**Files Modified:**
+- `src/components/notes/NotesTasksView.tsx`:
+  - Added task creation form state
+  - Added contact picker with search
+  - Added date picker integration
+  - Added form UI with styling matching Notes theme
+
+---
+
 ## Post-Migration Cleanup
 
 Remaining cleanup (optional):

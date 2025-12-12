@@ -13,6 +13,52 @@ export interface ContactFrameMetrics {
   lastScanAt: string | null;      // ISO timestamp
 }
 
+// --- CONTACT PERSONAL DETAILS ---
+
+/**
+ * Social profile link (X, Instagram, LinkedIn, Website, etc.)
+ */
+export interface ContactSocialProfile {
+  /** Display label (e.g., "X", "Instagram", "LinkedIn", "Website") */
+  label: string;
+  /** Username/handle where relevant (e.g., "@username") */
+  handle?: string;
+  /** Full URL to the profile */
+  url: string;
+}
+
+/**
+ * Personal details for a contact.
+ * Contains contact info, personal preferences, and family details.
+ */
+export interface ContactPersonalDetails {
+  /** Primary email address */
+  primaryEmail?: string;
+  /** Primary phone number */
+  primaryPhone?: string;
+  /** Location (free text, e.g., "Austin, TX") */
+  location?: string;
+  /** Time zone (IANA format, e.g., "America/Chicago") */
+  timeZone?: string;
+
+  /** Birthday (ISO date string "YYYY-MM-DD") */
+  birthday?: string;
+  /** Number of children */
+  kidsCount?: number;
+  /** Marital status (e.g., "single", "married", "divorced") */
+  maritalStatus?: string;
+
+  /** Favorite color */
+  favoriteColor?: string;
+  /** Favorite drink */
+  favoriteDrink?: string;
+  /** Additional personal notes */
+  personalNotes?: string;
+
+  /** Social media profiles */
+  socialProfiles?: ContactSocialProfile[];
+}
+
 // --- PSYCHOMETRIC PROFILE ---
 
 /**
@@ -141,6 +187,8 @@ export interface Contact {
   firstIntakeCompletedAt?: string | null;
   // Personal intel - user-editable intelligence about this contact
   personalIntel?: ContactPersonalIntel;
+  // Personal details - contact info, preferences, family details
+  personal?: ContactPersonalDetails;
 }
 
 /**

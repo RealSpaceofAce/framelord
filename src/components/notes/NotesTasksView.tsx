@@ -16,10 +16,15 @@ import {
   Filter,
   Search,
   AlertCircle,
+  Plus,
+  X,
+  User,
+  ChevronDown,
 } from 'lucide-react';
-import { getAllTasks, updateTaskStatus } from '../../services/taskStore';
-import { getContactById, CONTACT_ZERO } from '../../services/contactStore';
-import { Task, TaskStatus } from '../../types';
+import { getAllTasks, updateTaskStatus, createTask } from '../../services/taskStore';
+import { getContactById, getAllContacts, CONTACT_ZERO } from '../../services/contactStore';
+import { Task, TaskStatus, Contact } from '../../types';
+import { DatePicker } from '../DatePicker';
 
 // =============================================================================
 // TYPES
@@ -55,8 +60,27 @@ export const NotesTasksView: React.FC<NotesTasksViewProps> = ({
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Task creation form state
+  const [isCreating, setIsCreating] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskContactId, setNewTaskContactId] = useState<string>(CONTACT_ZERO.id);
+  const [newTaskDueDate, setNewTaskDueDate] = useState<string | null>(null);
+  const [isContactDropdownOpen, setIsContactDropdownOpen] = useState(false);
+  const [contactSearchQuery, setContactSearchQuery] = useState('');
+
   // Get all tasks
   const allTasks = useMemo(() => getAllTasks(), [refreshKey]);
+
+  // Get all contacts for picker
+  const allContacts = useMemo(() => {
+    const contacts = getAllContacts();
+    // Filter by search query if any
+    if (contactSearchQuery.trim()) {
+      const query = contactSearchQuery.toLowerCase();
+      return contacts.filter(c => c.fullName.toLowerCase().includes(query));
+    }
+    return contacts;
+  }, [contactSearchQuery]);
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -113,6 +137,40 @@ export const NotesTasksView: React.FC<NotesTasksViewProps> = ({
     onNavigateToContact?.(contactId);
   };
 
+  // Task creation handlers
+  const handleCreateTask = () => {
+    if (!newTaskTitle.trim()) return;
+
+    createTask({
+      contactId: newTaskContactId,
+      title: newTaskTitle.trim(),
+      dueAt: newTaskDueDate,
+    });
+
+    // Reset form
+    setNewTaskTitle('');
+    setNewTaskContactId(CONTACT_ZERO.id);
+    setNewTaskDueDate(null);
+    setIsCreating(false);
+    setRefreshKey(k => k + 1);
+  };
+
+  const handleCancelCreate = () => {
+    setNewTaskTitle('');
+    setNewTaskContactId(CONTACT_ZERO.id);
+    setNewTaskDueDate(null);
+    setIsCreating(false);
+  };
+
+  const handleSelectContact = (contactId: string) => {
+    setNewTaskContactId(contactId);
+    setIsContactDropdownOpen(false);
+    setContactSearchQuery('');
+  };
+
+  // Get selected contact for display
+  const selectedContact = getContactById(newTaskContactId);
+
   // Date formatting
   const formatDate = (dateStr: string): string => {
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -153,13 +211,181 @@ export const NotesTasksView: React.FC<NotesTasksViewProps> = ({
           <h2 className="text-lg font-semibold" style={{ color: colors.text }}>
             Tasks
           </h2>
-          {stats.overdue > 0 && (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-red-500/10 text-red-400 text-xs">
-              <AlertCircle size={12} />
-              {stats.overdue} overdue
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {stats.overdue > 0 && (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-red-500/10 text-red-400 text-xs">
+                <AlertCircle size={12} />
+                {stats.overdue} overdue
+              </div>
+            )}
+            {!isCreating && (
+              <button
+                onClick={() => setIsCreating(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                style={{ background: colors.accent, color: '#fff' }}
+              >
+                <Plus size={14} />
+                New Task
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Task Creation Form */}
+        {isCreating && (
+          <div
+            className="mb-4 p-4 rounded-lg border"
+            style={{ background: colors.hover, borderColor: colors.border }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium" style={{ color: colors.text }}>
+                Create New Task
+              </span>
+              <button
+                onClick={handleCancelCreate}
+                className="p-1 rounded transition-colors"
+                style={{ color: colors.textMuted }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = colors.text; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = colors.textMuted; }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Title Input */}
+            <input
+              type="text"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="What needs to be done?"
+              autoFocus
+              className="w-full px-3 py-2 text-sm rounded-md outline-none border mb-3"
+              style={{
+                background: colors.bg,
+                borderColor: colors.border,
+                color: colors.text,
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newTaskTitle.trim()) {
+                  handleCreateTask();
+                }
+                if (e.key === 'Escape') {
+                  handleCancelCreate();
+                }
+              }}
+            />
+
+            {/* Contact Picker & Due Date Row */}
+            <div className="flex items-center gap-3 mb-3">
+              {/* Contact Picker */}
+              <div className="relative flex-1">
+                <button
+                  onClick={() => setIsContactDropdownOpen(!isContactDropdownOpen)}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-md border text-sm text-left"
+                  style={{
+                    background: colors.bg,
+                    borderColor: colors.border,
+                    color: colors.text,
+                  }}
+                >
+                  {selectedContact ? (
+                    <>
+                      <img
+                        src={selectedContact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedContact.id}`}
+                        alt={selectedContact.fullName}
+                        className="w-5 h-5 rounded-full"
+                      />
+                      <span className="flex-1 truncate">{selectedContact.fullName}</span>
+                      {selectedContact.id === CONTACT_ZERO.id && (
+                        <span
+                          className="text-[9px] px-1 py-0.5 rounded"
+                          style={{ background: `${colors.accent}20`, color: colors.accent }}
+                        >
+                          You
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <User size={14} style={{ color: colors.textMuted }} />
+                      <span style={{ color: colors.textMuted }}>Select contact...</span>
+                    </>
+                  )}
+                  <ChevronDown size={14} style={{ color: colors.textMuted }} />
+                </button>
+
+                {/* Contact Dropdown */}
+                {isContactDropdownOpen && (
+                  <div
+                    className="absolute left-0 right-0 top-full mt-1 rounded-md border shadow-lg z-50 max-h-48 overflow-y-auto"
+                    style={{ background: colors.bg, borderColor: colors.border }}
+                  >
+                    <div className="p-2 border-b" style={{ borderColor: colors.border }}>
+                      <input
+                        type="text"
+                        value={contactSearchQuery}
+                        onChange={(e) => setContactSearchQuery(e.target.value)}
+                        placeholder="Search contacts..."
+                        autoFocus
+                        className="w-full px-2 py-1.5 text-sm rounded outline-none"
+                        style={{
+                          background: colors.hover,
+                          color: colors.text,
+                        }}
+                      />
+                    </div>
+                    {allContacts.map((contact) => (
+                      <button
+                        key={contact.id}
+                        onClick={() => handleSelectContact(contact.id)}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors"
+                        style={{ color: colors.text }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = colors.hover; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <img
+                          src={contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
+                          alt={contact.fullName}
+                          className="w-5 h-5 rounded-full"
+                        />
+                        <span className="flex-1 truncate">{contact.fullName}</span>
+                        {contact.id === CONTACT_ZERO.id && (
+                          <span
+                            className="text-[9px] px-1 py-0.5 rounded"
+                            style={{ background: `${colors.accent}20`, color: colors.accent }}
+                          >
+                            You
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Due Date Picker */}
+              <DatePicker
+                value={newTaskDueDate}
+                onChange={setNewTaskDueDate}
+                placeholder="Due date (optional)"
+                className="flex-1"
+              />
+            </div>
+
+            {/* Create Button */}
+            <button
+              onClick={handleCreateTask}
+              disabled={!newTaskTitle.trim()}
+              className="w-full py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: newTaskTitle.trim() ? colors.accent : colors.border,
+                color: newTaskTitle.trim() ? '#fff' : colors.textMuted,
+              }}
+            >
+              Create Task
+            </button>
+          </div>
+        )}
 
         {/* Search */}
         <div className="relative mb-3">
