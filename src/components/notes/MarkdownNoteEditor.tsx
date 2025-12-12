@@ -763,7 +763,7 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
         tippyOptions={{
           // Position to the left of the block, outside the padded content
           placement: 'left-start',
-          offset: [0, 48], // [skidding, distance] - push further left outside content
+          offset: [0, 24], // [skidding, distance] - align with content gutter (px-6 = 24px)
           // Disable animations for snappy feel
           duration: 0,
           // Style the container as transparent
@@ -1134,13 +1134,6 @@ export const MarkdownNoteEditor: React.FC<MarkdownNoteEditorProps> = ({
         .drag-handle-container {
           opacity: 1;
           transition: opacity 0.15s ease;
-        }
-
-        /* Make editor content have room for drag handles on left */
-        .notion-editor .ProseMirror {
-          position: relative;
-          padding-left: 48px;
-          margin-left: -48px;
         }
 
         /* TipTap DragHandle - clean floating icons with transparent container */

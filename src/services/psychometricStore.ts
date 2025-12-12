@@ -9,6 +9,7 @@ import {
   PsychometricProfile,
   PsychometricEvidence,
 } from '@/types/psychometrics';
+import { addPsychometricProfileToMemory } from './aiMemoryAdapters';
 
 /**
  * Internal state for psychometric data.
@@ -44,6 +45,13 @@ export const psychometricStore = {
    */
   upsertProfile(profile: PsychometricProfile): void {
     psychometricState.profiles[profile.contactId] = profile;
+
+    // Feed into AI memory for self-improving AI layer
+    try {
+      addPsychometricProfileToMemory(profile, 'all');
+    } catch (err) {
+      console.warn('[psychometricStore] Failed to add profile to AI memory:', err);
+    }
   },
 
   /**

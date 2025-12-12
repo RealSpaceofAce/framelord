@@ -40,6 +40,7 @@ export interface Tenant {
   ownerUserId: string;             // Platform user ID
   tenantContactZeroId: string;     // Contact ID representing the tenant owner (Contact Zero)
   seatCount?: number;              // For enterprise tenants: number of seats purchased
+  billing?: TenantBilling;         // Stripe billing state (optional during migration)
 }
 
 // =============================================================================
@@ -244,6 +245,11 @@ export interface BetaApplication {
   status: BetaApplicationStatus;
   form: BetaApplicationForm;
   aiEvaluation?: BetaApplicationAiResult;
+  // Optional user info for notifications (populated when available)
+  email?: string;
+  fullName?: string;
+  phone?: string;
+  smsOptIn?: boolean;
 }
 
 // =============================================================================
@@ -341,6 +347,68 @@ export interface CookieConsent {
   acceptedAt: string;
   version: number;
 }
+
+// =============================================================================
+// STRIPE BILLING TYPES
+// =============================================================================
+
+/**
+ * Subscription status from Stripe
+ * Maps directly to Stripe subscription.status values
+ */
+export type StripeSubscriptionStatus =
+  | 'trialing'
+  | 'active'
+  | 'past_due'
+  | 'canceled'
+  | 'unpaid'
+  | 'incomplete'
+  | 'incomplete_expired';
+
+/**
+ * Plan tier identifiers (from planConfig.ts)
+ * Beta tiers are used during beta period
+ * Production tiers are used post-launch
+ */
+export type PlanTier =
+  // Beta tiers
+  | 'beta_free'
+  | 'beta_plus'
+  | 'ultra_beta'
+  | 'enterprise_beta'
+  // Production tiers
+  | 'basic'
+  | 'pro'
+  | 'elite';
+
+/**
+ * Billing state for a tenant
+ * Stored alongside tenant metadata
+ */
+export interface TenantBilling {
+  /** Stripe customer ID (cus_xxx) */
+  stripeCustomerId?: string;
+  /** Stripe subscription ID (sub_xxx) */
+  stripeSubscriptionId?: string;
+  /** Current plan tier - determines feature access */
+  currentPlanTier: PlanTier;
+  /** Subscription status from Stripe */
+  billingStatus: StripeSubscriptionStatus | 'none';
+  /** ISO date when current period ends (for canceled subscriptions) */
+  validUntil?: string;
+  /** ISO date when subscription was created */
+  subscribedAt?: string;
+  /** ISO date of last billing event */
+  lastBillingEventAt?: string;
+}
+
+/**
+ * Default billing state for new tenants (beta_free)
+ */
+export const DEFAULT_TENANT_BILLING: TenantBilling = {
+  currentPlanTier: 'beta_free',
+  billingStatus: 'none',
+};
 
 // =============================================================================
 // EMAIL DISPATCH TYPES

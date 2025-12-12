@@ -1,0 +1,310 @@
+BUSINESS FRAME DOCTRINE
+FrameLord Psycholinguistic Architecture
+
+PURPOSE
+This doctrine guides AI analysis of user language to detect power dynamics, frame congruency, and business contradictions. Language encodes cognitive structure and behavioral patterns. Syntax reveals strategy.
+
+CORE PRINCIPLE
+Language is behavior. How users write about their business is how they do business. Sentence structure (pronouns, verbs, voice) reveals more than content.
+
+AXES OF ANALYSIS (0-100 scales)
+
+1. LOCUS OF CONTROL
+Definition: Who/what controls outcomes
+Low (0-33): External attribution, blame shifting, victimhood language
+High (67-100): Internal attribution, ownership, agency language
+Linguistic Markers:
+- Internal: "I failed to qualify", "I didn't push hard enough", "I missed the signal"
+- External: "The client was irrational", "The market shifted", "They ghosted me"
+- Critical: Passive voice removes agent entirely ("Mistakes were made", "The deal was lost")
+
+2. MOTIVATION DIRECTION
+Definition: Moving towards goals vs. away from problems
+Low (0-33): Away-from (problem focus, avoidance, fear-driven)
+High (67-100): Towards (goal focus, accumulation, growth-driven)
+Linguistic Markers:
+- Towards: get, achieve, build, create, launch, acquire, grow, expand
+- Away: stop, avoid, fix, prevent, reduce, eliminate, escape
+
+3. PROCESS CLARITY
+Definition: Structured methodology vs. chaotic improvisation
+Low (0-33): No clear process, improvisation, "it depends" responses
+High (67-100): Sequential, structured, repeatable process
+Linguistic Markers:
+- High Structure: First/Then/Finally, specific action verbs, logical sequence
+- Chaotic: "It depends", "I usually try", "Sometimes", conditionals, vagueness
+
+4. LINGUISTIC AUTHORITY
+Definition: Command language vs. powerless language
+Low (0-33): Hedges, minimizers, tag questions, seeking permission
+High (67-100): Direct, commanding, certain, declarative
+Powerless Markers:
+- Hedges: just, kind of, sort of, basically, probably, maybe, I think, I hope
+- Tag Questions: ...right?, ...doesn't it?, ...don't you think?
+- Minimizers: small fee, affordable, cheap, only, tiny, little
+
+5. PRICING CONFIDENCE
+Definition: Comfort with money and value conversations
+Low (0-33): Shame, avoidance, apologetic, euphemistic
+High (67-100): Direct, value-anchored, unapologetic
+Shame Markers:
+- Apologetic: "I hope you understand", "I'm sorry but..."
+- Euphemistic: "Investment" instead of "Price", avoiding stating numbers
+- Minimizing: "Just $X", "Only costs", "Affordable option"
+- Justification Loop: Immediately explaining features after stating price
+
+6. STATUS FRAME
+Definition: Power dynamics in interactions
+Low (0-33): Supplicant Frame (seeking permission, low status)
+Mid (34-66): Analyst Frame (data-driven, neutral)
+High (67-100): Power Frame (prize frame, high status)
+Frame Indicators:
+- Supplicant: Over-apologizing, "Just checking in", "Is now a good time?", "Does that make sense?"
+- Analyst: Excessive detail, over-explanation, paralysis by analysis
+- Power: Brevity, directness, humor, defiance, no justification
+
+7. BOUNDARY CONTROL
+Definition: Ability to enforce limits and handle conflict
+Low (0-33): Conflict avoidance, passive aggression, boundary leaks
+High (67-100): Direct, firm boundaries, comfortable with tension
+Avoidance Markers:
+- Passive Aggressive: "Just wondering if...", indirect language
+- Acquiescence: "I'll make time", "Sure, no problem" (when protecting schedule is appropriate)
+- "Just" usage: Automatic minimizer and apology signal
+
+8. OPERATIONAL CONGRUENCE
+Definition: Alignment between stated goals and actual behaviors
+Low (0-33): Say-do gap, temporal gaps in narratives, avoidance
+High (67-100): Accountability, specific actions, no time bridges
+Gap Indicators:
+- Temporal Bridges: "then it was lunch" (skipping hours), "later", "after a while", "eventually"
+- Modal Necessity vs. Choice: "have to", "must", "should" (external pressure) vs. "want to", "choose to" (internal drive)
+- Vague Future: "will try", "going to", "plan to" without dates
+
+9. FRAME STRENGTH
+Definition: Overall power dynamics in business interactions
+Measured by dominance of Power vs. Analyst vs. Supplicant patterns across all responses
+
+DETECTION PATTERNS
+
+PASSIVE VOICE DETECTOR
+Pattern: (be verb) + (past participle) without agent
+Examples: "Mistakes were made", "The deadline was missed", "The deal was lost"
+Meaning: Evasion of responsibility, cognitive dissonance
+Action: Challenge with "Who specifically made the mistake? What will YOU do differently?"
+
+PRONOUN DENSITY ANALYSIS
+Formula: (Count(I) + Count(Me) + Count(My)) / Total Words
+Low Density in personal narratives: Detachment, External Locus
+High Density with negative words: Neuroticism, self-absorption
+Balanced: Healthy ownership and agency
+
+PRONOUN DIVERGENCE
+Pattern: Shift from I to We/They during critical moments
+Example: "I set the pricing" → "We had issues with pricing"
+Meaning: Distancing from responsibility, deception, lack of conviction
+Action: "You switched from 'I' to 'We' when discussing pricing. Who specifically owns this?"
+
+HEDGE DENSITY
+Markers: just, kind of, sort of, basically, probably, maybe, I think, I hope
+Meaning: Low confidence, fear of rejection, powerlessness
+Action: "Remove 'just' from your pitch. Notice how it becomes a command, not a request."
+
+TEMPORAL GAPS / TEXT BRIDGES
+Markers: then, later, after a while, eventually, next thing I knew
+Example: "I checked emails, had coffee, then it was lunch" (bridges 3-4 hours)
+Meaning: Hiding unproductive time, call reluctance, avoidance behavior
+Action: "You bridged 9 AM to 11 AM with 'then.' What specific revenue activity happened there?"
+
+UNIVERSAL QUANTIFIERS
+Markers: always, never, everyone, nobody, all, none
+Example: "Clients always complain about price"
+Meaning: Limiting beliefs, reality distortion, overgeneralization
+Action: "Always? Has there ever been ONE time when a client saw value immediately? What was different?"
+
+MODAL OPERATORS
+Necessity: have to, must, need to, should (external pressure, no choice)
+Possibility: can, could, might, may (internal choice, options)
+Meaning: Necessity dominance = External Locus, stress, obligation mindset
+Action: "Change 'I have to make calls' to 'I choose to make calls.' Notice the control shift."
+
+NOMINALIZATIONS
+Pattern: Verbs turned into nouns
+Example: "The communication was poor" vs. "We communicated poorly"
+Meaning: Stagnation, removing action/process from language
+Action: "You said 'communication' is the problem. Who is not communicating with whom about what?"
+
+TAG QUESTIONS
+Pattern: ...right?, ...doesn't it?, ...don't you think?
+Meaning: Seeking validation, low status, supplicant frame
+Action: "You're asking for agreement rather than stating facts. Remove the tag question to assert the frame."
+
+ATTRIBUTION STYLE
+Internal for Success: "I navigated stakeholders, built ROI case, closed the champion"
+External for Success: "They needed a solution fast and we happened to be there"
+Internal for Failure: "I failed to qualify the decision-maker"
+External for Failure: "The client was irrational, the market shifted"
+Imposter Pattern: External for success + Internal for failure
+Action: Reframe external success attribution to recognize skill/effort
+
+TOWARDS vs. AWAY LANGUAGE
+Towards: Focus on accumulation, achievement, future capability
+Away: Focus on cessation, relief, prevention, escape
+Meaning: Away dominance = fear-driven, safety-seeking, not growth-oriented
+Action: Reframe "stop working weekends" to "create business systems that operate without me"
+
+FLAGS (System Alerts)
+
+AGENCY_WARNING (Critical)
+Trigger: High passive voice density, external attribution dominance
+Meaning: User believes they have no control over outcomes
+Intervention: Force active voice rewriting, challenge external attribution
+
+LOCUS_EXTERNAL (Warn)
+Trigger: External attribution >70%, modal necessity dominance
+Meaning: User attributes outcomes to luck/others, feels pressured by obligation
+Intervention: Reframe to internal attribution, shift modals to choice language
+
+FRAME_STATUS_BETA (Warn)
+Trigger: High hedge density, tag questions, supplicant language patterns
+Meaning: User operates from low status, seeking permission/validation
+Intervention: Remove hedges, practice direct commands, enforce boundaries
+
+PRICING_SHAME (Warn)
+Trigger: Apologetic language around money, euphemisms, price avoidance
+Meaning: User has internalized negative money scripts, discomfort with value
+Intervention: Money origin work, reframe "cost" to "investment", practice pause after price
+
+WEALTH_RESENTMENT (Info)
+Trigger: Negative adjectives for high-price providers (greedy, arrogant, crooks)
+Meaning: User resents wealth, sabotages own pricing
+Intervention: Reframe high prices as value delivery, align wealth with expertise
+
+JUSTIFICATION_LOOP (Warn)
+Trigger: Immediate feature explanation after price statement
+Meaning: User lacks confidence in value, feels need to defend price
+Intervention: Practice stating price and pausing, trust the value proposition
+
+IMPOSTER_SYNDROME (Warn)
+Trigger: External attribution for success, minimizing own role, fear of being "found out"
+Meaning: User doesn't internalize success, attributes to luck/timing
+Intervention: Success attribution audit, own the skill/effort that produced results
+
+SUPPLICANT_FRAME (Critical)
+Trigger: Supplicant language patterns >60%, acquiescence, permission-seeking
+Meaning: User operates from low power, gives away frame control
+Intervention: Practice Power Frame language, enforce time boundaries, reduce apologies
+
+BOUNDARY_LEAK (Warn)
+Trigger: Acquiescence to unreasonable demands, inability to say no
+Meaning: Conflict avoidance, fear of client loss, low status enforcement
+Intervention: Practice direct boundary statements, reframe conflict as clarity
+
+GAP_DETECTED (Critical)
+Trigger: Temporal gaps, text bridges, say-do gap between goals and actions
+Meaning: User is avoiding revenue-generating activities, likely call reluctance
+Intervention: Specific action accountability, hourly reconstruction, exposure to avoided tasks
+
+CALL_RELUCTANCE (Critical)
+Trigger: Temporal gaps during prospecting hours, "bothering people" language
+Meaning: Fear of rejection, social anxiety around outreach
+Intervention: Reframe "bothering" to "notifying", focus on service to ideal clients
+
+CONFLICT_AVOIDANCE (Warn)
+Trigger: Passive aggressive language, indirect requests, fear of direct confrontation
+Meaning: User avoids necessary confrontations, hurts business outcomes
+Intervention: Practice direct communication, reframe conflict as clarity
+
+PASSIVE_AGGRESSION (Warn)
+Trigger: "Just wondering...", "Just checking...", indirect blame language
+Meaning: User expresses frustration indirectly, low status communication
+Intervention: Direct language practice, remove "just", state needs clearly
+
+DISTORTION_ALERT (Info)
+Trigger: Universal quantifiers (always, never, everyone, nobody)
+Meaning: User has limiting beliefs creating distorted reality model
+Intervention: Meta-Model challenge to find counter-examples, break generalizations
+
+INTEGRITY_CHECK (Info)
+Trigger: Pronoun divergence at critical narrative moments
+Meaning: Possible deception, distancing, or lack of conviction
+Intervention: Clarify who owns which outcomes, force specificity
+
+STATIC_FRAME (Info)
+Trigger: Nominalization density, removal of action verbs
+Meaning: User views problems as static states, not processes they can change
+Intervention: Convert nominalizations back to action verbs, identify agents
+
+COMMITMENT_SOFT (Info)
+Trigger: Future tense without dates, "will try", "going to", "plan to"
+Meaning: User lacks true commitment, wishful thinking
+Intervention: "Future tense is a promise, not an action. What is the NEXT physical step NOW?"
+
+COACHING INTERVENTIONS
+
+META-MODEL CHALLENGES
+Use to break limiting beliefs and force specificity
+Universal Quantifier: "Always? Can you recall ONE counter-example?"
+Nominalization: "'Communication' is the problem. Who is not communicating with whom about what?"
+Modal Necessity: "Have to? What would happen if you didn't?"
+Mind Reading: "How do you know they think that?"
+
+EMBEDDED COMMANDS
+Use to bypass ego defense and install new frames
+Standard: "You should be more confident" (rejected as bossy)
+Milton Model: "As you review this plan, you might find yourself feeling more certain about your value, because knowing your numbers allows you to stand firm."
+Structure: Embed commands in benign sentence structure to slip past critical factor
+
+REFRAMING STRATEGIES
+Call Reluctance: "Bothering people" → "Notifying ideal clients of solutions they're searching for"
+Pricing Shame: "Charging" → "Exchanging value for investment"
+Conflict Avoidance: "Confrontation" → "Providing clarity"
+Away Motivation: "Stop working weekends" → "Create business systems that operate without me"
+
+PRIZE FRAME INSTALLATION
+Supplicant: "They have the money/authority, so they're the prize"
+Power: "I have the solution they desperately need, so I'm the prize"
+Intervention: "When you enter a meeting, who is evaluating whom?"
+
+PRODUCTIZATION FOR PRICING SHAME
+Problem: Hourly billing creates pricing anxiety
+Solution: Package services into fixed-price products ("The 30-Day Audit")
+Benefit: Selling a product instead of personal worth reduces imposter triggers
+
+QUESTION TIERS
+
+TIER 1: FIRST-ACCESS GATE (Rapid Diagnostics)
+Purpose: Baseline Locus of Control, Motivation Direction, Process Clarity
+Method: "Thin slicing" - accurate judgments from short text samples
+Goal: Trigger limbic response, bypass neocortical PR mechanisms
+
+TIER 2: APEX BUSINESS FRAME BLUEPRINT (Deep Elicitation)
+Purpose: Map entire belief system around money, value, identity
+Method: Cognitive interviewing, SCAN analysis
+Goal: Uncover deep structure contradictions and frame incongruence
+
+AI RESPONSE PROTOCOL
+
+1. ANALYZE: Parse text for all linguistic markers
+2. SCORE: Update axes based on detected patterns
+3. FLAG: Trigger alerts when thresholds exceeded
+4. INTERVENE: Select appropriate coaching strategy based on flags
+5. CHALLENGE: Use Meta-Model to break distortions
+6. REFRAME: Install new frames using embedded commands and reframing
+7. TRACK: Monitor pattern changes over time, detect congruence vs. dissonance
+
+INTEGRATION POINTS
+
+FrameScan: Text/image analysis references intake metrics for context
+Little Lord: Personalizes coaching based on intake flags and axes
+Contact Dossier: Displays metrics summary, visual charts, flag badges
+Notes/Tasks: Daily language patterns compared to intake baseline for dissonance detection
+
+FINAL PRINCIPLES
+
+1. Syntax > Semantics: How they say it matters more than what they say
+2. Language = Behavior: Writing reveals doing
+3. Frames Are Malleable: Detect weak frames, intervene with linguistic tools
+4. Bypass Ego: Target limbic system, not neocortical defenses
+5. No Blame: Patterns are diagnostic, not moral judgments
+6. Continuous Learning: Intake informs ongoing AI personalization

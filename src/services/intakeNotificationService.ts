@@ -22,6 +22,8 @@ import type { Contact, ContactIntakeProfile } from '../types';
 import { getSessionById } from './intakeStore';
 import { getContactById } from './contactStore';
 import { IntakeTier } from '../types/businessFrame';
+import { notifyUser, type UserForNotification } from './notificationService';
+import { getCurrentUserPlan } from '../config/planConfig';
 
 // --- TYPES ---
 
@@ -503,13 +505,37 @@ export const onIntakeCompleted = async (sessionId: string): Promise<void> => {
 
   console.log(`[IntakeNotification] Firing Tier 1 completion hook for session ${sessionId}`);
 
-  // Send email notification
+  // Get contact for user-facing notification
+  const contact = getContactById(session.contactId);
+
+  // Send admin email notification (existing behavior)
   const result = await sendIntakeCompletionEmail(sessionId);
 
   if (result.success) {
     console.log(`[IntakeNotification] Tier 1 notification sent successfully (${result.provider})`);
   } else {
     console.error(`[IntakeNotification] Tier 1 notification failed:`, result.error);
+  }
+
+  // Send user-facing notification via notificationService
+  if (contact && contact.email) {
+    const userProfile: UserForNotification = {
+      id: contact.id,
+      email: contact.email,
+      fullName: contact.fullName,
+      firstName: contact.fullName.split(' ')[0],
+      tenantId: session.tenantId,
+      planTier: getCurrentUserPlan(),
+      phone: contact.phone,
+      smsOptIn: contact.smsOptIn,
+    };
+
+    try {
+      const userNotifyResult = await notifyUser(userProfile, 'intake_completed');
+      console.log(`[IntakeNotification] User notification result:`, userNotifyResult.overallSuccess ? 'success' : 'failed');
+    } catch (err) {
+      console.error(`[IntakeNotification] Failed to send user notification:`, err);
+    }
   }
 };
 

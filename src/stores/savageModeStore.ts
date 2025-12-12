@@ -8,9 +8,13 @@
 // =============================================================================
 
 const SAVAGE_MODE_KEY = 'framelord_savage_mode';
+const SAVAGE_MODE_AUDIO_PATH = '/lightsaber-ignition-6816.mp3';
 
 // In-memory state
 let savageModeEnabled = false;
+
+// Audio element for Savage Mode activation sound
+let savageModeAudio: HTMLAudioElement | null = null;
 
 // Subscribers for reactive updates
 type Listener = () => void;
@@ -48,6 +52,30 @@ export function isSavageModeEnabled(): boolean {
 }
 
 /**
+ * Play the Savage Mode activation sound (lightsaber ignition).
+ */
+function playSavageModeSound(): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    // Create audio element if it doesn't exist
+    if (!savageModeAudio) {
+      savageModeAudio = new Audio(SAVAGE_MODE_AUDIO_PATH);
+      savageModeAudio.volume = 0.5; // 50% volume
+    }
+
+    // Reset and play
+    savageModeAudio.currentTime = 0;
+    savageModeAudio.play().catch((err) => {
+      // Silently fail if audio can't play (e.g., no user interaction yet)
+      console.debug('[SavageMode] Audio playback blocked:', err.message);
+    });
+  } catch (err) {
+    console.debug('[SavageMode] Audio error:', err);
+  }
+}
+
+/**
  * Enable Savage Mode.
  */
 export function enableSavageMode(): void {
@@ -55,6 +83,9 @@ export function enableSavageMode(): void {
   localStorage.setItem(SAVAGE_MODE_KEY, 'true');
   updateSavageModeClass();
   notifyListeners();
+
+  // Play activation sound
+  playSavageModeSound();
 }
 
 /**

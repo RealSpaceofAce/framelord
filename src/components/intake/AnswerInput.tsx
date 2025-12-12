@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, Send } from 'lucide-react';
+import { Loader2, Send, Mic, MicOff } from 'lucide-react';
 
 const MotionDiv = motion.div as any;
 
@@ -31,6 +31,172 @@ export const AnswerInput: React.FC<AnswerInputProps> = ({
 }) => {
   const [text, setText] = useState('');
   const [sliderValue, setSliderValue] = useState<number>(Math.ceil((minValue + maxValue) / 2));
+
+  // Voice dictation state
+  const [isListening, setIsListening] = useState(false);
+  const [interimText, setInterimText] = useState(''); // Show real-time feedback
+  const [voiceStatus, setVoiceStatus] = useState<'idle' | 'waiting' | 'active' | 'error'>('idle');
+  const recognitionRef = useRef<any>(null);
+  const wantsToListenRef = useRef(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const noSpeechTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitializedRef = useRef(false); // Prevent double init in StrictMode
+  const hasReceivedResultRef = useRef(false);
+
+  // 1-minute max recording time
+  const MAX_RECORDING_MS = 60000;
+  const NO_SPEECH_TIMEOUT_MS = 5000; // Show warning after 5 seconds of no speech
+
+  // Check if browser supports Web Speech API
+  const isSpeechSupported = typeof window !== 'undefined' &&
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+  // Helper to stop recording
+  const stopListening = useCallback(() => {
+    wantsToListenRef.current = false;
+    hasReceivedResultRef.current = false;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (noSpeechTimeoutRef.current) {
+      clearTimeout(noSpeechTimeoutRef.current);
+      noSpeechTimeoutRef.current = null;
+    }
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        // Ignore
+      }
+    }
+    setIsListening(false);
+    setInterimText('');
+    setVoiceStatus('idle');
+  }, []);
+
+  // Set up speech recognition (once)
+  useEffect(() => {
+    if (!isSpeechSupported || isInitializedRef.current) return;
+    isInitializedRef.current = true;
+
+    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognitionAPI) return;
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: any) => {
+      if (!event.results) return;
+
+      // Mark that we've received speech
+      if (!hasReceivedResultRef.current) {
+        hasReceivedResultRef.current = true;
+        setVoiceStatus('active');
+        // Clear the no-speech timeout since we got results
+        if (noSpeechTimeoutRef.current) {
+          clearTimeout(noSpeechTimeoutRef.current);
+          noSpeechTimeoutRef.current = null;
+        }
+      }
+
+      let finalTranscript = '';
+      let interimTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const transcript = result[0]?.transcript || '';
+        if (result.isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      // Update interim text for real-time feedback
+      setInterimText(interimTranscript);
+
+      // Commit final transcript to textarea
+      if (finalTranscript) {
+        setText(prev => {
+          const trimmed = prev.trim();
+          return trimmed ? trimmed + ' ' + finalTranscript : finalTranscript;
+        });
+        setInterimText('');
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.warn('[Voice] Error:', event.error);
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed' || event.error === 'aborted') {
+        setVoiceStatus('error');
+        stopListening();
+      }
+    };
+
+    recognition.onend = () => {
+      // Auto-restart if user still wants to listen (and under time limit)
+      if (wantsToListenRef.current) {
+        try {
+          recognition.start();
+        } catch (e) {
+          stopListening();
+        }
+      } else {
+        setIsListening(false);
+        setInterimText('');
+      }
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      isInitializedRef.current = false;
+      wantsToListenRef.current = false;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+    };
+  }, [isSpeechSupported, stopListening]);
+
+  const toggleVoice = useCallback(() => {
+    if (!recognitionRef.current) return;
+
+    if (isListening) {
+      stopListening();
+    } else {
+      // Start listening with 1-minute timeout
+      wantsToListenRef.current = true;
+      hasReceivedResultRef.current = false;
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+        setVoiceStatus('waiting');
+
+        // Auto-stop after 1 minute
+        timeoutRef.current = setTimeout(() => {
+          console.log('[Voice] 1-minute limit reached');
+          stopListening();
+        }, MAX_RECORDING_MS);
+
+        // Show warning if no speech detected after 5 seconds
+        noSpeechTimeoutRef.current = setTimeout(() => {
+          if (!hasReceivedResultRef.current && wantsToListenRef.current) {
+            setVoiceStatus('error');
+          }
+        }, NO_SPEECH_TIMEOUT_MS);
+      } catch (e) {
+        console.error('[Voice] Start failed:', e);
+        setVoiceStatus('error');
+        stopListening();
+      }
+    }
+  }, [isListening, stopListening]);
 
   const handleSubmit = () => {
     if (inputType === 'slider') {
@@ -229,6 +395,41 @@ export const AnswerInput: React.FC<AnswerInputProps> = ({
             <span className="text-xs text-fl-primary font-medium">Analyzing...</span>
           </MotionDiv>
         )}
+
+        {/* Voice Listening Indicator */}
+        {isListening && (
+          <MotionDiv
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`absolute bottom-4 left-4 right-4 flex items-center gap-3 px-4 py-2 rounded-lg border ${
+              voiceStatus === 'error'
+                ? 'bg-amber-500/10 border-amber-500/30'
+                : voiceStatus === 'active'
+                ? 'bg-emerald-500/10 border-emerald-500/30'
+                : 'bg-red-500/10 border-red-500/30'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full animate-pulse ${
+                voiceStatus === 'error' ? 'bg-amber-500' : voiceStatus === 'active' ? 'bg-emerald-500' : 'bg-red-500'
+              }`} />
+              <span className={`text-xs font-medium ${
+                voiceStatus === 'error' ? 'text-amber-400' : voiceStatus === 'active' ? 'text-emerald-400' : 'text-red-400'
+              }`}>
+                {voiceStatus === 'error'
+                  ? 'No speech detected - try speaking closer to mic'
+                  : voiceStatus === 'active'
+                  ? 'Transcribing...'
+                  : 'Listening...'}
+              </span>
+            </div>
+            {interimText && (
+              <span className="text-sm text-fl-gray/70 italic truncate flex-1">
+                {interimText}
+              </span>
+            )}
+          </MotionDiv>
+        )}
       </div>
 
       {/* Progress Bar (subtle, no counter) */}
@@ -272,28 +473,47 @@ export const AnswerInput: React.FC<AnswerInputProps> = ({
           )}
         </div>
 
-        {/* Submit Button */}
-        <button
-          onClick={handleSubmit}
-          disabled={!isValid || isAnalyzing || disabled}
-          className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all ${
-            isValid && !isAnalyzing && !disabled
-              ? 'bg-fl-primary hover:bg-fl-primary/80 text-white shadow-[0_0_15px_rgba(68,51,255,0.3)] hover:shadow-[0_0_25px_rgba(68,51,255,0.5)]'
-              : 'bg-fl-gray/20 text-fl-gray/50 cursor-not-allowed'
-          }`}
-        >
-          {isAnalyzing ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              Processing
-            </>
-          ) : (
-            <>
-              <Send size={16} />
-              Submit
-            </>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          {/* Voice Dictation Button - only if browser supports it */}
+          {isSpeechSupported && !isAnalyzing && !disabled && (
+            <button
+              onClick={toggleVoice}
+              type="button"
+              className={`p-2 rounded-lg transition-all ${
+                isListening
+                  ? 'bg-red-500 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]'
+                  : 'bg-fl-navy/50 text-fl-gray hover:text-white hover:bg-fl-navy border border-fl-gray/30'
+              }`}
+              title={isListening ? 'Stop dictating' : 'Start voice dictation'}
+            >
+              {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+            </button>
           )}
-        </button>
+
+          {/* Submit Button */}
+          <button
+            onClick={handleSubmit}
+            disabled={!isValid || isAnalyzing || disabled}
+            className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all ${
+              isValid && !isAnalyzing && !disabled
+                ? 'bg-fl-primary hover:bg-fl-primary/80 text-white shadow-[0_0_15px_rgba(68,51,255,0.3)] hover:shadow-[0_0_25px_rgba(68,51,255,0.5)]'
+                : 'bg-fl-gray/20 text-fl-gray/50 cursor-not-allowed'
+            }`}
+          >
+            {isAnalyzing ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Processing
+              </>
+            ) : (
+              <>
+                <Send size={16} />
+                Submit
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

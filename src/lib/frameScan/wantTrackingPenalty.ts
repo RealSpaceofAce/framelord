@@ -16,6 +16,7 @@ import {
   getWeightedMetricsCompliance,
   type MetricComplianceData,
 } from '../../services/wantTrackingStore';
+import { addWantTrackingPenaltyToMemory } from '../../services/aiMemoryAdapters';
 
 // =============================================================================
 // CONSTANTS
@@ -179,12 +180,21 @@ export function calculateWantTrackingPenalty(): WantTrackingPenaltyBreakdown {
 
   notes.push(`Total tracking penalty: -${totalPenalty} points`);
 
-  return {
+  const breakdown: WantTrackingPenaltyBreakdown = {
     totalPenalty,
     metricPenalties,
     dateRange: { startDate, endDate },
     notes,
   };
+
+  // Feed into AI memory for self-improving AI layer
+  try {
+    addWantTrackingPenaltyToMemory(breakdown);
+  } catch (err) {
+    console.warn('[wantTrackingPenalty] Failed to add penalty to AI memory:', err);
+  }
+
+  return breakdown;
 }
 
 /**

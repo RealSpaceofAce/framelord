@@ -5,9 +5,9 @@
 // Uses thresholds from appConfig for usage evaluation.
 // =============================================================================
 
-import type { 
-  BetaUserRecord, 
-  BetaStatus, 
+import type {
+  BetaUserRecord,
+  BetaStatus,
   BetaUsageStatus,
   UsageMetrics,
   BetaApplication,
@@ -15,6 +15,8 @@ import type {
   BetaApplicationAiResult
 } from '../types/multiTenant';
 import { betaUsageThresholds } from '../config/appConfig';
+import { notifyUser, type UserForNotification } from '../services/notificationService';
+import { getCurrentUserPlan } from '../config/planConfig';
 
 const USERS_STORAGE_KEY = 'framelord_beta_users';
 const APPLICATIONS_STORAGE_KEY = 'framelord_beta_applications';
@@ -407,31 +409,50 @@ export function getBetaApplicationsForUser(
 /**
  * Update beta application status
  */
-export function updateBetaApplicationStatus(
+export async function updateBetaApplicationStatus(
   id: string,
   status: BetaApplicationStatus
-): BetaApplication | null {
+): Promise<BetaApplication | null> {
   initApplications();
-  
+
   const index = applications.findIndex(a => a.id === id);
   if (index < 0) return null;
-  
+
   applications[index] = {
     ...applications[index],
     status,
   };
   persistApplications();
-  
+
+  const app = applications[index];
+
   // If approved, create beta user record
   if (status === 'APPROVED') {
-    const app = applications[index];
     upsertBetaUser(app.tenantId, app.userId, 'BETA_ACTIVE');
   }
-  
-  // BACKEND TODO: Record in audit log
-  // BACKEND TODO: Send notification email
+
+  // Send notification email to applicant
+  if (app.email) {
+    const userProfile: UserForNotification = {
+      id: app.userId,
+      email: app.email,
+      fullName: app.fullName || 'Beta Applicant',
+      firstName: app.fullName?.split(' ')[0],
+      tenantId: app.tenantId,
+      planTier: getCurrentUserPlan(),
+    };
+
+    try {
+      const notificationType = status === 'APPROVED' ? 'beta_accepted' : 'beta_rejected';
+      const result = await notifyUser(userProfile, notificationType);
+      console.log(`[BetaProgramStore] ${notificationType} notification:`, result.overallSuccess ? 'sent' : 'failed');
+    } catch (err) {
+      console.error('[BetaProgramStore] Failed to send beta notification:', err);
+    }
+  }
+
   console.log('[BetaProgramStore] Application status updated:', id, status);
-  
+
   return applications[index];
 }
 

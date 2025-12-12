@@ -27,7 +27,6 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { ScrollArea } from '../ui/ScrollArea';
 import { cn } from '@/lib/utils';
-import { SuccessTracking } from './SuccessTracking';
 
 const MotionDiv = motion.div as any;
 
@@ -458,7 +457,7 @@ export const WantProgressView: React.FC<WantProgressViewProps> = ({ onSelectWant
         </p>
         <div className="flex items-center gap-1 bg-[#0E0E16] rounded-lg p-1 border border-[#0043ff]/20">
           <Button
-            variant={viewMode === 'grid' ? 'brand' : 'ghost'}
+            variant={viewMode === 'grid' ? 'brand' : 'brand-outline'}
             size="sm"
             onClick={() => setViewMode('grid')}
             className="gap-1.5"
@@ -467,7 +466,7 @@ export const WantProgressView: React.FC<WantProgressViewProps> = ({ onSelectWant
             Grid
           </Button>
           <Button
-            variant={viewMode === 'timeline' ? 'brand' : 'ghost'}
+            variant={viewMode === 'timeline' ? 'brand' : 'brand-outline'}
             size="sm"
             onClick={() => setViewMode('timeline')}
             className="gap-1.5"
@@ -486,14 +485,6 @@ export const WantProgressView: React.FC<WantProgressViewProps> = ({ onSelectWant
 
           {/* Summary Stats */}
           <SummaryStats wants={wants} />
-
-          {/* Want Tracking - Notion-style daily logging table */}
-          <div className="mb-6">
-            <SuccessTracking
-              title="Want Tracking"
-              compact={false}
-            />
-          </div>
 
           {/* View Content */}
           {viewMode === 'grid' ? (

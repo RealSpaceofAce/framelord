@@ -224,7 +224,13 @@ const PreFlightBriefingOverlay: React.FC<{
                       return (
                         <div
                           key={task.id}
-                          className="flex items-center gap-3 p-2 bg-red-500/10 border border-red-500/30 rounded-lg"
+                          onClick={() => {
+                            if (contact) {
+                              onNavigateToDossier?.(contact.id);
+                              onClose();
+                            }
+                          }}
+                          className="flex items-center gap-3 p-2 bg-red-500/10 border border-red-500/30 rounded-lg cursor-pointer hover:border-red-500/50 transition-colors"
                         >
                           {contact && (
                             <img
@@ -256,7 +262,13 @@ const PreFlightBriefingOverlay: React.FC<{
                       return (
                         <div
                           key={task.id}
-                          className="flex items-center gap-3 p-2 bg-[#0a111d] border border-[#112035] rounded-lg"
+                          onClick={() => {
+                            if (contact) {
+                              onNavigateToDossier?.(contact.id);
+                              onClose();
+                            }
+                          }}
+                          className="flex items-center gap-3 p-2 bg-[#0a111d] border border-[#112035] rounded-lg cursor-pointer hover:border-[#1b2c45] transition-colors"
                         >
                           {contact && (
                             <img
@@ -414,7 +426,8 @@ const ThingsDueToday: React.FC<{
   plan: PlanTier;
   onNavigateToTasks?: () => void;
   onNavigateToCalendar?: () => void;
-}> = ({ plan, onNavigateToTasks, onNavigateToCalendar }) => {
+  onNavigateToDossier?: (contactId: string) => void;
+}> = ({ plan, onNavigateToTasks, onNavigateToCalendar, onNavigateToDossier }) => {
   const todayKey = getTodayKey();
   const openTasks = getAllOpenTasks();
 
@@ -451,20 +464,28 @@ const ThingsDueToday: React.FC<{
         </div>
       ) : (
         <div className="space-y-2">
-          {todayTasks.map(task => (
-            <div
-              key={task.id}
-              className="flex items-center gap-3 p-2 bg-[#0a111d] rounded-lg border border-[#112035] hover:border-[#1b2c45] transition-colors cursor-pointer"
-            >
-              <div className="w-2 h-2 rounded-full bg-green-400" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-white truncate">{task.title}</p>
-                {formatDueTime(task.dueAt) && (
-                  <p className="text-[10px] text-gray-500">{formatDueTime(task.dueAt)}</p>
-                )}
+          {todayTasks.map(task => {
+            const contact = getContactById(task.contactId);
+            return (
+              <div
+                key={task.id}
+                onClick={() => {
+                  if (contact && onNavigateToDossier) {
+                    onNavigateToDossier(contact.id);
+                  }
+                }}
+                className="flex items-center gap-3 p-2 bg-[#0a111d] rounded-lg border border-[#112035] hover:border-[#1b2c45] transition-colors cursor-pointer"
+              >
+                <div className="w-2 h-2 rounded-full bg-green-400" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white truncate">{task.title}</p>
+                  {formatDueTime(task.dueAt) && (
+                    <p className="text-[10px] text-gray-500">{formatDueTime(task.dueAt)}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -919,12 +940,16 @@ export const ContactZeroView: React.FC<ContactZeroViewProps> = ({
           onExpand={() => setIsPreFlightExpanded(true)}
         />
 
+        {/* FRAME INTEGRITY - Prominent position, visible without scrolling */}
+        <FrameStatsPanel plan={userPlan} onNavigateToFrameScan={onNavigateToFrameScan} />
+
         {/* MAIN GRID - 2x2 cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <ThingsDueToday
             plan={userPlan}
             onNavigateToTasks={onNavigateToTasks}
             onNavigateToCalendar={onNavigateToCalendar}
+            onNavigateToDossier={onNavigateToDossier}
           />
           <NetworkHealth
             plan={userPlan}
@@ -941,9 +966,8 @@ export const ContactZeroView: React.FC<ContactZeroViewProps> = ({
         </div>
 
         {/* BELOW-FOLD PANELS */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="w-full">
           <WantsStreaksPanel plan={userPlan} onNavigateToWants={onNavigateToWants} />
-          <FrameStatsPanel plan={userPlan} onNavigateToFrameScan={onNavigateToFrameScan} />
         </div>
       </div>
     </div>

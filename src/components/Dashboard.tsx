@@ -28,6 +28,7 @@ import { ProjectsView } from './crm/ProjectsView';
 import { ProjectDetailView } from './crm/ProjectDetailView';
 import { NotesView } from './crm/NotesView';
 import { ContactDossierView } from './crm/ContactDossierView';
+import { ContactZeroView } from './crm/ContactZeroView';
 import { TopicView } from './crm/TopicView';
 import { TasksView } from './crm/TasksView';
 import { CalendarView } from './crm/CalendarView';
@@ -51,6 +52,10 @@ import {
   getUnreadCount,
 } from '../services/systemLogStore';
 import {
+  startReminderScheduler,
+  stopReminderScheduler,
+} from '../services/taskReminderService';
+import {
   getTodayEvents,
   formatTime as formatEventTime,
   formatTimeRange,
@@ -73,6 +78,12 @@ import {
   formatProfileDate,
 } from '../lib/frameScan/frameProfile';
 import { LittleLordProvider } from './littleLord';
+import {
+  getFrameIntegrityMetrics,
+  getLeaderboard,
+  getOverviewKpis,
+  getOverviewTimeline,
+} from '../services/frameStatsService';
 import type { LittleLordViewId } from '../services/littleLord/types';
 
 // Map Dashboard views to Little Lord view IDs
@@ -104,6 +115,9 @@ import { TrackingPage } from '../pages/TrackingPage';
 import { useSavageMode } from '../hooks/useSavageMode';
 import { Flame } from 'lucide-react';
 import { FrameGraphView } from './graph';
+import { PlatformAdminPortal } from './admin/PlatformAdminPortal';
+import { getCurrentUserScope, subscribeAuth } from '../services/authStore';
+import type { UserScope } from '../types/multiTenant';
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -993,39 +1007,9 @@ interface SelectedDataPoint {
 
 // --- FRAME INTEGRITY WIDGET (with robot GIF) ---
 const FrameIntegrityWidget: React.FC = () => {
-    const user = getContactZero();
-    const reports = getContactZeroReports();
-    const profile = computeCumulativeFrameProfileForContact(CONTACT_ZERO.id, reports);
-    const allTasks = getAllTasks();
-    
-    // Calculate metrics based on actual app data - with safe defaults
-    let frameIntegrity = 50;
-    let scansCompleted = 0;
-    let frameLeaks = 0;
-    
-    try {
-        frameIntegrity = profile?.currentFrameScore || 50;
-        scansCompleted = profile?.scansCount || 0;
-        
-        // Frame Leaks: Count of incongruent actions from Contact Zero
-        // This includes: overdue tasks, missed commitments, uncompleted high-priority items
-        const overdueTasks = allTasks.filter(t =>
-          t.contactId === CONTACT_ZERO.id &&
-          t.dueAt &&
-          new Date(t.dueAt) < new Date() &&
-          t.status !== 'done'
-        ).length;
-
-        // Also count from reports: look for low frame scores
-        const lowFrameScoreReports = reports.filter(r =>
-          r.score && r.score.frameScore && r.score.frameScore < 60
-        ).length;
-        
-        // Frame leaks = overdue tasks + low frame score patterns detected
-        frameLeaks = overdueTasks + lowFrameScoreReports;
-    } catch (e) {
-        console.error('FrameIntegrityWidget error:', e);
-    }
+    // Use centralized selector for all Frame Integrity metrics
+    const metrics = getFrameIntegrityMetrics(CONTACT_ZERO.id);
+    const { frameScore: frameIntegrity, scansDone: scansCompleted, frameLeaks, scansLabel, leaksLabel } = metrics;
     
     return (
         <div className="bg-[#000000] rounded-xl p-6 relative overflow-hidden h-full border border-[#1c1c1c]" style={{ minHeight: '320px' }}>
@@ -1059,7 +1043,7 @@ const FrameIntegrityWidget: React.FC = () => {
                             <span className="text-[10px] text-[#0043ff] font-bold uppercase tracking-wider font-mono">Scans Done</span>
                         </div>
                         <div className="text-3xl font-display font-bold text-[#0043ff]">{scansCompleted}</div>
-                        <div className="text-[9px] text-[#0043ff]/60 font-mono">[COMPLETED]</div>
+                        <div className="text-[9px] text-[#0043ff]/60 font-mono">[{scansLabel}]</div>
                     </div>
 
                     {/* Frame Leaks */}
@@ -1069,7 +1053,7 @@ const FrameIntegrityWidget: React.FC = () => {
                             <span className="text-[10px] text-[#0043ff] font-bold uppercase tracking-wider font-mono">Frame Leaks</span>
                         </div>
                         <div className="text-3xl font-display font-bold text-[#0043ff]">{frameLeaks}</div>
-                        <div className="text-[9px] text-[#0043ff]/60 font-mono">[INCONGRUENT]</div>
+                        <div className="text-[9px] text-[#0043ff]/60 font-mono">[{leaksLabel}]</div>
                     </div>
                 </div>
 
@@ -1091,43 +1075,24 @@ const FrameIntegrityWidget: React.FC = () => {
 
 // --- REBELS RANKING WIDGET (Connected to Contact Data) ---
 const RebelsRankingWidget: React.FC = () => {
-    const contacts = getAllContacts();
-    const allTasks = getAllTasks();
-    const allNotes = getAllNotes();
-    
-    // Calculate "rebel points" for each contact based on activity
-    // Points come from: tasks completed, notes created, interactions, frame scans
-    const rankedContacts = useMemo(() => {
+    // Use centralized leaderboard selector
+    const leaderboard = useMemo(() => {
         try {
-            return contacts
-                .filter(c => c.id !== CONTACT_ZERO.id) // Exclude Contact Zero
-                .map(contact => {
-                    // Get activity metrics for this contact
-                    const contactTasks = allTasks.filter(t => t.contactId === contact.id);
-                    const completedTasks = contactTasks.filter(t => t.status === 'done').length;
-                    const contactNotes = allNotes.filter(n => n.contactId === contact.id);
-                    const contactInteractions = getInteractionsByContactId(contact.id);
-                    
-                    // Calculate points: 10 per completed task, 5 per note, 3 per interaction
-                    const points = (completedTasks * 10) + (contactNotes.length * 5) + (contactInteractions.length * 3);
-                    
-                    // Calculate streak (consecutive weeks with activity)
-                    const streak = Math.min(Math.floor(points / 30), 52); // Max 52 weeks
-                    
-                    return {
-                        ...contact,
-                        points,
-                        streak,
-                        isNew: false, // TODO: Need to track contact creation date in Contact type
-                    };
-                })
-                .sort((a, b) => b.points - a.points)
-                .slice(0, 5); // Top 5
+            return getLeaderboard('default');
         } catch (e) {
             console.error('RebelsRankingWidget error:', e);
             return [];
         }
-    }, [contacts, allTasks, allNotes]);
+    }, []);
+
+    // Transform leaderboard entries to match existing UI expectations
+    const rankedContacts = leaderboard.map(entry => ({
+        ...entry.contact,
+        points: entry.weeklyPoints,
+        streak: entry.streak,
+        isNew: entry.isNew,
+        statusLabel: entry.statusLabel,
+    }));
 
     const newCount = rankedContacts.filter(c => c.isNew).length;
 
@@ -1201,44 +1166,27 @@ const getFolderDisplayName = (folderId: string): string => {
 
 // --- DASHBOARD OVERVIEW (Rich - Binds to Contact Zero) ---
 const DashboardOverview: React.FC = () => {
-    const user = getContactZero();
-    const reports = getContactZeroReports();
-    const profile = computeCumulativeFrameProfileForContact(CONTACT_ZERO.id, reports);
-    const allTasks = getAllTasks();
-    
-    // Calculate actual metrics from Contact Zero's data - with safe defaults
-    let tasksDue = 0;
-    let scansDone = 0;
-    let leaks = 0;
-    
-    try {
-        tasksDue = allTasks.filter(t =>
-          t.contactId === CONTACT_ZERO.id &&
-          t.dueAt &&
-          new Date(t.dueAt) > new Date() &&
-          new Date(t.dueAt) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) &&
-          t.status !== 'done'
-        ).length;
-
-        // Scans completed from actual reports
-        scansDone = profile?.scansCount || 0;
-
-        // Frame leaks: overdue tasks + low frame score patterns
-        const overdueTasks = allTasks.filter(t =>
-          t.contactId === CONTACT_ZERO.id &&
-          t.dueAt &&
-          new Date(t.dueAt) < new Date() &&
-          t.status !== 'done'
-        ).length;
-        const lowFrameScoreReports = reports.filter(r =>
-          r.score && r.score.frameScore && r.score.frameScore < 60
-        ).length;
-        leaks = overdueTasks + lowFrameScoreReports;
-    } catch (e) {
-        console.error('DashboardOverview metrics error:', e);
-    }
-    
     const [chartRange, setChartRange] = useState<'week' | 'month' | 'year'>('week');
+
+    // Use centralized selectors for KPIs
+    const kpis = useMemo(() => {
+        try {
+            return getOverviewKpis(CONTACT_ZERO.id, chartRange);
+        } catch (e) {
+            console.error('DashboardOverview KPIs error:', e);
+            return {
+                scansCompleted: 0,
+                scansLabel: 'PENDING',
+                frameLeaks: 0,
+                leaksLabel: 'SEALED',
+                actionsDue: 0,
+                streakWeeks: 0,
+            };
+        }
+    }, [chartRange]);
+
+    const { scansCompleted: scansDone, frameLeaks: leaks, actionsDue: tasksDue, streakWeeks } = kpis;
+
     const [selectedDataPoint, setSelectedDataPoint] = useState<SelectedDataPoint | null>(null);
     const selectedContact = getContactZero();
 
@@ -1249,117 +1197,31 @@ const DashboardOverview: React.FC = () => {
         }, '');
     };
 
+    // Use centralized timeline selector for chart data
     const chartData = useMemo<OverviewMetricPoint[]>(() => {
         try {
-            const now = new Date();
+            const timelineData = getOverviewTimeline(CONTACT_ZERO.id, chartRange);
 
-            const getRangeStart = (range: typeof chartRange): Date => {
-                const d = new Date(now);
-                if (range === 'week') d.setDate(d.getDate() - 6);
-                if (range === 'month') d.setDate(d.getDate() - 29);
-                if (range === 'year') d.setMonth(d.getMonth() - 11);
-                return d;
-            };
-
-            const rangeStart = getRangeStart(chartRange);
-            const bucketCount = chartRange === 'year' ? 12 : chartRange === 'month' ? 30 : 7;
-
-            const buckets: OverviewMetricPoint[] = [];
-            const dayMs = 24 * 60 * 60 * 1000;
-
-            for (let i = 0; i < bucketCount; i++) {
-                const d = new Date(rangeStart);
-                if (chartRange === 'year') d.setMonth(rangeStart.getMonth() + i);
-                else d.setDate(rangeStart.getDate() + i);
-                buckets.push({
-                    ts: d.getTime(),
-                    label: chartRange === 'year'
-                        ? d.toLocaleDateString('en-US', { month: 'short' })
-                        : `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`,
-                    scans: 0,
-                    actions: 0,
-                    score: 0,
-                });
-            }
-
-            const clampToBucket = (dateStr?: string | null) => {
-                if (!dateStr) return -1;
-                const ts = new Date(dateStr).getTime();
-                if (Number.isNaN(ts)) return -1;
-                if (ts < rangeStart.getTime() || ts > now.getTime()) return -1;
-                if (chartRange === 'year') {
-                    const monthsDiff = (new Date(ts).getFullYear() - rangeStart.getFullYear()) * 12 + (new Date(ts).getMonth() - rangeStart.getMonth());
-                    return Math.min(Math.max(monthsDiff, 0), bucketCount - 1);
-                }
-                const daysDiff = Math.floor((ts - rangeStart.getTime()) / dayMs);
-                return Math.min(Math.max(daysDiff, 0), bucketCount - 1);
-            };
-
-            // Scans: interactions by Contact Zero - add realistic variation
-            const interactions = getInteractionsByAuthorId(CONTACT_ZERO.id);
-            interactions.forEach((int) => {
-                const idx = clampToBucket(int.occurredAt);
-                if (idx >= 0) buckets[idx].scans += 1;
-            });
-
-            // Add mock variation to scans to ensure visible data
-            buckets.forEach((b, i) => {
-                const baseScans = 3 + Math.floor(Math.random() * 8);
-                const variation = Math.sin(i * 0.5) * 4;
-                b.scans = Math.max(1, b.scans + baseScans + Math.floor(variation));
-            });
-
-            // Actions: tasks due or created + notes - add realistic variation
-            const tasks = getAllTasks();
-            tasks.forEach((task) => {
-                const idx = clampToBucket(task.dueAt || task.createdAt);
-                if (idx >= 0) buckets[idx].actions += 1;
-            });
-            const notes = getAllNotes();
-            notes.forEach((note) => {
-                const idx = clampToBucket(note.createdAt);
-                if (idx >= 0) buckets[idx].actions += 1;
-            });
-
-            // Add mock variation to actions to ensure visible data
-            buckets.forEach((b, i) => {
-                const baseActions = 2 + Math.floor(Math.random() * 5);
-                const variation = Math.cos(i * 0.6) * 2;
-                b.actions = Math.max(1, b.actions + baseActions + Math.floor(variation));
-            });
-
-            // Score: baseline from frame score, add meaningful variation
-            const baseScore = selectedContact.frame.currentScore || 75;
-            buckets.forEach((b, i) => {
-                // Create more pronounced variation for score
-                const activityBoost = (b.scans * 0.5 + b.actions * 0.3);
-                const trendVariation = Math.sin(i * 0.3) * 8;
-                const randomVariation = (Math.random() - 0.5) * 6;
-
-                let score = baseScore + activityBoost + trendVariation + randomVariation;
-                score = Math.max(40, Math.min(95, score));
-                b.score = Math.round(score);
-            });
-
-            // If there is not enough data, seed with a minimal baseline so chart renders
-            if (buckets.length < 2) {
-                const nowTs = now.getTime();
+            // If there's not enough data, return minimal baseline
+            if (timelineData.length < 2) {
+                const now = Date.now();
+                const baseScore = selectedContact.frame?.currentScore || 50;
                 return [
-                    { ts: nowTs - 24 * 60 * 60 * 1000, label: 'T-1', scans: 5, actions: 3, score: baseScore - 2 },
-                    { ts: nowTs, label: 'Today', scans: 8, actions: 4, score: baseScore + 2 },
+                    { ts: now - 24 * 60 * 60 * 1000, label: 'T-1', scans: 0, actions: 0, score: baseScore - 2 },
+                    { ts: now, label: 'Today', scans: 0, actions: 0, score: baseScore },
                 ];
             }
 
-            return buckets;
+            return timelineData;
         } catch (e) {
             console.error('Chart data error', e);
             const now = Date.now();
             return [
-                { ts: now - 24 * 60 * 60 * 1000, label: 'T-1', scans: 5, actions: 3, score: 70 },
-                { ts: now, label: 'Today', scans: 8, actions: 4, score: 72 },
+                { ts: now - 24 * 60 * 60 * 1000, label: 'T-1', scans: 0, actions: 0, score: 50 },
+                { ts: now, label: 'Today', scans: 0, actions: 0, score: 52 },
             ];
         }
-    }, [chartRange, selectedContact.frame.currentScore]);
+    }, [chartRange, selectedContact.frame?.currentScore]);
 
     return (
         <div className="space-y-6 h-full flex flex-col pb-20">
@@ -1415,7 +1277,9 @@ const DashboardOverview: React.FC = () => {
                             <Settings size={16} className="text-gray-700" onClick={() => alert('Coming soon')} />
                         </div>
                         <div className="flex items-center justify-between mt-4">
-                            <span className="text-xs text-gray-600">4 WEEKS 🔥 STREAK</span>
+                            <span className="text-xs text-gray-600">
+                                {streakWeeks > 0 ? `${streakWeeks} WEEK${streakWeeks > 1 ? 'S' : ''} 🔥 STREAK` : 'NO STREAK'}
+                            </span>
                         </div>
                     </div>
                 </SparkBorder>
@@ -1873,7 +1737,7 @@ const FrameScoreTileWidget: React.FC = () => {
 };
 
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'DAILY_LOG' | 'INBOX' | 'FOLDER' | 'NOTE_DETAIL' | 'BLOCKSUITE_TEST' | 'WANTS' | 'TRACKING' | 'GRAPH';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'DAILY_LOG' | 'INBOX' | 'FOLDER' | 'NOTE_DETAIL' | 'BLOCKSUITE_TEST' | 'WANTS' | 'TRACKING' | 'GRAPH' | 'PLATFORM_ADMIN';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -1883,6 +1747,11 @@ export const Dashboard: React.FC = () => {
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
   const [isGraphFullScreen, setIsGraphFullScreen] = useState(false);
+
+  // ==========================================================================
+  // NOTES INITIAL VIEW STATE (for routing to Tasks-in-Notes)
+  // ==========================================================================
+  const [notesInitialView, setNotesInitialView] = useState<'all' | 'journals' | 'tasks' | null>(null);
 
   // ==========================================================================
   // CENTRALIZED SELECTED CONTACT STATE
@@ -1926,6 +1795,28 @@ export const Dashboard: React.FC = () => {
   const selectedTopic = selectedTopicId ? getTopicById(selectedTopicId) : null;
 
   // ==========================================================================
+  // AUTH / USER SCOPE STATE
+  // ==========================================================================
+  const [userScope, setUserScope] = useState<UserScope | null>(() => getCurrentUserScope());
+
+  // Subscribe to auth changes
+  useEffect(() => {
+    const unsubscribe = subscribeAuth(() => {
+      setUserScope(getCurrentUserScope());
+    });
+    return unsubscribe;
+  }, []);
+
+  // Default user scope for when not authenticated (fallback for dev mode)
+  const effectiveUserScope: UserScope = userScope || {
+    userId: 'user_dev_001',
+    tenantId: 'tenant_demo_001',
+    tenantRole: 'OWNER',
+    staffRole: 'SUPER_ADMIN', // Dev mode defaults to SUPER_ADMIN
+    tenantContactZeroId: CONTACT_ZERO.id,
+  };
+
+  // ==========================================================================
   // SAVAGE MODE TOGGLE
   // ==========================================================================
   const { isEnabled: isSavageModeEnabled, toggle: toggleSavageMode } = useSavageMode();
@@ -1953,6 +1844,12 @@ export const Dashboard: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Start task reminder scheduler on mount
+  useEffect(() => {
+    startReminderScheduler();
+    return () => stopReminderScheduler();
+  }, []);
+
   // Only show the right sidebar on Overview
   useEffect(() => {
     setIsRightSidebarOpen(currentView === 'OVERVIEW');
@@ -1961,6 +1858,11 @@ export const Dashboard: React.FC = () => {
   }, [currentView]);
 
   const handleNav = (view: ViewMode) => {
+      // Clear notesInitialView when navigating to Notes via sidebar
+      // This ensures users see the default view (All docs) not Tasks
+      if (view === 'NOTES') {
+        setNotesInitialView(null);
+      }
       setCurrentView(view);
       setIsMobileMenuOpen(false);
   };
@@ -1997,6 +1899,12 @@ export const Dashboard: React.FC = () => {
   const handleNavigateToWant = (wantId: string | null) => {
     setSelectedWantId(wantId);
     setCurrentView('WANTS');
+  };
+
+  // Handler for navigating to Tasks (now embedded in Notes module)
+  const handleNavigateToTasks = () => {
+    setNotesInitialView('tasks');
+    setCurrentView('NOTES');
   };
 
   // Get header title based on view
@@ -2116,6 +2024,20 @@ export const Dashboard: React.FC = () => {
             <Settings size={14} />
             <span className="font-bold uppercase tracking-widest">Settings</span>
           </button>
+          {/* Super Admin Button - Dev mode only */}
+          {import.meta.env.DEV && (
+            <button
+              onClick={() => setCurrentView('PLATFORM_ADMIN')}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
+                currentView === 'PLATFORM_ADMIN'
+                  ? 'bg-orange-500/20 text-orange-500'
+                  : 'text-orange-500/60 hover:text-orange-500 hover:bg-[#111111]'
+              }`}
+            >
+              <Shield size={14} />
+              <span className="font-bold uppercase tracking-widest">Super Admin</span>
+            </button>
+          )}
         </div>
       </aside>
 
@@ -2158,15 +2080,29 @@ export const Dashboard: React.FC = () => {
          <div className={`p-4 md:p-6 flex-1 overflow-y-auto custom-scrollbar ${!isLeftSidebarOpen ? 'max-w-full' : ''}`}>
              {currentView === 'OVERVIEW' && <DashboardOverview />}
             {currentView === 'DOSSIER' && (
-              <ContactDossierView
-                selectedContactId={selectedContactId}
-                setSelectedContactId={setSelectedContactId}
-                onNavigateToDossier={() => setCurrentView('DOSSIER')}
-                onNavigateToTopic={handleNavigateToTopic}
-                onNavigateToGroup={handleNavigateToGroup}
-                onNavigateToProject={handleNavigateToProject}
-                onNavigateToFrameScanReport={handleNavigateToFrameScanReport}
-              />
+              selectedContactId === CONTACT_ZERO.id ? (
+                <ContactZeroView
+                  onNavigateToDossier={(contactId) => {
+                    setSelectedContactId(contactId);
+                    setCurrentView('DOSSIER');
+                  }}
+                  onNavigateToTasks={handleNavigateToTasks}
+                  onNavigateToWants={() => setCurrentView('WANTS')}
+                  onNavigateToFrameScan={() => setCurrentView('FRAMESCAN')}
+                  onNavigateToContacts={() => setCurrentView('CONTACTS')}
+                  onNavigateToCalendar={() => setCurrentView('CALENDAR')}
+                />
+              ) : (
+                <ContactDossierView
+                  selectedContactId={selectedContactId}
+                  setSelectedContactId={setSelectedContactId}
+                  onNavigateToDossier={() => setCurrentView('DOSSIER')}
+                  onNavigateToTopic={handleNavigateToTopic}
+                  onNavigateToGroup={handleNavigateToGroup}
+                  onNavigateToProject={handleNavigateToProject}
+                  onNavigateToFrameScanReport={handleNavigateToFrameScanReport}
+                />
+              )
             )}
              {currentView === 'TOPIC' && selectedTopicId && (
                <TopicView
@@ -2182,6 +2118,7 @@ export const Dashboard: React.FC = () => {
             {/* AFFiNE-style Notes - single unified view */}
             {currentView === 'NOTES' && (
               <AffineNotes
+                initialView={notesInitialView || undefined}
                 onNavigateToContact={(contactId) => {
                   setSelectedContactId(contactId);
                   setCurrentView('DOSSIER');
@@ -2208,7 +2145,7 @@ export const Dashboard: React.FC = () => {
                     setSelectedTopicId(node.topicSlug);
                     setCurrentView('TOPIC');
                   } else if (node.type === 'task') {
-                    setCurrentView('TASKS');
+                    handleNavigateToTasks();
                   } else if (node.type === 'framescan' && node.frameScanId) {
                     setSelectedReportId(node.frameScanId);
                     setCurrentView('FRAMESCAN_REPORT');
@@ -2232,6 +2169,9 @@ export const Dashboard: React.FC = () => {
                  onViewDossier={() => setCurrentView('DOSSIER')}
                />
              )}
+             {/* LEGACY: Tasks view is now embedded in Notes module.
+                 All navigation to Tasks now routes to NOTES with initialView='tasks'.
+                 Keeping this commented for reference during migration period.
              {currentView === 'TASKS' && (
                <TasksView
                  selectedContactId={selectedContactId}
@@ -2240,6 +2180,7 @@ export const Dashboard: React.FC = () => {
                  onNavigateToNotes={() => setCurrentView('NOTES')}
                />
              )}
+             */}
              {currentView === 'CALENDAR' && (
                <CalendarView
                  selectedContactId={selectedContactId}
@@ -2283,6 +2224,9 @@ export const Dashboard: React.FC = () => {
                  selectedContactId={selectedContactId}
                  setSelectedContactId={setSelectedContactId}
                />
+             )}
+             {currentView === 'PLATFORM_ADMIN' && (
+               <PlatformAdminPortal userScope={effectiveUserScope} />
              )}
              {currentView === 'FRAMESCAN' && (
                <FrameScanPage

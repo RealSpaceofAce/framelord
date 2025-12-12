@@ -108,8 +108,17 @@
   color: var(--text-primary) !important;
 }
 
-/* Light Mode */
+/* Light Mode - Override dark variables with light colors */
 .light-mode {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --border-color: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --accent-color: #0043ff;
+  --accent-2: #0043ff;
+  --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 0 10px rgba(0, 67, 255, 0.05);
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 0.75rem;
@@ -117,6 +126,7 @@
   --spacing-xl: 1.25rem;
 }
 
+.light-mode,
 .light-mode body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -131,7 +141,10 @@
 .light-mode .bg-\[\#0A0A12\],
 .light-mode .bg-\[\#1A1A1D\],
 .light-mode .bg-\[\#151623\],
-.light-mode .bg-\[\#0E0E16\] {
+.light-mode .bg-\[\#0E0E16\],
+.light-mode .bg-\[\#18181A\],
+.light-mode .bg-\[rgba\(0\,0\,0\,0\.9\)\],
+.light-mode .bg-black {
   background-color: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
 }
@@ -139,13 +152,14 @@
 .light-mode .text-white { color: var(--text-primary) !important; }
 .light-mode .text-gray-500 { color: var(--text-secondary) !important; }
 .light-mode .text-gray-400 { color: #6B7280 !important; }
-.light-mode .text-gray-300 { color: #4B5563 !important; }
-.light-mode .text-gray-200 { color: #374151 !important; }
+.light-mode .text-gray-300 { color: #9ca3af !important; }
+.light-mode .text-gray-200 { color: #d1d5db !important; }
 
 .light-mode .border-\[\#2A2A2A\],
 .light-mode .border-\[\#1C1D26\],
 .light-mode .border-\[\#1F2028\],
-.light-mode .border-\[\#333\] {
+.light-mode .border-\[\#333\],
+.light-mode .border-\[\#333333\] {
   border-color: var(--border-color) !important;
 }
 
@@ -155,6 +169,13 @@
 .light-mode .hover\:bg-\[\#0E0E0E\]:hover {
   background-color: rgba(0, 0, 0, 0.05) !important;
   color: var(--text-primary) !important;
+}
+
+/* Light mode card styles */
+.light-mode .glass-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--glass-shadow);
 }
 
 /* Compact Mode */

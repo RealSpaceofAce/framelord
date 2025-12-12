@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { Heart, Globe, Flower, Activity, User, Sparkles, MousePointer2, Shuffle } from 'lucide-react';
 import { PARTICLE_CONFIG, type ParticleConfig } from '@/config/particleConfig';
 
 type ShapeType = 'sphere' | 'heart' | 'saturn' | 'flower' | 'dna' | 'buddha' | 'fireworks' | 'statue';
@@ -13,7 +12,6 @@ export const ThreeParticles: React.FC<ThreeParticlesProps> = ({ forcedShape = nu
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeShape, setActiveShape] = useState<ShapeType>('statue');
   const [isRandomMode, setIsRandomMode] = useState(true);
-  const [isHoveringControls, setIsHoveringControls] = useState(false);
 
   // References
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -565,50 +563,6 @@ export const ThreeParticles: React.FC<ThreeParticlesProps> = ({ forcedShape = nu
     <>
       <div ref={containerRef} className="fixed inset-0 z-[5]" style={{ pointerEvents: 'none' }} />
 
-      {!forcedShape && (
-        <div 
-            className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-2"
-            onMouseEnter={() => setIsHoveringControls(true)}
-            onMouseLeave={() => setIsHoveringControls(false)}
-        >
-            <div className={`
-                flex items-center gap-2 bg-fl-black/80 backdrop-blur-md border border-fl-primary/30 rounded-full p-2 pr-4 transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.5)]
-                ${isHoveringControls ? 'opacity-100 translate-y-0' : 'opacity-60 translate-y-0'}
-            `}>
-                <button
-                    onClick={() => setIsRandomMode(!isRandomMode)}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all mr-2 ${isRandomMode ? 'bg-fl-accent text-white' : 'text-fl-gray hover:text-white'}`}
-                    title="Random Shape on Click"
-                >
-                    <Shuffle size={14} />
-                </button>
-
-                <div className="w-px h-4 bg-white/20 mx-1" />
-
-                <div className="flex gap-1">
-                    <ShapeBtn active={activeShape === 'statue'} onClick={() => { setActiveShape('statue'); setIsRandomMode(false); }} icon={<User size={16} />} />
-                    <ShapeBtn active={activeShape === 'heart'} onClick={() => { setActiveShape('heart'); setIsRandomMode(false); }} icon={<Heart size={16} />} />
-                    <ShapeBtn active={activeShape === 'saturn'} onClick={() => { setActiveShape('saturn'); setIsRandomMode(false); }} icon={<div className="w-4 h-4 rounded-full border border-current scale-75" />} />
-                    <ShapeBtn active={activeShape === 'flower'} onClick={() => { setActiveShape('flower'); setIsRandomMode(false); }} icon={<Flower size={16} />} />
-                </div>
-                
-                <div className="w-px h-4 bg-white/20 mx-2" />
-                
-                <span className="text-[10px] text-fl-primary font-mono flex items-center gap-1">
-                <MousePointer2 size={10} /> {isRandomMode ? 'CLICK & HOLD' : 'CLICK & HOLD'}
-                </span>
-            </div>
-        </div>
-      )}
     </>
   );
 };
-
-const ShapeBtn: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode }> = ({ active, onClick, icon }) => (
-    <button 
-        onClick={(e) => { e.stopPropagation(); onClick(); }}
-        className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${active ? 'bg-fl-primary text-white shadow-[0_0_10px_#4433FF] scale-110' : 'text-fl-gray hover:text-white hover:bg-white/10'}`}
-    >
-        {icon}
-    </button>
-);

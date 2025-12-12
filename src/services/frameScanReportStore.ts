@@ -21,6 +21,7 @@ import {
   updateFrameScanAsPsychometricEvidence,
   removeFrameScanFromPsychometricEvidence,
 } from './psychometricFrameScanAdapter';
+import { addFrameScanReportToMemory } from './aiMemoryAdapters';
 
 // =============================================================================
 // TYPES
@@ -144,6 +145,9 @@ export const addFrameScanReport = (
 
   // Feed into psychometric evidence pool
   addFrameScanAsPsychometricEvidence(newReport);
+
+  // Feed into AI memory for self-improving AI layer
+  addFrameScanReportToMemory(newReport);
 
   return newReport;
 };

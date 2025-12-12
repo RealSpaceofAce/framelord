@@ -1,0 +1,242 @@
+﻿Psycholinguistic Architecture for FrameLord: A Design Doctrine for High-Fidelity Business Intelligence and Frame Optimization
+1. Executive Introduction: The FrameLord System Mandate
+The conceptualization and subsequent engineering of FrameLord as a local-first CRM Operating System and AI coaching interface necessitates a radical departure from traditional sales enablement architectures. Conventional Customer Relationship Management (CRM) tools function primarily as passive, ex-post-facto data repositories—digital filing cabinets that record the what and when of transactional history but remain critically blind to the why and how of human performance. FrameLord is designed to transcend this limitation by functioning as an active psychometric interrogator and a strategic mirror. This document serves as the comprehensive design doctrine for constructing the system’s sensory apparatus: the intake protocols.
+To achieve this, we must craft two distinct tiers of user engagement: the rapid, high-velocity "First-Access Gate" and the profound, introspective "Apex Business Frame Blueprint." The objective is not merely to gather data but to perform a forensic audit of the user's cognitive architecture. By synthesizing advanced research from psycholinguistics, Neuro-Linguistic Programming (NLP), behavioral economics, and forensic discourse analysis (SCAN), we establish a rigorous methodology for detecting frame congruency, identifying business contradictions, and mapping the invisible power dynamics that govern executive decision-making.
+The fundamental premise of this architecture is that language is a direct correlate—and often a precursor—of cognitive structure and behavioral outcome. When a business leader, sales professional, or entrepreneur articulates their strategy, fears, or market positioning, they inevitably encode markers of their agency, locus of control, and status perception into the syntax and lexicon of their discourse. These linguistic footprints reveal whether a user operates from a position of "Internal Locus of Control," driving outcomes through agency 1, or resides in a state of "External Locus," buffeted by market forces and seeking permission to succeed.3
+A "local-first" system architecture ensures data sovereignty and privacy, a feature that paradoxically allows for greater intimacy and honesty in data collection. However, honesty is filtered through the user's conscious "public relations" mechanisms. Therefore, the questions must be engineered to bypass the neocortical filters and elicit responses from the limbic system—the "Crocodile Brain" responsible for survival, status, and immediate reaction.5 This report details the scientific basis for extracting high-fidelity intelligence from text-based inputs, transforming raw discourse into actionable business intelligence. We explore how to identify "Call Reluctance" through pronoun usage and temporal gaps 7, detect "Imposter Syndrome" through modal operators of necessity 9, and reveal "Pricing Shame" through passive voice constructions and euphemistic evasion.11 This is the blueprint for a system that sees the invisible architecture of the user's mind.
+2. Theoretical Foundations of Linguistic Agency and Power
+To engineer a system capable of detecting power dynamics and frame congruency with high precision, one must first master the fundamental linguistic building blocks of agency. FrameLord’s Natural Language Processing (NLP) engine must be calibrated to parse text not merely for semantic keywords—which are easily manipulated—but for the syntactic relationships that define the user's subconscious relationship to their environment.
+2.1 The Agency-Verb Triad and Self-Concept
+Research in psycholinguistics has established a robust, empirically verified link between the concept of self, the perception of agency, and the grammatical category of verbs. Agency is defined as the capacity to assign and pursue goals, a trait intrinsically and evolutionarily linked to the self.13 Empirical studies utilizing the Implicit Association Test (IAT) have confirmed that verbs are associated significantly more strongly with the self, whereas nouns and adjectives—representing more static, dispositional, or object-oriented qualities—are often associated with "others" or external entities.13
+This "verb-self link" is a critical heuristic for FrameLord’s analysis engine. High-agency individuals, particularly those effective in high-stakes sales and executive leadership, tend to utilize a higher density of action-oriented transitive verbs when describing their own behaviors and outcomes. They inhabit the grammatical subject position of their sentences. Conversely, individuals suffering from passivity, "Imposter Syndrome," or an external locus of control often resort to nominalizations (the linguistic process of turning dynamic processes into static nouns) or adjectives to describe their situations.
+Consider the psycholinguistic difference between two potential user inputs describing a failed quarter:
+1. High Agency: "I failed to close the enterprise accounts because I did not qualify the decision-makers early enough." (Syntax: "I" + Active Verb of cognition/action).
+2. Low Agency: "The sales performance was poor due to market volatility and client hesitation." (Syntax: Nominalization "Performance" + Static Adjective "Poor" + External Attribution).
+The Extended Argument Dependency Model (eADM) for language processing suggests that sentence comprehension is driven by a biological tendency to detect cues of agency as precisely and quickly as possible.13 The brain actively scans for "who plays the agent." Therefore, the FrameLord system must prioritize the extraction of the "agent" in every user narrative. When the user grammatically removes themselves from the agent position—a phenomenon often achieved through the passive voice—it is a primary marker of cognitive dissonance, responsibility avoidance, or "euphemistic evasion".11 The passive voice serves to displace responsibility, allowing the speaker to describe an outcome ("Mistakes were made") without identifying the perpetrator, thus preserving a fragile ego structure at the cost of operational truth.
+2.2 Markers of Linguistic Powerlessness
+In the context of negotiation and frame control, the "power frame" is determined by the speaker's linguistic certainty and economy. Research identifies specific markers of "powerless language" that dilute the impact of a message, signal low status, and reduce persuasive capacity. These markers include hedges (e.g., "sort of," "kind of," "basically"), hesitations (e.g., "um," "uh," "well"), and tag questions (e.g., "isn't it?", "don't you think?", "right?").15
+While some sociolinguistic studies suggest that tag questions can improve persuasiveness in low-relevance conditions by inviting communal agreement, in high-stakes business environments—the domain of FrameLord—these markers consistently result in less favorable attitudes and negative perceptions of the source's credibility and competence.15 A user who inputs, "I think we might be able to target this segment, don't you?" is signaling a lack of conviction and a "Supplicant Frame" compared to one who inputs, "We will target this segment," which signals a "Power Frame".5
+Furthermore, discourse analysis reveals that hesitation markers are not merely speech disfluencies but strategies for "floor holding" or cognitive planning during periods of high load.16 In a text-based intake system, "written hesitations"—such as excessive ellipses (...), parenthetical qualifiers, or convoluted sentence structures that delay the main point—serve as proxies for these spoken disfluencies. They indicate that the user is struggling to construct a coherent narrative around their business proposition, likely due to "Pricing Shame" or a lack of "Frame Control".5
+2.3 Discourse and Social Construction of Reality
+Discourse analysis provides the theoretical lens through which FrameLord views user inputs as "social practice" rather than neutral descriptions of reality.18 Users construct their business reality through their language choices. A founder who describes their market acquisition strategy using "warfare" metaphors (e.g., "attacking the vertical," "defending our position," "capturing territory") operates within a fundamentally different cognitive frame and emotional baseline than one who uses "nurturing" metaphors (e.g., "growing the community," "cultivating leads," "planting seeds").
+The analysis of "interpretive repertoires"—the clusters of terms, metaphors, and figures of speech used to describe specific objects or events—allows the system to detect deep-seated contradictions. For instance, a user may claim to value "aggressive growth" (Dominance Frame) in their stated goals but predominantly use "safety," "permission-seeking," and "hedging" language (Submission Frame) in their daily logs. This incongruence between declared intent and linguistic reality is a critical data point for the AI coaching module, indicating a "Blind Spot" in performance.20
+FrameLord acts as a critical discourse analyst, rejecting the "realist" notion that the user's text simply reflects the world as it is.18 Instead, the system treats the text as an attempt by the user to construct a version of themselves that may or may not align with their actual behaviors, results, and psychological state. The intake questions, therefore, must be designed to pierce these constructions and reveal the underlying "Deep Structure" of the user's model of the world.21
+3. Tier 1 Design: The First-Access Gate (Rapid Diagnostics)
+The First-Access Gate is the user's initial entry point into the FrameLord ecosystem. It serves a dual purpose: immediate user engagement and rapid, high-level diagnostic profiling. The design principle governing this tier is "Thin Slicing"—the ability to make accurate judgments about personality, competence, and affective state based on very short samples of behavior or text.22
+Research indicates that judgments of extraversion, conscientiousness, intelligence, and even teaching effectiveness made from "thin slices" (under 30 seconds of video or short text bursts) correlate highly with long-term assessments made by people who know the subjects well.23 FrameLord leverages this phenomenon by treating short text inputs as "thin slices" of the user's business psyche.
+3.1 Objective and Mechanism
+The primary objective of the First-Access Gate is to establish a baseline for Locus of Control, Motivation Direction, and Operational Readiness. To achieve this without fatiguing the user, the questions must be structurally simple but psycholinguistically loaded.
+We utilize the concept of the "Oh, That's Me" moment from advanced sales scripting, where the prompt targets a visceral, specific pain point rather than a general category.25 This ensures that the user's response is emotional and instinctual—originating from the limbic system—rather than a calculated, neocortical fabrication designed to impress the AI.5 By triggering a "Hot Cognition," we bypass the user's analytical defenses.
+3.2 Question Architecture: The Diagnostic Triad
+The First-Access Gate consists of three core question categories designed to triangulate the user's immediate psychological state and operational frame.
+3.2.1 Category A: Locus of Control & Agency Detection
+Theoretical Basis: Julian Rotter’s Locus of Control scale distinguishes between "internals" (who believe they control outcomes through their own actions) and "externals" (who attribute outcomes to luck, fate, or powerful others).1 Internal locus of control is highly correlated with sales success, entrepreneurial resilience, and the ability to navigate "shitstorms" effectively.2 Linguistic markers for this include the use of "I" statements in failure contexts (taking responsibility) versus "It/They" statements (shifting blame).1
+Drafted Question: "Describe the last significant deal or project that didn't go your way. What was the primary factor that caused the outcome?"
+Analysis Logic:
+* High Agency (Internal): "I failed to qualify the decision-maker." "I didn't push for the budget early enough." "I missed the buying signal." (Syntax: "I" + Verb of cognition/action). This indicates a user who believes they can influence future outcomes by changing their behavior.27
+* Low Agency (External): "The client was irrational." "The market shifted unexpectedly." "It just wasn't the right time." "They ghosted me." (Syntax: External Noun + Verb + Object; use of "It" as subject). This indicates a user who feels victimized by circumstance, often referred to as the "Helplessness Wobble".28
+* Red Flag: Passive voice usage ("The deal was lost," "Mistakes were made") obscures the agent entirely, a severe marker of powerlessness and cognitive dissonance.11
+3.2.2 Category B: Motivation Direction (Towards vs. Away)
+Theoretical Basis: NLP Meta-Programs distinguish between "Towards" motivation (seeking gain, pleasure, goals, accumulation) and "Away From" motivation (avoiding pain, risk, loss, problems).29 While "Away From" motivation is useful for quality control and risk management, high-growth entrepreneurship and high-ticket sales require a dominant "Towards" propulsion. "Move away" language focuses on problems and threats; "move toward" language focuses on possibilities and vision.30
+Drafted Question: "What is the single most important change you want to see in your business over the next 90 days?"
+Analysis Logic:
+* Towards Pattern: "I want to hit $1M ARR." "We will launch the new vertical." "I want to acquire 10 new clients." (Focus on accumulation, achievement, future capability).
+* Away Pattern: "I want to stop working weekends." "I need to get out of this cash flow crunch." "I want to avoid losing more clients." "I need to stop the churn." (Focus on cessation, relief, prevention).
+* Frame Impact: Users with "Away" patterns are susceptible to price objections and call reluctance because their primary drive is safety and anxiety reduction, not dominance or expansion.7 They pitch to the "Croc Brain's" fear rather than its desire.5
+3.2.3 Category C: Operational Frame Consistency (Thin Slicing)
+Theoretical Basis: This question leverages the "Thin Slice" methodology to assess competence and cognitive clarity. Research shows that intelligence and competence can be predicted from short linguistic samples.22 We utilize a "Procedural" vs. "Options" meta-program query to see if the user has a structured process (essential for scaling) or relies on chaotic improvisation (typical of early-stage or struggling founders).29
+Drafted Question: "Walk me through your sales process from 'Hello' to 'Signed Contract' in exactly three sentences."
+Analysis Logic:
+* High Structure (Procedural): "First, I qualify for budget and authority using BANT. Second, I demo the solution specifically mapping to their pain points. Third, I close on the implementation timeline and send the contract." (Sequential markers, clear transitive verbs, logical flow).
+* Chaotic (Options/Unstructured): "It depends on the client, really. I usually just try to build rapport and see where the conversation goes. Sometimes we talk price early, sometimes late." (Vague quantifiers, lack of sequence, conditionals, "try," "maybe").
+* Blind Spot Detection: If the user omits "Closing" or "Asking for the sale" in their summary, FrameLord tags "Closing Fear" or "Rejection Sensitivity" as a probable behavioral inhibitor.31
+3.3 The First-Access Gate Data Table
+The following table outlines the scoring metrics FrameLord applies to the First-Access Gate responses.
+Diagnostic Vector
+	Question Prototype
+	Target Linguistic Marker
+	FrameLord Scoring Metric
+	Locus of Control
+	"What caused your last missed target?"
+	Pronoun "I" vs. "They/It"; Active vs. Passive Voice
+	Internal Score (0-10): Higher score for "I" usage in negative context. Low score for external blame.
+	Motivation
+	"What is your primary goal for Q3?"
+	"Get/Achieve/Build" vs. "Stop/Avoid/Fix"
+	Propulsion Score (0-10): Higher score for Towards language; lower for Away language.
+	Process Clarity
+	"Describe your sales flow in 3 steps."
+	Sequential transition words (First, Then); Specific transitive verbs
+	Clarity Score (0-10): Penalties for "depends," "try," "maybe," "basically."
+	Confidence
+	"Why should a client buy from you?"
+	Absence of hedges (kinda, sort of); Presence of absolutes
+	Authority Score (0-10): Penalties for "just," "hope," "think," "probably."
+	4. Tier 2 Design: The Apex Business Frame Blueprint (Deep Elicitation)
+Once the user passes the First-Access Gate, the Apex Business Frame Blueprint serves as a deep-dive diagnostic. This tier is designed to map the user's entire belief system regarding money, value, and identity. It utilizes Cognitive Interviewing techniques 33 and Scientific Content Analysis (SCAN) 8 to uncover the deep structure of the user's business reality.
+4.1 Module 1: The Financial Frame and Pricing Shame
+Context: Many entrepreneurs suffer from "Pricing Shame" or "Money Avoidance," characterized by an inability to state prices confidently, discounting without being asked, or avoiding financial conversations entirely.7 This is often rooted in cognitive dissonance between their conscious desire for wealth and internalized negative scripts about money.37 The phenomenon of "Mother Tongue Shame" suggests that for some, discussing money (or speaking a non-native language of commerce) feels like a betrayal of cultural or familial norms, leading to deep discomfort.12
+Psycholinguistic Strategy: We must detect the "softening" of price. Users who feel shame around money often use minimizing language ("just," "small fee," "affordable," "cheap") to apologize for their value.39 They avoid "High Status" linguistic markers and revert to "Low Status" jargon or compensatory communication.41
+Intake Questions:
+1. Hypothetical Framing: "Imagine you must double your price tomorrow. Write the email you would send to your best client explaining this change."
+   * SCAN Analysis: Does the user apologize? Do they use "I hope you understand" or "I'm sorry but..."? Do they use the word "Cost" or "Price" instead of "Investment"? We look for "Euphemistic Evasion" where they avoid stating the new number directly, or "Text Bridges" that skip over the actual pricing statement.8
+2. Origin Story Probe: "What is your earliest memory of your family discussing money? How does that memory surface physically when you send an invoice today?"
+   * Elicitation Goal: To uncover "money blocks" and inherited scripts.37 Analyzing the emotional valence of adjectives used (e.g., "stressful," "scarce," "evil," "loud") provides the "money temperature" of the user.
+3. Value-Based Anchoring: "If a client says 'That's too expensive,' what is the literal first thought that flashes in your mind?"
+   * Response Analysis:
+      * Appeasement (Supplicant Frame): "I need to lower the price," "I priced it too high."
+      * Reframe (Power Frame): "They don't understand the value yet," "I need to clarify the ROI," "They might not be the right fit".42
+      * Insight: A user who immediately defaults to price reduction lacks "Price-to-Value Anchor" stability.44
+4.2 Module 2: Authority, Status, and Imposter Syndrome
+Context: Imposter Syndrome is a specific form of "Status Game" anxiety where the player feels they have cheated their way to their position and fears exposure.9 It is characterized by the fear of being "found out" and the attribution of success to external factors (luck, timing) rather than internal competence. This is often exacerbated in "Virtue Games" where moral purity competes with success.46
+Psycholinguistic Strategy: We analyze the user's attributional style. Imposters use "external" attributions for success ("We got lucky with that lead") and "internal" attributions for failure ("I messed up the demo").9 We also look for "hedging" against future failure through self-handicapping language and the use of "Universal Quantifiers" (e.g., "I always struggle with this").21
+Intake Questions:
+1. The Fraud Check: "Describe a recent success you achieved. How much of that result was due to your specific skill, and how much was due to luck or timing?"
+   * Analysis Logic: A heavy weighting on luck/timing indicates Imposter Syndrome. We look for the minimizing of their own role ("I just helped out," "It was mostly the team") versus owning the outcome ("I orchestrated the deal").9
+2. Status Alignment: "When you enter a meeting with a high-net-worth prospect, who is the 'Prize' in the room? Why?"
+   * Frame Control Logic: This directly tests Oren Klaff’s "Prize Frame" concept.5
+      * Beta/Supplicant Frame: "They are, because they have the money/authority."
+      * Alpha/Prize Frame: "I am, because I have the solution they desperately need."
+3. Conflict Simulation: "A client demands you jump on a call immediately, disrupting your schedule. You have no urgent meetings, but you intended to do deep work. What do you say?"
+   * Power Dynamics: This tests "Time Frame" control. Acquiescence ("I'll make time," "Sure, no problem") signals low status. Protecting the schedule ("I am booked until 3 PM, but I can speak then") signals high status and frame enforcement.5
+4.3 Module 3: Operational Congruency and Deception Detection
+Context: Users often lie to themselves about their business health. They engage in "cognitive dissonance reduction" by ignoring contradictory information or reframing failures as "learning experiences" without changing behavior.51 FrameLord must detect where the user's stated goals contradict their actual behaviors (the "Say-Do Gap").
+Psycholinguistic Strategy: We use SCAN (Scientific Content Analysis) principles. The most powerful indicators of deception or missing information in text are "Changes in Language".8 This includes shifting pronouns (from "I" to "We" to passive voice), changes in tense (past to present), and "text bridges" (e.g., "later on," "after that," "then") that skip over time periods where unacknowledged or unproductive behaviors occurred.8
+Intake Questions:
+1. The Day Reconstruction: "Walk me through yesterday, step-by-step, from the moment you started work to the moment you finished. Be specific."
+   * SCAN Application: We look for "temporal gaps" and "text bridges."
+      * Red Flag: "I checked emails, had a coffee, and then it was lunch." The phrase "and then it was lunch" bridges potentially 3-4 hours of time. FrameLord flags this block as a "Black Hole" of productivity, likely masking procrastination or "Call Reluctance".7
+      * Passive Voice Alert: The use of "it was" (passive) instead of "I worked on X" suggests avoidance behavior or a lack of agency over that time block.11
+2. The Commitment Audit: "You mentioned you want to reach [Goal X]. What is the one thing you know you should be doing to get there, but haven't done in the last week?"
+   * Dissonance Detection: This forces the user to articulate the gap between belief and behavior.
+      * Rationalization: "I just haven't had time" (External Locus).
+      * Admission: "I'm afraid to make the calls" (Internal Locus, actionable).
+   * Modal Operator Check: The use of "should," "must," or "have to" indicates external pressure rather than internal desire ("want to," "choose to"), signaling weak motivation.21
+5. Analytical Engine Logic: Parsing the "Hidden" Code
+FrameLord’s backend analysis must process these inputs using a structured logic gate system. This section defines the algorithms and heuristics the AI uses to interpret the linguistic data gathered from the two tiers.
+5.1 The SCAN Algorithm for Text
+The system must run a Pronoun Density Analysis.1
+* Formula: $P_{density} = \frac{\text{Count}(I) + \text{Count}(Me) + \text{Count}(My)}{\text{Total Word Count}}$
+* Interpretation:
+   * Extremely Low $P_{density}$: In narratives about personal business performance, this indicates detachment, dissociation, or an External Locus of Control ("It happened," "Things went wrong").
+   * Extremely High $P_{density}$: Combined with negative emotion words, this correlates with neuroticism, depression, or self-absorption.56
+   * The "Goldilocks Zone": Represents healthy ownership and agency. The user uses "I" to claim actions and results but balances it with objective descriptions of the environment.
+The system must also detect Text Bridges.8
+* Target Phrases: "Then," "Later," "After a while," "Next thing I knew," "Subsequently."
+* Logic: When a user bridges time, they are hiding activity or lack thereof. If a user bridges the time typically allocated for prospecting (e.g., "I prepped the list, then it was afternoon"), FrameLord flags "Sales Avoidance."
+5.2 Detecting Cognitive Dissonance via Sentiment Mismatch
+FrameLord analyzes the mismatch between Declared Intent and Linguistic Sentiment.
+* Scenario: User says, "I am excited to launch this product" (Intent), but uses "Tentative" words 57 like "maybe," "hope," "try," "possibly," "guess" in the description of the launch plan.
+* Diagnosis: The user is experiencing "Performance Anxiety" or "Imposter Syndrome." The conscious brain signals "excited" (social desirability), but the linguistic brain signals "uncertainty" and "fear of failure".9
+5.3 Frame Collision Modeling
+Based on Oren Klaff’s work 5, FrameLord assigns a Frame Strength Score to the user's inputs.
+* Power Frame Indicators: Defiance, humor, brevity, direct directives, lack of justification/over-explanation.
+* Analyst Frame Indicators: Excessive detail, over-explanation of data, reliance on logic over emotion, "paralysis by analysis."
+* Supplicant Frame Indicators: Over-apologizing, "Just checking in," asking for permission ("Is now a good time?"), validation seeking ("Does that make sense?").58
+* Logic: If a user’s goal is "High Ticket Sales," but their linguistic profile is "Supplicant Frame," the system identifies a critical Frame Incongruence that guarantees failure in negotiation.
+6. Ethical Elicitation and Intervention: The "Coaching Loop"
+Once FrameLord detects these patterns, it must intervene. However, standard "advice" is often rejected by the ego's defense mechanisms. Therefore, FrameLord utilizes Milton Model patterns 59 and Embedded Commands 61 to bypass resistance and install new frames directly into the user's subconscious.
+6.1 Recursive Questioning (The Meta-Model)
+Instead of telling the user they are being vague, FrameLord uses Meta-Model challenges to force specificity.21
+* User Input: "Customers always complain about price."
+* FrameLord Response (Universal Quantifier Challenge): "Always? Has there ever been a single time when a customer saw the value immediately? What was different about that specific interaction?"
+* Mechanism: This breaks the generalization pattern (distortion) and forces the user to access a memory of success (counter-example), shifting their state from "stuck" to "resourceful."
+6.2 Embedded Commands for Confidence
+In the feedback loops, FrameLord uses embedded commands to "seed" confidence and agency.
+* Standard Feedback: "You should try to be more confident next time." (Likely rejected as "bossy" or "unhelpful").
+* Milton Model Feedback: "As you review this plan, you might find yourself feeling more certain about your value, because knowing your numbers allows you to stand firm."
+* Structure: The commands ("find yourself feeling more certain," "stand firm") are embedded in a benign sentence structure ("As you..."), allowing them to slip past the "Critical Factor" of the conscious mind and influence the subconscious directly.63
+6.3 Reframing the "Call Reluctance" Narrative
+When "Call Reluctance" is detected, FrameLord reframes the activity using "Towards" motivation.
+* Current Frame (Away): "Cold calling is bothering people." (Focus on social pain/rejection).
+* Reframe (Towards): "Prospecting is the act of sorting through the market to find the people who are praying for your solution." (Focus on helping/saving/service).66
+* Intervention: "I notice you described the outreach as 'bothering.' What if you viewed it as 'notifying' them of a solution they currently lack and are actively searching for?"
+6.4 The Productization Solution
+For users exhibiting severe "Pricing Shame" or "Scope Creep," FrameLord suggests the Productized Service model.
+* Context: Hourly billing creates anxiety and "clouded judgment" for clients.67 Flat rates reduce anxiety but increase risk if scope isn't managed.
+* Intervention: FrameLord guides the user to package their service (e.g., "The 30-Day Audit" vs. "Consulting"). This removes the "haggling" dynamic and allows the user to sell a "product" rather than their "personal worth," significantly reducing Imposter Syndrome triggers.68
+7. Operationalizing the Doctrine: Question Bank & Logic Map
+The following section translates the theory into a concrete set of questions and logic flows for the FrameLord codebase.
+7.1 The "Money Block" Detection Sequence
+Input Q: "Complete this sentence: 'People who charge high prices are _________.'"
+Logic:
+* Negative Adjectives (Greedy, Lucky, Arrogant, Crooks) = Wealth Resentment Block.
+* Positive Adjectives (Smart, Valued, Experts, Leaders) = Wealth Alignment.
+Input Q: "When you state your price, do you pause and wait, or do you immediately explain the features?"
+Logic:
+* Explain/Justify = Insecurity/Justification Loop. This is a marker of "Powerless Language" where the speaker dilutes their own authority.15
+* Pause = Comfort with Tension (Power Frame).
+7.2 The "Passive Aggression" & "Conflict Avoidance" Screen
+Input Q: "A client is late on an invoice. Draft the reminder text."
+Logic:
+* Passive Aggressive: "Just wondering if you got the invoice..." (Indirect, low status, fear of conflict).70
+* Direct: "Please settle the attached invoice by EOD to avoid service interruption." (Direct, high status, boundaries).
+* The "Just" Filter: FrameLord automatically flags the word "Just" as a minimizer that signals apology ("I'm just checking," "I just thought").40
+7.3 The "Success Attribution" Protocol
+Input Q: "Why did you win your biggest deal?"
+Logic:
+* Internal Attribution: "I navigated the stakeholders, built a custom ROI case, and closed the champion." (High Agency/Internal Locus).
+* External Attribution: "They really needed a solution fast and we happened to be there." (Low Agency/Luck/External Locus).
+* Insight: Users with external attribution are at high risk of churn when market conditions tighten, as they believe they have no control over the outcome.2
+8. Conclusion
+The "Psycholinguistic Architecture for FrameLord" moves beyond standard data collection to true psychological profiling. By implementing the First-Access Gate and the Apex Business Frame Blueprint, FrameLord does not just "ask questions"—it performs a forensic audit of the user's reality tunnel.
+This design acknowledges three fundamental truths:
+1. Language is Behavior: How a user writes about their business is how they do business. Their syntax reveals their strategy.
+2. Structure Reveals Strategy: The syntax (pronouns, verbs, passive voice, text bridges) reveals more than the semantics (content). The way they say it matters more than what they say.
+3. Frames Are Malleable: By detecting weak frames (Supplicant, Analyst) and intervening with linguistic tools (Reframing, Embedded Commands, Meta-Model challenges), FrameLord can effectively "re-program" the user for higher agency, status, and profit.
+The result is a system that offers ethical, high-impact coaching intervention, turning the local-first CRM into a mirror that not only reflects the user's business but helps them reconstruct it from a position of absolute frame control.
+9. Comprehensive Design Matrix: From Theory to Code
+To facilitate immediate implementation, the following matrix correlates specific psycholinguistic phenomena with FrameLord system flags and actionable outputs.
+
+
+Linguistic Phenomenon
+	Detection Vector (Regex/NLP)
+	Psychological Correlate
+	FrameLord System Flag
+	AI Coaching Prompt (Intervention)
+	Passive Voice Dominance
+	(be verb) + (past participle) without agent ("Mistakes were made")
+	Cognitive Dissonance, Evasion of Responsibility 11
+	AGENCY_WARNING: LOW
+	"You wrote 'the deadline was missed.' Rewrite this starting with 'I' to take command of the solution."
+	Hedge Density
+	just, kind of, sort of, basically, probably, maybe
+	Powerlessness, Low Confidence, Fear of Rejection 15
+	FRAME_STATUS: BETA
+	"Remove the word 'just' from your pitch. Notice how the sentence becomes a command rather than a request."
+	Pronoun Divergence
+	Shift from I to We or They during critical narrative moments
+	Deception, Distancing, Lack of Conviction 8
+	INTEGRITY_CHECK
+	"You switched from 'I' to 'We' when discussing the pricing error. Who specifically owns this outcome?"
+	Temporal Gaps
+	later, then, after a while, eventually, next thing I knew
+	Hiding unproductive time, Call Reluctance 8
+	GAP_DETECTED
+	"You bridged the time between 9 AM and 11 AM with 'then.' What specific revenue-generating activity happened there?"
+	Universal Quantifiers
+	always, never, everyone, nobody
+	Limiting Beliefs, Distortion of Reality 21
+	DISTORTION_ALERT
+	"You said clients 'never' pay on time. Can you recall one specific instance where a client did pay on time?"
+	Modal Operators of Necessity
+	have to, must, need to, should
+	External Pressure, Lack of Choice, Stress 21
+	LOCUS_EXTERNAL
+	"Change 'I have to make calls' to 'I choose to make calls.' How does that shift your feeling of control?"
+	Nominalizations
+	Verbs turned into nouns (e.g., "The communication was poor" vs "We communicated poorly")
+	Stagnation, Removing Process/Action 71
+	STATIC_FRAME
+	"You mentioned 'communication' is the problem. Who is not communicating with whom, and about what?"
+	Future Tense in Strategy
+	will try, going to, plan to (without dates)
+	Lack of Commitment, Wishful Thinking 35
+	COMMITMENT_SOFT
+	"Future tense is a promise, not an action. What is the specific next physical step you are taking now?"
+	Tag Questions
+	...right?, ...doesn't it?, ...don't you think?
+	Seeking Validation, Low Status 15
+	SUPPLICANT_FRAME
+	"You are asking for agreement rather than stating facts. Remove the tag question to assert the frame."
+	This matrix serves as the coding logic for the NLP parser within FrameLord, ensuring that every linguistic input is treated as a data point for psychological analysis and strategic optimization. The system effectively "listens" between the lines, providing the user with the feedback necessary to become the FrameLord of their own enterprise.

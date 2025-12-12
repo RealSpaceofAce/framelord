@@ -46,7 +46,7 @@ const plans: Plan[] = [
 
 export const Pricing: React.FC = () => {
   return (
-    <section className="py-24 px-4 relative z-10 overflow-hidden">
+    <section id="pricing-section" className="py-24 px-4 relative z-10 overflow-hidden">
       {/* Subtle Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-fl-navy/20 to-fl-black pointer-events-none" />
 

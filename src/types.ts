@@ -112,6 +112,8 @@ export interface Contact {
   avatarUrl?: string;
   email?: string;
   phone?: string;
+  /** SMS opt-in status for receiving text notifications */
+  smsOptIn?: boolean;
   relationshipDomain: RelationshipDomain;
   relationshipRole: string;       // e.g., "prospect", "client", "friend", "manager"
   status: ContactStatus;

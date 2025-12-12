@@ -250,7 +250,7 @@ const MetricsTable: React.FC<MetricsTableProps> = ({ wantId, want }) => {
               </Button>
             </div>
           ) : (
-            <Button size="sm" variant="ghost" onClick={() => setShowAddMetric(true)} className="h-7 gap-1">
+            <Button size="sm" variant="brand-outline" onClick={() => setShowAddMetric(true)} className="h-7 gap-1">
               <Plus size={12} />
               Add Metric
             </Button>
@@ -872,7 +872,7 @@ export const WantDetailView: React.FC<WantDetailViewProps> = ({
                   {/* Kanban/List Toggle */}
                   <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
                     <Button
-                      variant={stepsViewMode === 'kanban' ? 'brand' : 'ghost'}
+                      variant={stepsViewMode === 'kanban' ? 'brand' : 'brand-outline'}
                       size="sm"
                       onClick={() => setStepsViewMode('kanban')}
                       className="gap-1.5 h-7 px-2"
@@ -881,7 +881,7 @@ export const WantDetailView: React.FC<WantDetailViewProps> = ({
                       <span className="hidden sm:inline text-xs">Kanban</span>
                     </Button>
                     <Button
-                      variant={stepsViewMode === 'list' ? 'brand' : 'ghost'}
+                      variant={stepsViewMode === 'list' ? 'brand' : 'brand-outline'}
                       size="sm"
                       onClick={() => setStepsViewMode('list')}
                       className="gap-1.5 h-7 px-2"

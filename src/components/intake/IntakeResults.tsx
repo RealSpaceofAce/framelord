@@ -29,7 +29,7 @@ interface IntakeResultsProps {
   metrics: IntakeMetrics;
   session: IntakeSession;
   onContinue?: () => void; // Continue to next tier
-  onFinish?: () => void; // Save & return later
+  onFinish?: () => void; // Fallback: return to dashboard if analysis incomplete
   onEnterDashboard?: () => void; // Enter FrameLord (go to dashboard)
   onChooseAnotherModule?: () => void; // For Tier 2: choose another module
 }
@@ -480,17 +480,6 @@ export const IntakeResults: React.FC<IntakeResultsProps> = ({
           </Button>
         )}
 
-        {/* Tier 1 Tertiary: Save & Return Later */}
-        {onFinish && !isTier2 && analysisComplete && onEnterDashboard && (
-          <Button
-            onClick={onFinish}
-            variant="outline"
-            className="border-fl-gray/30 text-fl-gray hover:text-white hover:border-fl-gray"
-          >
-            Save & Return Later
-          </Button>
-        )}
-
         {/* Tier 2 Primary: Book a Case Call */}
         {isTier2 && (
           <Button
@@ -514,8 +503,8 @@ export const IntakeResults: React.FC<IntakeResultsProps> = ({
           </Button>
         )}
 
-        {/* Tier 2 Tertiary / Fallback: Return to Dashboard */}
-        {onFinish && (isTier2 || !analysisComplete) && (
+        {/* Fallback: Return to Dashboard (only when analysis incomplete) */}
+        {onFinish && !analysisComplete && (
           <Button
             onClick={onFinish}
             variant="outline"

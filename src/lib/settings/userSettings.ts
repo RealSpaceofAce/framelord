@@ -166,5 +166,80 @@ export function getResolvedEditorTheme(): 'light' | 'dark' {
   return theme;
 }
 
+// =============================================================================
+// GLOBAL DARK MODE HELPERS
+// =============================================================================
+// These functions manage the app-wide dark/light mode setting.
+// This is the SINGLE SOURCE OF TRUTH for theme state across the app.
+// =============================================================================
+
+const GLOBAL_DARK_MODE_KEY = 'framelord_dark_mode';
+
+/**
+ * Get the global dark mode preference.
+ * Returns true if dark mode is enabled, false for light mode.
+ * Defaults to true (dark mode) if not set.
+ */
+export function getGlobalDarkMode(): boolean {
+  if (typeof window === 'undefined') return true;
+
+  const saved = window.localStorage.getItem(GLOBAL_DARK_MODE_KEY);
+  if (saved !== null) {
+    return saved === 'true';
+  }
+
+  // Default to dark mode if not set
+  return true;
+}
+
+/**
+ * Set the global dark mode preference and apply CSS classes.
+ * This is the single function that should be called to toggle theme app-wide.
+ */
+export function setGlobalDarkMode(isDark: boolean): void {
+  if (typeof window === 'undefined') return;
+
+  // Save to localStorage
+  window.localStorage.setItem(GLOBAL_DARK_MODE_KEY, String(isDark));
+
+  // Also sync to editor theme setting for consistency
+  setEditorTheme(isDark ? 'dark' : 'light');
+
+  // Apply CSS classes to document
+  applyGlobalTheme(isDark);
+}
+
+/**
+ * Apply theme CSS classes to the document.
+ * This handles both document element and body for maximum compatibility.
+ */
+export function applyGlobalTheme(isDark: boolean): void {
+  if (typeof document === 'undefined') return;
+
+  const root = document.documentElement;
+  const body = document.body;
+
+  if (isDark) {
+    root.classList.remove('light-mode');
+    body.classList.remove('light-mode');
+    root.classList.add('dark-mode');
+    body.classList.add('dark-mode');
+  } else {
+    root.classList.remove('dark-mode');
+    body.classList.remove('dark-mode');
+    root.classList.add('light-mode');
+    body.classList.add('light-mode');
+  }
+}
+
+/**
+ * Toggle global dark mode and return the new state.
+ */
+export function toggleGlobalDarkMode(): boolean {
+  const newValue = !getGlobalDarkMode();
+  setGlobalDarkMode(newValue);
+  return newValue;
+}
+
 
 

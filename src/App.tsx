@@ -10,7 +10,7 @@ import { SparkSystem } from './components/SparkSystem';
 import { ThreeParticles } from './components/ThreeParticles';
 import { InteractiveHeadline } from './components/InteractiveHeadline';
 import SplashCursor from './components/landing/SplashCursor';
-import { ArrowRight, MessageSquare, Terminal, ChevronDown, Calendar } from 'lucide-react';
+import { ArrowRight, MessageSquare, Terminal, ChevronDown, Calendar, X } from 'lucide-react';
 import { ApplicationPage } from './components/ApplicationPage';
 import { BetaPage } from './components/BetaPage';
 import { Dashboard } from './components/Dashboard';
@@ -22,9 +22,16 @@ import {
   DataProcessingAddendum,
 } from './components/legal';
 import { ToastProvider } from './components/Toast';
+import { LoginPage } from './components/auth/LoginPage';
 import type { UserScope } from './types/multiTenant';
 import { CONTACT_ZERO } from './services/contactStore';
 import { needsTier1Intake } from './lib/intakeGate';
+import {
+  isAuthenticated,
+  getCurrentUserScope,
+  subscribeAuth,
+  logout,
+} from './services/authStore';
 
 const MotionDiv = motion.div as any;
 const MotionNav = motion.nav as any;
@@ -90,9 +97,10 @@ function ensureEnterpriseTenantExists() {
 // Initialize enterprise tenant on load
 ensureEnterpriseTenantExists();
 
-// View type including legal pages
+// View type including legal pages and auth
 type AppView =
   | 'landing'
+  | 'login'
   | 'application'
   | 'beta'
   | 'dashboard'
@@ -107,8 +115,36 @@ const App: React.FC = () => {
   // Set default to 'landing' for the main landing page
   const [currentView, setCurrentView] = useState<AppView>('landing');
 
-  // Intake Gate: Redirect to intake if user needs Tier 1 and tries to access dashboard
+  // Auth state - track authentication status
+  const [authStatus, setAuthStatus] = useState(() => ({
+    isAuthenticated: isAuthenticated(),
+    userScope: getCurrentUserScope(),
+  }));
+
+  // Subscribe to auth changes
   React.useEffect(() => {
+    const unsubscribe = subscribeAuth(() => {
+      setAuthStatus({
+        isAuthenticated: isAuthenticated(),
+        userScope: getCurrentUserScope(),
+      });
+    });
+    return unsubscribe;
+  }, []);
+
+  // Video demo modal state
+  const [showDemoVideo, setShowDemoVideo] = useState(false);
+
+  // Dev mode bypass for intake gate (used by Dashboard (Dev) footer link)
+  const bypassIntakeGateRef = React.useRef(false);
+
+  // Intake Gate: Redirect to intake if user needs Tier 1 and tries to access dashboard
+  // Skipped when bypassIntakeGateRef is true (dev mode navigation)
+  React.useEffect(() => {
+    if (bypassIntakeGateRef.current) {
+      bypassIntakeGateRef.current = false; // Reset after use
+      return;
+    }
     if (currentView === 'dashboard' && needsTier1Intake(CONTACT_ZERO.id)) {
       console.log('[App] User needs Tier 1 intake, redirecting to intake flow');
       setCurrentView('intake');
@@ -135,6 +171,13 @@ const App: React.FC = () => {
   };
 
   const navigateToDashboard = () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setCurrentView('dashboard');
+  };
+
+  // Dev mode navigation - bypasses intake gate
+  const navigateToDashboardDev = () => {
+      bypassIntakeGateRef.current = true;
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setCurrentView('dashboard');
   };
@@ -175,10 +218,32 @@ const App: React.FC = () => {
       setCurrentView('intake');
   };
 
+  const navigateToLogin = () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setCurrentView('login');
+  };
+
+  const handleLoginSuccess = () => {
+      // After successful login, go to dashboard
+      setCurrentView('dashboard');
+  };
+
+  const handleLogout = () => {
+      logout();
+      setCurrentView('landing');
+  };
+
   const scrollToScanner = () => {
       const scannerSection = document.getElementById('scanner-section');
       if (scannerSection) {
           scannerSection.scrollIntoView({ behavior: 'smooth' });
+      }
+  };
+
+  const scrollToPricing = () => {
+      const pricingSection = document.getElementById('pricing-section');
+      if (pricingSection) {
+          pricingSection.scrollIntoView({ behavior: 'smooth' });
       }
   };
 
@@ -200,8 +265,50 @@ const App: React.FC = () => {
       {/* IMPORTANT: Never render on dashboard, contacts, notes, or any authenticated routes */}
       {currentView === 'landing' && <SplashCursor />}
 
+      {/* Demo Video Modal */}
+      <AnimatePresence>
+        {showDemoVideo && (
+          <MotionDiv
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+            onClick={() => setShowDemoVideo(false)}
+          >
+            <MotionDiv
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-4xl mx-4 aspect-video bg-fl-black rounded-2xl border border-fl-primary/30 shadow-[0_0_60px_rgba(68,51,255,0.3)] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setShowDemoVideo(false)}
+                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/60 hover:bg-red-500/80 text-white transition-colors border border-white/20"
+              >
+                <X size={20} />
+              </button>
+
+              {/* Video Container - Ready for YouTube embed */}
+              {/* TODO: Replace with YouTube iframe embed */}
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-fl-navy/50 to-fl-black">
+                <div className="text-center space-y-4">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-fl-primary/20 border border-fl-primary/40 flex items-center justify-center">
+                    <MessageSquare size={32} className="text-fl-primary" />
+                  </div>
+                  <p className="text-fl-gray text-sm">Demo video coming soon</p>
+                  <p className="text-fl-gray/50 text-xs">YouTube embed will go here</p>
+                </div>
+              </div>
+            </MotionDiv>
+          </MotionDiv>
+        )}
+      </AnimatePresence>
+
       {/* Navigation */}
-      {currentView !== 'dashboard' && (
+      {currentView !== 'dashboard' && currentView !== 'login' && (
       <MotionNav
         style={{ backgroundColor: navBackground, backdropFilter: 'blur(10px)' }}
         className="fixed top-0 w-full z-50 border-b border-white/5 h-20 flex items-center transition-colors duration-500"
@@ -216,7 +323,7 @@ const App: React.FC = () => {
              <div className="hidden md:flex gap-8 text-sm font-medium text-fl-text">
                 <a onClick={navigateToHome} className="hover:text-white transition-colors interactive cursor-pointer">How it Works</a>
                 <a onClick={navigateToHome} className="hover:text-white transition-colors interactive cursor-pointer">Pricing</a>
-                <a href="#" className="hover:text-white transition-colors interactive">Login</a>
+                <button onClick={navigateToLogin} className="hover:text-white transition-colors interactive cursor-pointer">Login</button>
              </div>
           )}
 
@@ -232,11 +339,11 @@ const App: React.FC = () => {
                 </Button>
              )}
 
-             {/* Show 'Get Access' (Scroll to Scanner) if on Landing page */}
+             {/* Show 'Get Access' (Scroll to Pricing) if on Landing page */}
              {currentView === 'landing' && (
                 <Button
                     variant="outline"
-                    onClick={scrollToScanner}
+                    onClick={scrollToPricing}
                     className="!py-2 !px-4 text-xs interactive animate-pulse border-fl-primary text-fl-primary shadow-[0_0_15px_rgba(68,51,255,0.3)]"
                 >
                     GET ACCESS
@@ -284,10 +391,7 @@ const App: React.FC = () => {
 
                     <Reveal delay={0.6}>
                         <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
-                            <Button glow onClick={scrollToScanner} className="group flex items-center gap-2 interactive">
-                                Start Scan Now <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                            </Button>
-                            <Button variant="secondary" className="flex items-center gap-2 interactive">
+                            <Button glow onClick={() => setShowDemoVideo(true)} className="group flex items-center gap-2 interactive">
                                 <MessageSquare size={18} /> View Demo
                             </Button>
                         </div>
@@ -415,6 +519,19 @@ const App: React.FC = () => {
                     }}
                 />
             </MotionDiv>
+        ) : currentView === 'login' ? (
+            <MotionDiv
+                key="login"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.05 }}
+                transition={{ duration: 0.5 }}
+            >
+                <LoginPage
+                    onLoginSuccess={handleLoginSuccess}
+                    onBack={navigateToHome}
+                />
+            </MotionDiv>
         ) : (
             <MotionDiv
                 key="dashboard"
@@ -435,8 +552,8 @@ const App: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Footer - Hide on Dashboard to maintain OS feel, or keep it for dev access. User said add access to footer. */}
-      {currentView !== 'dashboard' && (
+      {/* Footer - Hide on Dashboard and Login to maintain OS feel */}
+      {currentView !== 'dashboard' && currentView !== 'login' && (
       <footer className="relative bg-fl-black border-t border-white/5 py-12 z-10">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex flex-col gap-2">
@@ -468,12 +585,16 @@ const App: React.FC = () => {
                 Beta Program (Dev)
             </button>
             <div className="w-px h-4 bg-fl-gray/30 mx-2" />
-            <button onClick={navigateToDashboard} className="text-green-500 hover:text-white transition-colors interactive text-xs uppercase tracking-wider">
+            <button onClick={navigateToDashboardDev} className="text-green-500 hover:text-white transition-colors interactive text-xs uppercase tracking-wider">
                 Dashboard (Dev)
             </button>
             <div className="w-px h-4 bg-fl-gray/30 mx-2" />
             <button onClick={navigateToIntake} className="text-purple-500 hover:text-white transition-colors interactive text-xs uppercase tracking-wider">
                 Intake (Dev)
+            </button>
+            <div className="w-px h-4 bg-fl-gray/30 mx-2" />
+            <button onClick={navigateToLogin} className="text-cyan-500 hover:text-white transition-colors interactive text-xs uppercase tracking-wider">
+                Login (Dev)
             </button>
           </div>
 

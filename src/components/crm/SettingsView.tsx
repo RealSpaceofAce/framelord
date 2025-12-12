@@ -36,6 +36,9 @@ import {
   saveUserSettings,
   getLittleLordShortcut,
   setLittleLordShortcut,
+  getGlobalDarkMode,
+  setGlobalDarkMode,
+  applyGlobalTheme,
   type LittleLordShortcutPreference,
 } from '../../lib/settings/userSettings';
 import { useSavageMode } from '../../hooks/useSavageMode';
@@ -44,6 +47,25 @@ import {
   getNotificationSettings,
   updateNotificationSettings,
 } from '../../services/systemLogStore';
+import {
+  getTenantBilling,
+  getCurrentPlanTier,
+  hasActiveSubscription,
+} from '../../services/billingStore';
+import {
+  PLAN_NAMES,
+  PLAN_PRICES,
+  PLAN_QUOTAS,
+  getFrameScanQuota,
+  type PlanTier,
+  type ProductionTier,
+} from '../../config/planConfig';
+import {
+  createCheckoutSessionApi,
+  createPortalSessionApi,
+  handleCheckoutSuccess,
+  getAvailableUpgrades,
+} from '../../api/stripeApi';
 
 type SettingsTab = 'profile' | 'billing' | 'appearance' | 'notifications' | 'integrations' | 'privacy' | 'help';
 
@@ -79,6 +101,268 @@ const SavageModeToggle: React.FC = () => {
           <span className="text-xs text-red-400">
             Savage Mode is active. Your feedback will be more direct and unfiltered.
           </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Billing Section Component
+interface BillingSectionProps {
+  user: any;
+}
+
+const BillingSection: React.FC<BillingSectionProps> = ({ user }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Get tenant ID (using contact zero's id as proxy in dev)
+  const tenantId = user?.id || 'default-tenant';
+  const billing = getTenantBilling(tenantId);
+  const currentTier = getCurrentPlanTier(tenantId);
+  const isActive = hasActiveSubscription(tenantId);
+  const availableUpgrades = getAvailableUpgrades(currentTier);
+
+  // Check for checkout success on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get('success');
+    const sessionId = params.get('session_id');
+    const tier = params.get('tier') as PlanTier | null;
+
+    if (success === 'true' && sessionId && tier) {
+      handleCheckoutSuccess(tenantId, sessionId, tier);
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [tenantId]);
+
+  const handleUpgrade = async (targetTier: ProductionTier) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await createCheckoutSessionApi({
+        tenantId,
+        userId: user?.id || 'user-1',
+        email: user?.email || 'user@example.com',
+        targetTier,
+      });
+
+      if (result.success && result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+      } else {
+        setError(result.error || 'Failed to create checkout session');
+      }
+    } catch (err: any) {
+      setError(err?.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleManageBilling = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await createPortalSessionApi({
+        tenantId,
+        userId: user?.id || 'user-1',
+      });
+
+      if (result.success && result.portalUrl) {
+        window.location.href = result.portalUrl;
+      } else {
+        setError(result.error || 'Failed to open billing portal');
+      }
+    } catch (err: any) {
+      setError(err?.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Get quota info for current tier
+  const quota = PLAN_QUOTAS[currentTier] || PLAN_QUOTAS.beta_free;
+  const frameScanQuota = getFrameScanQuota(currentTier);
+
+  return (
+    <div className="space-y-6">
+      {/* Current Plan Card */}
+      <div className="glass-card rounded-lg p-6 border border-[#1f2f45]">
+        <div className="mb-4">
+          <h3 className="text-sm font-bold text-white mb-1">Current Plan</h3>
+          <p className="text-xs text-[#7fa6d1]">Your subscription and usage details</p>
+        </div>
+
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-[#4433FF]/20 flex items-center justify-center">
+              <Crown size={24} className="text-[#4433FF]" />
+            </div>
+            <div>
+              <div className="text-lg font-bold text-white">
+                {PLAN_NAMES[currentTier] || currentTier}
+              </div>
+              <div className="text-xs text-gray-500">
+                {billing.billingStatus === 'active' && 'Active subscription'}
+                {billing.billingStatus === 'trialing' && 'Trial period'}
+                {billing.billingStatus === 'canceled' && billing.validUntil && (
+                  <>Canceled - valid until {new Date(billing.validUntil).toLocaleDateString()}</>
+                )}
+                {billing.billingStatus === 'past_due' && (
+                  <span className="text-orange-400">Payment past due</span>
+                )}
+                {billing.billingStatus === 'none' && 'Free tier'}
+              </div>
+            </div>
+          </div>
+
+          {PLAN_PRICES[currentTier as keyof typeof PLAN_PRICES] !== undefined && (
+            <div className="text-right">
+              <div className="text-2xl font-bold text-white">
+                ${PLAN_PRICES[currentTier as keyof typeof PLAN_PRICES]}
+                <span className="text-sm font-normal text-gray-500">/mo</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Usage Quotas */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="p-3 bg-[#0E0E0E] rounded-lg border border-[#2A2A2A]">
+            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+              FrameScans/Day
+            </div>
+            <div className="text-lg font-bold text-white">
+              {frameScanQuota.daily === -1 ? '∞' : frameScanQuota.daily}
+            </div>
+          </div>
+          <div className="p-3 bg-[#0E0E0E] rounded-lg border border-[#2A2A2A]">
+            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+              AI Queries/Day
+            </div>
+            <div className="text-lg font-bold text-white">
+              {quota.aiQueriesDaily === -1 ? '∞' : quota.aiQueriesDaily}
+            </div>
+          </div>
+          <div className="p-3 bg-[#0E0E0E] rounded-lg border border-[#2A2A2A]">
+            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+              Contacts
+            </div>
+            <div className="text-lg font-bold text-white">
+              {quota.contactsLimit === -1 ? '∞' : quota.contactsLimit}
+            </div>
+          </div>
+          <div className="p-3 bg-[#0E0E0E] rounded-lg border border-[#2A2A2A]">
+            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+              Call Minutes
+            </div>
+            <div className="text-lg font-bold text-white">
+              {quota.callAnalyzerMinutes === 0 ? '—' : quota.callAnalyzerMinutes === -1 ? '∞' : quota.callAnalyzerMinutes}
+            </div>
+          </div>
+        </div>
+
+        {/* Manage Billing Button (for active subscribers) */}
+        {billing.stripeCustomerId && (
+          <button
+            onClick={handleManageBilling}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#1A1A1D] border border-[#333] rounded-lg hover:border-[#4433FF] transition-colors text-sm font-semibold text-white disabled:opacity-50"
+          >
+            <CreditCard size={16} />
+            {isLoading ? 'Loading...' : 'Manage Billing & Payment Method'}
+          </button>
+        )}
+
+        {error && (
+          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p className="text-xs text-red-400">{error}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Upgrade Options */}
+      {availableUpgrades.length > 0 && (
+        <div className="glass-card rounded-lg p-6 border border-[#1f2f45]">
+          <div className="mb-4">
+            <h3 className="text-sm font-bold text-white mb-1">Upgrade Your Plan</h3>
+            <p className="text-xs text-[#7fa6d1]">Unlock more features and higher limits</p>
+          </div>
+
+          <div className="grid gap-4">
+            {availableUpgrades.map((tier) => {
+              const tierQuota = PLAN_QUOTAS[tier];
+              const tierFrameScan = getFrameScanQuota(tier);
+
+              return (
+                <div
+                  key={tier}
+                  className="p-4 bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg hover:border-[#4433FF]/50 transition-colors"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="text-sm font-bold text-white">
+                        {PLAN_NAMES[tier]}
+                      </div>
+                      <div className="text-xl font-bold text-[#4433FF]">
+                        ${PLAN_PRICES[tier]}
+                        <span className="text-sm font-normal text-gray-500">/mo</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleUpgrade(tier)}
+                      disabled={isLoading}
+                      className="px-4 py-2 bg-[#4433FF] hover:bg-[#5544FF] text-white text-sm font-bold rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {isLoading ? 'Loading...' : 'Upgrade'}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2 text-xs">
+                    <div className="text-gray-500">
+                      <span className="text-white font-semibold">
+                        {tierFrameScan.daily === -1 ? '∞' : tierFrameScan.daily}
+                      </span> scans/day
+                    </div>
+                    <div className="text-gray-500">
+                      <span className="text-white font-semibold">
+                        {tierQuota.aiQueriesDaily === -1 ? '∞' : tierQuota.aiQueriesDaily}
+                      </span> AI/day
+                    </div>
+                    <div className="text-gray-500">
+                      <span className="text-white font-semibold">
+                        {tierQuota.contactsLimit === -1 ? '∞' : tierQuota.contactsLimit}
+                      </span> contacts
+                    </div>
+                    <div className="text-gray-500">
+                      <span className="text-white font-semibold">
+                        {tierQuota.callAnalyzerMinutes === 0 ? '—' : tierQuota.callAnalyzerMinutes === -1 ? '∞' : tierQuota.callAnalyzerMinutes}
+                      </span> call min
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Beta Notice */}
+      {currentTier.startsWith('beta_') && (
+        <div className="p-4 bg-[#4433FF]/10 border border-[#4433FF]/30 rounded-lg">
+          <div className="flex items-start gap-3">
+            <Info size={16} className="text-[#4433FF] mt-0.5 flex-shrink-0" />
+            <div>
+              <div className="text-sm font-semibold text-white mb-1">Beta Program</div>
+              <p className="text-xs text-[#7fa6d1]">
+                You're part of our beta program with enhanced features. When we launch publicly,
+                you'll transition to our production tiers with special beta pricing locked in.
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -140,15 +424,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [shortcutSaved, setShortcutSaved] = useState(false);
 
   useEffect(() => {
-    // Load settings from localStorage and current DOM to avoid sudden theme flips
-    const savedDarkMode = localStorage.getItem('framelord_dark_mode');
-    const root = document.documentElement;
-    const body = document.body;
-    const domIsDark = root.classList.contains('dark-mode') || (!root.classList.contains('light-mode') && !body.classList.contains('light-mode'));
-    const initialDark = savedDarkMode !== null ? savedDarkMode === 'true' : domIsDark;
-
+    // Load settings using shared utility function
+    const initialDark = getGlobalDarkMode();
     setDarkMode(initialDark);
-    applyTheme(initialDark);
+    applyGlobalTheme(initialDark);
     
     const savedCompactMode = localStorage.getItem('framelord_compact_mode');
     if (savedCompactMode !== null) {
@@ -223,21 +502,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setNanoKey('');
   };
 
-  const applyTheme = (isDark: boolean) => {
-    const root = document.documentElement;
-    const body = document.body;
-    if (isDark) {
-      root.classList.remove('light-mode');
-      body.classList.remove('light-mode');
-      root.classList.add('dark-mode');
-      body.classList.add('dark-mode');
-    } else {
-      root.classList.remove('dark-mode');
-      body.classList.remove('dark-mode');
-      root.classList.add('light-mode');
-      body.classList.add('light-mode');
-    }
-  };
+  // Note: applyTheme is now imported from userSettings as applyGlobalTheme
 
   const applyCompactMode = (isCompact: boolean) => {
     const root = document.documentElement;
@@ -535,90 +800,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {/* BILLING TAB */}
         {activeTab === 'billing' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <SettingCard
-                title="Current Plan"
-                description="Your active subscription"
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs px-3 py-1 bg-[#4433FF]/20 text-[#4433FF] border border-[#4433FF]/30 rounded-full font-bold uppercase">
-                      Free
-                    </span>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-display font-bold text-white mb-1">$0</div>
-                    <div className="text-xs text-gray-500">per month</div>
-                  </div>
-                  <div className="space-y-2 pt-4 border-t border-[#2A2A2A]">
-                    <div className="flex items-center gap-2 text-sm text-gray-300">
-                      <Check size={14} className="text-green-500" />
-                      Unlimited contacts
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-300">
-                      <Check size={14} className="text-green-500" />
-                      Unlimited notes
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-300">
-                      <Check size={14} className="text-green-500" />
-                      Basic frame scanning
-                    </div>
-                  </div>
-                  <button className="w-full px-4 py-2 bg-[#4433FF] hover:bg-[#5544FF] text-white text-sm font-bold rounded-lg transition-colors">
-                    Upgrade Plan
-                  </button>
-                </div>
-              </SettingCard>
-
-              <SettingCard
-                title="Billing Cycle"
-                description="Your subscription details"
-              >
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
-                      Current Period
-                    </div>
-                    <div className="text-sm text-white">
-                      {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - {new Date(new Date().setMonth(new Date().getMonth() + 1)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
-                      Status
-                    </div>
-                    <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded font-bold uppercase">
-                      Active
-                    </span>
-                  </div>
-                </div>
-              </SettingCard>
-            </div>
-
-            <SettingCard
-              title="Usage This Period"
-              description="Your quota resets on the next billing date"
-            >
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-white">Frame Scans</span>
-                    <span className="text-sm text-gray-500">0 / Unlimited</span>
-                  </div>
-                  <div className="h-2 bg-[#1A1A1D] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#4433FF] rounded-full" style={{ width: '0%' }} />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-white">Notes Created</span>
-                    <span className="text-sm text-gray-500">Unlimited</span>
-                  </div>
-                </div>
-              </div>
-            </SettingCard>
-          </div>
+          <BillingSection user={user} />
         )}
 
         {/* APPEARANCE TAB */}
@@ -638,8 +820,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     enabled={darkMode}
                     onChange={(enabled) => {
                       setDarkMode(enabled);
-                      localStorage.setItem('framelord_dark_mode', String(enabled));
-                      applyTheme(enabled);
+                      // Use shared utility that syncs localStorage, editor theme, and CSS classes
+                      setGlobalDarkMode(enabled);
                     }}
                   />
                 </div>

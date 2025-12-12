@@ -13,6 +13,7 @@ import {
   isCapabilityEnabled,
 } from '../../services/littleLord/viewBehavior';
 import { getApexSupremacyFilter, getSelectiveDoctrine } from '../../services/doctrineLoader';
+import { addLittleLordExchangeToMemory } from '../../services/aiMemoryAdapters';
 
 // =============================================================================
 // TYPES
@@ -471,7 +472,24 @@ export async function runLittleLord(input: LittleLordRunInput): Promise<LittleLo
   try {
     // Call LLM (uses gpt-4o-mini by default in openaiClient)
     const response = await callOpenAIChat(messages);
-    return parseResponse(response.rawText);
+    const output = parseResponse(response.rawText);
+
+    // Feed into AI memory for self-improving AI layer
+    try {
+      addLittleLordExchangeToMemory({
+        userMessage: message,
+        aiReply: output.reply,
+        event: output.event,
+        validation: output.validation ?? null,
+        guardrail: output.guardrail ?? null,
+        targetContactId: context?.selectedContactId ?? null,
+      });
+    } catch (memoryErr) {
+      // Don't fail the main flow if memory capture fails
+      console.warn('[runLittleLord] Failed to add exchange to memory:', memoryErr);
+    }
+
+    return output;
   } catch (error: unknown) {
     console.error('Little Lord run error:', error);
     return {

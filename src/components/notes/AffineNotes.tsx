@@ -50,12 +50,13 @@ import {
   MicOff,
   Sun,
   Moon,
+  CheckSquare,
 } from 'lucide-react';
 import { FrameLordNotesSidebarSkin } from './FrameLordNotesSidebarSkin';
 import { MarkdownNoteEditor } from './MarkdownNoteEditor';
-import { BiDirectionalLinks } from './BiDirectionalLinks';
 import { RightSidebar, type RightSidebarTab } from './RightSidebar';
 import { NotesSettings } from './NotesSettings';
+import { NotesTasksView } from './NotesTasksView';
 import { JournalWeekStrip } from './JournalWeekStrip';
 import { TemplatePickerModal } from './TemplatePickerModal';
 import { useAudioRecorder } from '../../hooks/useAudioRecorder';
@@ -70,7 +71,7 @@ import {
   getOrCreateJournalForDate,
   getJournalDates,
 } from '../../services/noteStore';
-import { getResolvedEditorTheme, setEditorTheme } from '../../lib/settings/userSettings';
+import { getGlobalDarkMode, setGlobalDarkMode } from '../../lib/settings/userSettings';
 import type { Note } from '../../types';
 import { motion } from 'framer-motion';
 
@@ -82,7 +83,7 @@ const MotionDiv = motion.div as any;
 // =============================================================================
 
 type MainTab = 'docs' | 'collections' | 'tags';
-type SidebarView = 'all' | 'journals' | 'trash' | 'folder' | 'collection' | 'tag';
+type SidebarView = 'all' | 'journals' | 'tasks' | 'trash' | 'folder' | 'collection' | 'tag';
 type ViewMode = 'list' | 'grid';
 
 interface FolderItem {
@@ -153,18 +154,20 @@ const EMOJI_OPTIONS = [
 interface AffineNotesProps {
   /** Callback when navigating to a contact dossier from @mention */
   onNavigateToContact?: (contactId: string) => void;
+  /** Initial sidebar view to show (e.g., 'tasks' for direct navigation to tasks) */
+  initialView?: SidebarView;
 }
 
-export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact }) => {
+export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact, initialView }) => {
   // Core state
-  const [sidebarView, setSidebarView] = useState<SidebarView>('all');
+  const [sidebarView, setSidebarView] = useState<SidebarView>(initialView || 'all');
   const [mainTab, setMainTab] = useState<MainTab>('docs');
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>(getResolvedEditorTheme());
+  const [theme, setTheme] = useState<'light' | 'dark'>(getGlobalDarkMode() ? 'dark' : 'light');
 
   // Navigation history for back/forward
   const [navHistory, setNavHistory] = useState<string[]>([]);
@@ -221,6 +224,15 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact })
   useEffect(() => {
     localStorage.setItem('framelord_collections', JSON.stringify(collections));
   }, [collections]);
+
+  // Handle initialView changes (e.g., navigation to tasks from outside)
+  useEffect(() => {
+    if (initialView) {
+      setSidebarView(initialView);
+      setSelectedPageId(null); // Clear any selected page when switching views
+    }
+  }, [initialView]);
+
   // Get all notes
   const allNotes = useMemo(() => getAllNotes(), [refreshKey]);
   const activeNotes = useMemo(() => allNotes.filter(n => !n.isArchived), [allNotes]);
@@ -452,7 +464,8 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact })
   const handleThemeToggle = useCallback(() => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-    setEditorTheme(newTheme);
+    // Use global dark mode setter which syncs localStorage and CSS classes
+    setGlobalDarkMode(newTheme === 'dark');
   }, [theme]);
 
   // Navigation handlers for back/forward
@@ -701,6 +714,17 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact })
               count={journalNotes.length}
               colors={sidebarColors}
             />
+            <SidebarNavItem
+              icon={<CheckSquare size={16} />}
+              label="Tasks"
+              isActive={sidebarView === 'tasks'}
+              onClick={() => {
+                setSidebarView('tasks');
+                setMainTab('docs');
+                setSelectedPageId(null); // Clear any selected page
+              }}
+              colors={sidebarColors}
+            />
 
             <div className="my-3 border-t" style={{ borderColor: sidebarColors.border }} />
 
@@ -838,7 +862,12 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact })
       <div className="flex-1 flex overflow-hidden">
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {selectedPage ? (
+          {sidebarView === 'tasks' ? (
+            <NotesTasksView
+              onNavigateToContact={onNavigateToContact}
+              colors={colors}
+            />
+          ) : selectedPage ? (
             <PageEditor
               page={selectedPage}
               theme={theme}
@@ -940,7 +969,8 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact })
             ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
             : newTheme === 'gray' ? 'dark' : newTheme; // Migrate 'gray' to 'dark'
           setTheme(resolvedTheme as 'light' | 'dark');
-          setEditorTheme(newTheme === 'gray' ? 'dark' : newTheme); // Store the preference (can be 'system')
+          // Use global dark mode setter which syncs localStorage and CSS classes
+          setGlobalDarkMode(resolvedTheme === 'dark');
         }}
       />
     </div>
@@ -2162,11 +2192,6 @@ const PageEditor: React.FC<PageEditorProps> = ({
               </button>
             </div>
           )}
-
-          {/* Bi-directional Links */}
-          <div className="mt-8">
-            <BiDirectionalLinks noteId={page.id} onNavigateToNote={onNavigateToNote} />
-          </div>
         </div>
       </div>
 
