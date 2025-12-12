@@ -379,32 +379,35 @@ const App: React.FC = () => {
                     >
                     <Reveal delay={0.1}>
                         <div className="inline-block mb-6 px-4 py-1 rounded-full glass-card border border-[#1f2f45] shadow-[0_0_15px_rgba(68,51,255,0.25)]">
-                            <span className="text-fl-secondary text-xs font-bold tracking-[0.2em] uppercase">Authority Diagnostics for High-Stakes Communication</span>
+                            <span className="text-fl-secondary text-xs font-bold tracking-[0.2em] uppercase">Private Intel Machine</span>
                         </div>
                     </Reveal>
 
                     <Reveal delay={0.2} width="100%" className="mb-2">
                         <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold leading-tight drop-shadow-2xl text-white">
-                            QUANTIFY YOUR AUTHORITY.
+                            YOUR UNFAIR ADVANTAGE
                         </h1>
                     </Reveal>
 
                     <Reveal delay={0.3} width="100%" className="mb-8">
                         <h2 className="font-display text-3xl md:text-5xl lg:text-6xl font-medium leading-tight drop-shadow-2xl text-fl-text">
-                            SEE EXACTLY WHERE <span className="text-fl-primary font-bold">IT FAILS.</span>
+                            IN POWER, PERSUASION, AND <span className="text-fl-primary font-bold">PROTECTION.</span>
                         </h2>
                     </Reveal>
 
                     <Reveal delay={0.5}>
                         <p className="text-xl text-fl-text max-w-3xl mx-auto mb-10 font-light leading-relaxed">
-                            FrameLord analyzes your calls, messages, and transcripts across nine authority axes so you see the exact moments your frame collapses and what to correct before the next conversation.
+                            An authority diagnostics lab and private intel machine for high-stakes operators.
+                            Grounded in evo psych, Big Five, DISC, MBTI-style patterns, and dark triad risk signals.
+                            See exactly where your frame leaks, who's running games on you, and what to correct before it costs you.
                         </p>
                     </Reveal>
 
                     <Reveal delay={0.7}>
-                        <Button glow onClick={scrollToScanner} className="group flex items-center gap-2 interactive">
+                        <Button glow onClick={() => setShowDemoVideo(true)} className="group flex items-center gap-2 interactive">
                             <ArrowRight size={18} /> See How It Works
                         </Button>
+                        <p className="text-fl-gray text-xs mt-3">Invite-only beta. Founding member pricing locked.</p>
                     </Reveal>
                     </MotionDiv>
 
@@ -418,7 +421,7 @@ const App: React.FC = () => {
                                 className="flex flex-col items-center gap-3"
                             >
                                 <span className="text-fl-accent text-[10px] md:text-xs font-bold tracking-[0.3em] uppercase drop-shadow-[0_0_10px_rgba(68,51,255,0.8)] whitespace-nowrap">
-                                    Run Your First Scan
+                                    See the Blind Spot
                                 </span>
                                 <ChevronDown size={28} className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]" />
                             </MotionDiv>
@@ -431,12 +434,14 @@ const App: React.FC = () => {
                     <div className="max-w-4xl mx-auto text-center">
                         <Reveal width="100%">
                             <h2 className="text-3xl md:text-4xl font-display text-white mb-6">
-                                THE GAP YOU CAN'T SEE IS <span className="text-fl-accent">COSTING YOU</span>
+                                YOU DON'T SEE YOUR <span className="text-fl-accent">FRAME LEAKS</span>
                             </h2>
                         </Reveal>
                         <Reveal width="100%" delay={0.2}>
                             <p className="text-lg text-fl-text leading-relaxed max-w-3xl mx-auto">
-                                You've read the books. Taken the courses. But there's a gap between how you <em>think</em> you hold frame and what actually happens in high-stakes conversations. Traditional feedback is slow, biased, and often wrong. FrameLord closes the gap with AI-powered frame analysis—instant, objective, and brutally honest.
+                                Micro-submissions you don't notice. Deference patterns you can't hear. Manipulative frames you don't recognize until it's too late.
+                                You think you're coming across one way—reality says otherwise.
+                                FrameLord exposes the gap between intent and impact with clinical precision, grounded in evo psych and dark triad pattern recognition.
                             </p>
                         </Reveal>
                     </div>
@@ -450,19 +455,59 @@ const App: React.FC = () => {
                 {/* Features Grid */}
                 <Features />
 
-                {/* Differentiation Section */}
+                {/* Private Intel Machine Section */}
                 <section className="py-20 px-4 relative z-10">
-                    <div className="max-w-4xl mx-auto text-center">
+                    <div className="max-w-5xl mx-auto text-center">
                         <Reveal width="100%">
                             <h2 className="text-3xl md:text-4xl font-display text-white mb-6">
-                                BUILT FOR <span className="text-fl-accent">OUTCOME</span>, NOT AESTHETICS
+                                YOUR PRIVATE <span className="text-fl-accent">AUTHORITY INTEL MACHINE</span>
                             </h2>
                         </Reveal>
                         <Reveal width="100%" delay={0.2}>
-                            <p className="text-lg text-fl-text leading-relaxed max-w-3xl mx-auto mb-8">
-                                FrameLord is not a writing assistant. It is an authority diagnostics lab for high-stakes communication. It scores how much leverage you actually have in an interaction by looking at where people push back, where you concede, and how the exchange moves after you speak. The focus is external outcomes and hard signals, not whether your sentences look pretty.
+                            <p className="text-lg text-fl-text leading-relaxed max-w-3xl mx-auto mb-12">
+                                FrameLord is a growing dossier on you and everyone tied to your outcomes.
+                                Log patterns, vulnerabilities, leverage points. Track relationship vectors and authority drift over time.
+                                Not perception management—outside-in effectiveness where authority becomes real.
                             </p>
                         </Reveal>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+                            <Reveal delay={0.1}>
+                                <div className="p-6 glass-card border border-[#1f2f45] rounded-xl">
+                                    <h3 className="text-fl-primary font-display text-sm font-bold mb-2 uppercase tracking-wider">Relationship OS</h3>
+                                    <p className="text-fl-text text-sm">Contact dossiers with notes, timelines, interactions, and psychometric profiles. Everything hangs off the contact spine.</p>
+                                </div>
+                            </Reveal>
+                            <Reveal delay={0.15}>
+                                <div className="p-6 glass-card border border-[#1f2f45] rounded-xl">
+                                    <h3 className="text-fl-primary font-display text-sm font-bold mb-2 uppercase tracking-wider">Psychometric Profiles</h3>
+                                    <p className="text-fl-text text-sm">Big Five, DISC, MBTI-style patterns, and dark triad risk signals per contact. Know who you're dealing with before they know you.</p>
+                                </div>
+                            </Reveal>
+                            <Reveal delay={0.2}>
+                                <div className="p-6 glass-card border border-[#1f2f45] rounded-xl">
+                                    <h3 className="text-fl-primary font-display text-sm font-bold mb-2 uppercase tracking-wider">Wants & Accountability</h3>
+                                    <p className="text-fl-text text-sm">Track your Sovereign Wants. Daily streaks. Goal compliance feeds your FrameScore via Little Lord enforcement.</p>
+                                </div>
+                            </Reveal>
+                            <Reveal delay={0.25}>
+                                <div className="p-6 glass-card border border-[#1f2f45] rounded-xl">
+                                    <h3 className="text-fl-primary font-display text-sm font-bold mb-2 uppercase tracking-wider">Authority Trajectory</h3>
+                                    <p className="text-fl-text text-sm">Watch FrameScore and relationship vectors shift over time. Trendlines reveal patterns you can't see in the moment.</p>
+                                </div>
+                            </Reveal>
+                            <Reveal delay={0.3}>
+                                <div className="p-6 glass-card border border-[#1f2f45] rounded-xl">
+                                    <h3 className="text-fl-primary font-display text-sm font-bold mb-2 uppercase tracking-wider">Little Lord Advisor</h3>
+                                    <p className="text-fl-text text-sm">Not a friendly chatbot. Ruthless tactical advisor trained on Apex Frame doctrine. Flags leaks, prescribes drills, enforces congruency.</p>
+                                </div>
+                            </Reveal>
+                            <Reveal delay={0.35}>
+                                <div className="p-6 glass-card border border-[#1f2f45] rounded-xl">
+                                    <h3 className="text-fl-gray font-display text-sm font-bold mb-2 uppercase tracking-wider">On Deck: Call Analysis</h3>
+                                    <p className="text-fl-text text-sm">Recording, transcription, timestamped coaching tied to exact moments. Tests you send out that feed back into dossiers.</p>
+                                </div>
+                            </Reveal>
+                        </div>
                     </div>
                 </section>
 
@@ -471,36 +516,85 @@ const App: React.FC = () => {
                     <div className="max-w-6xl mx-auto">
                         <Reveal width="100%" className="text-center mb-16">
                             <h2 className="text-4xl md:text-5xl font-display text-white mb-4">
-                                THREE STEPS TO <span className="text-fl-primary">FRAME MASTERY</span>
+                                HOW <span className="text-fl-primary">IT WORKS</span>
                             </h2>
                         </Reveal>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                             <Reveal delay={0.1}>
-                                <div className="text-center p-8 glass-card border border-[#1f2f45] rounded-2xl">
-                                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-fl-primary/20 border border-fl-primary/40 flex items-center justify-center">
-                                        <span className="text-fl-primary font-display text-2xl font-bold">1</span>
+                                <div className="text-center p-6 glass-card border border-[#1f2f45] rounded-2xl">
+                                    <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-fl-primary/20 border border-fl-primary/40 flex items-center justify-center">
+                                        <span className="text-fl-primary font-display text-xl font-bold">1</span>
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-3 font-display">Paste Your Message</h3>
-                                    <p className="text-fl-text text-sm">Copy any email, DM, or transcript into the FrameScan box.</p>
+                                    <h3 className="text-lg font-bold text-white mb-2 font-display">Get Access</h3>
+                                    <p className="text-fl-text text-xs">Set up Contact Zero—your identity in the system.</p>
+                                </div>
+                            </Reveal>
+                            <Reveal delay={0.15}>
+                                <div className="text-center p-6 glass-card border border-[#1f2f45] rounded-2xl">
+                                    <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-fl-primary/20 border border-fl-primary/40 flex items-center justify-center">
+                                        <span className="text-fl-primary font-display text-xl font-bold">2</span>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-white mb-2 font-display">Run Diagnostics</h3>
+                                    <p className="text-fl-text text-xs">Scan real situations: texts, calls, images, transcripts.</p>
                                 </div>
                             </Reveal>
                             <Reveal delay={0.2}>
-                                <div className="text-center p-8 glass-card border border-[#1f2f45] rounded-2xl">
-                                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-fl-primary/20 border border-fl-primary/40 flex items-center justify-center">
-                                        <span className="text-fl-primary font-display text-2xl font-bold">2</span>
+                                <div className="text-center p-6 glass-card border border-[#1f2f45] rounded-2xl">
+                                    <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-fl-primary/20 border border-fl-primary/40 flex items-center justify-center">
+                                        <span className="text-fl-primary font-display text-xl font-bold">3</span>
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-3 font-display">Get Your FrameScore</h3>
-                                    <p className="text-fl-text text-sm">See exactly where you're projecting strength—and where you're leaking authority.</p>
+                                    <h3 className="text-lg font-bold text-white mb-2 font-display">Build Dossiers</h3>
+                                    <p className="text-fl-text text-xs">Create profiles on contacts. Log wants, patterns, risks.</p>
+                                </div>
+                            </Reveal>
+                            <Reveal delay={0.25}>
+                                <div className="text-center p-6 glass-card border border-[#1f2f45] rounded-2xl">
+                                    <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-fl-primary/20 border border-fl-primary/40 flex items-center justify-center">
+                                        <span className="text-fl-primary font-display text-xl font-bold">4</span>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-white mb-2 font-display">Execute Drills</h3>
+                                    <p className="text-fl-text text-xs">Little Lord prescribes tasks and enforces accountability.</p>
                                 </div>
                             </Reveal>
                             <Reveal delay={0.3}>
-                                <div className="text-center p-8 glass-card border border-[#1f2f45] rounded-2xl">
-                                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-fl-primary/20 border border-fl-primary/40 flex items-center justify-center">
-                                        <span className="text-fl-primary font-display text-2xl font-bold">3</span>
+                                <div className="text-center p-6 glass-card border border-[#1f2f45] rounded-2xl">
+                                    <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-fl-primary/20 border border-fl-primary/40 flex items-center justify-center">
+                                        <span className="text-fl-primary font-display text-xl font-bold">5</span>
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-3 font-display">Fix & Improve</h3>
-                                    <p className="text-fl-text text-sm">Apply the AI's suggestions, rescan, and watch your score climb.</p>
+                                    <h3 className="text-lg font-bold text-white mb-2 font-display">Watch It Shift</h3>
+                                    <p className="text-fl-text text-xs">Track FrameScore and relationship vectors over time.</p>
+                                </div>
+                            </Reveal>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Who This Is For Section */}
+                <section className="py-20 px-4 relative z-10">
+                    <div className="max-w-5xl mx-auto">
+                        <Reveal width="100%" className="text-center mb-12">
+                            <h2 className="text-3xl md:text-4xl font-display text-white mb-4">
+                                WHO THIS IS <span className="text-fl-primary">FOR</span>
+                            </h2>
+                        </Reveal>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <Reveal delay={0.1}>
+                                <div className="p-8 glass-card border border-[#1f2f45] rounded-2xl text-center">
+                                    <h3 className="text-xl font-bold text-white mb-3 font-display">CLOSERS & SALES OPERATORS</h3>
+                                    <p className="text-fl-text text-sm">Know exactly when the buyer is testing you, when to push, when to walk. Stop leaving money on the table from weak frame moments.</p>
+                                </div>
+                            </Reveal>
+                            <Reveal delay={0.2}>
+                                <div className="p-8 glass-card border border-[#1f2f45] rounded-2xl text-center">
+                                    <h3 className="text-xl font-bold text-white mb-3 font-display">FOUNDERS & EXECUTIVES</h3>
+                                    <p className="text-fl-text text-sm">Navigate investors, partners, board dynamics, and staff with pattern awareness. Flag dark triad operators before they cost you equity or sanity.</p>
+                                </div>
+                            </Reveal>
+                            <Reveal delay={0.3}>
+                                <div className="p-8 glass-card border border-[#1f2f45] rounded-2xl text-center">
+                                    <h3 className="text-xl font-bold text-white mb-3 font-display">ROMANTIC & SOCIAL STRATEGISTS</h3>
+                                    <p className="text-fl-text text-sm">Intergender power dynamics, social positioning, protecting yourself from manipulation. See the games before you're played.</p>
                                 </div>
                             </Reveal>
                         </div>
@@ -508,17 +602,16 @@ const App: React.FC = () => {
                 </section>
 
                 {/* Social Proof Section */}
-                <section className="py-20 px-4 relative z-10">
+                <section className="py-16 px-4 relative z-10 bg-fl-navy/10">
                     <div className="max-w-4xl mx-auto text-center">
                         <Reveal width="100%">
-                            <p className="text-fl-text text-lg italic mb-6">
-                                "I thought I was being direct. FrameLord showed me I was being passive-aggressive. Huge wake-up call."
+                            <p className="text-fl-text/70 text-sm uppercase tracking-widest mb-4">
+                                Used by high-ticket closers, executive coaches, founders, and power-aware operators.
                             </p>
-                            <p className="text-fl-gray text-sm">— Early Beta User</p>
                         </Reveal>
-                        <Reveal width="100%" delay={0.2} className="mt-12">
-                            <p className="text-fl-text/60 text-sm uppercase tracking-widest">
-                                Trusted by professionals who demand precision in every word.
+                        <Reveal width="100%" delay={0.1}>
+                            <p className="text-fl-gray text-xs italic">
+                                Privacy is a feature, not a bug. They won't list this in their stack. Neither will you.
                             </p>
                         </Reveal>
                     </div>
@@ -537,12 +630,12 @@ const App: React.FC = () => {
                         </Reveal>
                         <Reveal width="100%" delay={0.2}>
                             <p className="text-fl-text text-lg mb-8">
-                                Run a diagnostic. No credit card required.
+                                Apply for founding member access. Pricing locks at launch.
                             </p>
                         </Reveal>
                         <Reveal width="100%" delay={0.3}>
-                            <Button glow onClick={scrollToScanner} className="group flex items-center gap-2 interactive mx-auto">
-                                <ArrowRight size={18} /> Run Your First Scan
+                            <Button glow onClick={scrollToPricing} className="group flex items-center gap-2 interactive mx-auto">
+                                <ArrowRight size={18} /> Secure Your License
                             </Button>
                         </Reveal>
                     </div>

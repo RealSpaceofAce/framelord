@@ -11,40 +11,48 @@ const plans: Plan[] = [
   {
     name: "Pro",
     price: "$29",
-    description: "For professionals who send high-stakes messages daily.",
+    description: "For operators who need visibility into their own frame dynamics.",
     features: [
-      "Unlimited FrameScans",
-      "Full dominance signal breakdown",
-      "Weak pattern history",
-      "Priority AI processing"
+      "Unlimited FrameScans (text, image, audio)",
+      "9-axis authority diagnostics",
+      "Psychometric pattern detection",
+      "Dark triad risk signals",
+      "Full report history",
+      "Little Lord tactical advisor"
     ],
     isPopular: true
   },
   {
     name: "Elite",
     price: "$79",
-    description: "For teams and power users.",
+    description: "Full intel machine with CRM and team capabilities.",
     features: [
       "Everything in Pro",
-      "Transcript upload & audio analysis",
-      "Multi-user team dashboard",
-      "API access"
+      "Relationship OS / CRM spine",
+      "Contact dossiers with psychometric profiles",
+      "Wants tracking and accountability",
+      "Notes, tasks, calendar, pipelines",
+      "API access and team features"
     ]
   }
 ];
 
 const faqs = [
   {
-    question: "Is my data private?",
-    answer: "Yes. Your messages are processed in real-time and never stored or used for training. We take privacy seriously—your communication stays yours."
+    question: "Is this only for sales emails?",
+    answer: "No. FrameLord handles any high-stakes communication: sales conversations, investor pitches, board dynamics, romantic exchanges, HR conversations, and anywhere frame, status, and authority matter. Text, images, screenshots, audio transcripts—all ingestible."
   },
   {
-    question: "Can I cancel anytime?",
-    answer: "Absolutely. No contracts, no commitment. Cancel with one click and keep access until your billing period ends."
+    question: "What frameworks does this use?",
+    answer: "Grounded in evolutionary psychology and primal intergender dynamics. Incorporates Big Five personality traits, DISC behavioral patterns, MBTI-style preference patterns, dark triad risk assessment. Informed by social dynamics, cold reading, persuasion literature, and intelligence/tradecraft-style pattern recognition."
   },
   {
-    question: "How is FrameLord different from writing tools?",
-    answer: "Writing tools focus on grammar and style. FrameLord analyzes authority signals—where you hold frame, where you concede ground, and how the power dynamic shifts during an exchange. It measures leverage, not prose."
+    question: "Is my data safe?",
+    answer: "Local-first architecture. Your data stays on your device. We don't sell your communications, train on your content, or share with third parties. Privacy is a feature, not a bug."
+  },
+  {
+    question: "How is this different from writing tools?",
+    answer: "Writing tools fix grammar and prose. FrameLord diagnoses authority—where you hold frame, where you leak, where others manipulate, and what the power dynamic actually is. It's a clinical diagnostics lab, not a spellchecker."
   }
 ];
 
@@ -58,11 +66,11 @@ export const Pricing: React.FC = () => {
   const getButtonText = (planName: string) => {
     switch (planName) {
       case 'Pro':
-        return 'Start Pro';
+        return 'Apply for Pro Access';
       case 'Elite':
-        return 'Apply for Elite';
+        return 'Apply for Elite Access';
       default:
-        return `Start ${planName}`;
+        return `Apply for ${planName}`;
     }
   };
 
@@ -74,12 +82,12 @@ export const Pricing: React.FC = () => {
       <div className="max-w-7xl mx-auto relative z-10">
         <Reveal width="100%" className="mb-4">
             <h2 className="text-4xl md:text-5xl font-display text-center text-white">
-            CHOOSE YOUR LEVEL OF <span className="text-fl-accent">INSIGHT</span>
+            SECURE YOUR <span className="text-fl-accent">LICENSE</span>
             </h2>
         </Reveal>
         <Reveal width="100%" delay={0.1} className="mb-16">
             <p className="text-fl-text text-center text-lg">
-              Private beta. Pricing reflects the tiers available when public signups open.
+              Founding member pricing. Locks at these rates before public launch.
             </p>
         </Reveal>
 
@@ -96,7 +104,7 @@ export const Pricing: React.FC = () => {
                 >
                 {plan.isPopular && (
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-fl-primary text-white text-[10px] font-bold px-4 py-1 rounded-full tracking-[0.2em] uppercase shadow-lg">
-                        Most Popular
+                        Founding Member
                     </div>
                 )}
 
