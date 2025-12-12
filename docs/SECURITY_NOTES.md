@@ -1,7 +1,37 @@
 # Security Notes — FrameLord Beta
 
-**Last Reviewed**: 2025-12-11
-**Status**: Cleared for Closed Beta
+**Last Reviewed**: 2025-12-12
+**Status**: Cleared for Closed Beta (with remediation required)
+
+---
+
+## CRITICAL: 2025-12-12 Audit Findings
+
+### Issue #1: .env Files Tracked in Git (CRITICAL)
+
+**Status**: REMEDIATED
+
+- `.env` and `.env.local.backup` were accidentally committed to git
+- `.env` contained a real OpenAI API key
+- **Actions Taken**:
+  1. Removed files from git tracking via `git rm --cached`
+  2. Updated `.gitignore` to include `.env*.backup`, `.env.production`, `.env.development`
+  3. Files remain on disk for local use
+
+**Required User Action**:
+- **ROTATE YOUR OPENAI API KEY IMMEDIATELY**
+- Go to https://platform.openai.com/api-keys
+- Revoke the exposed key and generate a new one
+
+### Issue #2: PII in Console Logs (LOW)
+
+**Status**: Acceptable for Beta
+
+Found PII exposure in server-side logs:
+- `authStore.ts:176` - Logs email on login
+- `intakeNotificationService.ts:436` - Logs contact name/email
+
+**Recommendation**: Mask PII before GA launch
 
 ---
 
