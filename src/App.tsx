@@ -329,9 +329,9 @@ const App: React.FC = () => {
           {/* Only show nav links on Landing Page */}
           {currentView === 'landing' && (
              <div className="hidden md:flex gap-8 text-sm font-medium text-fl-text">
-                <a onClick={navigateToHome} className="hover:text-white transition-colors interactive cursor-pointer">How it Works</a>
-                <a onClick={navigateToHome} className="hover:text-white transition-colors interactive cursor-pointer">Pricing</a>
-                <button onClick={navigateToLogin} className="hover:text-white transition-colors interactive cursor-pointer">Login</button>
+                <a onClick={scrollToScanner} className="hover:text-white transition-colors interactive cursor-pointer">How It Works</a>
+                <a onClick={scrollToPricing} className="hover:text-white transition-colors interactive cursor-pointer">Pricing</a>
+                <button onClick={navigateToLogin} className="hover:text-white transition-colors interactive cursor-pointer">Log In</button>
              </div>
           )}
 
@@ -371,7 +371,7 @@ const App: React.FC = () => {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
             >
-                {/* Hero Section */}
+                {/* Hero: Authority Diagnostics – single CTA "See How It Works" */}
                 <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
                     <MotionDiv
                         style={{ opacity: heroOpacity, y: heroY }}
@@ -379,33 +379,32 @@ const App: React.FC = () => {
                     >
                     <Reveal delay={0.1}>
                         <div className="inline-block mb-6 px-4 py-1 rounded-full glass-card border border-[#1f2f45] shadow-[0_0_15px_rgba(68,51,255,0.25)]">
-                            <span className="text-fl-secondary text-xs font-bold tracking-[0.2em] uppercase">Authority Diagnostics V1.0</span>
+                            <span className="text-fl-secondary text-xs font-bold tracking-[0.2em] uppercase">Authority Diagnostics for High-Stakes Communication</span>
                         </div>
                     </Reveal>
 
-                    <Reveal delay={0.2} width="100%" className="mb-8">
-                        <InteractiveHeadline
-                        text="STOP SOUNDING LIKE AN AMATEUR."
-                        highlightWords={["AMATEUR."]}
-                        className="font-display text-5xl md:text-7xl lg:text-8xl font-bold leading-tight drop-shadow-2xl cursor-default"
-                        />
+                    <Reveal delay={0.2} width="100%" className="mb-2">
+                        <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold leading-tight drop-shadow-2xl text-white">
+                            QUANTIFY YOUR AUTHORITY.
+                        </h1>
                     </Reveal>
 
-                    <Reveal delay={0.4}>
-                        <p className="text-xl text-fl-text max-w-2xl mx-auto mb-10 font-light leading-relaxed">
-                            One in a million, or just another flake? FrameLord is the AI mirror that exposes exactly where you lose authority in your communication, then tells you how to fix it.
+                    <Reveal delay={0.3} width="100%" className="mb-8">
+                        <h2 className="font-display text-3xl md:text-5xl lg:text-6xl font-medium leading-tight drop-shadow-2xl text-fl-text">
+                            SEE EXACTLY WHERE <span className="text-fl-primary font-bold">IT FAILS.</span>
+                        </h2>
+                    </Reveal>
+
+                    <Reveal delay={0.5}>
+                        <p className="text-xl text-fl-text max-w-3xl mx-auto mb-10 font-light leading-relaxed">
+                            FrameLord analyzes your calls, messages, and transcripts across nine authority axes so you see the exact moments your frame collapses and what to correct before the next conversation.
                         </p>
                     </Reveal>
 
-                    <Reveal delay={0.6}>
-                        <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
-                            <Button glow onClick={scrollToPricing} className="group flex items-center gap-2 interactive">
-                                <ArrowRight size={18} /> Get Access
-                            </Button>
-                            <Button variant="outline" onClick={() => setShowDemoVideo(true)} className="group flex items-center gap-2 interactive">
-                                <MessageSquare size={18} /> Watch Demo
-                            </Button>
-                        </div>
+                    <Reveal delay={0.7}>
+                        <Button glow onClick={scrollToScanner} className="group flex items-center gap-2 interactive">
+                            <ArrowRight size={18} /> See How It Works
+                        </Button>
                     </Reveal>
                     </MotionDiv>
 
@@ -419,11 +418,27 @@ const App: React.FC = () => {
                                 className="flex flex-col items-center gap-3"
                             >
                                 <span className="text-fl-accent text-[10px] md:text-xs font-bold tracking-[0.3em] uppercase drop-shadow-[0_0_10px_rgba(68,51,255,0.8)] whitespace-nowrap">
-                                    Initialize Scan
+                                    Run Your First Scan
                                 </span>
                                 <ChevronDown size={28} className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]" />
                             </MotionDiv>
                         </div>
+                    </div>
+                </section>
+
+                {/* Problem/Gap Section */}
+                <section className="py-20 px-4 relative z-10">
+                    <div className="max-w-4xl mx-auto text-center">
+                        <Reveal width="100%">
+                            <h2 className="text-3xl md:text-4xl font-display text-white mb-6">
+                                THE GAP YOU CAN'T SEE IS <span className="text-fl-accent">COSTING YOU</span>
+                            </h2>
+                        </Reveal>
+                        <Reveal width="100%" delay={0.2}>
+                            <p className="text-lg text-fl-text leading-relaxed max-w-3xl mx-auto">
+                                You've read the books. Taken the courses. But there's a gap between how you <em>think</em> you hold frame and what actually happens in high-stakes conversations. Traditional feedback is slow, biased, and often wrong. FrameLord closes the gap with AI-powered frame analysis—instant, objective, and brutally honest.
+                            </p>
+                        </Reveal>
                     </div>
                 </section>
 
@@ -435,8 +450,103 @@ const App: React.FC = () => {
                 {/* Features Grid */}
                 <Features />
 
+                {/* Differentiation Section */}
+                <section className="py-20 px-4 relative z-10">
+                    <div className="max-w-4xl mx-auto text-center">
+                        <Reveal width="100%">
+                            <h2 className="text-3xl md:text-4xl font-display text-white mb-6">
+                                BUILT FOR <span className="text-fl-accent">OUTCOME</span>, NOT AESTHETICS
+                            </h2>
+                        </Reveal>
+                        <Reveal width="100%" delay={0.2}>
+                            <p className="text-lg text-fl-text leading-relaxed max-w-3xl mx-auto mb-8">
+                                FrameLord is not a writing assistant. It is an authority diagnostics lab for high-stakes communication. It scores how much leverage you actually have in an interaction by looking at where people push back, where you concede, and how the exchange moves after you speak. The focus is external outcomes and hard signals, not whether your sentences look pretty.
+                            </p>
+                        </Reveal>
+                    </div>
+                </section>
+
+                {/* How It Works Section */}
+                <section className="py-24 px-4 relative z-10 bg-fl-navy/20">
+                    <div className="max-w-6xl mx-auto">
+                        <Reveal width="100%" className="text-center mb-16">
+                            <h2 className="text-4xl md:text-5xl font-display text-white mb-4">
+                                THREE STEPS TO <span className="text-fl-primary">FRAME MASTERY</span>
+                            </h2>
+                        </Reveal>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <Reveal delay={0.1}>
+                                <div className="text-center p-8 glass-card border border-[#1f2f45] rounded-2xl">
+                                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-fl-primary/20 border border-fl-primary/40 flex items-center justify-center">
+                                        <span className="text-fl-primary font-display text-2xl font-bold">1</span>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-3 font-display">Paste Your Message</h3>
+                                    <p className="text-fl-text text-sm">Copy any email, DM, or transcript into the FrameScan box.</p>
+                                </div>
+                            </Reveal>
+                            <Reveal delay={0.2}>
+                                <div className="text-center p-8 glass-card border border-[#1f2f45] rounded-2xl">
+                                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-fl-primary/20 border border-fl-primary/40 flex items-center justify-center">
+                                        <span className="text-fl-primary font-display text-2xl font-bold">2</span>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-3 font-display">Get Your FrameScore</h3>
+                                    <p className="text-fl-text text-sm">See exactly where you're projecting strength—and where you're leaking authority.</p>
+                                </div>
+                            </Reveal>
+                            <Reveal delay={0.3}>
+                                <div className="text-center p-8 glass-card border border-[#1f2f45] rounded-2xl">
+                                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-fl-primary/20 border border-fl-primary/40 flex items-center justify-center">
+                                        <span className="text-fl-primary font-display text-2xl font-bold">3</span>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-3 font-display">Fix & Improve</h3>
+                                    <p className="text-fl-text text-sm">Apply the AI's suggestions, rescan, and watch your score climb.</p>
+                                </div>
+                            </Reveal>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Social Proof Section */}
+                <section className="py-20 px-4 relative z-10">
+                    <div className="max-w-4xl mx-auto text-center">
+                        <Reveal width="100%">
+                            <p className="text-fl-text text-lg italic mb-6">
+                                "I thought I was being direct. FrameLord showed me I was being passive-aggressive. Huge wake-up call."
+                            </p>
+                            <p className="text-fl-gray text-sm">— Early Beta User</p>
+                        </Reveal>
+                        <Reveal width="100%" delay={0.2} className="mt-12">
+                            <p className="text-fl-text/60 text-sm uppercase tracking-widest">
+                                Trusted by professionals who demand precision in every word.
+                            </p>
+                        </Reveal>
+                    </div>
+                </section>
+
                 {/* Pricing */}
                 <Pricing />
+
+                {/* Final CTA Strip */}
+                <section className="py-16 px-4 relative z-10 bg-gradient-to-r from-fl-primary/20 via-fl-navy/30 to-fl-primary/20">
+                    <div className="max-w-4xl mx-auto text-center">
+                        <Reveal width="100%">
+                            <h2 className="text-3xl md:text-4xl font-display text-white mb-4">
+                                READY TO SEE WHAT YOU'VE BEEN MISSING?
+                            </h2>
+                        </Reveal>
+                        <Reveal width="100%" delay={0.2}>
+                            <p className="text-fl-text text-lg mb-8">
+                                Run a diagnostic. No credit card required.
+                            </p>
+                        </Reveal>
+                        <Reveal width="100%" delay={0.3}>
+                            <Button glow onClick={scrollToScanner} className="group flex items-center gap-2 interactive mx-auto">
+                                <ArrowRight size={18} /> Run Your First Scan
+                            </Button>
+                        </Reveal>
+                    </div>
+                </section>
             </MotionDiv>
         ) : currentView === 'application' ? (
             <MotionDiv
@@ -575,7 +685,7 @@ const App: React.FC = () => {
                   <Terminal size={18} className="text-fl-primary" /> FRAMELORD
               </div>
               <p className="text-fl-gray text-xs max-w-xs">
-                  Clinical authority diagnostics for high-stakes communication.
+                  AI-powered frame analysis for high-stakes communication.
               </p>
             </div>
 
