@@ -77,6 +77,8 @@ import {
 } from '../../services/widgetLayoutStore';
 import { FrameScanContactTab } from './FrameScanContactTab';
 import { AIProfileWidget } from './AIProfileWidget';
+import { DossierTwoColumnLayout } from './DossierTwoColumnLayout';
+import { getCurrentUserPlan } from '@/config/planConfig';
 
 const MotionDiv = motion.div as any;
 
@@ -140,6 +142,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   const [isCustomizingWidgets, setIsCustomizingWidgets] = useState(false);
   const [useGlobalLayout, setUseGlobalLayout] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [layoutMode, setLayoutMode] = useState<'classic' | 'tactical'>('classic');
   
   // Widget layout
   const widgetLayout = useMemo(() => getWidgetLayout(selectedContactId), [selectedContactId, refreshKey]);
@@ -809,6 +812,20 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
                 <Settings2 size={14} />
                 {isCustomizingWidgets ? 'Done' : 'Layout'}
               </button>
+              {!isContactZero && (
+                <button
+                  onClick={() => setLayoutMode(layoutMode === 'classic' ? 'tactical' : 'classic')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 ${
+                    layoutMode === 'tactical'
+                      ? 'bg-[#7a5dff] text-white'
+                      : 'bg-[#1A1A1D] text-gray-400 hover:text-white border border-[#333]'
+                  }`}
+                  title="Switch between classic and tactical view modes"
+                >
+                  <Layout size={14} />
+                  {layoutMode === 'tactical' ? 'Tactical' : 'Classic'}
+                </button>
+              )}
               {isContactZero && (
                 <span className="text-[11px] px-3 py-1 rounded-full border border-[#2ee0ff55] bg-[#0c2c3d]/60 text-[#82f2ff] font-semibold uppercase tracking-[0.15em]">
                   Identity Prime
@@ -944,6 +961,145 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           </div>
         )}
 
+        {/* TACTICAL TWO-COLUMN LAYOUT (for non-Contact Zero) */}
+        {!isContactZero && layoutMode === 'tactical' ? (
+          <DossierTwoColumnLayout
+            contactId={selectedContactId}
+            plan={getCurrentUserPlan()}
+            renderTimeline={() => (
+              <div className="p-4 space-y-3">
+                {interactions.length > 0 ? (
+                  interactions.slice(0, 10).map((interaction) => (
+                    <div
+                      key={interaction.id}
+                      className="flex items-start gap-3 p-3 bg-[#0a111d] border border-[#112035] rounded-lg"
+                    >
+                      <div className="mt-0.5">{getInteractionTypeIcon(interaction.type)}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] text-gray-500 uppercase font-bold">
+                            {getInteractionTypeLabel(interaction.type)}
+                          </span>
+                          <span className="text-[10px] text-gray-600">
+                            {formatDateTime(interaction.occurredAt)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-300">{interaction.summary}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 text-center py-8">No interactions logged yet</p>
+                )}
+              </div>
+            )}
+            renderNotes={() => (
+              <div className="p-4 space-y-3">
+                {/* Add Note Form */}
+                <div className="mb-4">
+                  <textarea
+                    value={newNoteContent}
+                    onChange={(e) => setNewNoteContent(e.target.value)}
+                    onKeyDown={handleNoteKeyDown}
+                    placeholder="Add a note..."
+                    className="w-full bg-[#0a111d] border border-[#112035] rounded-lg p-3 text-gray-200 text-sm resize-none focus:border-[#4433FF] outline-none"
+                    rows={2}
+                  />
+                  <button
+                    onClick={handleAddNote}
+                    disabled={!newNoteContent.trim()}
+                    className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#4433FF] hover:bg-[#5544FF] disabled:bg-[#1b2c45] disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg transition-colors"
+                  >
+                    <Send size={12} /> Add Note
+                  </button>
+                </div>
+                {notesAboutContact.length > 0 ? (
+                  notesAboutContact.map((note) => (
+                    <div key={note.id} className="p-3 bg-[#0a111d] border border-[#112035] rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Clock size={10} className="text-gray-500" />
+                        <span className="text-[10px] text-gray-500">{formatDate(note.createdAt)}</span>
+                      </div>
+                      <p className="text-sm text-gray-300">{truncate(stripHtmlTags(note.content), 200)}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 text-center py-8">No notes yet</p>
+                )}
+              </div>
+            )}
+            renderTasks={() => (
+              <div className="p-4 space-y-3">
+                {/* Add Task Form */}
+                <div className="mb-4 space-y-2">
+                  <input
+                    type="text"
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    placeholder="New task..."
+                    className="w-full bg-[#0a111d] border border-[#112035] rounded-lg px-3 py-2 text-gray-200 text-sm focus:border-[#4433FF] outline-none"
+                  />
+                  <div className="flex gap-2">
+                    <DatePicker
+                      value={newTaskDueDate}
+                      onChange={setNewTaskDueDate}
+                      placeholder="Due date..."
+                      className="flex-1"
+                    />
+                    <button
+                      onClick={handleAddTask}
+                      disabled={!newTaskTitle.trim()}
+                      className="px-4 py-2 bg-[#4433FF] hover:bg-[#5544FF] disabled:bg-[#1b2c45] disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1"
+                    >
+                      <Plus size={12} /> Add
+                    </button>
+                  </div>
+                </div>
+                {openTasks.length > 0 ? (
+                  openTasks.map((task) => (
+                    <div key={task.id} className="flex items-start gap-3 p-3 bg-[#0a111d] border border-[#112035] rounded-lg">
+                      <button
+                        onClick={() => handleMarkTaskDone(task.id)}
+                        className="mt-0.5 text-gray-500 hover:text-[#4433FF] transition-colors"
+                      >
+                        <Square size={16} />
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white">{task.title}</p>
+                        {task.dueAt && (
+                          <p className="text-[10px] text-gray-500 mt-1">
+                            Due: {formatDueDate(task.dueAt)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 text-center py-8">No open tasks</p>
+                )}
+              </div>
+            )}
+            renderFrameScan={() => (
+              <FrameScanContactTab
+                contactId={selectedContactId}
+                contactName={contact.fullName}
+              />
+            )}
+            onCreateTask={(title) => {
+              setNewTaskTitle(title);
+            }}
+            onLogInteraction={() => {
+              // Scroll to interaction form or open modal
+            }}
+            onNavigateToGraph={() => {
+              // Navigate to graph view
+            }}
+            onExpandPersonality={() => {
+              // Navigate to expanded personality view
+            }}
+          />
+        ) : (
+        <>
         {/* MAIN GRID - 4 Zone Layout */}
         <div className="grid grid-cols-1 xl:grid-cols-[320px_1fr_360px] gap-6 items-start">
 
@@ -1970,6 +2126,8 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           )}
         </div>
       </div>
+        </>
+        )}
 
       {/* CONTACT ZERO ONLY: Your Open Tasks (what you owe to others) */}
       {isContactZero && isWidgetVisible('openTasksOwed') && openTasksByContact.size > 0 && (
