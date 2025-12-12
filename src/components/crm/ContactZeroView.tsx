@@ -139,9 +139,212 @@ const LockedOverlay: React.FC<{
 };
 
 /**
+ * PreFlight Briefing Overlay - Expanded view with all items
+ */
+const PreFlightBriefingOverlay: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onNavigateToTasks?: () => void;
+  onNavigateToDossier?: (contactId: string) => void;
+}> = ({ isOpen, onClose, onNavigateToTasks, onNavigateToDossier }) => {
+  const todayKey = getTodayKey();
+  const openTasks = getAllOpenTasks();
+  const todayTasks = openTasks.filter(t => t.dueAt?.startsWith(todayKey));
+  const overdueTasks = openTasks.filter(t => t.dueAt && t.dueAt < todayKey);
+  const contactsNeedingAttention = getContactsNeedingAttention(10);
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          className="bg-[#0c1424] border border-[#1b2c45] rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4433FF] to-[#7a5dff] flex items-center justify-center">
+                <Sparkles size={18} className="text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white">Pre-Flight Briefing</h2>
+                <p className="text-xs text-gray-500">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-white hover:bg-[#1b2c45] rounded-lg transition-colors"
+            >
+              <Eye size={16} />
+            </button>
+          </div>
+
+          {/* Two column layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Tasks Column */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <CheckCircle2 size={14} className="text-green-400" />
+                  Tasks Requiring Action
+                </h3>
+                {onNavigateToTasks && (
+                  <button
+                    onClick={() => {
+                      onNavigateToTasks();
+                      onClose();
+                    }}
+                    className="text-xs text-[#4433FF] hover:text-white"
+                  >
+                    View All
+                  </button>
+                )}
+              </div>
+
+              {/* Overdue Tasks */}
+              {overdueTasks.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-[10px] text-red-400 uppercase tracking-wider mb-2">
+                    {overdueTasks.length} Overdue
+                  </p>
+                  <div className="space-y-2">
+                    {overdueTasks.slice(0, 5).map(task => {
+                      const contact = getContactById(task.contactId);
+                      return (
+                        <div
+                          key={task.id}
+                          className="flex items-center gap-3 p-2 bg-red-500/10 border border-red-500/30 rounded-lg"
+                        >
+                          {contact && (
+                            <img
+                              src={contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
+                              alt={contact.fullName}
+                              className="w-6 h-6 rounded-full"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white truncate">{task.title}</p>
+                            <p className="text-[10px] text-gray-500">{contact?.fullName || 'Unassigned'}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Due Today */}
+              {todayTasks.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-green-400 uppercase tracking-wider mb-2">
+                    {todayTasks.length} Due Today
+                  </p>
+                  <div className="space-y-2">
+                    {todayTasks.slice(0, 5).map(task => {
+                      const contact = getContactById(task.contactId);
+                      return (
+                        <div
+                          key={task.id}
+                          className="flex items-center gap-3 p-2 bg-[#0a111d] border border-[#112035] rounded-lg"
+                        >
+                          {contact && (
+                            <img
+                              src={contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
+                              alt={contact.fullName}
+                              className="w-6 h-6 rounded-full"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white truncate">{task.title}</p>
+                            <p className="text-[10px] text-gray-500">
+                              {contact?.fullName || 'Unassigned'}
+                              {formatDueTime(task.dueAt) && ` • ${formatDueTime(task.dueAt)}`}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {overdueTasks.length === 0 && todayTasks.length === 0 && (
+                <div className="text-center py-6 text-gray-500">
+                  <CheckCircle2 size={24} className="mx-auto mb-2 text-green-400" />
+                  <p className="text-sm">No urgent tasks</p>
+                </div>
+              )}
+            </div>
+
+            {/* Contacts Column */}
+            <div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 mb-3">
+                <Users size={14} className="text-blue-400" />
+                Contacts Needing Attention
+              </h3>
+
+              {contactsNeedingAttention.length > 0 ? (
+                <div className="space-y-2">
+                  {contactsNeedingAttention.map(({ contact, daysSinceContact, status }) => (
+                    <div
+                      key={contact.id}
+                      onClick={() => {
+                        onNavigateToDossier?.(contact.id);
+                        onClose();
+                      }}
+                      className={`flex items-center gap-3 p-2 rounded-lg border cursor-pointer transition-colors ${
+                        status === 'critical'
+                          ? 'bg-red-500/10 border-red-500/30 hover:border-red-500/50'
+                          : 'bg-yellow-500/10 border-yellow-500/30 hover:border-yellow-500/50'
+                      }`}
+                    >
+                      <img
+                        src={contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
+                        alt={contact.fullName}
+                        className="w-8 h-8 rounded-full"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white truncate">{contact.fullName}</p>
+                        <p className="text-[10px] text-gray-500">{contact.relationshipRole || contact.relationshipDomain}</p>
+                      </div>
+                      <span className={`text-xs font-medium ${status === 'critical' ? 'text-red-400' : 'text-yellow-400'}`}>
+                        {daysSinceContact}d ago
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <Users size={24} className="mx-auto mb-2 text-green-400" />
+                  <p className="text-sm">All contacts healthy</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+/**
  * PreFlight Briefing Strip - AI-generated daily summary
  */
-const PreFlightBriefing: React.FC<{ plan: PlanTier }> = ({ plan }) => {
+const PreFlightBriefing: React.FC<{
+  plan: PlanTier;
+  onExpand: () => void;
+}> = ({ plan, onExpand }) => {
   const todayKey = getTodayKey();
   const openTasks = getAllOpenTasks();
   const todayTasks = openTasks.filter(t => t.dueAt?.startsWith(todayKey));
@@ -154,11 +357,11 @@ const PreFlightBriefing: React.FC<{ plan: PlanTier }> = ({ plan }) => {
   // Generate briefing points
   const briefingPoints: string[] = [];
 
-  if (todayTasks.length > 0) {
-    briefingPoints.push(`${todayTasks.length} task${todayTasks.length > 1 ? 's' : ''} due today`);
-  }
   if (overdueTasks.length > 0) {
     briefingPoints.push(`${overdueTasks.length} overdue task${overdueTasks.length > 1 ? 's' : ''} need attention`);
+  }
+  if (todayTasks.length > 0) {
+    briefingPoints.push(`${todayTasks.length} task${todayTasks.length > 1 ? 's' : ''} due today`);
   }
   if (networkHealth.criticalCount > 0) {
     briefingPoints.push(`${networkHealth.criticalCount} contact${networkHealth.criticalCount > 1 ? 's' : ''} need attention`);
@@ -193,7 +396,10 @@ const PreFlightBriefing: React.FC<{ plan: PlanTier }> = ({ plan }) => {
             ))}
           </div>
         </div>
-        <button className="px-3 py-1.5 text-xs font-semibold text-[#4433FF] border border-[#4433FF]/30 rounded-lg hover:bg-[#4433FF]/10 transition-colors">
+        <button
+          onClick={onExpand}
+          className="px-3 py-1.5 text-xs font-semibold text-[#4433FF] border border-[#4433FF]/30 rounded-lg hover:bg-[#4433FF]/10 transition-colors"
+        >
           Expand
         </button>
       </div>
@@ -207,7 +413,8 @@ const PreFlightBriefing: React.FC<{ plan: PlanTier }> = ({ plan }) => {
 const ThingsDueToday: React.FC<{
   plan: PlanTier;
   onNavigateToTasks?: () => void;
-}> = ({ plan, onNavigateToTasks }) => {
+  onNavigateToCalendar?: () => void;
+}> = ({ plan, onNavigateToTasks, onNavigateToCalendar }) => {
   const todayKey = getTodayKey();
   const openTasks = getAllOpenTasks();
 
@@ -261,14 +468,26 @@ const ThingsDueToday: React.FC<{
         </div>
       )}
 
-      {onNavigateToTasks && (
-        <button
-          onClick={onNavigateToTasks}
-          className="w-full mt-3 text-xs text-[#4433FF] hover:text-white flex items-center justify-center gap-1 py-2 rounded-lg hover:bg-[#4433FF]/10 transition-colors"
-        >
-          View All Tasks <ChevronRight size={14} />
-        </button>
-      )}
+      {/* Footer links */}
+      <div className="flex items-center gap-2 mt-3">
+        {onNavigateToTasks && (
+          <button
+            onClick={onNavigateToTasks}
+            className="flex-1 text-xs text-[#4433FF] hover:text-white flex items-center justify-center gap-1 py-2 rounded-lg hover:bg-[#4433FF]/10 transition-colors"
+          >
+            View All Tasks <ChevronRight size={14} />
+          </button>
+        )}
+        {onNavigateToCalendar && (
+          <button
+            onClick={onNavigateToCalendar}
+            className="p-2 text-gray-400 hover:text-[#4433FF] hover:bg-[#4433FF]/10 rounded-lg transition-colors"
+            title="Open Calendar"
+          >
+            <Calendar size={14} />
+          </button>
+        )}
+      </div>
     </div>
   );
 };
@@ -361,7 +580,12 @@ const NetworkHealth: React.FC<{
 /**
  * Radar Widget - Attention/alerts overview
  */
-const RadarWidget: React.FC<{ plan: PlanTier }> = ({ plan }) => {
+const RadarWidget: React.FC<{
+  plan: PlanTier;
+  onNavigateToTasks?: () => void;
+  onNavigateToContacts?: () => void;
+  onNavigateToFrameScan?: () => void;
+}> = ({ plan, onNavigateToTasks, onNavigateToContacts, onNavigateToFrameScan }) => {
   const openTasks = getAllOpenTasks();
   const todayKey = getTodayKey();
   const overdueTasks = openTasks.filter(t => t.dueAt && t.dueAt < todayKey);
@@ -376,18 +600,25 @@ const RadarWidget: React.FC<{ plan: PlanTier }> = ({ plan }) => {
   // Get network health for alerts
   const healthSummary = getNetworkHealthSummary();
 
-  const alerts = [
+  const alerts: Array<{
+    type: 'warning' | 'alert';
+    message: string;
+    onClick?: () => void;
+  }> = [
     ...(overdueTasks.length > 0 ? [{
       type: 'warning' as const,
       message: `${overdueTasks.length} overdue task${overdueTasks.length > 1 ? 's' : ''}`,
+      onClick: onNavigateToTasks,
     }] : []),
     ...(recentReports.filter(r => r.score.frameScore < 50).length > 0 ? [{
       type: 'alert' as const,
       message: 'Low FrameScore detected',
+      onClick: onNavigateToFrameScan,
     }] : []),
     ...(healthSummary.criticalCount > 0 ? [{
       type: 'warning' as const,
       message: `${healthSummary.criticalCount} contact${healthSummary.criticalCount > 1 ? 's' : ''} need attention`,
+      onClick: onNavigateToContacts,
     }] : []),
   ];
 
@@ -417,14 +648,16 @@ const RadarWidget: React.FC<{ plan: PlanTier }> = ({ plan }) => {
           {alerts.map((alert, i) => (
             <div
               key={i}
-              className={`flex items-center gap-2 p-2 rounded-lg border ${
+              onClick={alert.onClick}
+              className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors ${
                 alert.type === 'alert'
-                  ? 'bg-red-500/10 border-red-500/30'
-                  : 'bg-yellow-500/10 border-yellow-500/30'
+                  ? 'bg-red-500/10 border-red-500/30 hover:border-red-500/50'
+                  : 'bg-yellow-500/10 border-yellow-500/30 hover:border-yellow-500/50'
               }`}
             >
               <AlertTriangle size={14} className={alert.type === 'alert' ? 'text-red-400' : 'text-yellow-400'} />
               <span className="text-sm text-gray-300">{alert.message}</span>
+              <ChevronRight size={14} className="ml-auto text-gray-500" />
             </div>
           ))}
         </div>
@@ -635,12 +868,23 @@ export const ContactZeroView: React.FC<ContactZeroViewProps> = ({
   // Get user's plan from config (will come from auth/tenant context later)
   const userPlan = getCurrentUserPlan();
 
+  // Pre-flight briefing expanded state
+  const [isPreFlightExpanded, setIsPreFlightExpanded] = useState(false);
+
   const contact = CONTACT_ZERO;
 
   return (
     <div className="relative min-h-screen text-[#dce8ff]">
       {/* Background gradient */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(68,51,255,0.08),transparent_32%),radial-gradient(circle_at_80%_10%,rgba(68,140,255,0.12),transparent_28%),linear-gradient(140deg,#050810_0%,#060b17_45%,#04060d_100%)]" />
+
+      {/* Pre-Flight Briefing Overlay */}
+      <PreFlightBriefingOverlay
+        isOpen={isPreFlightExpanded}
+        onClose={() => setIsPreFlightExpanded(false)}
+        onNavigateToTasks={onNavigateToTasks}
+        onNavigateToDossier={onNavigateToDossier}
+      />
 
       <div className="relative space-y-6 pb-20 px-4 lg:px-8">
         {/* HEADER */}
@@ -670,17 +914,29 @@ export const ContactZeroView: React.FC<ContactZeroViewProps> = ({
         </div>
 
         {/* PRE-FLIGHT BRIEFING */}
-        <PreFlightBriefing plan={userPlan} />
+        <PreFlightBriefing
+          plan={userPlan}
+          onExpand={() => setIsPreFlightExpanded(true)}
+        />
 
         {/* MAIN GRID - 2x2 cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <ThingsDueToday plan={userPlan} onNavigateToTasks={onNavigateToTasks} />
+          <ThingsDueToday
+            plan={userPlan}
+            onNavigateToTasks={onNavigateToTasks}
+            onNavigateToCalendar={onNavigateToCalendar}
+          />
           <NetworkHealth
             plan={userPlan}
             onNavigateToContacts={onNavigateToContacts}
             onNavigateToDossier={onNavigateToDossier}
           />
-          <RadarWidget plan={userPlan} />
+          <RadarWidget
+            plan={userPlan}
+            onNavigateToTasks={onNavigateToTasks}
+            onNavigateToContacts={onNavigateToContacts}
+            onNavigateToFrameScan={onNavigateToFrameScan}
+          />
           <LiveFeed plan={userPlan} onNavigateToDossier={onNavigateToDossier} />
         </div>
 
