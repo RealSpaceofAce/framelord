@@ -30,7 +30,8 @@ export interface FeatureFlags {
 export const featureFlags: FeatureFlags = {
   enableAdvancedApiSettings: true,
   enablePublicScanGate: true,
-  enableDevRoutes: true,
+  // SECURITY: Dev routes should only be enabled in development
+  enableDevRoutes: import.meta.env.DEV,
   enableCoachingUpsell: true,
   enableBetaProgram: true,
   enablePlatformAdmin: true,

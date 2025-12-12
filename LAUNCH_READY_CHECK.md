@@ -225,3 +225,49 @@ npm run build
 - [ ] Test Notes theme toggle (moon icon in editor header)
 - [ ] Test Calendar section in Settings > Integrations
 - [ ] Verify build deploys correctly to Vercel
+
+---
+
+## Security Review (2025-12-11)
+
+### Completed Checks
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| Hardcoded secrets search | PASS | No sk_live, SG., TWILIO_, etc. found |
+| ENV variable usage | PASS | All secrets via process.env/import.meta.env |
+| Auth backdoors | FIXED | Removed localhost bypass in authStore.ts |
+| Role gating | PASS | Admin routes properly check staff roles |
+| Tier gating | PASS | canUseFeature() uses proper level comparison |
+| Stripe webhooks | PASS | Signature validation implemented |
+| Notification safety | PASS | 30-min interval, deduplication, plan gating |
+| Frontend leakage | FIXED | enableDevRoutes now uses import.meta.env.DEV |
+
+### Issues Found & Fixed
+
+1. **localhost auth bypass** (HIGH)
+   - **File**: `src/services/authStore.ts`
+   - **Issue**: `loginAsSuperAdminDev()` allowed login on localhost even in production builds
+   - **Fix**: Removed hostname checks, now only uses `import.meta.env.DEV`
+
+2. **localhost check in LoginPage** (MEDIUM)
+   - **File**: `src/components/auth/LoginPage.tsx`
+   - **Issue**: isDev included localhost checks
+   - **Fix**: Now only uses `import.meta.env.DEV`
+
+3. **Dev routes hardcoded** (MEDIUM)
+   - **File**: `src/config/appConfig.ts`
+   - **Issue**: `enableDevRoutes` was hardcoded to `true`
+   - **Fix**: Changed to `import.meta.env.DEV`
+
+### Known Limitations (Acceptable for Closed Beta)
+
+- **No rate limiting** — API calls not throttled
+- **Mock authentication** — Replace with real auth before production
+- **No audit logs** — Add before enterprise features
+- **No 2FA** — Add for admin accounts
+- **No CSRF tokens** — Frontend-only SPA architecture
+
+### Security Documentation
+
+Full security notes available at: `docs/SECURITY_NOTES.md`

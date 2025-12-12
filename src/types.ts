@@ -517,6 +517,7 @@ export interface FileAttachment {
 export interface Plan {
   name: string;
   price: string;
+  description?: string;
   features: string[];
   isPopular?: boolean;
 }

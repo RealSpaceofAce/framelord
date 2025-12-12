@@ -389,10 +389,10 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
                   <h2 className="text-3xl font-display text-white tracking-wide">FRAMESCAN</h2>
                   <FrameScanContextHelp iconSize={18} />
                 </div>
-                <p className="text-fl-text">
+                <p className="text-fl-text text-lg">
                   {isSavageMode
-                    ? "Upload a photo or paste a draft. No mercy. No excuses."
-                    : "Upload a photo or paste a draft. See how weak you really are."
+                    ? "Paste any message. No mercy. No excuses."
+                    : "Paste any message. Get your FrameScore in seconds."
                   }
                 </p>
             </div>
@@ -414,7 +414,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
                                 setInput(e.target.value);
                                 if (validationError) setValidationError(null);
                               }}
-                              placeholder="Paste your text here... or drop an image to analyze body language."
+                              placeholder="Paste an email, DM, or transcript here..."
                               className={`w-full h-40 bg-fl-navy/50 border rounded-lg p-6 text-white placeholder-fl-gray/50 focus:outline-none focus:ring-1 transition-all font-mono text-base resize-none shadow-inner hover:bg-fl-navy/70 ${
                                 validationError
                                   ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500'
@@ -535,11 +535,11 @@ export const Scanner: React.FC<ScannerProps> = ({ onApply }) => {
                     >
                     {loading ? (
                         <span className="flex items-center gap-2 justify-center">
-                            <Loader2 className="animate-spin" size={20} /> ANALYZING {selectedImage ? 'VISUALS' : 'PATTERNS'}...
+                            <Loader2 className="animate-spin" size={20} /> ANALYZING {selectedImage ? 'VISUALS' : 'FRAME'}...
                         </span>
                     ) : (
                         <span className="flex items-center gap-2 justify-center">
-                            <Zap size={20} /> RUN DIAGNOSTIC
+                            <Zap size={20} /> ANALYZE MY FRAME
                         </span>
                     )}
                     </Button>

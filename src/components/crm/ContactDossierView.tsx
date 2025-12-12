@@ -78,7 +78,7 @@ import {
 import { FrameScanContactTab } from './FrameScanContactTab';
 import { AIProfileWidget } from './AIProfileWidget';
 import { DossierTwoColumnLayout } from './DossierTwoColumnLayout';
-import { ContactDetailsCard } from './ContactDetailsCard';
+import { ContactDetailsSheet } from './ContactDetailsSheet';
 import { getCurrentUserPlan } from '@/config/planConfig';
 
 const MotionDiv = motion.div as any;
@@ -141,6 +141,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [isCustomizingWidgets, setIsCustomizingWidgets] = useState(false);
+  const [isDetailsSheetOpen, setIsDetailsSheetOpen] = useState(false);
   const [useGlobalLayout, setUseGlobalLayout] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [layoutMode, setLayoutMode] = useState<'classic' | 'tactical'>('tactical');
@@ -780,6 +781,14 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
 
   return (
     <div className="relative min-h-screen text-[#dce8ff]">
+      {/* Contact Details Sheet - rendered at top level for proper portal behavior */}
+      <ContactDetailsSheet
+        contactId={selectedContactId}
+        open={isDetailsSheetOpen}
+        onOpenChange={setIsDetailsSheetOpen}
+        onEditClick={() => setIsEditing(true)}
+      />
+
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(0,255,209,0.08),transparent_32%),radial-gradient(circle_at_80%_10%,rgba(68,140,255,0.12),transparent_28%),linear-gradient(140deg,#050810_0%,#060b17_45%,#04060d_100%)]" />
       <div className="relative space-y-8 pb-20 px-4 lg:px-8">
         {/* HEADER */}
@@ -795,6 +804,14 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               </h1>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsDetailsSheetOpen(true)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 bg-[#1A1A1D] text-gray-400 hover:text-white border border-[#333]"
+                title="View contact details"
+              >
+                <User size={14} />
+                Details
+              </button>
               <button
                 onClick={() => {
                   setIsCustomizingWidgets(!isCustomizingWidgets);
@@ -1362,12 +1379,6 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
           </div>
         </div>
 
-        {/* Contact Details Card */}
-        <ContactDetailsCard
-          contactId={selectedContactId}
-          onExpandClick={() => setIsEditing(true)}
-          onRefresh={() => setRefreshKey(k => k + 1)}
-        />
         </div>
         {/* End Zone 1 */}
 

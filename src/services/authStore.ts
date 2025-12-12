@@ -180,13 +180,14 @@ export function loginWithEmailMock(email: string, password: string): boolean {
 /**
  * Dev-only: Login as SUPER_ADMIN
  * This should only be available in development mode
+ *
+ * SECURITY: Only checks import.meta.env.DEV which is set at build time.
+ * Do NOT add localhost checks as those could be bypassed in production.
  */
 export function loginAsSuperAdminDev(): boolean {
-  const isDev = import.meta.env.DEV ||
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1';
-
-  if (!isDev) {
+  // SECURITY: Only allow in development builds
+  // import.meta.env.DEV is false in production builds
+  if (!import.meta.env.DEV) {
     console.warn('[AuthStore] Super Admin dev login only available in development');
     return false;
   }

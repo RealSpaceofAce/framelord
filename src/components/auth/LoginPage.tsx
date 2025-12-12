@@ -28,9 +28,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onBack }) 
   const [isLoading, setIsLoading] = useState(false);
 
   // Check if running in development mode
-  const isDev = import.meta.env.DEV ||
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1';
+  // SECURITY: Only use import.meta.env.DEV which is set at build time.
+  // Do NOT add localhost checks as those could be bypassed in production.
+  const isDev = import.meta.env.DEV;
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();

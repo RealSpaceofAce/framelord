@@ -14,6 +14,7 @@ import {
   Target,
   Activity,
   Users,
+  User,
   TrendingUp,
   TrendingDown,
   Clock,
@@ -65,7 +66,7 @@ import {
 import type { Task } from '@/types';
 
 // Components
-import { ContactDetailsCard } from './ContactDetailsCard';
+import { ContactDetailsSheet } from './ContactDetailsSheet';
 
 // =============================================================================
 // TYPES
@@ -895,6 +896,9 @@ export const ContactZeroView: React.FC<ContactZeroViewProps> = ({
   // Pre-flight briefing expanded state
   const [isPreFlightExpanded, setIsPreFlightExpanded] = useState(false);
 
+  // Contact details sheet state
+  const [isDetailsSheetOpen, setIsDetailsSheetOpen] = useState(false);
+
   const contact = CONTACT_ZERO;
 
   return (
@@ -928,6 +932,14 @@ export const ContactZeroView: React.FC<ContactZeroViewProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsDetailsSheetOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-white bg-[#0a111d] hover:bg-[#112035] border border-[#112035] hover:border-[#1b2c45] rounded-lg transition-colors"
+              title="View contact details"
+            >
+              <User size={14} />
+              <span>Details</span>
+            </button>
             <span className="text-[10px] px-3 py-1 rounded-full border border-[#4433FF]/50 bg-[#4433FF]/20 text-[#4433FF] font-semibold uppercase tracking-wider">
               Contact Zero
             </span>
@@ -937,13 +949,12 @@ export const ContactZeroView: React.FC<ContactZeroViewProps> = ({
           </div>
         </div>
 
-        {/* MY CONTACT DETAILS - Personal info card for Contact Zero */}
-        <div className="max-w-md">
-          <ContactDetailsCard
-            contactId={contact.id}
-            onRefresh={() => {}}
-          />
-        </div>
+        {/* Contact Details Sheet */}
+        <ContactDetailsSheet
+          contactId={contact.id}
+          open={isDetailsSheetOpen}
+          onOpenChange={setIsDetailsSheetOpen}
+        />
 
         {/* PRE-FLIGHT BRIEFING */}
         <PreFlightBriefing
