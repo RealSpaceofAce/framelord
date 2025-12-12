@@ -1,29 +1,11 @@
 /**
- * NanoBanana Client
+ * NanoBanana Client — Image annotation via Vercel proxy
  *
- * Assumes a generic POST /v1/annotate API that accepts { imageUrl, options }
- * and returns { annotations, annotatedImageUrl }.
- *
- * When we get the real NanoBanana spec, only this file should need to change.
- *
- * Environment variables:
- * - VITE_NANOBANANA_API_URL: Base URL for the API (default: placeholder)
- * - VITE_NANOBANANA_API_KEY: API key (or set in user Settings)
+ * Calls /api/nanobanana-annotate serverless function.
+ * API keys are kept server-side only.
  */
 
-import { resolveApiKey } from "./providers";
 import type { FrameImageAnnotation, FrameAnnotationSeverity } from "../frameScan/frameTypes";
-
-// =============================================================================
-// CONFIG
-// =============================================================================
-
-/**
- * Base URL for the NanoBanana API.
- * TODO: Update this placeholder URL when we have the real NanoBanana endpoint.
- */
-const NANO_BANANA_BASE_URL =
-  (import.meta as any).env?.VITE_NANOBANANA_API_URL || "https://api.nanobanana.example.com";
 
 // =============================================================================
 // TYPES
@@ -42,7 +24,6 @@ export interface NanoBananaResult {
 
 /**
  * Raw annotation shape from the NanoBanana API response.
- * TODO: Adjust this interface when we have the real API spec.
  */
 interface RawNanoBananaAnnotation {
   id?: string;
@@ -57,36 +38,10 @@ interface RawNanoBananaAnnotation {
 
 /**
  * Raw response shape from the NanoBanana API.
- * TODO: Adjust this interface when we have the real API spec.
  */
 interface RawNanoBananaResponse {
   annotations?: RawNanoBananaAnnotation[];
   annotatedImageUrl?: string;
-}
-
-// =============================================================================
-// MOCK RESPONSES
-// =============================================================================
-
-/**
- * Returns a mock annotation result when no API key is configured.
- */
-function getMockAnnotationResult(): NanoBananaResult {
-  return {
-    annotations: [
-      {
-        id: "mock-1",
-        label: "Mock region",
-        description: "Mock annotation. No real image analysis performed. Set VITE_NANOBANANA_API_KEY to enable real analysis.",
-        severity: "info",
-        x: 0.4,
-        y: 0.3,
-        width: 0.2,
-        height: 0.2,
-      },
-    ],
-    annotatedImageUrl: undefined,
-  };
 }
 
 // =============================================================================
@@ -111,7 +66,6 @@ function isValidNumber(value: unknown): value is number {
 
 /**
  * Map raw NanoBanana API response to our internal format.
- * TODO: Adjust mapping logic when we have the real API response format.
  */
 function mapNanoBananaResponse(json: RawNanoBananaResponse): NanoBananaResult {
   const rawAnnotations = Array.isArray(json.annotations) ? json.annotations : [];
@@ -176,7 +130,7 @@ function mapNanoBananaResponse(json: RawNanoBananaResponse): NanoBananaResult {
 // =============================================================================
 
 /**
- * Call Nano Banana to annotate an image.
+ * Call Nano Banana to annotate an image via Vercel proxy.
  *
  * @param imageIdOrUrl - URL to the image or a file ID/reference
  * @returns Annotation result with detected elements and optional annotated image URL
@@ -185,68 +139,27 @@ function mapNanoBananaResponse(json: RawNanoBananaResponse): NanoBananaResult {
 export async function callNanoBananaAnnotateImage(
   imageIdOrUrl: string
 ): Promise<NanoBananaResult> {
-  const apiKey = resolveApiKey("nanobanana_image");
-
-  // Return mock response if no API key configured
-  if (!apiKey) {
-    console.warn(
-      "[NanoBanana] Running in MOCK MODE - no API key configured. " +
-        "Set VITE_NANOBANANA_API_KEY env var or configure in Settings to enable real image analysis."
-    );
-    return getMockAnnotationResult();
-  }
-
-  // Build request URL
-  // TODO: Update endpoint path when we have the real NanoBanana API spec
-  const url = `${NANO_BANANA_BASE_URL.replace(/\/$/, "")}/v1/annotate`;
-
-  // Build request body
-  // TODO: Adjust request body shape when we have the real NanoBanana API spec
-  const body = {
-    imageUrl: imageIdOrUrl,
-    options: {
-      returnAnnotatedImage: true,
+  const res = await fetch("/api/nanobanana-annotate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-  };
+    body: JSON.stringify({
+      imageUrl: imageIdOrUrl,
+    }),
+  });
 
-  // Perform HTTP request
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(body),
-    });
-  } catch (err) {
-    throw new Error(
-      `[NanoBanana] Network error calling ${url}: ${(err as Error).message}`
-    );
-  }
-
-  // Handle non-OK responses
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    const truncated = text.slice(0, 300);
+    const data = await res.json().catch(() => ({ error: "Unknown error" }));
     throw new Error(
-      `[NanoBanana] API error: ${res.status} ${res.statusText} - ${truncated}`
+      `[NanoBanana] API error: ${res.status} - ${data.error || res.statusText}`
     );
   }
 
-  // Parse JSON response
-  let json: RawNanoBananaResponse;
-  try {
-    json = await res.json();
-  } catch (err) {
-    throw new Error(
-      `[NanoBanana] Failed to parse JSON response: ${(err as Error).message}`
-    );
-  }
+  const json = await res.json();
 
-  // Map response to our internal format
-  return mapNanoBananaResponse(json);
+  // The proxy returns { annotations: ... } which contains the raw response
+  return mapNanoBananaResponse(json.annotations || json);
 }
 
 // =============================================================================
@@ -254,16 +167,9 @@ export async function callNanoBananaAnnotateImage(
 // =============================================================================
 
 /**
- * Check if Nano Banana service is available (has API key configured).
+ * Check if Nano Banana service is available.
+ * In production, always true since API key is server-side.
  */
 export function isNanoBananaAvailable(): boolean {
-  const apiKey = resolveApiKey("nanobanana_image");
-  return apiKey !== null;
-}
-
-/**
- * Get the configured NanoBanana API base URL (for debugging/testing).
- */
-export function getNanoBananaBaseUrl(): string {
-  return NANO_BANANA_BASE_URL;
+  return true;
 }

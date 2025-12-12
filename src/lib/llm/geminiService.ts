@@ -1,184 +1,215 @@
+// =============================================================================
+// GEMINI SERVICE — Frame analysis and chat via Vercel proxy
+// =============================================================================
+// Calls /api/gemini-analyze and /api/gemini-chat serverless functions.
+// API keys are kept server-side only (no @google/genai SDK in browser).
+// =============================================================================
 
-import { GoogleGenAI, Type } from "@google/genai";
 import { FrameAnalysisResult, ChatMessage } from "../../types";
 
-const apiKey = process.env.API_KEY || '';
+// =============================================================================
+// FRAME ANALYSIS
+// =============================================================================
 
-// Fallback mock data matching the new complex structure
-const MOCK_RESULT: FrameAnalysisResult = {
-  score: 79,
-  developing_frame: true,
-  subscores: {
-    authority: 80,
-    magnetism: 45,
-    boundaries: 78,
-    energy: 82,
-    clarity: 85,
-    emotional_tone: 50,
-    brand_congruence: 75,
-    sales_strength: 35
-  },
-  critical_signal: {
-    title: "Apologetic framing detected",
-    description: "Subject exhibits beta syntax by qualifying requests and assuming burden.",
-    quotes: ["I was wondering if", "you're busy", "potentially help"]
-  },
-  corrections: [
-    "Remove 'just' qualifiers",
-    "State purpose directly",
-    "Shift to assumption of value",
-    "Lead with specific result",
-    "Use definitive language"
-  ],
-  transcription: "This is a mock transcription of the audio analysis. In a real scenario, this would contain the speech-to-text output from the Gemini model processing your audio file."
-};
+/**
+ * Analyze text, image, or audio for Frame Control dynamics via Gemini.
+ *
+ * @param text - Text to analyze or context for media
+ * @param mediaBase64 - Optional base64-encoded image or audio
+ * @param mimeType - MIME type of the media (e.g., 'image/jpeg', 'audio/webm')
+ * @returns Frame analysis result with scores and corrections
+ * @throws Error if the API call fails
+ */
+export const analyzeFrame = async (
+  text: string,
+  mediaBase64?: string,
+  mimeType?: string
+): Promise<FrameAnalysisResult> => {
+  // Build the appropriate prompt based on input type
+  let prompt = "";
+  let mediaContent: { base64: string; mimeType: string } | undefined;
 
-export const analyzeFrame = async (text: string, imageBase64?: string, mimeType?: string): Promise<FrameAnalysisResult> => {
-  if (!apiKey) {
-    console.warn("No API Key found. Returning mock data.");
-    await new Promise(resolve => setTimeout(resolve, 1500)); 
-    return MOCK_RESULT;
-  }
+  if (mediaBase64 && mimeType) {
+    mediaContent = { base64: mediaBase64, mimeType };
 
-  try {
-    const ai = new GoogleGenAI({ apiKey });
-    
-    let prompt = "";
-    let contents: any = [];
+    if (mimeType.startsWith('audio/')) {
+      prompt = `Analyze this audio recording for 'Vocal Frame' dynamics.
+${text ? `User Context/Tags: "${text}"` : ""}
 
-    // Common schema for both text and image/audio
-    const responseSchema = {
-        type: Type.OBJECT,
-        properties: {
-            score: { type: Type.INTEGER },
-            subscores: {
-                type: Type.OBJECT,
-                properties: {
-                    authority: { type: Type.INTEGER },
-                    magnetism: { type: Type.INTEGER },
-                    boundaries: { type: Type.INTEGER },
-                    energy: { type: Type.INTEGER },
-                    clarity: { type: Type.INTEGER },
-                    emotional_tone: { type: Type.INTEGER },
-                    brand_congruence: { type: Type.INTEGER },
-                    sales_strength: { type: Type.INTEGER }
-                }
-            },
-            critical_signal: {
-                type: Type.OBJECT,
-                properties: {
-                    title: { type: Type.STRING },
-                    description: { type: Type.STRING },
-                    quotes: { type: Type.ARRAY, items: { type: Type.STRING } }
-                }
-            },
-            corrections: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING }
-            },
-            transcription: { type: Type.STRING }
-        }
-    };
+Evaluate: Tonality, Pace, Pauses, Confidence, Interruptions.
 
-    if (imageBase64 && mimeType) {
-        if (mimeType.startsWith('audio/')) {
-            prompt = `Analyze this audio recording for 'Vocal Frame' dynamics.
-            ${text ? `User Context/Tags: "${text}"` : ""}
-            
-            Evaluate: Tonality, Pace, Pauses, Confidence, Interruptions.
-            
-            Return a JSON object with:
-            - score (0-100)
-            - subscores (authority, magnetism, boundaries, energy, clarity, emotional_tone, brand_congruence, sales_strength)
-            - critical_signal: { title, description, quotes (from audio) }
-            - corrections: List of 3-5 specific vocal adjustments.
-            - transcription: A full transcript of the audio.
-            `;
-        } else {
-            prompt = `Analyze this image for 'Visual Frame' dynamics.
-            ${text ? `User Context/Tags: "${text}"` : ""}
-            
-            Evaluate: Posture, Orientation, Eye Level, Space Usage.
-            
-            Return a JSON object with:
-            - score (0-100)
-            - subscores (authority, magnetism, boundaries, energy, clarity, emotional_tone, brand_congruence, sales_strength)
-            - critical_signal: { title (e.g. "Slouched Posture"), description, quotes (use descriptions of visual elements like "Rounded shoulders") }
-            - corrections: List of 3-5 specific physical adjustments.
-            `;
-        }
-        
-        contents = [
-            { inlineData: { mimeType: mimeType, data: imageBase64 } },
-            { text: prompt }
-        ];
-
+Return a JSON object with:
+- score (0-100)
+- subscores (authority, magnetism, boundaries, energy, clarity, emotional_tone, brand_congruence, sales_strength)
+- critical_signal: { title, description, quotes (from audio) }
+- corrections: List of 3-5 specific vocal adjustments.
+- transcription: A full transcript of the audio.
+`;
     } else {
-        prompt = `Analyze the following text for Frame Control.
-        
-        Input Text: "${text}"
-        
-        The user may use CRM tags:
-        - @Name (Specific Contact)
-        - /Context (e.g., /SalesCall, /Email, /Date)
-        
-        Use these tags to inform the context.
-        
-        Return a JSON object with:
-        1. score (0-100)
-        2. subscores (0-100 for: authority, magnetism, boundaries, energy, clarity, emotional_tone, brand_congruence, sales_strength)
-        3. critical_signal: { 
-             title: Short alert (e.g. "Apologetic Framing"), 
-             description: 1 sentence explanation, 
-             quotes: Array of exact substrings from the text that are weak.
-           }
-        4. corrections: Array of 3-5 short, imperative commands to fix the frame (e.g., "Remove 'just'", "State price directly").
-        `;
+      prompt = `Analyze this image for 'Visual Frame' dynamics.
+${text ? `User Context/Tags: "${text}"` : ""}
 
-        contents = [{ text: prompt }];
+Evaluate: Posture, Orientation, Eye Level, Space Usage.
+
+Return a JSON object with:
+- score (0-100)
+- subscores (authority, magnetism, boundaries, energy, clarity, emotional_tone, brand_congruence, sales_strength)
+- critical_signal: { title (e.g. "Slouched Posture"), description, quotes (use descriptions of visual elements like "Rounded shoulders") }
+- corrections: List of 3-5 specific physical adjustments.
+`;
     }
+  } else {
+    prompt = `Analyze the following text for Frame Control.
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: { parts: contents },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: responseSchema
-      }
-    });
+Input Text: "${text}"
 
-    if (response.text) {
-      return JSON.parse(response.text) as FrameAnalysisResult;
-    }
-    
-    throw new Error("Empty response");
+The user may use CRM tags:
+- @Name (Specific Contact)
+- /Context (e.g., /SalesCall, /Email, /Date)
 
-  } catch (error) {
-    console.error("Gemini analysis failed:", error);
-    return MOCK_RESULT;
+Use these tags to inform the context.
+
+Return a JSON object with:
+1. score (0-100)
+2. subscores (0-100 for: authority, magnetism, boundaries, energy, clarity, emotional_tone, brand_congruence, sales_strength)
+3. critical_signal: {
+     title: Short alert (e.g. "Apologetic Framing"),
+     description: 1 sentence explanation,
+     quotes: Array of exact substrings from the text that are weak.
+   }
+4. corrections: Array of 3-5 short, imperative commands to fix the frame (e.g., "Remove 'just'", "State price directly").
+`;
+  }
+
+  // Build request body
+  const requestBody: Record<string, unknown> = {
+    prompt,
+    model: 'gemini-2.5-flash',
+  };
+
+  // Add media content if present
+  if (mediaContent) {
+    requestBody.mediaBase64 = mediaContent.base64;
+    requestBody.mediaMimeType = mediaContent.mimeType;
+  }
+
+  // Call Vercel proxy
+  const res = await fetch("/api/gemini-analyze", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error(
+      `Gemini analysis failed: ${res.status} - ${data.error || res.statusText}`
+    );
+  }
+
+  const data = await res.json();
+
+  // Parse the JSON response from Gemini
+  try {
+    const result = JSON.parse(data.text) as FrameAnalysisResult;
+    return result;
+  } catch {
+    throw new Error("Failed to parse Gemini analysis response as JSON");
   }
 };
 
-export const submitApplicationChat = async (history: ChatMessage[], newUserMessage: string): Promise<string> => {
-    // ... existing implementation
-    if (!apiKey) return "System Offline: API Key missing.";
-    const ai = new GoogleGenAI({ apiKey });
-    const conversationHistory = history.map(m => `${m.role === 'user' ? 'APPLICANT' : 'OFFICER'}: ${m.content}`).join('\n');
-    const prompt = `You are the Senior Case Officer... \n\n${conversationHistory}\nAPPLICANT: ${newUserMessage}\nOFFICER RESPONSE:`;
-    try {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: { text: prompt } });
-        return response.text || "Connection interrupted.";
-    } catch (e) { return "Error connecting."; }
+// =============================================================================
+// APPLICATION CHAT
+// =============================================================================
+
+/**
+ * Submit a message to the coaching application chat.
+ *
+ * @param history - Previous chat messages
+ * @param newUserMessage - New message from the applicant
+ * @returns AI response text
+ */
+export const submitApplicationChat = async (
+  history: ChatMessage[],
+  newUserMessage: string
+): Promise<string> => {
+  const systemInstruction = `You are the Senior Case Officer evaluating applicants for an elite coaching program. Be direct, professional, and probe for genuine commitment. Do not accept surface-level answers.`;
+
+  const messages = history.map(m => ({
+    role: m.role === 'user' ? 'user' as const : 'model' as const,
+    content: m.content,
+  }));
+
+  messages.push({ role: 'user' as const, content: newUserMessage });
+
+  const res = await fetch("/api/gemini-chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messages,
+      systemInstruction,
+      model: 'gemini-2.0-flash',
+      temperature: 0.7,
+    }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({ error: "Unknown error" }));
+    console.error('[ApplicationChat] Error:', data.error);
+    return "Connection interrupted. Please try again.";
+  }
+
+  const data = await res.json();
+  return data.text || "No response received.";
 };
 
-export const submitBetaApplicationChat = async (history: ChatMessage[], newUserMessage: string): Promise<string> => {
-    // ... existing implementation
-    if (!apiKey) return "System Offline.";
-    const ai = new GoogleGenAI({ apiKey });
-    const conversationHistory = history.map(m => `${m.role === 'user' ? 'USER' : 'DIRECTOR'}: ${m.content}`).join('\n');
-    const prompt = `You are the Beta Program Director... \n\n${conversationHistory}\nUSER: ${newUserMessage}\nDIRECTOR RESPONSE:`;
-    try {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: { text: prompt } });
-        return response.text || "Connection interrupted.";
-    } catch (e) { return "Error connecting."; }
+// =============================================================================
+// BETA APPLICATION CHAT
+// =============================================================================
+
+/**
+ * Submit a message to the beta program application chat.
+ *
+ * @param history - Previous chat messages
+ * @param newUserMessage - New message from the user
+ * @returns AI response text
+ */
+export const submitBetaApplicationChat = async (
+  history: ChatMessage[],
+  newUserMessage: string
+): Promise<string> => {
+  const systemInstruction = `You are the Beta Program Director evaluating candidates for early access to the FrameLord platform. Assess technical aptitude, use case fit, and commitment level. Be professional but approachable.`;
+
+  const messages = history.map(m => ({
+    role: m.role === 'user' ? 'user' as const : 'model' as const,
+    content: m.content,
+  }));
+
+  messages.push({ role: 'user' as const, content: newUserMessage });
+
+  const res = await fetch("/api/gemini-chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messages,
+      systemInstruction,
+      model: 'gemini-2.0-flash',
+      temperature: 0.7,
+    }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({ error: "Unknown error" }));
+    console.error('[BetaChat] Error:', data.error);
+    return "Connection interrupted. Please try again.";
+  }
+
+  const data = await res.json();
+  return data.text || "No response received.";
 };

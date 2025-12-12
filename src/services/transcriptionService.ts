@@ -1,11 +1,9 @@
 // =============================================================================
-// TRANSCRIPTION SERVICE — OpenAI Whisper API integration
+// TRANSCRIPTION SERVICE — OpenAI Whisper API via Vercel proxy
 // =============================================================================
-// Transcribes audio blobs to text using OpenAI's Whisper model.
-// Uses the existing provider key resolution pattern.
+// Transcribes audio blobs to text via /api/openai-transcribe serverless function.
+// API keys are kept server-side only.
 // =============================================================================
-
-import { resolveApiKey } from '../lib/llm/providers';
 
 // =============================================================================
 // TYPES
@@ -22,23 +20,13 @@ export interface TranscriptionResult {
 // =============================================================================
 
 /**
- * Transcribe an audio blob to text using OpenAI Whisper.
+ * Transcribe an audio blob to text using OpenAI Whisper via proxy.
  *
  * @param blob - Audio blob (webm, mp4, etc.)
  * @returns Transcription result with text or error
  */
 export async function transcribeAudioToText(blob: Blob): Promise<TranscriptionResult> {
   try {
-    // Get API key using existing provider resolution
-    const apiKey = resolveApiKey('openai_text');
-
-    if (!apiKey) {
-      return {
-        success: false,
-        error: 'OpenAI API key not configured. Set VITE_OPENAI_API_KEY or add key in Settings.',
-      };
-    }
-
     // Create FormData for multipart upload
     const formData = new FormData();
 
@@ -51,22 +39,19 @@ export async function transcribeAudioToText(blob: Blob): Promise<TranscriptionRe
     formData.append('file', blob, `recording.${extension}`);
     formData.append('model', 'whisper-1');
 
-    // Call OpenAI Whisper API
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    // Call Vercel proxy (which handles API key server-side)
+    const response = await fetch('/api/openai-transcribe', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-      },
       body: formData,
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[Transcription] API error:', response.status, errorText);
+      const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('[Transcription] API error:', response.status, data.error);
 
       return {
         success: false,
-        error: `Transcription failed: ${response.statusText}`,
+        error: `Transcription failed: ${data.error || response.statusText}`,
       };
     }
 
@@ -95,8 +80,10 @@ export async function transcribeAudioToText(blob: Blob): Promise<TranscriptionRe
 }
 
 /**
- * Check if transcription is available (API key configured).
+ * Check if transcription is available.
+ * In production, always true since API key is server-side.
+ * The actual availability check happens when the call is made.
  */
 export function isTranscriptionAvailable(): boolean {
-  return resolveApiKey('openai_text') !== null;
+  return true;
 }

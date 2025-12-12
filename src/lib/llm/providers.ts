@@ -1,15 +1,16 @@
 // =============================================================================
-// LLM PROVIDER CONFIGURATION — Provider abstraction and API key resolution
+// LLM PROVIDER CONFIGURATION — Provider identifiers and availability checks
 // =============================================================================
-// This module defines the provider configuration and resolves API keys from:
-// 1. User-supplied keys in Settings (highest priority)
-// 2. App-level keys from environment variables (fallback)
+// This module defines provider identifiers for LLM services.
 //
-// NOTE: For production, user settings will be persisted server-side per account.
-// The localStorage approach here is temporary for local development.
+// IMPORTANT: API keys are NO LONGER read from browser environment variables.
+// All API calls go through Vercel serverless functions (/api/*) which read
+// keys from server-side environment variables only.
+//
+// The VITE_* env vars are DEPRECATED and should NOT be set in production.
+// User-supplied keys (stored in settings) will be a future enhancement
+// passed securely to the proxy functions.
 // =============================================================================
-
-import { loadUserSettings, UserSettings } from "../settings/userSettings";
 
 // =============================================================================
 // PROVIDER TYPES
@@ -17,100 +18,54 @@ import { loadUserSettings, UserSettings } from "../settings/userSettings";
 
 /**
  * Supported LLM provider identifiers.
- * - openai_text: OpenAI for text-based FrameScan analysis
+ * - openai_text: OpenAI for text-based analysis and transcription
  * - nanobanana_image: Nano Banana for image annotation
+ * - gemini: Google Gemini for frame analysis and chat
  */
-export type LlmProviderId = "openai_text" | "nanobanana_image";
-
-/**
- * Configuration for a single provider's API key resolution.
- */
-export interface ProviderKeyConfig {
-  /** Provider identifier */
-  providerId: LlmProviderId;
-  /** Environment variable name for app-wide API key */
-  appApiKeyEnvVar: string;
-  /** Settings key for user-supplied API key override */
-  userApiKeySettingKey: keyof UserSettings;
-}
+export type LlmProviderId = "openai_text" | "nanobanana_image" | "gemini";
 
 // =============================================================================
-// PROVIDER CONFIGURATION MAP
+// AVAILABILITY CHECKS
 // =============================================================================
 
 /**
- * Configuration for all supported providers.
- * Maps provider ID to its key resolution config.
- */
-export const PROVIDER_CONFIG: Record<LlmProviderId, ProviderKeyConfig> = {
-  openai_text: {
-    providerId: "openai_text",
-    appApiKeyEnvVar: "VITE_OPENAI_API_KEY",
-    userApiKeySettingKey: "openaiApiKey",
-  },
-  nanobanana_image: {
-    providerId: "nanobanana_image",
-    appApiKeyEnvVar: "VITE_NANOBANANA_API_KEY",
-    userApiKeySettingKey: "nanobananaApiKey",
-  },
-};
-
-// =============================================================================
-// API KEY RESOLUTION
-// =============================================================================
-
-/**
- * Resolve the API key for a given provider.
+ * Check if a provider is available.
+ * In production, all providers are available since API keys are server-side.
+ * The actual availability is determined when the API call is made.
  *
- * Resolution order:
- * 1. User-supplied key from Settings (localStorage) — highest priority
- * 2. App-level key from environment variable — fallback
- *
- * @param providerId - The provider to resolve the key for
- * @returns The API key string, or null if not configured
- */
-export function resolveApiKey(providerId: LlmProviderId): string | null {
-  const config = PROVIDER_CONFIG[providerId];
-  if (!config) {
-    console.warn(`Unknown provider ID: ${providerId}`);
-    return null;
-  }
-
-  const settings = loadUserSettings();
-
-  // 1. Check user-supplied override first (highest priority)
-  const userKey = settings[config.userApiKeySettingKey] as string | undefined;
-  if (userKey && userKey.trim().length > 0) {
-    return userKey.trim();
-  }
-
-  // 2. Fall back to app-level environment variable
-  // Using import.meta.env for Vite compatibility
-  const envKey = (import.meta as any).env?.[config.appApiKeyEnvVar] as string | undefined;
-  if (envKey && envKey.trim().length > 0) {
-    return envKey.trim();
-  }
-
-  return null;
-}
-
-/**
- * Check if a provider has a valid API key configured.
+ * @param providerId - The provider to check
+ * @returns Always true in production (actual availability checked server-side)
  */
 export function isProviderConfigured(providerId: LlmProviderId): boolean {
-  return resolveApiKey(providerId) !== null;
+  // In the new architecture, availability is determined server-side
+  // This function exists for backwards compatibility
+  return true;
 }
 
 /**
- * Get all configured providers (those with valid API keys).
+ * Get all configured providers.
+ * Returns all providers since actual configuration is server-side.
  */
 export function getConfiguredProviders(): LlmProviderId[] {
-  return (Object.keys(PROVIDER_CONFIG) as LlmProviderId[]).filter(isProviderConfigured);
+  return ["openai_text", "nanobanana_image", "gemini"];
 }
 
+// =============================================================================
+// DEPRECATED: Legacy API key resolution
+// =============================================================================
+// These functions are kept for backwards compatibility during migration.
+// They should NOT be used in production code.
+// =============================================================================
 
-
-
-
-
-
+/**
+ * @deprecated API keys are now handled server-side only.
+ * This function is kept for backwards compatibility but always returns null.
+ */
+export function resolveApiKey(_providerId: LlmProviderId): string | null {
+  console.warn(
+    "[DEPRECATED] resolveApiKey() is deprecated. " +
+    "API keys are now handled server-side via Vercel functions. " +
+    "This function always returns null."
+  );
+  return null;
+}
