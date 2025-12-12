@@ -142,7 +142,7 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   const [isCustomizingWidgets, setIsCustomizingWidgets] = useState(false);
   const [useGlobalLayout, setUseGlobalLayout] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [layoutMode, setLayoutMode] = useState<'classic' | 'tactical'>('classic');
+  const [layoutMode, setLayoutMode] = useState<'classic' | 'tactical'>('tactical');
   
   // Widget layout
   const widgetLayout = useMemo(() => getWidgetLayout(selectedContactId), [selectedContactId, refreshKey]);
