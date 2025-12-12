@@ -22,7 +22,7 @@
 
 import type { PlanTier, StripeSubscriptionStatus } from '../types/multiTenant';
 import type { ProductionTier } from '../config/planConfig';
-import { verifyWebhookSignature } from '../lib/stripe/stripeClient';
+import { verifyWebhookSignature } from '../lib/stripe/stripeWebhookVerify';
 import {
   isBetaTier,
   isProductionTier,

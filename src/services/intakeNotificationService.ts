@@ -360,47 +360,27 @@ const formatDate = (isoString: string): string => {
 // --- EMAIL SENDING ---
 
 /**
- * Internal helper to send email via SendGrid
+ * Internal helper to send email
+ * NOTE: SendGrid integration removed from client bundle.
+ * When server-side email is needed, implement via API route.
  */
 const sendEmail = async (
   subject: string,
-  html: string,
-  text: string,
-  apiKey: string,
+  _html: string,
+  _text: string,
+  _apiKey: string,
   toEmail: string,
-  fromEmail: string
+  _fromEmail: string
 ): Promise<EmailSendResult> => {
-  try {
-    // Dynamic import to avoid bundling SendGrid in client code
-    const sgMail = (await import('@sendgrid/mail')).default;
-    sgMail.setApiKey(apiKey);
+  console.log(`[IntakeNotification] Email sending requires server-side implementation`);
+  console.log(`  To: ${toEmail}`);
+  console.log(`  Subject: ${subject}`);
 
-    const msg = {
-      to: toEmail,
-      from: fromEmail,
-      subject,
-      text,
-      html,
-    };
-
-    const [response] = await sgMail.send(msg);
-    const messageId = response.headers['x-message-id'] as string | undefined;
-
-    console.log(`[IntakeNotification] Email sent via SendGrid: ${messageId || response.statusCode}`);
-    return {
-      success: true,
-      messageId: messageId || `sg-${Date.now()}`,
-      provider: 'sendgrid',
-    };
-  } catch (err: any) {
-    const errorMessage = err?.response?.body?.errors?.[0]?.message || err?.message || String(err);
-    console.error('[IntakeNotification] SendGrid error:', errorMessage);
-    return {
-      success: false,
-      error: errorMessage,
-      provider: 'sendgrid',
-    };
-  }
+  return {
+    success: false,
+    error: 'Email sending requires server-side API route',
+    provider: 'console',
+  };
 };
 
 /**

@@ -336,73 +336,11 @@ export const cancelSubscription = async (
 };
 
 // =============================================================================
-// WEBHOOK VERIFICATION
-// =============================================================================
-
-/**
- * Verify webhook signature
- * Returns the parsed event if valid, null if invalid
- */
-export const verifyWebhookSignature = async (
-  payload: string,
-  signature: string
-): Promise<Record<string, unknown> | null> => {
-  const config = getStripeConfig();
-
-  if (!config.webhookSecret) {
-    console.warn('[StripeClient] No webhook secret configured');
-    // In development, allow unverified webhooks
-    try {
-      return JSON.parse(payload);
-    } catch {
-      return null;
-    }
-  }
-
-  // Verify signature using Stripe's algorithm
-  // This is a simplified version - in production, use proper HMAC verification
-  try {
-    const crypto = await import('crypto');
-    const [timestamp, v1Sig] = parseSignature(signature);
-
-    const signedPayload = `${timestamp}.${payload}`;
-    const expectedSig = crypto
-      .createHmac('sha256', config.webhookSecret)
-      .update(signedPayload)
-      .digest('hex');
-
-    if (expectedSig !== v1Sig) {
-      console.error('[StripeClient] Invalid webhook signature');
-      return null;
-    }
-
-    return JSON.parse(payload);
-  } catch (error) {
-    console.error('[StripeClient] Webhook verification error:', error);
-    return null;
-  }
-};
-
-/**
- * Parse Stripe signature header
- */
-const parseSignature = (header: string): [string, string] => {
-  const parts = header.split(',');
-  let timestamp = '';
-  let v1Sig = '';
-
-  for (const part of parts) {
-    const [key, value] = part.split('=');
-    if (key === 't') timestamp = value;
-    if (key === 'v1') v1Sig = value;
-  }
-
-  return [timestamp, v1Sig];
-};
-
-// =============================================================================
 // HELPERS
 // =============================================================================
+
+// NOTE: Webhook verification moved to stripeWebhookVerify.ts to keep
+// Node's crypto module out of the client bundle.
 
 /**
  * Map Stripe subscription object to our BillingSubscription type

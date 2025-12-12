@@ -99,67 +99,19 @@ export const sendEmail = async (params: EmailSendParams): Promise<EmailSendResul
     };
   }
 
-  const config = getSendGridConfig();
+  // NOTE: SendGrid integration removed from client bundle.
+  // When server-side email is needed, implement via API route.
+  console.log('[EmailClient] Email sending requires server-side implementation:', params.subject);
 
-  try {
-    // Dynamic import to avoid bundling in client code
-    const sgMail = (await import('@sendgrid/mail')).default;
-    sgMail.setApiKey(config.apiKey);
+  const result: EmailSendResult = {
+    success: false,
+    error: 'Email sending requires server-side API route',
+    provider: 'stub',
+    timestamp,
+  };
 
-    const msg: any = {
-      to: params.to,
-      from: {
-        email: config.fromEmail,
-        name: config.fromName,
-      },
-      subject: params.subject,
-      html: params.html,
-    };
-
-    // Add optional fields
-    if (params.text) {
-      msg.text = params.text;
-    }
-    if (params.replyTo) {
-      msg.replyTo = params.replyTo;
-    }
-    if (params.templateId) {
-      msg.templateId = params.templateId;
-      msg.dynamicTemplateData = params.dynamicTemplateData || {};
-    }
-
-    const [response] = await sgMail.send(msg);
-    const messageId = (response.headers['x-message-id'] as string) || `sg-${Date.now()}`;
-
-    const result: EmailSendResult = {
-      success: true,
-      messageId,
-      provider: 'sendgrid',
-      timestamp,
-    };
-
-    logEmailAttempt(params.to, params.subject, result);
-    console.log(`[EmailClient] Email sent successfully: ${messageId}`);
-
-    return result;
-  } catch (error: any) {
-    const errorMessage =
-      error?.response?.body?.errors?.[0]?.message ||
-      error?.message ||
-      'Unknown SendGrid error';
-
-    const result: EmailSendResult = {
-      success: false,
-      error: errorMessage,
-      provider: 'sendgrid',
-      timestamp,
-    };
-
-    logEmailAttempt(params.to, params.subject, result);
-    console.error('[EmailClient] SendGrid error:', errorMessage);
-
-    return result;
-  }
+  logEmailAttempt(params.to, params.subject, result);
+  return result;
 };
 
 /**
@@ -195,54 +147,16 @@ export const sendTemplateEmail = async (
     };
   }
 
-  const config = getSendGridConfig();
+  // NOTE: SendGrid integration removed from client bundle.
+  // When server-side email is needed, implement via API route.
+  console.log('[EmailClient] Template email sending requires server-side implementation:', templateId);
 
-  try {
-    const sgMail = (await import('@sendgrid/mail')).default;
-    sgMail.setApiKey(config.apiKey);
-
-    const msg: any = {
-      to,
-      from: {
-        email: config.fromEmail,
-        name: config.fromName,
-      },
-      templateId,
-      dynamicTemplateData,
-    };
-
-    if (options?.replyTo) {
-      msg.replyTo = options.replyTo;
-    }
-
-    const [response] = await sgMail.send(msg);
-    const messageId = (response.headers['x-message-id'] as string) || `sg-${Date.now()}`;
-
-    const result: EmailSendResult = {
-      success: true,
-      messageId,
-      provider: 'sendgrid',
-      timestamp,
-    };
-
-    console.log(`[EmailClient] Template email sent successfully: ${messageId}`);
-
-    return result;
-  } catch (error: any) {
-    const errorMessage =
-      error?.response?.body?.errors?.[0]?.message ||
-      error?.message ||
-      'Unknown SendGrid error';
-
-    console.error('[EmailClient] SendGrid template error:', errorMessage);
-
-    return {
-      success: false,
-      error: errorMessage,
-      provider: 'sendgrid',
-      timestamp,
-    };
-  }
+  return {
+    success: false,
+    error: 'Email sending requires server-side API route',
+    provider: 'stub',
+    timestamp,
+  };
 };
 
 /**
