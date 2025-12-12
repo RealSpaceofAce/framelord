@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { Scanner } from './components/Scanner';
 import { Features } from './components/Features';
@@ -26,6 +26,7 @@ import { LoginPage } from './components/auth/LoginPage';
 import type { UserScope } from './types/multiTenant';
 import { CONTACT_ZERO } from './services/contactStore';
 import { needsTier1Intake } from './lib/intakeGate';
+import { getGlobalDarkMode, applyGlobalTheme } from './lib/settings/userSettings';
 import {
   isAuthenticated,
   getCurrentUserScope,
@@ -130,6 +131,13 @@ const App: React.FC = () => {
       });
     });
     return unsubscribe;
+  }, []);
+
+  // Initialize theme on app startup
+  // This ensures the correct CSS classes are applied before any component renders
+  useEffect(() => {
+    const isDark = getGlobalDarkMode();
+    applyGlobalTheme(isDark);
   }, []);
 
   // Video demo modal state

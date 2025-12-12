@@ -183,13 +183,17 @@ const GLOBAL_DARK_MODE_KEY = 'framelord_dark_mode';
 export function getGlobalDarkMode(): boolean {
   if (typeof window === 'undefined') return true;
 
-  const saved = window.localStorage.getItem(GLOBAL_DARK_MODE_KEY);
-  if (saved !== null) {
-    return saved === 'true';
+  try {
+    const saved = window.localStorage.getItem(GLOBAL_DARK_MODE_KEY);
+    // Only return false if explicitly set to 'false'
+    // Any other value (null, undefined, 'true', or invalid) defaults to dark mode
+    if (saved === 'false') {
+      return false;
+    }
+    return true;
+  } catch {
+    return true;
   }
-
-  // Default to dark mode if not set
-  return true;
 }
 
 /**
@@ -212,6 +216,10 @@ export function setGlobalDarkMode(isDark: boolean): void {
 /**
  * Apply theme CSS classes to the document.
  * This handles both document element and body for maximum compatibility.
+ *
+ * IMPORTANT: The app uses `:root` CSS variables for dark mode (default).
+ * `.light-mode` class overrides those variables for light mode.
+ * `.dark-mode` class is added for semantic purposes but has no CSS rules.
  */
 export function applyGlobalTheme(isDark: boolean): void {
   if (typeof document === 'undefined') return;
@@ -219,14 +227,17 @@ export function applyGlobalTheme(isDark: boolean): void {
   const root = document.documentElement;
   const body = document.body;
 
+  // Always remove both classes first to ensure clean state
+  root.classList.remove('light-mode', 'dark-mode');
+  body.classList.remove('light-mode', 'dark-mode');
+
   if (isDark) {
-    root.classList.remove('light-mode');
-    body.classList.remove('light-mode');
+    // Dark mode: Add dark-mode class (semantic, no CSS rules)
+    // The `:root` default variables are already dark mode
     root.classList.add('dark-mode');
     body.classList.add('dark-mode');
   } else {
-    root.classList.remove('dark-mode');
-    body.classList.remove('dark-mode');
+    // Light mode: Add light-mode class to trigger CSS overrides
     root.classList.add('light-mode');
     body.classList.add('light-mode');
   }
