@@ -1952,10 +1952,11 @@ export const Dashboard: React.FC = () => {
       currentViewId={mapViewToLittleLordViewId(currentView)}
       selectedContactId={selectedContactId}
     >
-      <div className="fixed inset-0 text-[#DBDBDB] font-sans flex flex-col lg:flex-row overflow-hidden z-[50] app-neon">
+      <div className="fixed inset-0 text-[#DBDBDB] font-sans flex flex-row overflow-hidden z-[50] app-neon">
         <aside className={`
-          ${isLeftSidebarOpen ? 'w-[280px]' : 'w-0'} flex-shrink-0 flex flex-col z-40 transform transition-all duration-300 lg:relative overflow-hidden app-sidebar-framelord
-          ${isMobileMenuOpen && isLeftSidebarOpen ? 'translate-x-0' : isLeftSidebarOpen ? 'translate-x-0' : 'lg:translate-x-0 -translate-x-full'}
+          ${isLeftSidebarOpen ? 'w-[280px]' : 'w-0'} flex-shrink-0 flex flex-col z-40 transform transition-all duration-300 overflow-hidden app-sidebar-framelord
+          fixed lg:relative inset-y-0 left-0
+          ${isMobileMenuOpen && isLeftSidebarOpen ? 'translate-x-0' : isLeftSidebarOpen ? 'lg:translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* BLACK TOP BAR - Seamless zone: Logo + Overview (no grid, no particles, no dividers) */}
         <div className="sidebar-header-zone hidden lg:flex flex-col px-3 pt-4 pb-2">
