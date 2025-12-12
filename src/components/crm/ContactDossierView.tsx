@@ -231,6 +231,12 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
   // Notes ABOUT this contact (targetContactId === contact.id)
   const notesAboutContact = getNotesByContactId(contact.id);
 
+  // Interactions with this contact (for tactical layout timeline)
+  const interactions = useMemo(() => {
+    return getInteractionsByContactId(contact.id)
+      .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime());
+  }, [contact.id]);
+
   // Notes that @MENTION this contact (excludes notes about this contact)
   const notesMentioningContact = useMemo(() => {
     if (isContactZero) return []; // Contact Zero doesn't need @mentions to themselves
