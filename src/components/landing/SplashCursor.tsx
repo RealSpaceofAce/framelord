@@ -815,6 +815,13 @@ export default function SplashCursor({
       const rgba = ext.formatRGBA;
       const rg = ext.formatRG;
       const r = ext.formatR;
+
+      // Guard against null formats (unsupported WebGL configurations)
+      if (!rgba || !rg || !r) {
+        console.warn('[SplashCursor] Required texture formats not supported');
+        return;
+      }
+
       const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST;
       gl.disable(gl.BLEND);
 
