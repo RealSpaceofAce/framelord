@@ -27,21 +27,24 @@ export default async function handler(
 ): Promise<void> {
   // Only allow POST
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
   }
 
   // Get API key from server environment
   const apiKey = process.env.NANOBANANA_API_KEY;
   if (!apiKey) {
     console.error('[nanobanana-annotate] NANOBANANA_API_KEY not configured');
-    return res.status(500).json({ error: 'API key not configured' });
+    res.status(500).json({ error: 'API key not configured' });
+    return;
   }
 
   try {
     const { imageUrl, imageBase64, prompt } = req.body as AnnotateRequest;
 
     if (!imageUrl && !imageBase64) {
-      return res.status(400).json({ error: 'imageUrl or imageBase64 required' });
+      res.status(400).json({ error: 'imageUrl or imageBase64 required' });
+      return;
     }
 
     // Build request to NanoBanana API
@@ -69,18 +72,19 @@ export default async function handler(
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[nanobanana-annotate] NanoBanana API error:', response.status, errorText);
-      return res.status(response.status).json({
+      res.status(response.status).json({
         error: `NanoBanana API error: ${response.status}`
       });
+      return;
     }
 
     const data = await response.json();
 
-    return res.status(200).json({
+    res.status(200).json({
       annotations: data,
     });
   } catch (error) {
     console.error('[nanobanana-annotate] Unexpected error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

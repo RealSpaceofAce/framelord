@@ -31,14 +31,16 @@ export default async function handler(
 ): Promise<void> {
   // Only allow POST
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
   }
 
   // Get API key from server environment
   const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) {
     console.error('[gemini-analyze] GEMINI_API_KEY not configured');
-    return res.status(500).json({ error: 'API key not configured' });
+    res.status(500).json({ error: 'API key not configured' });
+    return;
   }
 
   try {
@@ -51,7 +53,8 @@ export default async function handler(
     } = req.body as AnalyzeRequest;
 
     if (!prompt) {
-      return res.status(400).json({ error: 'prompt required' });
+      res.status(400).json({ error: 'prompt required' });
+      return;
     }
 
     // Build parts array for the content
@@ -110,20 +113,21 @@ export default async function handler(
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[gemini-analyze] Gemini API error:', response.status, errorText);
-      return res.status(response.status).json({
+      res.status(response.status).json({
         error: `Gemini API error: ${response.status}`
       });
+      return;
     }
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-    return res.status(200).json({
+    res.status(200).json({
       text,
       model,
     });
   } catch (error) {
     console.error('[gemini-analyze] Unexpected error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

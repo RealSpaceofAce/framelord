@@ -27,14 +27,16 @@ export default async function handler(
 ): Promise<void> {
   // Only allow POST
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
   }
 
   // Get API key from server environment
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     console.error('[openai-transcribe] OPENAI_API_KEY not configured');
-    return res.status(500).json({ error: 'API key not configured' });
+    res.status(500).json({ error: 'API key not configured' });
+    return;
   }
 
   try {
@@ -42,7 +44,8 @@ export default async function handler(
     const contentType = req.headers['content-type'] || '';
 
     if (!contentType.includes('multipart/form-data')) {
-      return res.status(400).json({ error: 'Content-Type must be multipart/form-data' });
+      res.status(400).json({ error: 'Content-Type must be multipart/form-data' });
+      return;
     }
 
     // Collect raw body chunks
@@ -65,18 +68,19 @@ export default async function handler(
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[openai-transcribe] OpenAI API error:', response.status, errorText);
-      return res.status(response.status).json({
+      res.status(response.status).json({
         error: `OpenAI API error: ${response.status}`
       });
+      return;
     }
 
     const data = await response.json();
 
-    return res.status(200).json({
+    res.status(200).json({
       text: data.text || '',
     });
   } catch (error) {
     console.error('[openai-transcribe] Unexpected error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

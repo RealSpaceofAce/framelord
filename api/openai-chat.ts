@@ -33,21 +33,24 @@ export default async function handler(
 ): Promise<void> {
   // Only allow POST
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
   }
 
   // Get API key from server environment (NOT client-exposed VITE_*)
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     console.error('[openai-chat] OPENAI_API_KEY not configured');
-    return res.status(500).json({ error: 'API key not configured' });
+    res.status(500).json({ error: 'API key not configured' });
+    return;
   }
 
   try {
     const { model = 'gpt-4o-mini', messages, temperature = 0.1 } = req.body as ChatRequest;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: 'messages array required' });
+      res.status(400).json({ error: 'messages array required' });
+      return;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -66,20 +69,21 @@ export default async function handler(
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[openai-chat] OpenAI API error:', response.status, errorText);
-      return res.status(response.status).json({
+      res.status(response.status).json({
         error: `OpenAI API error: ${response.status}`
       });
+      return;
     }
 
     const data = await response.json();
     const text = data.choices?.[0]?.message?.content || '';
 
-    return res.status(200).json({
+    res.status(200).json({
       text,
       model: data.model || model,
     });
   } catch (error) {
     console.error('[openai-chat] Unexpected error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
