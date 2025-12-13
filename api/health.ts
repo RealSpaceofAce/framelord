@@ -53,10 +53,10 @@ function checkOpenAI(): ServiceStatus {
 }
 
 function checkGemini(): ServiceStatus {
-  const apiKey = process.env.GEMINI_API_KEY || '';
+  const apiKey = process.env.GOOGLE_API_KEY || '';
 
   if (!apiKey) {
-    return { configured: false, status: 'missing', details: 'GEMINI_API_KEY not set' };
+    return { configured: false, status: 'missing', details: 'GOOGLE_API_KEY not set' };
   }
 
   return { configured: true, status: 'ok' };

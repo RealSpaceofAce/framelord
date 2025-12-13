@@ -35,7 +35,7 @@ export default async function handler(
   }
 
   // Get API key from server environment
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) {
     console.error('[gemini-analyze] GEMINI_API_KEY not configured');
     return res.status(500).json({ error: 'API key not configured' });
