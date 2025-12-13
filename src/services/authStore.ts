@@ -584,14 +584,43 @@ export function isTenantAdmin(): boolean {
 // INTAKE COMPLETION (Supabase user_metadata)
 // =============================================================================
 
+// LocalStorage keys for intake completion (fallback when Supabase is slow/unavailable)
+const INTAKE_COMPLETE_KEY = 'framelord_intake_completed';
+const INTAKE_COMPLETE_GENERIC_KEY = 'framelord_intake_completed_any'; // Device-level fallback
+
 /**
  * Check if the current user has completed Tier 1 intake.
- * Reads from Supabase user_metadata which persists across devices.
+ * Checks multiple sources for reliability:
+ * 1. Supabase user_metadata (cross-device, requires auth)
+ * 2. User-specific localStorage (device-specific, requires user.id)
+ * 3. Generic localStorage (device-specific, works even if auth is slow)
  */
 export function hasCompletedIntake(): boolean {
   const user = authState.user;
-  if (!user) return false;
-  return !!user.user_metadata?.intake_completed_at;
+
+  // Check Supabase user_metadata first
+  if (user?.user_metadata?.intake_completed_at) {
+    return true;
+  }
+
+  // Fallback: check user-specific localStorage
+  if (user) {
+    const localKey = `${INTAKE_COMPLETE_KEY}_${user.id}`;
+    const localValue = localStorage.getItem(localKey);
+    if (localValue) {
+      console.log('[AuthStore] Intake completion found in user-specific localStorage');
+      return true;
+    }
+  }
+
+  // Final fallback: check generic localStorage (for when auth is slow but user completed on this device)
+  const genericValue = localStorage.getItem(INTAKE_COMPLETE_GENERIC_KEY);
+  if (genericValue) {
+    console.log('[AuthStore] Intake completion found in generic localStorage fallback');
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -600,47 +629,79 @@ export function hasCompletedIntake(): boolean {
 export function getIntakeCompletionDate(): string | null {
   const user = authState.user;
   if (!user) return null;
-  return user.user_metadata?.intake_completed_at || null;
+
+  // Check Supabase first
+  if (user.user_metadata?.intake_completed_at) {
+    return user.user_metadata.intake_completed_at;
+  }
+
+  // Fallback: check localStorage
+  const localKey = `${INTAKE_COMPLETE_KEY}_${user.id}`;
+  return localStorage.getItem(localKey);
 }
 
 /**
  * Mark the current user's Tier 1 intake as completed.
- * Stores in Supabase user_metadata so it persists across devices/sessions.
+ * Stores in multiple places for reliability:
+ * 1. Generic localStorage (always, for device-level fallback)
+ * 2. User-specific localStorage (if user.id available)
+ * 3. Supabase user_metadata (for cross-device sync)
  */
 export async function markIntakeComplete(): Promise<boolean> {
-  if (!isSupabaseConfigured()) {
-    console.warn('[AuthStore] Cannot mark intake complete - Supabase not configured');
-    return false;
-  }
+  const now = new Date().toISOString();
+
+  // Always store in generic localStorage first (works even if auth fails)
+  localStorage.setItem(INTAKE_COMPLETE_GENERIC_KEY, now);
+  console.log('[AuthStore] Intake marked complete in generic localStorage');
 
   const user = authState.user;
   if (!user) {
-    console.warn('[AuthStore] Cannot mark intake complete - no user logged in');
-    return false;
+    console.warn('[AuthStore] No user logged in - using generic localStorage only');
+    return true; // Still consider it successful since generic localStorage worked
   }
 
-  // Don't overwrite if already set
+  // Also store in user-specific localStorage
+  const localKey = `${INTAKE_COMPLETE_KEY}_${user.id}`;
+  localStorage.setItem(localKey, now);
+  console.log('[AuthStore] Intake marked complete in user-specific localStorage');
+
+  // Don't overwrite Supabase if already set
   if (user.user_metadata?.intake_completed_at) {
-    console.log('[AuthStore] Intake already marked complete');
+    console.log('[AuthStore] Intake already marked complete in Supabase');
     return true;
   }
 
-  const now = new Date().toISOString();
-  const { data, error } = await supabase.auth.updateUser({
-    data: {
-      ...user.user_metadata,
-      intake_completed_at: now,
-    },
-  });
-
-  if (error) {
-    console.error('[AuthStore] Failed to mark intake complete:', error);
-    return false;
+  // Try to store in Supabase (may fail if connection is slow)
+  if (!isSupabaseConfigured()) {
+    console.warn('[AuthStore] Supabase not configured - using localStorage only');
+    return true;
   }
 
-  // Update local state with new user data
-  if (data.user) {
-    updateState({ user: data.user });
+  try {
+    const { data, error } = await withTimeout(
+      supabase.auth.updateUser({
+        data: {
+          ...user.user_metadata,
+          intake_completed_at: now,
+        },
+      }),
+      QUERY_TIMEOUT_MS,
+      { data: null, error: { message: 'Timeout' } }
+    );
+
+    if (error) {
+      console.warn('[AuthStore] Failed to mark intake complete in Supabase (localStorage fallback active):', error);
+      return true; // Still return true since localStorage worked
+    }
+
+    // Update local state with new user data
+    if (data?.user) {
+      updateState({ user: data.user });
+    }
+
+    console.log('[AuthStore] Intake marked complete in Supabase');
+  } catch (e) {
+    console.warn('[AuthStore] Supabase update failed, using localStorage fallback');
   }
 
   console.log('[AuthStore] Intake marked complete at:', now);
