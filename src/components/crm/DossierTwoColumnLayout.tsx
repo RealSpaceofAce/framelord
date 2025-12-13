@@ -98,10 +98,10 @@ const ControlButton: React.FC<{
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-[#0a111d] border border-[#1b2c45] rounded-lg transition-colors ${
+    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-[#020712] border border-[#0043FF]/30 rounded-lg transition-colors ${
       disabled
         ? 'text-gray-600 cursor-not-allowed opacity-50'
-        : 'text-gray-300 hover:border-[#4433FF] hover:text-white'
+        : 'text-gray-300 hover:border-[#0043FF]/80 hover:text-white hover:shadow-[0_0_12px_rgba(0,67,255,0.3)]'
     }`}
   >
     {icon}
@@ -242,7 +242,7 @@ export const DossierTwoColumnLayout: React.FC<DossierTwoColumnLayoutProps> = ({
       {/* LEFT COLUMN - Tabbed Content */}
       <div className="lg:col-span-2 space-y-0">
         {/* Control Deck */}
-        <div className="bg-[#0c1424]/80 border border-[#1b2c45] rounded-t-xl px-4 py-3 flex items-center justify-between">
+        <div className="bg-[#050c18] border border-[#0043FF]/40 border-b-0 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-t-3xl px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ControlButton
               icon={<Phone size={14} />}
@@ -276,7 +276,7 @@ export const DossierTwoColumnLayout: React.FC<DossierTwoColumnLayoutProps> = ({
         </div>
 
         {/* Tab Bar */}
-        <div className="bg-[#0c1424]/80 border-x border-[#1b2c45] flex overflow-x-auto">
+        <div className="bg-[#050c18] border-x border-[#0043FF]/40 flex overflow-x-auto">
           <TabButton
             tab="timeline"
             activeTab={activeTab}
@@ -308,7 +308,7 @@ export const DossierTwoColumnLayout: React.FC<DossierTwoColumnLayoutProps> = ({
         </div>
 
         {/* Tab Content */}
-        <div className="bg-[#0c1424]/80 border border-t-0 border-[#1b2c45] rounded-b-xl min-h-[400px]">
+        <div className="bg-[#050c18] border border-t-0 border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-b-3xl min-h-[400px]">
           {renderTabContent()}
         </div>
       </div>

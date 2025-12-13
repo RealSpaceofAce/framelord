@@ -32,6 +32,7 @@ interface IntakeResultsProps {
   onFinish?: () => void; // Fallback: return to dashboard if analysis incomplete
   onEnterDashboard?: () => void; // Enter FrameLord (go to dashboard)
   onChooseAnotherModule?: () => void; // For Tier 2: choose another module
+  onBookCaseCall?: () => void; // Navigate to case call application
 }
 
 // Integrity indicator helper
@@ -66,6 +67,7 @@ export const IntakeResults: React.FC<IntakeResultsProps> = ({
   onFinish,
   onEnterDashboard,
   onChooseAnotherModule,
+  onBookCaseCall,
 }) => {
   const [expandedFlags, setExpandedFlags] = useState<Set<FrameFlag>>(new Set());
 
@@ -483,7 +485,7 @@ export const IntakeResults: React.FC<IntakeResultsProps> = ({
         {/* Tier 2 Primary: Book a Case Call */}
         {isTier2 && (
           <Button
-            onClick={() => window.open('https://calendly.com/framelord/case-call', '_blank')}
+            onClick={onBookCaseCall || (() => window.open('https://calendly.com/framelord/case-call', '_blank'))}
             glow
             className="group flex items-center gap-2"
           >

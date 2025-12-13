@@ -1,12 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Terminal, TestTube, CheckCircle, Lock, Microscope } from 'lucide-react';
+import { Send, Terminal, TestTube, CheckCircle, Lock, Microscope, CheckCircle2 } from 'lucide-react';
 import { Button } from './Button';
 import { Reveal } from './Reveal';
 import { ChatMessage } from '../types';
 import { submitBetaApplicationChat } from '../lib/llm/geminiService';
+import { submitBetaChatApplication } from '../stores/betaChatApplicationStore';
 
 const MotionDiv = motion.div as any;
+
+// Keywords that indicate the conversation is complete and application should be submitted
+const COMPLETION_INDICATORS = [
+  'application has been received',
+  'application is submitted',
+  'we will review',
+  'we\'ll review',
+  'we will be in touch',
+  'we\'ll be in touch',
+  'thank you for applying',
+  'thanks for applying',
+  'application complete',
+  'you\'ll hear from us',
+  'expect to hear from us',
+];
 
 export const BetaPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -14,7 +30,9 @@ export const BetaPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasSubmittedRef = useRef(false);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -22,6 +40,33 @@ export const BetaPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isTyping]);
+
+  /**
+   * Check if AI response indicates conversation is complete
+   */
+  const isConversationComplete = (aiResponse: string): boolean => {
+    const lowerResponse = aiResponse.toLowerCase();
+    return COMPLETION_INDICATORS.some(indicator => lowerResponse.includes(indicator));
+  };
+
+  /**
+   * Submit the application to storage and trigger notification
+   */
+  const submitApplication = async (conversationHistory: ChatMessage[]) => {
+    // Prevent duplicate submissions
+    if (hasSubmittedRef.current) return;
+    hasSubmittedRef.current = true;
+
+    try {
+      await submitBetaChatApplication(conversationHistory);
+      setIsSubmitted(true);
+      console.log('[BetaPage] Application submitted successfully');
+    } catch (error) {
+      console.error('[BetaPage] Failed to submit application:', error);
+      // Allow retry on error
+      hasSubmittedRef.current = false;
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -34,7 +79,19 @@ export const BetaPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     try {
       const responseText = await submitBetaApplicationChat(messages, userMsg.content);
       const aiMsg: ChatMessage = { role: 'ai', content: responseText, timestamp: Date.now() };
-      setMessages(prev => [...prev, aiMsg]);
+
+      // Update messages
+      setMessages(prev => {
+        const updatedMessages = [...prev, aiMsg];
+
+        // Check if conversation is complete and submit application
+        if (isConversationComplete(responseText) && !hasSubmittedRef.current) {
+          // Submit after a short delay to ensure state is updated
+          setTimeout(() => submitApplication(updatedMessages), 500);
+        }
+
+        return updatedMessages;
+      });
     } catch (e) {
       console.error(e);
     } finally {
@@ -168,26 +225,33 @@ export const BetaPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
             {/* Input Area */}
             <div className="p-4 bg-fl-black/50 border-t border-fl-secondary/20 relative z-20">
-                <div className="relative flex items-center">
-                    <Terminal size={18} className="absolute left-4 text-fl-gray" />
-                    <input 
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Type response..."
-                        disabled={isTyping}
-                        className="w-full bg-fl-navy/60 border border-fl-secondary/30 rounded-lg pl-12 pr-12 py-4 text-white placeholder-fl-gray/50 focus:outline-none focus:border-fl-secondary focus:ring-1 focus:ring-fl-secondary transition-all font-mono"
-                        autoFocus
-                    />
-                    <button 
-                        onClick={handleSend}
-                        disabled={!input.trim() || isTyping}
-                        className="absolute right-2 p-2 bg-fl-secondary/20 hover:bg-fl-secondary text-fl-secondary hover:text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <Send size={18} />
-                    </button>
-                </div>
+                {isSubmitted ? (
+                  <div className="flex items-center justify-center gap-2 py-3 text-green-400">
+                    <CheckCircle2 size={18} />
+                    <span className="text-sm font-medium">Application Submitted</span>
+                  </div>
+                ) : (
+                  <div className="relative flex items-center">
+                      <Terminal size={18} className="absolute left-4 text-fl-gray" />
+                      <input
+                          type="text"
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          placeholder="Type response..."
+                          disabled={isTyping}
+                          className="w-full bg-fl-navy/60 border border-fl-secondary/30 rounded-lg pl-12 pr-12 py-4 text-white placeholder-fl-gray/50 focus:outline-none focus:border-fl-secondary focus:ring-1 focus:ring-fl-secondary transition-all font-mono"
+                          autoFocus
+                      />
+                      <button
+                          onClick={handleSend}
+                          disabled={!input.trim() || isTyping}
+                          className="absolute right-2 p-2 bg-fl-secondary/20 hover:bg-fl-secondary text-fl-secondary hover:text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                          <Send size={18} />
+                      </button>
+                  </div>
+                )}
             </div>
           </div>
         </Reveal>

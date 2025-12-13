@@ -129,6 +129,7 @@ export type FeatureKey =
   | 'live_feed'
   | 'wants_streaks'
   | 'frame_analytics'
+  | 'apex_blueprint'
   // Contact Dossier View Features
   | 'timeline_tab'
   | 'notes_tab'
@@ -174,6 +175,7 @@ export const FEATURE_REQUIREMENTS: Record<FeatureKey, PlanTier> = {
   live_feed: 'beta_free',
   wants_streaks: 'beta_plus',
   frame_analytics: 'beta_free',
+  apex_blueprint: 'beta_free', // Tier 2 intake available to all beta users
 
   // Contact Dossier View Features
   timeline_tab: 'beta_free',

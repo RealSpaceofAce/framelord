@@ -12,13 +12,14 @@ import {
   ShieldCheck, ChevronRight, Search, Filter, MoreHorizontal, RefreshCw,
   Mail, Clock, CheckCircle, XCircle, AlertCircle, UserPlus, Ban, Play,
   Target, Calendar, BarChart3, Activity, Radio, User, ClipboardList, Eye,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, Phone
 } from 'lucide-react';
 import type { UserScope, AdminActionType } from '../../types/multiTenant';
 import {
   CoachingApplicationsPanel,
   BetaApplicationsPanel,
   PendingCallsPanel,
+  CaseCallApplicationsPanel,
 } from './ApplicationAdminPanels';
 import {
   UsageAnalyticsPanel,
@@ -78,6 +79,7 @@ type AdminTab =
   | 'users'
   | 'coaching-apps'
   | 'beta-apps'
+  | 'case-call-apps'
   | 'pending-calls'
   | 'struggling'
   | 'intake-sessions'
@@ -128,6 +130,7 @@ export const PlatformAdminPortal: React.FC<PlatformAdminPortalProps> = ({
     { id: 'users', label: 'Users', icon: <Users size={16} /> },
     { id: 'coaching-apps', label: 'Coaching Apps', icon: <Target size={16} /> },
     { id: 'beta-apps', label: 'Beta Apps', icon: <FlaskConical size={16} /> },
+    { id: 'case-call-apps', label: 'Case Calls', icon: <Phone size={16} /> },
     { id: 'pending-calls', label: 'Pending Calls', icon: <Calendar size={16} /> },
     { id: 'struggling', label: 'Struggling Users', icon: <AlertTriangle size={16} /> },
     { id: 'intake-sessions', label: 'Intake Sessions', icon: <ClipboardList size={16} /> },
@@ -227,6 +230,9 @@ export const PlatformAdminPortal: React.FC<PlatformAdminPortalProps> = ({
               )}
               {activeTab === 'beta-apps' && (
                 <BetaApplicationsPanel userScope={userScope} />
+              )}
+              {activeTab === 'case-call-apps' && (
+                <CaseCallApplicationsPanel userScope={userScope} />
               )}
               {activeTab === 'pending-calls' && (
                 <PendingCallsPanel userScope={userScope} />

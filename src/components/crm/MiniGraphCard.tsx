@@ -117,14 +117,14 @@ export const MiniGraphCard: React.FC<MiniGraphCardProps> = ({
 
   if (!contact) {
     return (
-      <div className="bg-[#0c1424]/80 border border-[#1b2c45] rounded-xl p-4">
+      <div className="bg-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-4">
         <p className="text-sm text-gray-500">Contact not found</p>
       </div>
     );
   }
 
   return (
-    <div className="relative bg-[#0c1424]/80 border border-[#1b2c45] rounded-xl p-4">
+    <div className="relative bg-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-4">
       <LockedOverlay featureKey="mini_graph_card" currentPlan={plan} />
 
       {/* Header */}

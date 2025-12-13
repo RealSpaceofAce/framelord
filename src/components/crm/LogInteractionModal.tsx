@@ -99,7 +99,7 @@ export const LogInteractionModal: React.FC<LogInteractionModalProps> = ({
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-[#0c1424] border border-[#1b2c45] rounded-xl p-6 w-full max-w-lg mx-4"
+          className="bg-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-6 w-full max-w-lg mx-4"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

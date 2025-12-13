@@ -165,7 +165,7 @@ export const ContactDetailsCard: React.FC<ContactDetailsCardProps> = ({
 
   if (!contact) {
     return (
-      <div className="bg-[#0c1424]/80 border border-[#1b2c45] rounded-xl p-4">
+      <div className="bg-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-4">
         <p className="text-sm text-gray-500">Contact not found</p>
       </div>
     );
@@ -179,7 +179,7 @@ export const ContactDetailsCard: React.FC<ContactDetailsCardProps> = ({
   const hasAnyData = hasContactInfo || hasPersonalInfo || hasPreferences || hasSocialProfiles;
 
   return (
-    <div className="relative bg-[#0c1424]/80 border border-[#1b2c45] rounded-xl p-4">
+    <div className="relative bg-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">

@@ -1107,6 +1107,10 @@ export const ContactDossierView: React.FC<ContactDossierViewProps> = ({
               <FrameScanContactTab
                 contactId={selectedContactId}
                 contactName={contact.fullName}
+                onViewReport={(reportId) => {
+                  // Navigate to report detail view - for now just log
+                  console.log('[ContactDossierView] View report:', reportId);
+                }}
               />
             )}
             onCreateTask={(title) => {

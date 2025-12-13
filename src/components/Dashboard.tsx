@@ -19,14 +19,14 @@ import { useAudio } from '../hooks/useAudio';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { transcribeAudioToText } from '../services/transcriptionService';
 import { showToast } from './Toast';
-import { FrameAnalysisResult } from '../types';
+import { FrameAnalysisResult, DEFAULT_FOLDERS } from '../types';
 import { Reveal } from './Reveal';
 import { ContactsView } from './crm/ContactsView';
 import { CasesView } from './crm/CasesView';
 import { PipelinesView } from './crm/PipelinesView';
 import { ProjectsView } from './crm/ProjectsView';
 import { ProjectDetailView } from './crm/ProjectDetailView';
-import { NotesView } from './crm/NotesView';
+// NotesView removed - legacy component moved to _legacy
 import { ContactDossierView } from './crm/ContactDossierView';
 import { ContactZeroView } from './crm/ContactZeroView';
 import { TopicView } from './crm/TopicView';
@@ -78,6 +78,8 @@ import {
   formatProfileDate,
 } from '../lib/frameScan/frameProfile';
 import { LittleLordProvider } from './littleLord';
+import { IntakeFlow } from './intake';
+import { IntakeTier } from '../types/businessFrame';
 import {
   getFrameIntegrityMetrics,
   getLeaderboard,
@@ -116,8 +118,33 @@ import { useSavageMode } from '../hooks/useSavageMode';
 import { Flame } from 'lucide-react';
 import { FrameGraphView } from './graph';
 import { PlatformAdminPortal } from './admin/PlatformAdminPortal';
-import { getCurrentUserScope, subscribeAuth } from '../services/authStore';
+import { getCurrentUserScope, subscribeAuth, getCurrentUser } from '../services/authStore';
 import type { UserScope } from '../types/multiTenant';
+
+// =============================================================================
+// SUPER ADMIN EMAIL ALLOWLIST
+// =============================================================================
+// Email addresses that have platform-wide super admin access.
+// This is the primary way to grant SUPER_ADMIN access in production.
+const SUPER_ADMIN_EMAILS = [
+  'realaaronernst@gmail.com',
+];
+
+/**
+ * Check if the current user should have Super Admin access
+ * based on email allowlist or staffRole
+ */
+const isSuperAdminUser = (userScope: UserScope | null, userEmail?: string | null): boolean => {
+  // Check email allowlist first (primary method)
+  if (userEmail && SUPER_ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
+    return true;
+  }
+  // Fall back to staffRole check (for database-configured admins)
+  if (userScope?.staffRole === 'SUPER_ADMIN') {
+    return true;
+  }
+  return false;
+};
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -1333,7 +1360,7 @@ const DashboardOverview: React.FC = () => {
                             const maxScore = Math.max(...chartData.map(c => c.score), 1);
 
                             return (
-                              <svg className="w-full h-full absolute inset-0 z-0 overflow-visible" preserveAspectRatio="none">
+                              <svg className="w-full h-full absolute inset-0 z-0" viewBox="0 0 1000 400" preserveAspectRatio="none">
                                   <defs>
                                     {/* Gradient for Scans (green) - primary series */}
                                     <linearGradient id="chartScansGradient" x1="0" y1="0" x2="0" y2="1">
@@ -1737,7 +1764,7 @@ const FrameScoreTileWidget: React.FC = () => {
 };
 
 
-type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'DAILY_LOG' | 'INBOX' | 'FOLDER' | 'NOTE_DETAIL' | 'BLOCKSUITE_TEST' | 'WANTS' | 'TRACKING' | 'GRAPH' | 'PLATFORM_ADMIN';
+type ViewMode = 'OVERVIEW' | 'DOSSIER' | 'NOTES' | 'SCAN' | 'CONTACTS' | 'CASES' | 'PIPELINES' | 'PROJECTS' | 'TOPIC' | 'TASKS' | 'CALENDAR' | 'ACTIVITY' | 'SETTINGS' | 'FRAMESCAN' | 'FRAMESCAN_REPORT' | 'PUBLIC_SCAN' | 'FRAME_DEMO' | 'DAILY_LOG' | 'INBOX' | 'FOLDER' | 'NOTE_DETAIL' | 'BLOCKSUITE_TEST' | 'WANTS' | 'TRACKING' | 'GRAPH' | 'PLATFORM_ADMIN' | 'APEX_BLUEPRINT';
 
 export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('OVERVIEW');
@@ -1798,11 +1825,13 @@ export const Dashboard: React.FC = () => {
   // AUTH / USER SCOPE STATE
   // ==========================================================================
   const [userScope, setUserScope] = useState<UserScope | null>(() => getCurrentUserScope());
+  const [userEmail, setUserEmail] = useState<string | null>(() => getCurrentUser()?.email ?? null);
 
   // Subscribe to auth changes
   useEffect(() => {
     const unsubscribe = subscribeAuth(() => {
       setUserScope(getCurrentUserScope());
+      setUserEmail(getCurrentUser()?.email ?? null);
     });
     return unsubscribe;
   }, []);
@@ -1815,6 +1844,9 @@ export const Dashboard: React.FC = () => {
     staffRole: 'SUPER_ADMIN', // Dev mode defaults to SUPER_ADMIN
     tenantContactZeroId: CONTACT_ZERO.id,
   };
+
+  // Check if current user should see Platform Admin
+  const showPlatformAdmin = isSuperAdminUser(userScope, userEmail) || import.meta.env.DEV;
 
   // ==========================================================================
   // SAVAGE MODE TOGGLE
@@ -2025,8 +2057,8 @@ export const Dashboard: React.FC = () => {
             <Settings size={14} />
             <span className="font-bold uppercase tracking-widest">Settings</span>
           </button>
-          {/* Super Admin Button - Dev mode only */}
-          {import.meta.env.DEV && (
+          {/* Super Admin Button - Visible to SUPER_ADMIN email allowlist and dev mode */}
+          {showPlatformAdmin && (
             <button
               onClick={() => setCurrentView('PLATFORM_ADMIN')}
               className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
@@ -2036,7 +2068,7 @@ export const Dashboard: React.FC = () => {
               }`}
             >
               <Shield size={14} />
-              <span className="font-bold uppercase tracking-widest">Super Admin</span>
+              <span className="font-bold uppercase tracking-widest">Platform Admin</span>
             </button>
           )}
         </div>
@@ -2092,6 +2124,7 @@ export const Dashboard: React.FC = () => {
                   onNavigateToFrameScan={() => setCurrentView('FRAMESCAN')}
                   onNavigateToContacts={() => setCurrentView('CONTACTS')}
                   onNavigateToCalendar={() => setCurrentView('CALENDAR')}
+                  onNavigateToApexBlueprint={() => setCurrentView('APEX_BLUEPRINT')}
                 />
               ) : (
                 <ContactDossierView
@@ -2228,6 +2261,23 @@ export const Dashboard: React.FC = () => {
              )}
              {currentView === 'PLATFORM_ADMIN' && (
                <PlatformAdminPortal userScope={effectiveUserScope} />
+             )}
+             {currentView === 'APEX_BLUEPRINT' && (
+               <IntakeFlow
+                 contactId={CONTACT_ZERO.id}
+                 initialTier={IntakeTier.TIER_2}
+                 onAbandon={() => {
+                   setSelectedContactId(CONTACT_ZERO.id);
+                   setCurrentView('DOSSIER');
+                 }}
+                 onEnterDashboard={() => {
+                   setSelectedContactId(CONTACT_ZERO.id);
+                   setCurrentView('DOSSIER');
+                 }}
+                 onComplete={(metrics) => {
+                   console.log('[Dashboard] Apex Blueprint complete:', metrics);
+                 }}
+               />
              )}
              {currentView === 'FRAMESCAN' && (
                <FrameScanPage
