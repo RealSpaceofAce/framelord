@@ -1,18 +1,24 @@
 // =============================================================================
-// INTAKE NOTIFICATION SERVICE — SendGrid Email Integration
+// ADMIN NOTIFICATION SERVICE — SendGrid Email Integration
 // =============================================================================
-// Sends email notifications when Tier 1 intake sessions are completed.
+// Sends email notifications to platform admins for various events:
+// - Tier 1 intake completion
+// - Tier 2 (Apex Blueprint) module completion
+// - Beta application submissions
+// - Case call application submissions
 //
 // !! SECURITY WARNING !!
-// This service is currently imported from client-side React code (IntakeFlow.tsx).
-// Until this is moved to a server-side endpoint (e.g., /api/intake-completed),
-// EMAIL_ENABLED must remain FALSE to prevent API key exposure.
+// This service is currently imported from client-side React code.
+// Until this is moved to a server-side endpoint, EMAIL_ENABLED must remain FALSE.
 //
 // To enable email sending:
-// 1. Create a server-side API endpoint that imports and calls sendIntakeCompletionEmail
-// 2. Have the client POST the sessionId to that endpoint
+// 1. Create server-side API endpoints for each notification type
+// 2. Have the client POST the payload to that endpoint
 // 3. Set EMAIL_ENABLED in the server runtime (process.env.EMAIL_ENABLED = "true")
-// 4. Configure SENDGRID_API_KEY and INTAKE_NOTIFY_EMAIL in server env
+// 4. Configure these env vars on the server:
+//    - SENDGRID_API_KEY
+//    - INTAKE_NOTIFY_EMAIL (admin recipient)
+//    - EMAIL_FROM_ADDRESS (default: support@framelord.com)
 //
 // DO NOT set EMAIL_ENABLED = true while this code runs client-side.
 // =============================================================================
@@ -72,7 +78,51 @@ const EMAIL_ENABLED = false;
 // Fallback config - in production, use process.env from server/env.ts
 const SENDGRID_API_KEY = '';
 const INTAKE_NOTIFY_EMAIL = '';
-const EMAIL_FROM_ADDRESS = 'FrameLord Intake <no-reply@framelord.com>';
+// Future production From address: support@framelord.com
+const EMAIL_FROM_ADDRESS = 'FrameLord <support@framelord.com>';
+
+// =============================================================================
+// ADMIN NOTIFICATION TYPES (for beta, case-call, and other events)
+// =============================================================================
+
+export type AdminNotificationEventType =
+  | 'BETA_APPLICATION_SUBMITTED'
+  | 'TIER_1_INTAKE_COMPLETED'
+  | 'INTAKE_SESSION_COMPLETED'
+  | 'CASE_CALL_APPLICATION_SUBMITTED';
+
+export interface AdminNotificationPayload {
+  eventType: AdminNotificationEventType;
+  route: string;
+  contactId?: string;
+  userId?: string;
+  name: string;
+  email?: string;
+  timestamp: string;
+  answers: {
+    question: string;
+    answer: string;
+  }[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface BetaApplicationData {
+  id: string;
+  email: string;
+  name: string;
+  conversationHistory: { role: 'user' | 'ai'; content: string }[];
+  submittedAt: string;
+}
+
+export interface CaseCallApplicationData {
+  id: string;
+  email: string;
+  name: string;
+  phone?: string;
+  answers: { question: string; answer: string }[];
+  contactId?: string;
+  submittedAt: string;
+}
 
 // --- HELPER FUNCTIONS ---
 
@@ -552,4 +602,286 @@ export const onTier2ModuleCompleted = async (sessionId: string): Promise<void> =
   } else {
     console.error(`[IntakeNotification] Tier 2 (${moduleName}) notification failed:`, result.error);
   }
+};
+
+// =============================================================================
+// BETA APPLICATION NOTIFICATION
+// =============================================================================
+
+/**
+ * Generate HTML email for admin notification (generic)
+ */
+const generateAdminNotificationHtml = (payload: AdminNotificationPayload): string => {
+  const answersHtml = payload.answers
+    .map(
+      (a, i) => `
+      <div style="margin-bottom: 16px; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
+          Q${i + 1}
+        </div>
+        <div style="font-size: 14px; color: #333; margin-bottom: 8px; font-weight: 500;">
+          ${escapeHtml(a.question)}
+        </div>
+        <div style="font-size: 14px; color: #000; background: #fff; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+          ${escapeHtml(a.answer)}
+        </div>
+      </div>
+    `
+    )
+    .join('');
+
+  const eventLabels: Record<AdminNotificationEventType, string> = {
+    BETA_APPLICATION_SUBMITTED: 'Beta Application Submitted',
+    TIER_1_INTAKE_COMPLETED: 'Tier 1 Intake Completed',
+    INTAKE_SESSION_COMPLETED: 'Intake Session Completed',
+    CASE_CALL_APPLICATION_SUBMITTED: 'Case Call Application Submitted',
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${eventLabels[payload.eventType]}</title>
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #fff;">
+      <div style="background: #0A0A0A; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+        <h1 style="margin: 0; color: #fff; font-size: 18px;">[FrameLord] ${eventLabels[payload.eventType]}</h1>
+        <p style="margin: 8px 0 0; color: #888; font-size: 14px;">Route: ${escapeHtml(payload.route)}</p>
+      </div>
+
+      <div style="background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #eee;">
+        <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+          <div style="font-size: 12px; color: #666;">Applicant</div>
+          <div style="font-size: 16px; font-weight: 500; color: #333;">${escapeHtml(payload.name)}</div>
+          ${payload.email ? `<div style="font-size: 14px; color: #666;">${escapeHtml(payload.email)}</div>` : ''}
+        </div>
+
+        <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+          <div style="font-size: 12px; color: #666;">Submitted</div>
+          <div style="font-size: 14px; color: #333;">${formatDate(payload.timestamp)}</div>
+        </div>
+
+        <h2 style="font-size: 14px; color: #333; margin: 24px 0 12px;">Questions & Answers</h2>
+        ${answersHtml}
+      </div>
+
+      <div style="margin-top: 20px; padding: 12px; text-align: center; color: #888; font-size: 12px;">
+        Sent from FrameLord Admin Notification System
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+/**
+ * Generate plain text for admin notification
+ */
+const generateAdminNotificationText = (payload: AdminNotificationPayload): string => {
+  const answersText = payload.answers
+    .map((a, i) => `Q${i + 1}: ${a.question}\nA: ${a.answer}\n`)
+    .join('\n');
+
+  const eventLabels: Record<AdminNotificationEventType, string> = {
+    BETA_APPLICATION_SUBMITTED: 'Beta Application Submitted',
+    TIER_1_INTAKE_COMPLETED: 'Tier 1 Intake Completed',
+    INTAKE_SESSION_COMPLETED: 'Intake Session Completed',
+    CASE_CALL_APPLICATION_SUBMITTED: 'Case Call Application Submitted',
+  };
+
+  return `
+[FRAMELORD] ${eventLabels[payload.eventType]}
+====================================
+
+Route: ${payload.route}
+Applicant: ${payload.name}${payload.email ? ` (${payload.email})` : ''}
+Submitted: ${formatDate(payload.timestamp)}
+
+QUESTIONS & ANSWERS
+-------------------
+${answersText}
+---
+Sent from FrameLord Admin Notification System
+  `.trim();
+};
+
+/**
+ * Central function to send admin notification emails
+ */
+export const sendAdminNotificationEmail = async (
+  payload: AdminNotificationPayload
+): Promise<EmailSendResult> => {
+  const eventLabels: Record<AdminNotificationEventType, string> = {
+    BETA_APPLICATION_SUBMITTED: 'Beta Application Submitted',
+    TIER_1_INTAKE_COMPLETED: 'Tier 1 Intake Completed',
+    INTAKE_SESSION_COMPLETED: 'Intake Session Completed',
+    CASE_CALL_APPLICATION_SUBMITTED: 'Case Call Application Submitted',
+  };
+
+  const subject = `[FrameLord] ${eventLabels[payload.eventType]} – ${payload.email || payload.name}`;
+  const html = generateAdminNotificationHtml(payload);
+  const text = generateAdminNotificationText(payload);
+
+  // Always log to console for dev visibility
+  console.log('========================================');
+  console.log(`[AdminNotification] ${payload.eventType}`);
+  console.log('========================================');
+  console.log('  Subject:', subject);
+  console.log('  Route:', payload.route);
+  console.log('  Name:', payload.name);
+  console.log('  Email:', payload.email || 'N/A');
+  console.log('  Timestamp:', payload.timestamp);
+  console.log('  Answers:');
+  payload.answers.forEach((a, i) => {
+    console.log(`    Q${i + 1}: ${a.question}`);
+    console.log(`    A${i + 1}: ${a.answer.substring(0, 100)}${a.answer.length > 100 ? '...' : ''}`);
+  });
+  console.log('========================================');
+
+  // Check if email is enabled
+  if (!EMAIL_ENABLED) {
+    console.log('[AdminNotification] EMAIL_ENABLED is false. Logged to console only.');
+    return {
+      success: true,
+      messageId: `console-${Date.now()}`,
+      provider: 'console',
+    };
+  }
+
+  // Runtime check - should only send from server
+  if (!isServerRuntime()) {
+    console.warn('[AdminNotification] Attempted to send email from client-side. Skipping.');
+    return {
+      success: false,
+      error: 'Email sending is only allowed from server-side code',
+      provider: 'console',
+    };
+  }
+
+  // Check for required configuration
+  const apiKey = SENDGRID_API_KEY || process.env.SENDGRID_API_KEY;
+  const notifyEmail = INTAKE_NOTIFY_EMAIL || process.env.INTAKE_NOTIFY_EMAIL;
+  const fromEmail = EMAIL_FROM_ADDRESS || process.env.EMAIL_FROM_ADDRESS || 'FrameLord <support@framelord.com>';
+
+  if (!apiKey || !notifyEmail) {
+    console.error('[AdminNotification] Missing SendGrid configuration.');
+    return {
+      success: false,
+      error: 'Missing SendGrid configuration',
+      provider: 'sendgrid',
+    };
+  }
+
+  return sendEmail(subject, html, text, apiKey, notifyEmail, fromEmail);
+};
+
+/**
+ * Hook to fire when a beta application is submitted
+ */
+export const onBetaApplicationSubmitted = async (
+  application: BetaApplicationData
+): Promise<void> => {
+  console.log(`[AdminNotification] Beta application submitted by ${application.email}`);
+
+  // Extract Q/A pairs from conversation history
+  // The conversation alternates between AI and user
+  const answers: { question: string; answer: string }[] = [];
+  const history = application.conversationHistory;
+
+  for (let i = 0; i < history.length - 1; i++) {
+    if (history[i].role === 'ai' && history[i + 1]?.role === 'user') {
+      answers.push({
+        question: history[i].content.substring(0, 500), // Truncate long AI prompts
+        answer: history[i + 1].content,
+      });
+    }
+  }
+
+  const payload: AdminNotificationPayload = {
+    eventType: 'BETA_APPLICATION_SUBMITTED',
+    route: '/beta/application',
+    userId: application.id,
+    name: application.name,
+    email: application.email,
+    timestamp: application.submittedAt,
+    answers,
+    metadata: {
+      applicationId: application.id,
+      conversationTurns: history.length,
+    },
+  };
+
+  await sendAdminNotificationEmail(payload);
+};
+
+/**
+ * Hook to fire when a case call application is submitted
+ */
+export const onCaseCallApplicationSubmitted = async (
+  application: CaseCallApplicationData
+): Promise<void> => {
+  console.log(`[AdminNotification] Case call application submitted by ${application.email}`);
+
+  const payload: AdminNotificationPayload = {
+    eventType: 'CASE_CALL_APPLICATION_SUBMITTED',
+    route: '/case-call',
+    contactId: application.contactId,
+    userId: application.id,
+    name: application.name,
+    email: application.email,
+    timestamp: application.submittedAt,
+    answers: application.answers,
+    metadata: {
+      applicationId: application.id,
+      phone: application.phone,
+    },
+  };
+
+  await sendAdminNotificationEmail(payload);
+};
+
+/**
+ * Hook to fire when any intake session is completed (Tier 1 or Tier 2)
+ * This is a unified hook that can be called in addition to the tier-specific hooks
+ */
+export const onIntakeSessionCompleted = async (sessionId: string): Promise<void> => {
+  const session = getSessionById(sessionId);
+  if (!session) {
+    console.warn(`[AdminNotification] onIntakeSessionCompleted: Session ${sessionId} not found`);
+    return;
+  }
+
+  if (session.status !== 'completed') {
+    return;
+  }
+
+  const contact = getContactById(session.contactId);
+  const tierLabel = session.tier === IntakeTier.TIER_1
+    ? 'Tier 1'
+    : `Tier 2 (${session.module || 'Unknown'})`;
+
+  console.log(`[AdminNotification] Intake session completed: ${tierLabel}`);
+
+  const payload: AdminNotificationPayload = {
+    eventType: 'INTAKE_SESSION_COMPLETED',
+    route: '/intake',
+    contactId: session.contactId,
+    name: contact?.fullName || 'Unknown',
+    email: contact?.email,
+    timestamp: session.completedAt || new Date().toISOString(),
+    answers: session.answers.map(a => ({
+      question: a.questionText,
+      answer: a.rawText,
+    })),
+    metadata: {
+      sessionId: session.id,
+      tier: session.tier,
+      module: session.module,
+      frameScore: session.metrics?.overallFrameScore,
+      frameType: session.metrics?.frameType,
+    },
+  };
+
+  await sendAdminNotificationEmail(payload);
 };
