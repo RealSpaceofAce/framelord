@@ -7,16 +7,31 @@
 
 import { SystemLogEntry, NotificationSettings } from '../types';
 
-// --- MOCK SYSTEM LOG ENTRIES ---
+// --- DEMO DATA GATING ---
+const DEMO_ENABLED_KEY = 'framelord_demo_logs_enabled';
 
-let MOCK_LOG_ENTRIES: SystemLogEntry[] = [
+let demoLogsEnabled = (() => {
+  const stored = localStorage.getItem(DEMO_ENABLED_KEY);
+  // Default to true for backwards compatibility, false when explicitly disabled
+  return stored !== 'false';
+})();
+
+export const isDemoLogsEnabled = (): boolean => demoLogsEnabled;
+
+export const setDemoLogsEnabled = (enabled: boolean): void => {
+  demoLogsEnabled = enabled;
+  localStorage.setItem(DEMO_ENABLED_KEY, enabled.toString());
+};
+
+// --- DEMO SYSTEM LOG ENTRIES ---
+const DEMO_LOG_ENTRIES: SystemLogEntry[] = [
   // Billing notices (mandatory / high priority)
   {
     id: 'log_001',
     type: 'billing',
     title: 'Subscription Renewal',
     message: 'Your subscription renews in 3 days.',
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     isRead: false,
     severity: 'warning',
     source: 'system',
@@ -26,19 +41,18 @@ let MOCK_LOG_ENTRIES: SystemLogEntry[] = [
     type: 'billing',
     title: 'Payment Method Updated',
     message: 'Your payment method was successfully updated.',
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     isRead: true,
     severity: 'info',
     source: 'system',
   },
-
   // Owner announcements
   {
     id: 'log_003',
     type: 'announcement',
     title: 'New Frame Scan Features',
     message: 'New Frame Scan features available: Multi-language support and voice tone analysis.',
-    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
+    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
     isRead: false,
     severity: 'info',
     source: 'owner',
@@ -48,19 +62,18 @@ let MOCK_LOG_ENTRIES: SystemLogEntry[] = [
     type: 'announcement',
     title: 'Weekly Office Hours',
     message: 'Join us for weekly office hours every Thursday at 2 PM EST.',
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     isRead: true,
     severity: 'info',
     source: 'owner',
   },
-
   // System events
   {
     id: 'log_005',
     type: 'system',
     title: 'Data Sync Complete',
     message: 'All your data has been successfully synced across devices.',
-    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
+    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
     isRead: false,
     severity: 'info',
     source: 'system',
@@ -70,19 +83,18 @@ let MOCK_LOG_ENTRIES: SystemLogEntry[] = [
     type: 'system',
     title: 'Analysis Complete',
     message: 'Contact "Sarah Chen" frame score updated.',
-    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
     isRead: false,
     severity: 'info',
     source: 'system',
   },
-
   // Task reminders
   {
     id: 'log_007',
     type: 'task',
     title: 'Action Required',
     message: 'Review pending case files.',
-    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
+    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
     isRead: false,
     severity: 'warning',
     source: 'system',
@@ -92,24 +104,34 @@ let MOCK_LOG_ENTRIES: SystemLogEntry[] = [
     type: 'task',
     title: 'Task Due Soon',
     message: 'Prepare demo for Dec 5 meeting is due tomorrow.',
-    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
+    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
     isRead: true,
     severity: 'warning',
     source: 'system',
   },
-
   // Custom user rules
   {
     id: 'log_009',
     type: 'custom',
     title: 'Frame Score Alert',
     message: 'Your weekly average frame score improved by 12 points.',
-    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
+    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
     isRead: false,
     severity: 'info',
     source: 'userRule',
   },
 ];
+
+// Real log entries (empty initially, populated by actual app events)
+let REAL_LOG_ENTRIES: SystemLogEntry[] = [];
+
+// Getter that combines based on demo mode
+const getLogEntries = (): SystemLogEntry[] => {
+  if (demoLogsEnabled) {
+    return [...REAL_LOG_ENTRIES, ...DEMO_LOG_ENTRIES];
+  }
+  return [...REAL_LOG_ENTRIES];
+};
 
 // --- NOTIFICATION SETTINGS ---
 
@@ -124,7 +146,7 @@ let NOTIFICATION_SETTINGS: NotificationSettings = {
 // --- GETTERS ---
 
 export const getAllLogEntries = (): SystemLogEntry[] => {
-  return [...MOCK_LOG_ENTRIES].sort(
+  return getLogEntries().sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 };
@@ -162,7 +184,7 @@ export const getFilteredLogEntries = (): SystemLogEntry[] => {
 };
 
 export const getLogEntryById = (id: string): SystemLogEntry | undefined => {
-  return MOCK_LOG_ENTRIES.find((entry) => entry.id === id);
+  return getLogEntries().find((entry) => entry.id === id);
 };
 
 export const getNotificationSettings = (): NotificationSettings => {
@@ -178,7 +200,7 @@ export const addLogEntry = (entry: Omit<SystemLogEntry, 'id' | 'createdAt'>): Sy
     createdAt: new Date().toISOString(),
   };
 
-  MOCK_LOG_ENTRIES.unshift(newEntry);
+  REAL_LOG_ENTRIES.unshift(newEntry);
   return newEntry;
 };
 
@@ -204,16 +226,30 @@ export const addOwnerAnnouncement = (
 };
 
 export const markLogEntryRead = (id: string): void => {
-  const entry = MOCK_LOG_ENTRIES.find((e) => e.id === id);
-  if (entry) {
-    entry.isRead = true;
+  // Check real entries first
+  const realEntry = REAL_LOG_ENTRIES.find((e) => e.id === id);
+  if (realEntry) {
+    realEntry.isRead = true;
+    return;
+  }
+  // Also check demo entries if enabled
+  if (demoLogsEnabled) {
+    const demoEntry = DEMO_LOG_ENTRIES.find((e) => e.id === id);
+    if (demoEntry) {
+      demoEntry.isRead = true;
+    }
   }
 };
 
 export const markAllLogEntriesRead = (): void => {
-  MOCK_LOG_ENTRIES.forEach((entry) => {
+  REAL_LOG_ENTRIES.forEach((entry) => {
     entry.isRead = true;
   });
+  if (demoLogsEnabled) {
+    DEMO_LOG_ENTRIES.forEach((entry) => {
+      entry.isRead = true;
+    });
+  }
 };
 
 export const updateNotificationSettings = (

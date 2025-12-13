@@ -8,6 +8,8 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase/client';
 import type { User, Session, AuthError } from '@supabase/supabase-js';
 import type { UserScope, StaffRole, TenantRole } from '../types/multiTenant';
+import { setDemoContactsEnabled, refreshContactsList } from './contactStore';
+import { setDemoLogsEnabled } from './systemLogStore';
 
 // =============================================================================
 // TYPES
@@ -65,6 +67,23 @@ function updateState(updates: Partial<AuthState>): void {
  * Build UserScope from Supabase user and database records
  */
 async function buildUserScope(user: User): Promise<UserScope> {
+  // Get user's staff role from users table
+  let staffRole: StaffRole = 'NONE';
+  try {
+    const { data: userData } = await supabase
+      .from('users')
+      .select('staff_role')
+      .eq('id', user.id)
+      .single();
+
+    if (userData?.staff_role) {
+      staffRole = userData.staff_role.toUpperCase() as StaffRole;
+      console.log('[AuthStore] User staff role:', staffRole);
+    }
+  } catch (e) {
+    console.log('[AuthStore] Could not fetch staff role, defaulting to NONE');
+  }
+
   // Try to get user's tenant membership from database
   try {
     const { data: userTenant } = await supabase
@@ -78,7 +97,7 @@ async function buildUserScope(user: User): Promise<UserScope> {
         userId: user.id,
         tenantId: userTenant.tenant_id,
         tenantRole: (userTenant.role?.toUpperCase() || 'MEMBER') as TenantRole,
-        staffRole: 'NONE' as StaffRole,
+        staffRole,
         tenantContactZeroId: `contact_zero_${userTenant.tenant_id}`,
       };
     }
@@ -91,7 +110,7 @@ async function buildUserScope(user: User): Promise<UserScope> {
     userId: user.id,
     tenantId: `tenant_${user.id}`,
     tenantRole: 'OWNER',
-    staffRole: 'NONE',
+    staffRole,
     tenantContactZeroId: `contact_zero_${user.id}`,
   };
 }
@@ -150,6 +169,12 @@ async function createTenantForUser(user: User): Promise<void> {
  */
 async function handleAuthChange(session: Session | null): Promise<void> {
   if (session?.user) {
+    // Disable demo data for authenticated users
+    setDemoContactsEnabled(false);
+    setDemoLogsEnabled(false);
+    refreshContactsList();
+    console.log('[AuthStore] Demo data disabled for authenticated user');
+
     const userScope = await buildUserScope(session.user);
     updateState({
       isAuthenticated: true,
@@ -160,6 +185,11 @@ async function handleAuthChange(session: Session | null): Promise<void> {
       error: null,
     });
   } else {
+    // Re-enable demo data for logged out users (landing page visitors)
+    setDemoContactsEnabled(true);
+    setDemoLogsEnabled(true);
+    refreshContactsList();
+
     updateState({
       isAuthenticated: false,
       isLoading: false,

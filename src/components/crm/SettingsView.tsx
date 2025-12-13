@@ -391,7 +391,37 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     location: user.location || '',
     linkedinUrl: user.linkedinUrl || '',
     xHandle: user.xHandle || '',
+    avatarUrl: user.avatarUrl || '',
   });
+
+  // Avatar upload ref
+  const avatarInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Handle avatar file selection
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be less than 5MB');
+      return;
+    }
+
+    // Convert to Data URL
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      setProfileData((prev) => ({ ...prev, avatarUrl: dataUrl }));
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Appearance state
   const [darkMode, setDarkMode] = useState(true);
@@ -685,6 +715,53 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* PROFILE TAB */}
         {activeTab === 'profile' && (
           <div className="space-y-6">
+            <SettingCard
+              title="Profile Photo"
+              description="Upload a photo to personalize your profile"
+            >
+              <div className="flex items-center gap-6">
+                {/* Avatar Preview */}
+                <div className="relative">
+                  <img
+                    src={profileData.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`}
+                    alt="Profile"
+                    className="w-24 h-24 rounded-full border-2 border-[#333] object-cover"
+                  />
+                  {profileData.avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setProfileData((prev) => ({ ...prev, avatarUrl: '' }))}
+                      className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-600 transition-colors"
+                      title="Remove photo"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                {/* Upload Controls */}
+                <div className="space-y-2">
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="px-4 py-2 bg-[#4433FF] hover:bg-[#5544FF] text-white text-sm font-bold rounded-lg transition-colors"
+                  >
+                    Upload Photo
+                  </button>
+                  <p className="text-xs text-gray-500">
+                    JPG, PNG, or GIF. Max 5MB.
+                  </p>
+                </div>
+              </div>
+            </SettingCard>
+
             <SettingCard
               title="Profile Information"
               description="Update your personal information and contact details"

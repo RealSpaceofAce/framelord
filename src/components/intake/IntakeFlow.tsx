@@ -207,14 +207,25 @@ export const IntakeFlow: React.FC<IntakeFlowProps> = ({
   onEnterDashboard,
   onBookCaseCall,
 }) => {
-  const [flowState, setFlowState] = useState<FlowState>('TIER_1_INTRO');
+  // Initialize flowState based on initialTier
+  const getInitialFlowState = (): FlowState => {
+    if (initialTier === IntakeTier.TIER_2) {
+      return 'TIER_2_MODULE_SELECT';
+    }
+    return 'TIER_1_INTRO';
+  };
+
+  const [flowState, setFlowState] = useState<FlowState>(getInitialFlowState);
   const [currentSession, setCurrentSession] = useState<IntakeSession | null>(null);
   const [currentTier, setCurrentTier] = useState<IntakeTier>(initialTier);
   const [currentModule, setCurrentModule] = useState<IntakeModule | undefined>(undefined);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questions, setQuestions] = useState<QuestionDefinition[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [completedTiers, setCompletedTiers] = useState<IntakeTier[]>([]);
+  // If starting at Tier 2, mark Tier 1 as already completed
+  const [completedTiers, setCompletedTiers] = useState<IntakeTier[]>(
+    initialTier === IntakeTier.TIER_2 ? [IntakeTier.TIER_1] : []
+  );
 
   // Load questions for current tier/module
   useEffect(() => {

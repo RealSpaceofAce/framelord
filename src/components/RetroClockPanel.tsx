@@ -43,8 +43,9 @@ export const RetroClockPanel: React.FC<RetroClockPanelProps> = ({ time, userLoca
   };
 
   // Format temperature (Fahrenheit for US users)
-  const getTemperature = () => {
-    return '64°F'; // TODO: Get real temperature from location API
+  // TODO: Integrate with weather API to get real temperature
+  const getTemperature = (): string | null => {
+    return null; // Don't show fake temperature
   };
 
   // Format timezone
@@ -196,7 +197,7 @@ export const RetroClockPanel: React.FC<RetroClockPanelProps> = ({ time, userLoca
         {/* Bottom row: Temperature/Location and Timezone */}
         <div className="flex items-end justify-between text-[10px] font-mono tracking-wider text-gray-400">
           <div className="flex items-center gap-2">
-            <span>{temperature}</span>
+            {temperature && <span>{temperature}</span>}
             <span>{locationText}</span>
           </div>
           <div>{timezone}</div>
