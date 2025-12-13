@@ -17,7 +17,8 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 // Validate configuration
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.warn(
-    '[Supabase] Missing configuration. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env'
+    '[Supabase] Missing configuration. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env',
+    { url: SUPABASE_URL ? 'set' : 'missing', key: SUPABASE_ANON_KEY ? 'set' : 'missing' }
   );
 }
 
