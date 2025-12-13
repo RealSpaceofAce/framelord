@@ -268,9 +268,9 @@ const App: React.FC = () => {
       )}
       <SparkSystem />
 
-      {/* SplashCursor fluid effect - DISABLED due to WebGL compatibility issues */}
-      {/* TODO: Re-enable once WebGL fallback is properly implemented */}
-      {/* {currentView === 'landing' && <SplashCursor />} */}
+      {/* SplashCursor fluid effect - ONLY on landing page */}
+      {/* Gracefully disables on browsers without WebGL float texture support */}
+      {currentView === 'landing' && <SplashCursor />}
 
       {/* Demo Video Modal */}
       <AnimatePresence>

@@ -240,6 +240,12 @@ export default function SplashCursor({
     const { gl, ext } = getWebGLContext(canvas);
     if (!gl || !ext) return;
 
+    // Check if required formats are supported
+    if (!ext.formatRGBA || !ext.formatRG || !ext.formatR) {
+      console.warn('[SplashCursor] Required WebGL texture formats not supported, disabling effect');
+      return;
+    }
+
     if (!ext.supportLinearFiltering) {
       config.DYE_RESOLUTION = 256;
       config.SHADING = false;
@@ -812,15 +818,9 @@ export default function SplashCursor({
       const dyeRes = getResolution(config.DYE_RESOLUTION);
 
       const texType = ext.halfFloatTexType;
-      const rgba = ext.formatRGBA;
-      const rg = ext.formatRG;
-      const r = ext.formatR;
-
-      // Guard against null formats (unsupported WebGL configurations)
-      if (!rgba || !rg || !r) {
-        console.warn('[SplashCursor] Required texture formats not supported');
-        return;
-      }
+      const rgba = ext.formatRGBA!;
+      const rg = ext.formatRG!;
+      const r = ext.formatR!;
 
       const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST;
       gl.disable(gl.BLEND);
