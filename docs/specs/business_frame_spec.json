@@ -524,6 +524,20 @@
   ],
   "questions": [
     {
+      "id": "t1_name",
+      "tier": 1,
+      "module": null,
+      "prompt": "What should we call you?",
+      "questionType": "name",
+      "inputType": "text",
+      "minLength": 1,
+      "maxLength": 50,
+      "hint": "Your first name or nickname works great.",
+      "targetAxes": [],
+      "targetFlags": [],
+      "storeAs": "contactProfile.displayName"
+    },
+    {
       "id": "t1_identity",
       "tier": 1,
       "module": null,

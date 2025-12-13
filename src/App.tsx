@@ -13,6 +13,7 @@ import SplashCursor from './components/landing/SplashCursor';
 import { ArrowRight, MessageSquare, Terminal, ChevronDown, Calendar, X } from 'lucide-react';
 import { ApplicationPage } from './components/ApplicationPage';
 import { BetaPage } from './components/BetaPage';
+import { CaseCallPage } from './components/CaseCallPage';
 import { Dashboard } from './components/Dashboard';
 import { IntakeFlow } from './components/intake';
 import {
@@ -26,7 +27,7 @@ import { LoginPage } from './components/auth/LoginPage';
 import type { UserScope } from './types/multiTenant';
 import { CONTACT_ZERO } from './services/contactStore';
 import { needsTier1Intake } from './lib/intakeGate';
-import { getGlobalDarkMode, applyGlobalTheme } from './lib/settings/userSettings';
+import { applyGlobalTheme } from './lib/settings/userSettings';
 import {
   isAuthenticated,
   getCurrentUserScope,
@@ -106,6 +107,7 @@ type AppView =
   | 'beta'
   | 'dashboard'
   | 'booking'
+  | 'case-call'
   | 'intake'
   | 'terms'
   | 'privacy'
@@ -134,10 +136,10 @@ const App: React.FC = () => {
   }, []);
 
   // Initialize theme on app startup
-  // This ensures the correct CSS classes are applied before any component renders
+  // App shell is ALWAYS dark mode - only the notes editor can toggle to light
   useEffect(() => {
-    const isDark = getGlobalDarkMode();
-    applyGlobalTheme(isDark);
+    // Always apply dark mode to the app shell
+    applyGlobalTheme(true);
   }, []);
 
   // Video demo modal state
@@ -224,6 +226,11 @@ const App: React.FC = () => {
   const navigateToIntake = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setCurrentView('intake');
+  };
+
+  const navigateToCaseCall = () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setCurrentView('case-call');
   };
 
   const navigateToLogin = () => {
@@ -675,6 +682,16 @@ const App: React.FC = () => {
                     <Button variant="outline" onClick={navigateToHome}>Return to Home</Button>
                 </div>
             </MotionDiv>
+        ) : currentView === 'case-call' ? (
+            <MotionDiv
+                key="case-call"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.05 }}
+                transition={{ duration: 0.5 }}
+            >
+                <CaseCallPage onBack={navigateToHome} />
+            </MotionDiv>
         ) : currentView === 'terms' ? (
             <MotionDiv
                 key="terms"
@@ -727,6 +744,7 @@ const App: React.FC = () => {
                     contactId={CONTACT_ZERO.id}
                     onAbandon={navigateToHome}
                     onEnterDashboard={navigateToDashboard}
+                    onBookCaseCall={navigateToCaseCall}
                     onComplete={(metrics) => {
                         console.log('Intake complete:', metrics);
                     }}

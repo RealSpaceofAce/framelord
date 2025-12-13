@@ -811,21 +811,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               description="Customize how FrameLord looks"
             >
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-semibold text-white mb-1">Dark Mode</div>
-                    <div className="text-xs text-gray-500">Switch between light and dark themes</div>
-                  </div>
-                  <ToggleSwitch
-                    enabled={darkMode}
-                    onChange={(enabled) => {
-                      setDarkMode(enabled);
-                      // Use shared utility that syncs localStorage, editor theme, and CSS classes
-                      setGlobalDarkMode(enabled);
-                    }}
-                  />
-                </div>
-                <div className="h-px bg-[#2A2A2A]" />
+                {/* Dark Mode toggle removed - app shell is locked to dark mode */}
+                {/* Notes editor has its own theme toggle for editor content */}
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm font-semibold text-white mb-1">Compact Mode</div>

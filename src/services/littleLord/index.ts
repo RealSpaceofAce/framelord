@@ -63,6 +63,9 @@ export {
 // Re-export user profile functions
 export * from './userProfile';
 
+// Re-export session store functions for conversation persistence
+export * from './sessionStore';
+
 // =============================================================================
 // SYSTEM PROMPT GENERATION
 // =============================================================================

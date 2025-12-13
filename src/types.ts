@@ -127,6 +127,8 @@ export interface EngagementEvent {
  * Extended to capture full Tier 1 intake data.
  */
 export interface ContactIntakeProfile {
+  /** Display name from intake (t1_name) - "What should we call you?" */
+  displayName?: string;
   /** Brief bio statement from intake (t1_identity) */
   bio?: string;
   /** Work context description from intake (t1_work_context) */

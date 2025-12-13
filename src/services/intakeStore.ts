@@ -512,7 +512,14 @@ export const storeIntakeProfileData = (sessionId: string): boolean => {
     const storeAs = questionDef.storeAs;
 
     // Map by storeAs property
-    if (storeAs === 'contactProfile.bio') {
+    if (storeAs === 'contactProfile.displayName') {
+      // Store in profile for reference
+      contactProfile.displayName = answer.rawText;
+      contactProfile.updatedAt = now;
+      // Also update Contact Zero's fullName
+      contact.fullName = answer.rawText;
+      updated = true;
+    } else if (storeAs === 'contactProfile.bio') {
       contactProfile.bio = answer.rawText;
       contactProfile.updatedAt = now;
       updated = true;

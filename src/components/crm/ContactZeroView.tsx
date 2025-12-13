@@ -65,6 +65,9 @@ import {
 // Types
 import type { Task } from '@/types';
 
+// Intake Gate
+import { needsTier1Intake } from '@/lib/intakeGate';
+
 // Components
 import { ContactDetailsSheet } from './ContactDetailsSheet';
 
@@ -79,6 +82,7 @@ interface ContactZeroViewProps {
   onNavigateToFrameScan?: () => void;
   onNavigateToContacts?: () => void;
   onNavigateToCalendar?: () => void;
+  onNavigateToApexBlueprint?: () => void; // Navigate to Tier 2 intake
 }
 
 // =============================================================================
@@ -172,7 +176,7 @@ const PreFlightBriefingOverlay: React.FC<{
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-[#0c1424] border border-[#1b2c45] rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+          className="bg-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
@@ -188,7 +192,7 @@ const PreFlightBriefingOverlay: React.FC<{
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-white hover:bg-[#1b2c45] rounded-lg transition-colors"
+              className="p-2 text-gray-400 hover:text-white hover:bg-[#0043FF]/20 rounded-lg transition-colors"
             >
               <Eye size={16} />
             </button>
@@ -272,7 +276,7 @@ const PreFlightBriefingOverlay: React.FC<{
                               onClose();
                             }
                           }}
-                          className="flex items-center gap-3 p-2 bg-[#0a111d] border border-[#112035] rounded-lg cursor-pointer hover:border-[#1b2c45] transition-colors"
+                          className="flex items-center gap-3 p-2 bg-[#020712] border border-[#0043FF]/20 rounded-lg cursor-pointer hover:border-[#0043FF]/50 transition-colors"
                         >
                           {contact && (
                             <img
@@ -391,7 +395,7 @@ const PreFlightBriefing: React.FC<{
   }
 
   return (
-    <div className="relative bg-gradient-to-r from-[#0a1628] via-[#0c1a30] to-[#0a1628] border border-[#1b2c45] rounded-xl p-4 overflow-hidden">
+    <div className="relative bg-gradient-to-r from-[#050c18] via-[#071020] to-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-4 overflow-hidden">
       <LockedOverlay featureKey="preflight_briefing" currentPlan={plan} />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(68,51,255,0.1),transparent_50%)]" />
       <div className="relative flex items-center gap-4">
@@ -446,7 +450,7 @@ const ThingsDueToday: React.FC<{
   const overdueTasks = openTasks.filter(t => t.dueAt && t.dueAt < todayKey);
 
   return (
-    <div className="relative bg-[#0c1424]/80 border border-[#1b2c45] rounded-xl p-4 h-full">
+    <div className="relative bg-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-4 h-full">
       <LockedOverlay featureKey="things_due_today" currentPlan={plan} />
 
       <div className="flex items-center justify-between mb-3">
@@ -478,7 +482,7 @@ const ThingsDueToday: React.FC<{
                     onNavigateToDossier(contact.id);
                   }
                 }}
-                className="flex items-center gap-3 p-2 bg-[#0a111d] rounded-lg border border-[#112035] hover:border-[#1b2c45] transition-colors cursor-pointer"
+                className="flex items-center gap-3 p-2 bg-[#020712] rounded-lg border border-[#0043FF]/20 hover:border-[#0043FF]/50 transition-colors cursor-pointer"
               >
                 <div className="w-2 h-2 rounded-full bg-green-400" />
                 <div className="flex-1 min-w-0">
@@ -530,7 +534,7 @@ const NetworkHealth: React.FC<{
   const contactsNeedingAttention = getContactsNeedingAttention(4);
 
   return (
-    <div className="relative bg-[#0c1424]/80 border border-[#1b2c45] rounded-xl p-4 h-full">
+    <div className="relative bg-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-4 h-full">
       <LockedOverlay featureKey="network_health" currentPlan={plan} />
 
       <div className="flex items-center justify-between mb-3">
@@ -572,7 +576,7 @@ const NetworkHealth: React.FC<{
             <div
               key={contact.id}
               onClick={() => onNavigateToDossier?.(contact.id)}
-              className="flex items-center gap-3 p-2 bg-[#0a111d] rounded-lg border border-[#112035] hover:border-[#1b2c45] transition-colors cursor-pointer"
+              className="flex items-center gap-3 p-2 bg-[#020712] rounded-lg border border-[#0043FF]/20 hover:border-[#0043FF]/50 transition-colors cursor-pointer"
             >
               <img
                 src={contact.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.id}`}
@@ -648,7 +652,7 @@ const RadarWidget: React.FC<{
   ];
 
   return (
-    <div className="relative bg-[#0c1424]/80 border border-[#1b2c45] rounded-xl p-4 h-full">
+    <div className="relative bg-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-4 h-full">
       <LockedOverlay featureKey="radar_widget" currentPlan={plan} />
 
       <div className="flex items-center justify-between mb-3">
@@ -711,7 +715,7 @@ const LiveFeed: React.FC<{
   };
 
   return (
-    <div className="relative bg-[#0c1424]/80 border border-[#1b2c45] rounded-xl p-4 h-full">
+    <div className="relative bg-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-4 h-full">
       <LockedOverlay featureKey="live_feed" currentPlan={plan} />
 
       <div className="flex items-center justify-between mb-3">
@@ -733,7 +737,7 @@ const LiveFeed: React.FC<{
               <div
                 key={interaction.id}
                 onClick={() => onNavigateToDossier?.(interaction.contactId)}
-                className="flex items-start gap-2 p-2 bg-[#0a111d] rounded-lg border border-[#112035] hover:border-[#1b2c45] transition-colors cursor-pointer"
+                className="flex items-start gap-2 p-2 bg-[#020712] rounded-lg border border-[#0043FF]/20 hover:border-[#0043FF]/50 transition-colors cursor-pointer"
               >
                 {getInteractionIcon(interaction.type)}
                 <div className="flex-1 min-w-0">
@@ -765,7 +769,7 @@ const WantsStreaksPanel: React.FC<{
   const activeMetrics = metrics.filter(m => m.isActive).slice(0, 4);
 
   return (
-    <div className="relative bg-[#0c1424]/80 border border-[#1b2c45] rounded-xl p-4">
+    <div className="relative bg-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-4">
       <LockedOverlay featureKey="wants_streaks" currentPlan={plan} />
 
       <div className="flex items-center justify-between mb-4">
@@ -795,7 +799,7 @@ const WantsStreaksPanel: React.FC<{
             return (
               <div
                 key={metric.slug}
-                className="p-3 bg-[#0a111d] rounded-lg border border-[#112035]"
+                className="p-3 bg-[#020712] rounded-lg border border-[#0043FF]/20"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <div
@@ -820,6 +824,45 @@ const WantsStreaksPanel: React.FC<{
 };
 
 /**
+ * Apex Blueprint Card - CTA for Tier 2 intake
+ */
+const ApexBlueprintCard: React.FC<{
+  plan: PlanTier;
+  onNavigateToApexBlueprint?: () => void;
+}> = ({ plan, onNavigateToApexBlueprint }) => {
+  return (
+    <div className="relative bg-gradient-to-r from-[#050c18] via-[#0a1528] to-[#050c18] border border-amber-500/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(245,158,11,0.2)] rounded-3xl p-4 overflow-hidden">
+      <LockedOverlay featureKey="apex_blueprint" currentPlan={plan} />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,rgba(245,158,11,0.1),transparent_50%)]" />
+      <div className="relative flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-[0_0_20px_rgba(245,158,11,0.4)]">
+          <Brain size={22} className="text-white" />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Tier 2</span>
+            <span className="text-[9px] text-gray-500">Deep Diagnostics</span>
+          </div>
+          <h3 className="text-base font-display font-bold text-white mb-1">Apex Blueprint</h3>
+          <p className="text-xs text-gray-400">
+            Unlock module-level analysis for Money, Authority, and Operations.
+          </p>
+        </div>
+        {onNavigateToApexBlueprint && (
+          <button
+            onClick={onNavigateToApexBlueprint}
+            className="px-4 py-2 text-sm font-semibold text-amber-400 border border-amber-500/40 rounded-lg hover:bg-amber-500/10 hover:border-amber-500/60 transition-colors flex items-center gap-2"
+          >
+            Start
+            <ChevronRight size={16} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
  * Frame Stats Panel - FrameScore overview
  */
 const FrameStatsPanel: React.FC<{
@@ -836,7 +879,7 @@ const FrameStatsPanel: React.FC<{
     : null;
 
   return (
-    <div className="relative bg-[#0c1424]/80 border border-[#1b2c45] rounded-xl p-4">
+    <div className="relative bg-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-4">
       <LockedOverlay featureKey="frame_analytics" currentPlan={plan} />
 
       <div className="flex items-center justify-between mb-4">
@@ -889,6 +932,7 @@ export const ContactZeroView: React.FC<ContactZeroViewProps> = ({
   onNavigateToFrameScan,
   onNavigateToContacts,
   onNavigateToCalendar,
+  onNavigateToApexBlueprint,
 }) => {
   // Get user's plan from config (will come from auth/tenant context later)
   const userPlan = getCurrentUserPlan();
@@ -916,7 +960,7 @@ export const ContactZeroView: React.FC<ContactZeroViewProps> = ({
 
       <div className="relative space-y-6 pb-20 px-4 lg:px-8">
         {/* HEADER */}
-        <div className="bg-[#0c1424]/80 border border-[#1b2c45] rounded-xl p-4 flex items-center justify-between">
+        <div className="bg-[#050c18] border border-[#0043FF]/40 shadow-[0_0_18px_rgba(0,0,0,0.9),0_0_24px_rgba(0,67,255,0.3)] rounded-3xl p-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="relative">
               <div className="absolute inset-[-4px] rounded-full bg-gradient-to-r from-[#4433FF] to-[#7a5dff] opacity-50 blur-sm" />
@@ -934,7 +978,7 @@ export const ContactZeroView: React.FC<ContactZeroViewProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsDetailsSheetOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-white bg-[#0a111d] hover:bg-[#112035] border border-[#112035] hover:border-[#1b2c45] rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-white bg-[#020712] hover:bg-[#0043FF]/20 border border-[#0043FF]/20 hover:border-[#0043FF]/50 rounded-lg transition-colors"
               title="View contact details"
             >
               <User size={14} />
@@ -964,6 +1008,11 @@ export const ContactZeroView: React.FC<ContactZeroViewProps> = ({
 
         {/* FRAME INTEGRITY - Prominent position, visible without scrolling */}
         <FrameStatsPanel plan={userPlan} onNavigateToFrameScan={onNavigateToFrameScan} />
+
+        {/* APEX BLUEPRINT - Tier 2 CTA (only shown after Tier 1 is complete) */}
+        {!needsTier1Intake(CONTACT_ZERO.id) && (
+          <ApexBlueprintCard plan={userPlan} onNavigateToApexBlueprint={onNavigateToApexBlueprint} />
+        )}
 
         {/* MAIN GRID - 2x2 cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

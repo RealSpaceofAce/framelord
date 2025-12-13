@@ -71,7 +71,7 @@ import {
   getOrCreateJournalForDate,
   getJournalDates,
 } from '../../services/noteStore';
-import { getGlobalDarkMode, setGlobalDarkMode } from '../../lib/settings/userSettings';
+// NOTE: Global dark mode functions removed - app shell is always dark, editor has its own theme
 import type { Note } from '../../types';
 import { motion } from 'framer-motion';
 
@@ -167,7 +167,11 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact, i
   const [refreshKey, setRefreshKey] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>(getGlobalDarkMode() ? 'dark' : 'light');
+  // Editor theme is stored separately from app shell theme (which is always dark)
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const savedEditorTheme = localStorage.getItem('framelord_editor_theme');
+    return savedEditorTheme === 'light' ? 'light' : 'dark'; // Default to dark
+  });
 
   // Navigation history for back/forward
   const [navHistory, setNavHistory] = useState<string[]>([]);
@@ -464,8 +468,9 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact, i
   const handleThemeToggle = useCallback(() => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-    // Use global dark mode setter which syncs localStorage and CSS classes
-    setGlobalDarkMode(newTheme === 'dark');
+    // NOTE: We only change the editor theme, NOT the global app theme.
+    // The app shell is locked to dark mode. Editor theme is stored separately.
+    localStorage.setItem('framelord_editor_theme', newTheme);
   }, [theme]);
 
   // Navigation handlers for back/forward
@@ -969,8 +974,8 @@ export const AffineNotes: React.FC<AffineNotesProps> = ({ onNavigateToContact, i
             ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
             : newTheme === 'gray' ? 'dark' : newTheme; // Migrate 'gray' to 'dark'
           setTheme(resolvedTheme as 'light' | 'dark');
-          // Use global dark mode setter which syncs localStorage and CSS classes
-          setGlobalDarkMode(resolvedTheme === 'dark');
+          // NOTE: Only affects editor theme, NOT global app shell theme
+          localStorage.setItem('framelord_editor_theme', resolvedTheme);
         }}
       />
     </div>
