@@ -72,7 +72,7 @@ const EMAIL_ENABLED = false;
 // Fallback config - in production, use process.env from server/env.ts
 const SENDGRID_API_KEY = '';
 const INTAKE_NOTIFY_EMAIL = '';
-const EMAIL_FROM_ADDRESS = 'FrameLord Intake <no-reply@framelord.app>';
+const EMAIL_FROM_ADDRESS = 'FrameLord Intake <no-reply@framelord.com>';
 
 // --- HELPER FUNCTIONS ---
 
@@ -444,7 +444,7 @@ export const sendIntakeCompletionEmail = async (
   // Check for required configuration
   const apiKey = SENDGRID_API_KEY || process.env.SENDGRID_API_KEY;
   const notifyEmail = INTAKE_NOTIFY_EMAIL || process.env.INTAKE_NOTIFY_EMAIL;
-  const fromEmail = EMAIL_FROM_ADDRESS || process.env.EMAIL_FROM_ADDRESS || 'FrameLord Intake <no-reply@framelord.app>';
+  const fromEmail = EMAIL_FROM_ADDRESS || process.env.EMAIL_FROM_ADDRESS || 'FrameLord Intake <no-reply@framelord.com>';
 
   if (!apiKey || !notifyEmail) {
     console.error('[IntakeNotification] Missing SendGrid configuration. Skipping send.');

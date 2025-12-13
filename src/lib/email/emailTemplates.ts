@@ -116,7 +116,7 @@ const generateWelcomeHtml = (profile: UserProfile): string => {
       <li>Explore your CRM dashboard and start tracking contacts</li>
     </ul>
     <p style="text-align: center; margin-top: 32px;">
-      <a href="https://app.framelord.app/dashboard" style="${BUTTON_STYLES}">
+      <a href="https://www.framelord.com/dashboard" style="${BUTTON_STYLES}">
         Go to Dashboard →
       </a>
     </p>
@@ -159,7 +159,7 @@ const generateIntakeCompletedHtml = (profile: UserProfile): string => {
       <li>Set up your first Wants and track progress</li>
     </ul>
     <p style="text-align: center; margin-top: 32px;">
-      <a href="https://app.framelord.app/dashboard" style="${BUTTON_STYLES}">
+      <a href="https://www.framelord.com/dashboard" style="${BUTTON_STYLES}">
         View Your Profile →
       </a>
     </p>
@@ -202,7 +202,7 @@ const generateBetaAcceptedHtml = (profile: UserProfile): string => {
       <li>Your feedback shapes the product</li>
     </ul>
     <p style="text-align: center; margin-top: 32px;">
-      <a href="https://app.framelord.app/dashboard" style="${BUTTON_STYLES}">
+      <a href="https://www.framelord.com/dashboard" style="${BUTTON_STYLES}">
         Start Your Beta Journey →
       </a>
     </p>
@@ -300,7 +300,7 @@ const generateCaseCallReminderHtml = (profile: UserProfile, callDetails: CallDet
     </p>
     ` : ''}
     <p style="text-align: center; margin-top: 32px;">
-      <a href="https://app.framelord.app/dashboard" style="${BUTTON_STYLES}">
+      <a href="https://www.framelord.com/dashboard" style="${BUTTON_STYLES}">
         View in Dashboard →
       </a>
     </p>

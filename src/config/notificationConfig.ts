@@ -57,7 +57,7 @@ export const getSendGridConfig = (): SendGridConfig => {
   }
 
   const apiKey = process.env.SENDGRID_API_KEY || '';
-  const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@framelord.app';
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@framelord.com';
   const fromName = process.env.SENDGRID_FROM_NAME || 'FrameLord';
 
   // Email is enabled only if API key is present
