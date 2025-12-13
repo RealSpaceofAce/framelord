@@ -23,6 +23,7 @@ import {
 } from '../../services/intakeStore';
 import { onIntakeCompleted, onTier2ModuleCompleted, onIntakeSessionCompleted } from '../../services/intakeNotificationService';
 import { analyzeAnswer, computeSessionMetrics } from '../../services/frameAnalysisStore';
+import { markIntakeComplete } from '../../services/authStore';
 import { Loader2, Terminal, Info } from 'lucide-react';
 import spec from '../../../docs/specs/business_frame_spec.json';
 import { LittleLordOrbView, SpiritState } from '../littleLord/LittleLordOrbView';
@@ -303,8 +304,10 @@ export const IntakeFlow: React.FC<IntakeFlowProps> = ({
           onIntakeSessionCompleted(currentSession.id);
 
           if (currentTier === IntakeTier.TIER_1) {
-            // Mark Tier 1 gateway as completed (only sets on first completion)
+            // Mark Tier 1 gateway as completed (localStorage for Contact Zero)
             markTier1GateCompleted(contactId);
+            // Mark intake complete in Supabase user_metadata (persists across devices)
+            markIntakeComplete();
             // Fire notification hook for Tier 1 completion (user notification)
             onIntakeCompleted(currentSession.id);
             // Go to access gate interstitial first

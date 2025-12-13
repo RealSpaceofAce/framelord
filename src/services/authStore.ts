@@ -525,6 +525,73 @@ export function isTenantAdmin(): boolean {
 }
 
 // =============================================================================
+// INTAKE COMPLETION (Supabase user_metadata)
+// =============================================================================
+
+/**
+ * Check if the current user has completed Tier 1 intake.
+ * Reads from Supabase user_metadata which persists across devices.
+ */
+export function hasCompletedIntake(): boolean {
+  const user = authState.user;
+  if (!user) return false;
+  return !!user.user_metadata?.intake_completed_at;
+}
+
+/**
+ * Get the intake completion timestamp for the current user.
+ */
+export function getIntakeCompletionDate(): string | null {
+  const user = authState.user;
+  if (!user) return null;
+  return user.user_metadata?.intake_completed_at || null;
+}
+
+/**
+ * Mark the current user's Tier 1 intake as completed.
+ * Stores in Supabase user_metadata so it persists across devices/sessions.
+ */
+export async function markIntakeComplete(): Promise<boolean> {
+  if (!isSupabaseConfigured()) {
+    console.warn('[AuthStore] Cannot mark intake complete - Supabase not configured');
+    return false;
+  }
+
+  const user = authState.user;
+  if (!user) {
+    console.warn('[AuthStore] Cannot mark intake complete - no user logged in');
+    return false;
+  }
+
+  // Don't overwrite if already set
+  if (user.user_metadata?.intake_completed_at) {
+    console.log('[AuthStore] Intake already marked complete');
+    return true;
+  }
+
+  const now = new Date().toISOString();
+  const { data, error } = await supabase.auth.updateUser({
+    data: {
+      ...user.user_metadata,
+      intake_completed_at: now,
+    },
+  });
+
+  if (error) {
+    console.error('[AuthStore] Failed to mark intake complete:', error);
+    return false;
+  }
+
+  // Update local state with new user data
+  if (data.user) {
+    updateState({ user: data.user });
+  }
+
+  console.log('[AuthStore] Intake marked complete at:', now);
+  return true;
+}
+
+// =============================================================================
 // REACT HOOK
 // =============================================================================
 
