@@ -35,7 +35,7 @@ import { CalendarView } from './crm/CalendarView';
 import { ActivityView } from './crm/ActivityView';
 import { SettingsView } from './crm/SettingsView';
 import { RetroClockPanel } from './RetroClockPanel';
-import { getContactZero, CONTACT_ZERO, getContactById, getAllContacts } from '../services/contactStore';
+import { getContactZero, CONTACT_ZERO, getContactById, getAllContacts, subscribeContacts } from '../services/contactStore';
 import { getTopicById } from '../services/topicStore';
 import { getAllNotes } from '../services/noteStore';
 import {
@@ -68,7 +68,7 @@ import { FrameScoreTile } from './crm/FrameScoreTile';
 import { PublicFrameScanPage } from '../pages/PublicFrameScanPage';
 import { FrameReportDemoPage } from '../pages/FrameReportDemoPage';
 import { FrameScanContextHelp } from './FrameScanContextHelp';
-import { appConfig } from '../config/appConfig';
+import { appConfig, SUPER_ADMIN_EMAILS } from '../config/appConfig';
 import { getContactZeroReports } from '../services/frameScanReportStore';
 import {
   computeCumulativeFrameProfileForContact,
@@ -122,14 +122,6 @@ import { getCurrentUserScope, subscribeAuth, getCurrentUser, logout } from '../s
 import type { UserScope } from '../types/multiTenant';
 
 // =============================================================================
-// SUPER ADMIN EMAIL ALLOWLIST
-// =============================================================================
-// Email addresses that have platform-wide super admin access.
-// This is the primary way to grant SUPER_ADMIN access in production.
-const SUPER_ADMIN_EMAILS = [
-  'realaaronernst@gmail.com',
-];
-
 /**
  * Check if the current user should have Super Admin access
  * based on email allowlist or staffRole
@@ -1836,6 +1828,15 @@ export const Dashboard: React.FC = () => {
     return unsubscribe;
   }, []);
 
+  // Subscribe to contact changes (e.g., when demo data is disabled)
+  const [contactsVersion, setContactsVersion] = useState(0);
+  useEffect(() => {
+    const unsubscribe = subscribeContacts(() => {
+      setContactsVersion((v) => v + 1);
+    });
+    return unsubscribe;
+  }, []);
+
   // Default user scope for when not authenticated (fallback for dev mode)
   const effectiveUserScope: UserScope = userScope || {
     userId: 'user_dev_001',
@@ -2261,7 +2262,7 @@ export const Dashboard: React.FC = () => {
                />
              )}
              {currentView === 'PLATFORM_ADMIN' && (
-               <PlatformAdminPortal userScope={effectiveUserScope} />
+               <PlatformAdminPortal userScope={effectiveUserScope} userEmail={userEmail} />
              )}
              {currentView === 'APEX_BLUEPRINT' && (
                <IntakeFlow

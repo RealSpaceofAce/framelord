@@ -377,6 +377,26 @@ let CONTACTS: Contact[] = isDemoContactsEnabled()
   ? [CONTACT_ZERO, ...DEMO_CONTACTS]
   : [CONTACT_ZERO];
 
+// --- SUBSCRIPTION SUPPORT ---
+// Allows components to subscribe to contact changes and re-render
+const contactSubscribers: Set<() => void> = new Set();
+
+/**
+ * Subscribe to contact changes
+ * Returns unsubscribe function
+ */
+export const subscribeContacts = (callback: () => void): (() => void) => {
+  contactSubscribers.add(callback);
+  return () => contactSubscribers.delete(callback);
+};
+
+/**
+ * Notify all subscribers of contact changes
+ */
+const notifyContactSubscribers = (): void => {
+  contactSubscribers.forEach((callback) => callback());
+};
+
 /**
  * Refresh contacts array based on demo contacts preference
  * Call this after changing demo contacts setting
@@ -385,6 +405,8 @@ export const refreshContactsList = (): void => {
   CONTACTS = isDemoContactsEnabled()
     ? [CONTACT_ZERO, ...DEMO_CONTACTS]
     : [CONTACT_ZERO];
+  // Notify subscribers so components re-render with new contacts
+  notifyContactSubscribers();
 };
 
 // --- HELPER FUNCTIONS ---

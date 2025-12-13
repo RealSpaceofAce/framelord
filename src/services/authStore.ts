@@ -12,6 +12,32 @@ import { setDemoContactsEnabled, refreshContactsList } from './contactStore';
 import { setDemoLogsEnabled } from './systemLogStore';
 
 // =============================================================================
+// QUERY TIMEOUT UTILITY
+// =============================================================================
+// Wraps async operations with a timeout to prevent indefinite spinning
+
+const QUERY_TIMEOUT_MS = 10000; // 10 seconds
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number = QUERY_TIMEOUT_MS,
+  fallback?: T
+): Promise<T> {
+  const timeoutPromise = new Promise<T>((resolve, reject) => {
+    setTimeout(() => {
+      if (fallback !== undefined) {
+        console.warn(`[AuthStore] Query timed out after ${timeoutMs}ms, using fallback`);
+        resolve(fallback);
+      } else {
+        reject(new Error(`Query timed out after ${timeoutMs}ms`));
+      }
+    }, timeoutMs);
+  });
+
+  return Promise.race([promise, timeoutPromise]);
+}
+
+// =============================================================================
 // TYPES
 // =============================================================================
 
@@ -65,40 +91,49 @@ function updateState(updates: Partial<AuthState>): void {
 
 /**
  * Build UserScope from Supabase user and database records
+ * Uses timeouts to prevent indefinite spinning on slow queries
  */
 async function buildUserScope(user: User): Promise<UserScope> {
-  // Get user's staff role from users table
+  // Get user's staff role from users table (with timeout)
   let staffRole: StaffRole = 'NONE';
   try {
-    const { data: userData } = await supabase
-      .from('users')
-      .select('staff_role')
-      .eq('id', user.id)
-      .single();
+    const result = await withTimeout(
+      supabase
+        .from('users')
+        .select('staff_role')
+        .eq('id', user.id)
+        .single(),
+      QUERY_TIMEOUT_MS,
+      { data: null, error: null } // Fallback on timeout
+    );
 
-    if (userData?.staff_role) {
-      staffRole = userData.staff_role.toUpperCase() as StaffRole;
+    if (result.data?.staff_role) {
+      staffRole = result.data.staff_role.toUpperCase() as StaffRole;
       console.log('[AuthStore] User staff role:', staffRole);
     }
   } catch (e) {
     console.log('[AuthStore] Could not fetch staff role, defaulting to NONE');
   }
 
-  // Try to get user's tenant membership from database
+  // Try to get user's tenant membership from database (with timeout)
   try {
-    const { data: userTenant } = await supabase
-      .from('user_tenants')
-      .select('tenant_id, role')
-      .eq('user_id', user.id)
-      .single();
+    const result = await withTimeout(
+      supabase
+        .from('user_tenants')
+        .select('tenant_id, role')
+        .eq('user_id', user.id)
+        .single(),
+      QUERY_TIMEOUT_MS,
+      { data: null, error: null } // Fallback on timeout
+    );
 
-    if (userTenant) {
+    if (result.data) {
       return {
         userId: user.id,
-        tenantId: userTenant.tenant_id,
-        tenantRole: (userTenant.role?.toUpperCase() || 'MEMBER') as TenantRole,
+        tenantId: result.data.tenant_id,
+        tenantRole: (result.data.role?.toUpperCase() || 'MEMBER') as TenantRole,
         staffRole,
-        tenantContactZeroId: `contact_zero_${userTenant.tenant_id}`,
+        tenantContactZeroId: `contact_zero_${result.data.tenant_id}`,
       };
     }
   } catch (e) {

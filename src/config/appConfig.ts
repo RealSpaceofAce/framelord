@@ -180,6 +180,16 @@ export const cookieConsentConfig = {
  */
 export const SUPER_ADMIN_USER_ID = 'super_admin_owner';
 
+/**
+ * Email addresses that have platform-wide super admin access.
+ * This is the PRIMARY way to grant SUPER_ADMIN access in production.
+ * Emails in this list can access Platform Admin even if their database
+ * staff_role is not set to SUPER_ADMIN.
+ */
+export const SUPER_ADMIN_EMAILS: string[] = [
+  'realaaronernst@gmail.com',
+];
+
 // =============================================================================
 // COMBINED APP CONFIG (Legacy compatibility)
 // =============================================================================

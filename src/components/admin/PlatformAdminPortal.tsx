@@ -94,6 +94,7 @@ type AdminTab =
 
 interface PlatformAdminPortalProps {
   userScope: UserScope;
+  userEmail?: string | null;
 }
 
 // =============================================================================
@@ -102,13 +103,14 @@ interface PlatformAdminPortalProps {
 
 export const PlatformAdminPortal: React.FC<PlatformAdminPortalProps> = ({
   userScope,
+  userEmail,
 }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('tenants');
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Access check
-  if (!canAccessPlatformAdmin(userScope)) {
+  // Access check - checks both email allowlist and staffRole
+  if (!canAccessPlatformAdmin(userScope, userEmail)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#0A0A0A]">
         <div className="text-center p-8">

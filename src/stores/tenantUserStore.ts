@@ -8,7 +8,7 @@
 
 import type { TenantUser, TenantRole, StaffRole, UserScope, Tenant } from '../types/multiTenant';
 import { isEnterpriseTenant } from '../types/multiTenant';
-import { SUPER_ADMIN_USER_ID } from '../config/appConfig';
+import { SUPER_ADMIN_USER_ID, SUPER_ADMIN_EMAILS } from '../config/appConfig';
 import { getTenantById } from './tenantStore';
 
 const STORAGE_KEY = 'framelord_tenant_users';
@@ -354,9 +354,19 @@ export function buildUserScope(userId: string): UserScope | null {
 
 /**
  * Check if user can access Platform Admin
- * Only platform staff (SUPER_ADMIN, ADMIN) can access
+ * Access is granted if:
+ * 1. User email is in SUPER_ADMIN_EMAILS allowlist (primary method)
+ * 2. User has SUPER_ADMIN or ADMIN staffRole in database
+ *
+ * @param scope - User scope containing staffRole
+ * @param userEmail - Optional user email to check against allowlist
  */
-export function canAccessPlatformAdmin(scope: UserScope): boolean {
+export function canAccessPlatformAdmin(scope: UserScope, userEmail?: string | null): boolean {
+  // Check email allowlist first (primary method for production)
+  if (userEmail && SUPER_ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
+    return true;
+  }
+  // Fall back to staffRole check (for database-configured admins)
   return scope.staffRole === 'SUPER_ADMIN' || scope.staffRole === 'ADMIN';
 }
 
