@@ -5,7 +5,7 @@
 // Manages user sessions, login/logout, and user scope.
 // =============================================================================
 
-import { supabase } from '../lib/supabase/client';
+import { supabase, isSupabaseConfigured } from '../lib/supabase/client';
 import type { User, Session, AuthError } from '@supabase/supabase-js';
 import type { UserScope, StaffRole, TenantRole } from '../types/multiTenant';
 
@@ -175,22 +175,29 @@ async function handleAuthChange(session: Session | null): Promise<void> {
 // INITIALIZE AUTH LISTENER
 // =============================================================================
 
-// Listen for auth state changes
-supabase.auth.onAuthStateChange(async (event, session) => {
-  console.log('[AuthStore] Auth event:', event);
+// Only initialize if Supabase is configured
+if (isSupabaseConfigured()) {
+  // Listen for auth state changes
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    console.log('[AuthStore] Auth event:', event);
 
-  if (event === 'SIGNED_IN' && session?.user) {
-    // Create tenant for new users
-    await createTenantForUser(session.user);
-  }
+    if (event === 'SIGNED_IN' && session?.user) {
+      // Create tenant for new users
+      await createTenantForUser(session.user);
+    }
 
-  await handleAuthChange(session);
-});
+    await handleAuthChange(session);
+  });
 
-// Get initial session
-supabase.auth.getSession().then(({ data: { session } }) => {
-  handleAuthChange(session);
-});
+  // Get initial session
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    handleAuthChange(session);
+  });
+} else {
+  // Supabase not configured - mark as not loading, not authenticated
+  console.warn('[AuthStore] Supabase not configured - auth disabled');
+  updateState({ isLoading: false });
+}
 
 // =============================================================================
 // PUBLIC API
@@ -244,10 +251,15 @@ export function subscribeAuth(callback: () => void): () => void {
 // AUTH ACTIONS
 // =============================================================================
 
+const SUPABASE_NOT_CONFIGURED_ERROR = 'Authentication service not configured';
+
 /**
  * Sign in with email and password
  */
 export async function loginWithEmail(email: string, password: string): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
+  }
   updateState({ isLoading: true, error: null });
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -271,6 +283,9 @@ export async function signUpWithEmail(
   password: string,
   fullName?: string
 ): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
+  }
   updateState({ isLoading: true, error: null });
 
   const { data, error } = await supabase.auth.signUp({
@@ -305,6 +320,9 @@ export async function signUpWithEmail(
  * Sign in with magic link (passwordless)
  */
 export async function loginWithMagicLink(email: string): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
+  }
   updateState({ isLoading: true, error: null });
 
   const { error } = await supabase.auth.signInWithOtp({
@@ -327,6 +345,9 @@ export async function loginWithMagicLink(email: string): Promise<AuthResult> {
  * Request password reset
  */
 export async function resetPassword(email: string): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
+  }
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password`,
   });
@@ -342,6 +363,9 @@ export async function resetPassword(email: string): Promise<AuthResult> {
  * Update password (after reset)
  */
 export async function updatePassword(newPassword: string): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
+  }
   const { error } = await supabase.auth.updateUser({
     password: newPassword,
   });
@@ -357,7 +381,9 @@ export async function updatePassword(newPassword: string): Promise<AuthResult> {
  * Logout - clears all auth state
  */
 export async function logout(): Promise<void> {
-  await supabase.auth.signOut();
+  if (isSupabaseConfigured()) {
+    await supabase.auth.signOut();
+  }
   updateState({
     isAuthenticated: false,
     isLoading: false,

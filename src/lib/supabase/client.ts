@@ -25,14 +25,22 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 // CLIENT INSTANCE
 // =============================================================================
 
-export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-  },
-});
+// Only create client if configuration is available
+let supabaseInstance: SupabaseClient | null = null;
+
+if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+  supabaseInstance = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    },
+  });
+}
+
+export const supabase = supabaseInstance as SupabaseClient;
+export const isSupabaseConfigured = (): boolean => supabaseInstance !== null;
 
 // =============================================================================
 // EXPORTS
