@@ -288,6 +288,11 @@ export async function signUpWithEmail(
   }
   updateState({ isLoading: true, error: null });
 
+  // Use production URL for redirects, fallback to current origin for dev
+  const siteUrl = import.meta.env.PROD
+    ? 'https://www.framelord.com'
+    : window.location.origin;
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -295,6 +300,7 @@ export async function signUpWithEmail(
       data: {
         full_name: fullName || email.split('@')[0],
       },
+      emailRedirectTo: `${siteUrl}/dashboard`,
     },
   });
 
@@ -325,10 +331,14 @@ export async function loginWithMagicLink(email: string): Promise<AuthResult> {
   }
   updateState({ isLoading: true, error: null });
 
+  const siteUrl = import.meta.env.PROD
+    ? 'https://www.framelord.com'
+    : window.location.origin;
+
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${window.location.origin}/dashboard`,
+      emailRedirectTo: `${siteUrl}/dashboard`,
     },
   });
 
@@ -348,8 +358,13 @@ export async function resetPassword(email: string): Promise<AuthResult> {
   if (!isSupabaseConfigured()) {
     return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
   }
+
+  const siteUrl = import.meta.env.PROD
+    ? 'https://www.framelord.com'
+    : window.location.origin;
+
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/reset-password`,
+    redirectTo: `${siteUrl}/reset-password`,
   });
 
   if (error) {
