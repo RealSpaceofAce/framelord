@@ -152,42 +152,55 @@ async function buildUserScope(user: User): Promise<UserScope> {
 
 /**
  * Create tenant and membership for new user
+ * Uses timeouts and runs in background to not block login
  */
 async function createTenantForUser(user: User): Promise<void> {
   try {
-    // Check if user already exists
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('id')
-      .eq('id', user.id)
-      .single();
+    // Check if user already exists (with timeout)
+    const existingUserResult = await withTimeout(
+      supabase.from('users').select('id').eq('id', user.id).single(),
+      QUERY_TIMEOUT_MS,
+      { data: { id: user.id }, error: null } // Assume exists on timeout to avoid duplicate creation
+    );
 
-    if (!existingUser) {
-      // Create user record
-      await supabase.from('users').insert({
-        id: user.id,
-        email: user.email,
-        full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
-      });
+    if (!existingUserResult.data) {
+      // Create user record (with timeout, ignore failures)
+      await withTimeout(
+        supabase.from('users').insert({
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+        }),
+        QUERY_TIMEOUT_MS,
+        { data: null, error: null }
+      );
 
-      // Create tenant for user
-      const { data: tenant } = await supabase
-        .from('tenants')
-        .insert({
-          name: `${user.email}'s Workspace`,
-          owner_user_id: user.id,
-          plan_tier: 'beta_free',
-        })
-        .select()
-        .single();
+      // Create tenant for user (with timeout)
+      const tenantResult = await withTimeout(
+        supabase
+          .from('tenants')
+          .insert({
+            name: `${user.email}'s Workspace`,
+            owner_user_id: user.id,
+            plan_tier: 'beta_free',
+          })
+          .select()
+          .single(),
+        QUERY_TIMEOUT_MS,
+        { data: null, error: null }
+      );
 
-      if (tenant) {
-        // Create membership
-        await supabase.from('user_tenants').insert({
-          user_id: user.id,
-          tenant_id: tenant.id,
-          role: 'owner',
-        });
+      if (tenantResult.data) {
+        // Create membership (with timeout, ignore failures)
+        await withTimeout(
+          supabase.from('user_tenants').insert({
+            user_id: user.id,
+            tenant_id: tenantResult.data.id,
+            role: 'owner',
+          }),
+          QUERY_TIMEOUT_MS,
+          { data: null, error: null }
+        );
       }
     }
   } catch (e) {
@@ -247,8 +260,10 @@ if (isSupabaseConfigured()) {
     console.log('[AuthStore] Auth event:', event);
 
     if (event === 'SIGNED_IN' && session?.user) {
-      // Create tenant for new users
-      await createTenantForUser(session.user);
+      // Create tenant for new users - run in background, don't block login
+      createTenantForUser(session.user).catch((e) => {
+        console.error('[AuthStore] Background tenant creation failed:', e);
+      });
     }
 
     await handleAuthChange(session);
@@ -327,17 +342,23 @@ export async function loginWithEmail(email: string, password: string): Promise<A
   }
   updateState({ isLoading: true, error: null });
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  try {
+    const { data, error } = await withTimeout(
+      supabase.auth.signInWithPassword({ email, password }),
+      QUERY_TIMEOUT_MS
+    );
 
-  if (error) {
-    updateState({ isLoading: false, error: error.message });
-    return { success: false, error: error.message };
+    if (error) {
+      updateState({ isLoading: false, error: error.message });
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, user: data.user! };
+  } catch (e) {
+    const errorMsg = e instanceof Error ? e.message : 'Login timed out. Please try again.';
+    updateState({ isLoading: false, error: errorMsg });
+    return { success: false, error: errorMsg };
   }
-
-  return { success: true, user: data.user! };
 }
 
 /**
