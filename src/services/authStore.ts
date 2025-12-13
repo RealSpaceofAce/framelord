@@ -1,20 +1,13 @@
 // =============================================================================
-// AUTH STORE — Authentication state management
+// AUTH STORE — Supabase Authentication
 // =============================================================================
-// Manages user authentication state including login/logout and user scope.
-// Uses localStorage for session persistence.
-//
-// MOCK MODE: During beta, uses mock authentication without real backend.
-// When backend is ready, replace loginWithEmailMock with real API calls.
+// Real authentication using Supabase Auth.
+// Manages user sessions, login/logout, and user scope.
 // =============================================================================
 
+import { supabase } from '../lib/supabase/client';
+import type { User, Session, AuthError } from '@supabase/supabase-js';
 import type { UserScope, StaffRole, TenantRole } from '../types/multiTenant';
-
-// =============================================================================
-// STORAGE KEYS
-// =============================================================================
-
-const AUTH_STORAGE_KEY = 'framelord_auth';
 
 // =============================================================================
 // TYPES
@@ -22,32 +15,18 @@ const AUTH_STORAGE_KEY = 'framelord_auth';
 
 export interface AuthState {
   isAuthenticated: boolean;
+  isLoading: boolean;
+  user: User | null;
+  session: Session | null;
   currentUserScope: UserScope | null;
-  loginMethod: 'email' | 'dev_super_admin' | null;
-  lastLoginAt: string | null;
+  error: string | null;
 }
 
-// =============================================================================
-// DEFAULT MOCK SCOPES
-// =============================================================================
-
-// Platform Super Admin - full access to Platform Admin portal
-const SUPER_ADMIN_SCOPE: UserScope = {
-  userId: 'user_super_admin_001',
-  tenantId: 'tenant_demo_001',
-  tenantRole: 'OWNER',
-  staffRole: 'SUPER_ADMIN',
-  tenantContactZeroId: 'contact_zero_demo_001',
-};
-
-// Default user scope for email login (beta user)
-const DEFAULT_USER_SCOPE: UserScope = {
-  userId: 'user_beta_001',
-  tenantId: 'tenant_demo_001',
-  tenantRole: 'OWNER',
-  staffRole: 'NONE',
-  tenantContactZeroId: 'contact_zero_demo_001',
-};
+export interface AuthResult {
+  success: boolean;
+  error?: string;
+  user?: User;
+}
 
 // =============================================================================
 // STATE
@@ -55,48 +34,15 @@ const DEFAULT_USER_SCOPE: UserScope = {
 
 let authState: AuthState = {
   isAuthenticated: false,
+  isLoading: true,
+  user: null,
+  session: null,
   currentUserScope: null,
-  loginMethod: null,
-  lastLoginAt: null,
+  error: null,
 };
 
 // Subscribers for state changes
 const subscribers: Set<() => void> = new Set();
-
-// =============================================================================
-// PERSISTENCE
-// =============================================================================
-
-function saveToStorage(): void {
-  try {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authState));
-  } catch (e) {
-    console.warn('[AuthStore] Failed to save auth state:', e);
-  }
-}
-
-function loadFromStorage(): void {
-  try {
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // Validate the stored state
-      if (parsed && typeof parsed.isAuthenticated === 'boolean') {
-        authState = {
-          isAuthenticated: parsed.isAuthenticated,
-          currentUserScope: parsed.currentUserScope || null,
-          loginMethod: parsed.loginMethod || null,
-          lastLoginAt: parsed.lastLoginAt || null,
-        };
-      }
-    }
-  } catch (e) {
-    console.warn('[AuthStore] Failed to load auth state:', e);
-  }
-}
-
-// Initialize from storage on load
-loadFromStorage();
 
 // =============================================================================
 // NOTIFY SUBSCRIBERS
@@ -105,6 +51,146 @@ loadFromStorage();
 function notifySubscribers(): void {
   subscribers.forEach((callback) => callback());
 }
+
+function updateState(updates: Partial<AuthState>): void {
+  authState = { ...authState, ...updates };
+  notifySubscribers();
+}
+
+// =============================================================================
+// USER SCOPE MANAGEMENT
+// =============================================================================
+
+/**
+ * Build UserScope from Supabase user and database records
+ */
+async function buildUserScope(user: User): Promise<UserScope> {
+  // Try to get user's tenant membership from database
+  try {
+    const { data: userTenant } = await supabase
+      .from('user_tenants')
+      .select('tenant_id, role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (userTenant) {
+      return {
+        userId: user.id,
+        tenantId: userTenant.tenant_id,
+        tenantRole: (userTenant.role?.toUpperCase() || 'MEMBER') as TenantRole,
+        staffRole: 'NONE' as StaffRole,
+        tenantContactZeroId: `contact_zero_${userTenant.tenant_id}`,
+      };
+    }
+  } catch (e) {
+    console.log('[AuthStore] No tenant membership found, using default scope');
+  }
+
+  // Default scope for new users
+  return {
+    userId: user.id,
+    tenantId: `tenant_${user.id}`,
+    tenantRole: 'OWNER',
+    staffRole: 'NONE',
+    tenantContactZeroId: `contact_zero_${user.id}`,
+  };
+}
+
+/**
+ * Create tenant and membership for new user
+ */
+async function createTenantForUser(user: User): Promise<void> {
+  try {
+    // Check if user already exists
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (!existingUser) {
+      // Create user record
+      await supabase.from('users').insert({
+        id: user.id,
+        email: user.email,
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+      });
+
+      // Create tenant for user
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .insert({
+          name: `${user.email}'s Workspace`,
+          owner_user_id: user.id,
+          plan_tier: 'beta_free',
+        })
+        .select()
+        .single();
+
+      if (tenant) {
+        // Create membership
+        await supabase.from('user_tenants').insert({
+          user_id: user.id,
+          tenant_id: tenant.id,
+          role: 'owner',
+        });
+      }
+    }
+  } catch (e) {
+    console.error('[AuthStore] Error creating tenant for user:', e);
+  }
+}
+
+// =============================================================================
+// SESSION MANAGEMENT
+// =============================================================================
+
+/**
+ * Handle auth state change from Supabase
+ */
+async function handleAuthChange(session: Session | null): Promise<void> {
+  if (session?.user) {
+    const userScope = await buildUserScope(session.user);
+    updateState({
+      isAuthenticated: true,
+      isLoading: false,
+      user: session.user,
+      session,
+      currentUserScope: userScope,
+      error: null,
+    });
+  } else {
+    updateState({
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+      session: null,
+      currentUserScope: null,
+      error: null,
+    });
+  }
+}
+
+// =============================================================================
+// INITIALIZE AUTH LISTENER
+// =============================================================================
+
+// Listen for auth state changes
+supabase.auth.onAuthStateChange(async (event, session) => {
+  console.log('[AuthStore] Auth event:', event);
+
+  if (event === 'SIGNED_IN' && session?.user) {
+    // Create tenant for new users
+    await createTenantForUser(session.user);
+  }
+
+  await handleAuthChange(session);
+});
+
+// Get initial session
+supabase.auth.getSession().then(({ data: { session } }) => {
+  handleAuthChange(session);
+});
 
 // =============================================================================
 // PUBLIC API
@@ -115,6 +201,20 @@ function notifySubscribers(): void {
  */
 export function isAuthenticated(): boolean {
   return authState.isAuthenticated;
+}
+
+/**
+ * Check if auth is still loading
+ */
+export function isAuthLoading(): boolean {
+  return authState.isLoading;
+}
+
+/**
+ * Get current user
+ */
+export function getCurrentUser(): User | null {
+  return authState.user;
 }
 
 /**
@@ -140,67 +240,175 @@ export function subscribeAuth(callback: () => void): () => void {
   return () => subscribers.delete(callback);
 }
 
+// =============================================================================
+// AUTH ACTIONS
+// =============================================================================
+
 /**
- * Mock login with email and password
- * In production, replace with real API call
+ * Sign in with email and password
+ */
+export async function loginWithEmail(email: string, password: string): Promise<AuthResult> {
+  updateState({ isLoading: true, error: null });
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    updateState({ isLoading: false, error: error.message });
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, user: data.user! };
+}
+
+/**
+ * Sign up with email and password
+ */
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+  fullName?: string
+): Promise<AuthResult> {
+  updateState({ isLoading: true, error: null });
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName || email.split('@')[0],
+      },
+    },
+  });
+
+  if (error) {
+    updateState({ isLoading: false, error: error.message });
+    return { success: false, error: error.message };
+  }
+
+  // Check if email confirmation is required
+  if (data.user && !data.session) {
+    updateState({ isLoading: false });
+    return {
+      success: true,
+      user: data.user,
+      error: 'Please check your email to confirm your account.',
+    };
+  }
+
+  return { success: true, user: data.user! };
+}
+
+/**
+ * Sign in with magic link (passwordless)
+ */
+export async function loginWithMagicLink(email: string): Promise<AuthResult> {
+  updateState({ isLoading: true, error: null });
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: `${window.location.origin}/dashboard`,
+    },
+  });
+
+  if (error) {
+    updateState({ isLoading: false, error: error.message });
+    return { success: false, error: error.message };
+  }
+
+  updateState({ isLoading: false });
+  return { success: true, error: 'Check your email for the magic link!' };
+}
+
+/**
+ * Request password reset
+ */
+export async function resetPassword(email: string): Promise<AuthResult> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, error: 'Check your email for the reset link!' };
+}
+
+/**
+ * Update password (after reset)
+ */
+export async function updatePassword(newPassword: string): Promise<AuthResult> {
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Logout - clears all auth state
+ */
+export async function logout(): Promise<void> {
+  await supabase.auth.signOut();
+  updateState({
+    isAuthenticated: false,
+    isLoading: false,
+    user: null,
+    session: null,
+    currentUserScope: null,
+    error: null,
+  });
+  console.log('[AuthStore] Logged out');
+}
+
+// =============================================================================
+// LEGACY COMPATIBILITY
+// =============================================================================
+
+/**
+ * @deprecated Use loginWithEmail instead
  */
 export function loginWithEmailMock(email: string, password: string): boolean {
-  // Mock validation - in production, this would be an API call
-  if (!email || !password) {
-    console.warn('[AuthStore] Login failed: Missing email or password');
-    return false;
-  }
-
-  // For now, any email/password combination works
-  // Password must be at least 6 characters
-  if (password.length < 6) {
-    console.warn('[AuthStore] Login failed: Password too short');
-    return false;
-  }
-
-  // Create user scope based on email
-  const userScope: UserScope = {
-    ...DEFAULT_USER_SCOPE,
-    userId: `user_${email.split('@')[0]}_${Date.now()}`,
-  };
-
-  authState = {
-    isAuthenticated: true,
-    currentUserScope: userScope,
-    loginMethod: 'email',
-    lastLoginAt: new Date().toISOString(),
-  };
-
-  saveToStorage();
-  notifySubscribers();
-  console.log('[AuthStore] Logged in as:', email);
+  console.warn('[AuthStore] loginWithEmailMock is deprecated. Use loginWithEmail instead.');
+  loginWithEmail(email, password);
   return true;
 }
 
 /**
- * Dev-only: Login as SUPER_ADMIN
- * This should only be available in development mode
- *
- * SECURITY: Only checks import.meta.env.DEV which is set at build time.
- * Do NOT add localhost checks as those could be bypassed in production.
+ * Dev-only: Login as SUPER_ADMIN (only in development)
  */
 export function loginAsSuperAdminDev(): boolean {
-  // SECURITY: Only allow in development builds
-  // import.meta.env.DEV is false in production builds
   if (!import.meta.env.DEV) {
     console.warn('[AuthStore] Super Admin dev login only available in development');
     return false;
   }
 
-  authState = {
-    isAuthenticated: true,
-    currentUserScope: SUPER_ADMIN_SCOPE,
-    loginMethod: 'dev_super_admin',
-    lastLoginAt: new Date().toISOString(),
+  // Create mock super admin scope for dev testing
+  const superAdminScope: UserScope = {
+    userId: 'dev_super_admin',
+    tenantId: 'dev_tenant',
+    tenantRole: 'OWNER',
+    staffRole: 'SUPER_ADMIN',
+    tenantContactZeroId: 'dev_contact_zero',
   };
 
-  saveToStorage();
-  notifySubscribers();
+  updateState({
+    isAuthenticated: true,
+    isLoading: false,
+    user: null,
+    session: null,
+    currentUserScope: superAdminScope,
+    error: null,
+  });
+
   console.log('[AuthStore] Logged in as SUPER_ADMIN (dev mode)');
   return true;
 }
@@ -209,34 +417,20 @@ export function loginAsSuperAdminDev(): boolean {
  * Login with a specific scope (for testing different roles)
  */
 export function loginWithScope(scope: UserScope): boolean {
-  authState = {
+  updateState({
     isAuthenticated: true,
+    isLoading: false,
+    user: null,
+    session: null,
     currentUserScope: scope,
-    loginMethod: 'email',
-    lastLoginAt: new Date().toISOString(),
-  };
-
-  saveToStorage();
-  notifySubscribers();
-  console.log('[AuthStore] Logged in with custom scope:', scope.staffRole, scope.tenantRole);
+    error: null,
+  });
   return true;
 }
 
-/**
- * Logout - clears all auth state
- */
-export function logout(): void {
-  authState = {
-    isAuthenticated: false,
-    currentUserScope: null,
-    loginMethod: null,
-    lastLoginAt: null,
-  };
-
-  saveToStorage();
-  notifySubscribers();
-  console.log('[AuthStore] Logged out');
-}
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
 
 /**
  * Check if current user is a platform staff member
@@ -271,19 +465,21 @@ export function isTenantAdmin(): boolean {
 
 /**
  * React hook for auth state
- * Usage: const { isAuthenticated, userScope, login, logout } = useAuth();
  */
 export function useAuth() {
-  // This will be used with useSyncExternalStore in React 18+
-  // For now, components can use subscribeAuth for updates
   return {
     isAuthenticated: isAuthenticated(),
+    isLoading: isAuthLoading(),
+    user: getCurrentUser(),
     userScope: getCurrentUserScope(),
     authState: getAuthState(),
-    loginWithEmail: loginWithEmailMock,
+    loginWithEmail,
+    signUpWithEmail,
+    loginWithMagicLink,
+    resetPassword,
+    logout,
     loginAsSuperAdmin: loginAsSuperAdminDev,
     loginWithScope,
-    logout,
     isPlatformStaff: isPlatformStaff(),
     isSuperAdmin: isSuperAdmin(),
     isTenantAdmin: isTenantAdmin(),
