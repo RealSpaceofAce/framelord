@@ -5,7 +5,7 @@
 // Used in both Platform Admin and Tenant Admin portals.
 // =============================================================================
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Target, FlaskConical, Calendar, Phone, Mail, Clock, User,
@@ -29,6 +29,21 @@ import {
   getCoachingApplicationByIdV2,
   getBetaApplicationByIdV2,
 } from '../../stores/applicationStore';
+import {
+  getAllBetaChatApplications,
+  approveBetaApplication,
+  markNeedsCaseCall,
+  rejectBetaApplication,
+  type BetaChatApplication,
+  type BetaChatApplicationStatus,
+} from '../../stores/betaChatApplicationStore';
+import {
+  getAllCaseCallApplications,
+  updateCaseCallApplicationStatus,
+  markCaseCallScheduled,
+  type CaseCallApplication,
+  type CaseCallApplicationStatus,
+} from '../../stores/caseCallApplicationStore';
 import {
   getAllBookings,
   getPendingBookings,
@@ -303,29 +318,62 @@ export const BetaApplicationsPanel: React.FC<BetaApplicationsPanelProps> = ({
   tenantFilter,
 }) => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [minFitScore, setMinFitScore] = useState<number>(0);
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'chat' | 'form'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  
-  const applications = useMemo(() => {
-    let apps = getAllBetaApplicationsV2();
-    
-    if (tenantFilter) {
-      apps = apps.filter(a => a.tenantId === tenantFilter);
-    }
-    
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [chatApplications, setChatApplications] = useState<BetaChatApplication[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Get both chat-based and form-based beta applications
+  useEffect(() => {
+    setIsLoading(true);
+    getAllBetaChatApplications()
+      .then(setChatApplications)
+      .finally(() => setIsLoading(false));
+  }, [refreshKey]);
+
+  const formApplications = useMemo(() => getAllBetaApplicationsV2(), [refreshKey]);
+
+  // Filter chat applications
+  const filteredChatApps = useMemo(() => {
+    if (sourceFilter === 'form') return [];
+    let apps = chatApplications;
     if (statusFilter !== 'all') {
       apps = apps.filter(a => a.status === statusFilter);
     }
-    
-    if (minFitScore > 0) {
-      apps = apps.filter(a => (a.aiEvaluation?.betaFitScore ?? 0) >= minFitScore);
+    return apps;
+  }, [chatApplications, statusFilter, sourceFilter]);
+
+  // Filter form applications
+  const filteredFormApps = useMemo(() => {
+    if (sourceFilter === 'chat') return [];
+    let apps = formApplications;
+    if (tenantFilter) {
+      apps = apps.filter(a => a.tenantId === tenantFilter);
     }
-    
-    return apps.sort((a, b) => 
-      new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-    );
-  }, [tenantFilter, statusFilter, minFitScore]);
-  
+    if (statusFilter !== 'all') {
+      apps = apps.filter(a => a.status === statusFilter);
+    }
+    return apps;
+  }, [formApplications, tenantFilter, statusFilter, sourceFilter]);
+
+  const totalCount = filteredChatApps.length + filteredFormApps.length;
+
+  const handleChatStatusChange = async (id: string, action: 'approve' | 'reject' | 'needs_case_call') => {
+    switch (action) {
+      case 'approve':
+        await approveBetaApplication(id, userScope.userId);
+        break;
+      case 'reject':
+        await rejectBetaApplication(id, userScope.userId);
+        break;
+      case 'needs_case_call':
+        await markNeedsCaseCall(id, userScope.userId);
+        break;
+    }
+    setRefreshKey(k => k + 1);
+  };
+
   return (
     <div>
       {/* Filters */}
@@ -333,54 +381,209 @@ export const BetaApplicationsPanel: React.FC<BetaApplicationsPanelProps> = ({
         <div className="flex items-center gap-2">
           <Filter size={14} className="text-gray-500" />
           <select
+            value={sourceFilter}
+            onChange={(e) => setSourceFilter(e.target.value as 'all' | 'chat' | 'form')}
+            className="text-xs bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-gray-400"
+          >
+            <option value="all">All Sources</option>
+            <option value="chat">Chat Applications</option>
+            <option value="form">Form Applications</option>
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="text-xs bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-gray-400"
           >
             <option value="all">All Statuses</option>
-            <option value="SUBMITTED">Submitted</option>
+            <option value="applied">Applied (Chat)</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="needs_case_call">Needs Case Call</option>
+            <option value="SUBMITTED">Submitted (Form)</option>
             <option value="AI_EVALUATED">AI Evaluated</option>
-            <option value="SCHEDULING_COMPLETE">Scheduling Complete</option>
-            <option value="CALL_CONFIRMED">Call Confirmed</option>
-            <option value="APPROVED">Approved</option>
-            <option value="DECLINED">Declined</option>
           </select>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">Min Fit Score:</span>
-          <input
-            type="number"
-            min={0}
-            max={100}
-            value={minFitScore}
-            onChange={(e) => setMinFitScore(parseInt(e.target.value) || 0)}
-            className="w-16 text-xs bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-gray-400"
-          />
-        </div>
         <span className="text-xs text-gray-500 ml-auto">
-          {applications.length} application{applications.length !== 1 ? 's' : ''}
+          {totalCount} application{totalCount !== 1 ? 's' : ''}
         </span>
       </div>
-      
-      {/* List */}
-      <div className="divide-y divide-[#1A1A1D] max-h-[600px] overflow-y-auto">
-        {applications.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
-            <FlaskConical size={32} className="mx-auto mb-2 opacity-50" />
-            <p>No beta applications found</p>
+
+      {/* Chat Applications Section */}
+      {filteredChatApps.length > 0 && (
+        <div>
+          <div className="px-4 py-2 bg-[#1A1A1D] text-xs text-gray-400 font-bold uppercase">
+            Chat Applications ({filteredChatApps.length})
           </div>
-        ) : (
-          applications.map(app => (
-            <BetaApplicationRow
-              key={app.id}
-              application={app}
-              expanded={expandedId === app.id}
-              onToggle={() => setExpandedId(expandedId === app.id ? null : app.id)}
-              userScope={userScope}
-            />
-          ))
-        )}
+          <div className="divide-y divide-[#1A1A1D]">
+            {filteredChatApps.map(app => (
+              <BetaChatApplicationRow
+                key={app.id}
+                application={app}
+                expanded={expandedId === app.id}
+                onToggle={() => setExpandedId(expandedId === app.id ? null : app.id)}
+                onStatusChange={handleChatStatusChange}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Form Applications Section */}
+      {filteredFormApps.length > 0 && (
+        <div>
+          <div className="px-4 py-2 bg-[#1A1A1D] text-xs text-gray-400 font-bold uppercase">
+            Form Applications ({filteredFormApps.length})
+          </div>
+          <div className="divide-y divide-[#1A1A1D]">
+            {filteredFormApps.map(app => (
+              <BetaApplicationRow
+                key={app.id}
+                application={app}
+                expanded={expandedId === app.id}
+                onToggle={() => setExpandedId(expandedId === app.id ? null : app.id)}
+                userScope={userScope}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {totalCount === 0 && (
+        <div className="p-6 text-center text-gray-500">
+          <FlaskConical size={32} className="mx-auto mb-2 opacity-50" />
+          <p>No beta applications found</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// =============================================================================
+// BETA CHAT APPLICATION ROW
+// =============================================================================
+
+const BetaChatApplicationRow: React.FC<{
+  application: BetaChatApplication;
+  expanded: boolean;
+  onToggle: () => void;
+  onStatusChange: (id: string, action: 'approve' | 'reject' | 'needs_case_call') => void;
+}> = ({ application, expanded, onToggle, onStatusChange }) => {
+
+  const getStatusColor = (status: BetaChatApplicationStatus) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'rejected':
+        return 'bg-red-500/20 text-red-400 border-red-500/30';
+      case 'needs_case_call':
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      default:
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+    }
+  };
+
+  return (
+    <div className="border-b border-[#1A1A1D] last:border-b-0">
+      {/* Header */}
+      <div
+        onClick={onToggle}
+        className="p-4 hover:bg-[#1A1A1D] cursor-pointer transition-colors"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
+              <User size={16} className="text-purple-400" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-white">{application.name}</div>
+              <div className="text-xs text-gray-500">{application.email}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs px-2 py-1 bg-purple-500/20 text-purple-400 rounded">
+              Chat
+            </span>
+            <span className={`text-xs px-2 py-1 rounded border ${getStatusColor(application.status)}`}>
+              {application.status.replace(/_/g, ' ')}
+            </span>
+            {expanded ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}
+          </div>
+        </div>
+        <div className="mt-2 text-xs text-gray-500">
+          Submitted: {new Date(application.createdAt).toLocaleString()}
+        </div>
       </div>
+
+      {/* Expanded Content */}
+      {expanded && (
+        <MotionDiv
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          className="px-4 pb-4"
+        >
+          <div className="bg-[#1A1A1D] rounded-lg p-4 space-y-4">
+            {/* Conversation History */}
+            <div>
+              <h4 className="text-xs font-bold text-gray-400 uppercase mb-2">Conversation History</h4>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {application.conversationHistory.map((msg, idx) => (
+                  <div key={idx} className={`p-3 rounded-lg ${
+                    msg.role === 'ai'
+                      ? 'bg-[#0E0E0E] border-l-2 border-purple-500'
+                      : 'bg-[#2A2A2A] border-l-2 border-blue-500'
+                  }`}>
+                    <div className="text-xs text-gray-500 mb-1 uppercase font-bold">
+                      {msg.role === 'ai' ? 'Director' : 'Applicant'}
+                    </div>
+                    <p className="text-sm text-gray-300 whitespace-pre-wrap">{msg.content}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            {application.status === 'applied' && (
+              <div>
+                <h4 className="text-xs font-bold text-gray-400 uppercase mb-2">Actions</h4>
+                <div className="flex gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onStatusChange(application.id, 'approve'); }}
+                    className="flex items-center gap-1 px-3 py-2 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30 transition-colors"
+                  >
+                    <CheckCircle size={14} />
+                    Approve & Create Account
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onStatusChange(application.id, 'needs_case_call'); }}
+                    className="flex items-center gap-1 px-3 py-2 bg-yellow-500/20 text-yellow-400 rounded text-xs hover:bg-yellow-500/30 transition-colors"
+                  >
+                    <Phone size={14} />
+                    Needs Case Call
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onStatusChange(application.id, 'reject'); }}
+                    className="flex items-center gap-1 px-3 py-2 bg-red-500/20 text-red-400 rounded text-xs hover:bg-red-500/30 transition-colors"
+                  >
+                    <XCircle size={14} />
+                    Reject
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Review Info */}
+            {application.reviewedAt && (
+              <div className="text-xs text-gray-500">
+                Reviewed: {new Date(application.reviewedAt).toLocaleString()}
+                {application.notes && <div className="mt-1 text-gray-400">Notes: {application.notes}</div>}
+              </div>
+            )}
+          </div>
+        </MotionDiv>
+      )}
     </div>
   );
 };
@@ -647,6 +850,280 @@ export const PendingCallsPanel: React.FC<PendingCallsPanelProps> = ({
 };
 
 // =============================================================================
+// CASE CALL APPLICATIONS PANEL
+// =============================================================================
+
+interface CaseCallApplicationsPanelProps {
+  userScope: UserScope;
+}
+
+export const CaseCallApplicationsPanel: React.FC<CaseCallApplicationsPanelProps> = ({
+  userScope,
+}) => {
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [allApplications, setAllApplications] = useState<CaseCallApplication[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    getAllCaseCallApplications()
+      .then(setAllApplications)
+      .finally(() => setIsLoading(false));
+  }, [refreshKey]);
+
+  const applications = useMemo(() => {
+    let apps = [...allApplications];
+    if (statusFilter !== 'all') {
+      apps = apps.filter(a => a.status === statusFilter);
+    }
+    return apps.sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [statusFilter, allApplications]);
+
+  const handleStatusChange = async (id: string, newStatus: CaseCallApplicationStatus) => {
+    await updateCaseCallApplicationStatus(id, newStatus);
+    setRefreshKey(k => k + 1);
+  };
+
+  const handleMarkScheduled = async (id: string) => {
+    await markCaseCallScheduled(id);
+    setRefreshKey(k => k + 1);
+  };
+
+  const getStatusColor = (status: CaseCallApplicationStatus) => {
+    switch (status) {
+      case 'scheduled':
+      case 'completed':
+        return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'cancelled':
+        return 'bg-red-500/20 text-red-400 border-red-500/30';
+      case 'reviewed':
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      default:
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+    }
+  };
+
+  return (
+    <div>
+      {/* Filters */}
+      <div className="px-4 py-3 border-b border-[#2A2A2A] flex flex-wrap gap-3 items-center">
+        <div className="flex items-center gap-2">
+          <Filter size={14} className="text-gray-500" />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="text-xs bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-gray-400"
+          >
+            <option value="all">All Statuses</option>
+            <option value="submitted">Submitted</option>
+            <option value="reviewed">Reviewed</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <span className="text-xs text-gray-500 ml-auto">
+          {applications.length} application{applications.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+
+      {/* List */}
+      <div className="divide-y divide-[#1A1A1D] max-h-[600px] overflow-y-auto">
+        {applications.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">
+            <Phone size={32} className="mx-auto mb-2 opacity-50" />
+            <p>No case call applications found</p>
+          </div>
+        ) : (
+          applications.map(app => (
+            <CaseCallApplicationRow
+              key={app.id}
+              application={app}
+              expanded={expandedId === app.id}
+              onToggle={() => setExpandedId(expandedId === app.id ? null : app.id)}
+              onStatusChange={handleStatusChange}
+              onMarkScheduled={handleMarkScheduled}
+              getStatusColor={getStatusColor}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+const CaseCallApplicationRow: React.FC<{
+  application: CaseCallApplication;
+  expanded: boolean;
+  onToggle: () => void;
+  onStatusChange: (id: string, status: CaseCallApplicationStatus) => void;
+  onMarkScheduled: (id: string) => void;
+  getStatusColor: (status: CaseCallApplicationStatus) => string;
+}> = ({ application, expanded, onToggle, onStatusChange, onMarkScheduled, getStatusColor }) => {
+  return (
+    <div className="border-b border-[#1A1A1D] last:border-b-0">
+      {/* Header */}
+      <div
+        onClick={onToggle}
+        className="p-4 hover:bg-[#1A1A1D] cursor-pointer transition-colors"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center">
+              <Phone size={16} className="text-orange-400" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-white">{application.name}</div>
+              <div className="text-xs text-gray-500">{application.email}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className={`text-xs px-2 py-1 rounded border ${getStatusColor(application.status)}`}>
+              {application.status}
+            </span>
+            {expanded ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}
+          </div>
+        </div>
+        <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+          <span>Submitted: {new Date(application.createdAt).toLocaleString()}</span>
+          {application.phone && (
+            <span className="flex items-center gap-1">
+              <Phone size={10} />
+              {application.phone}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Expanded Content */}
+      {expanded && (
+        <MotionDiv
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          className="px-4 pb-4"
+        >
+          <div className="bg-[#1A1A1D] rounded-lg p-4 space-y-4">
+            {/* Application Answers */}
+            <div>
+              <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">Application Answers</h4>
+              <div className="space-y-4">
+                {application.answers.map((qa, idx) => (
+                  <div key={idx}>
+                    <div className="text-xs text-gray-500 mb-1">{qa.question}</div>
+                    <p className="text-sm text-gray-300 leading-relaxed">{qa.answer}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Notes */}
+            {application.notes && (
+              <div>
+                <h4 className="text-xs font-bold text-gray-400 uppercase mb-2">Admin Notes</h4>
+                <p className="text-sm text-gray-300">{application.notes}</p>
+              </div>
+            )}
+
+            {/* Scheduling Info */}
+            {application.scheduledAt && (
+              <div className="flex items-center gap-2 text-xs text-green-400">
+                <Calendar size={12} />
+                Scheduled: {new Date(application.scheduledAt).toLocaleString()}
+              </div>
+            )}
+
+            {/* Actions */}
+            {application.status === 'submitted' && (
+              <div>
+                <h4 className="text-xs font-bold text-gray-400 uppercase mb-2">Actions</h4>
+                <div className="flex gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onStatusChange(application.id, 'reviewed'); }}
+                    className="flex items-center gap-1 px-3 py-2 bg-yellow-500/20 text-yellow-400 rounded text-xs hover:bg-yellow-500/30 transition-colors"
+                  >
+                    <Eye size={14} />
+                    Mark Reviewed
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onMarkScheduled(application.id); }}
+                    className="flex items-center gap-1 px-3 py-2 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30 transition-colors"
+                  >
+                    <Calendar size={14} />
+                    Mark Scheduled
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onStatusChange(application.id, 'cancelled'); }}
+                    className="flex items-center gap-1 px-3 py-2 bg-red-500/20 text-red-400 rounded text-xs hover:bg-red-500/30 transition-colors"
+                  >
+                    <XCircle size={14} />
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {application.status === 'reviewed' && (
+              <div>
+                <h4 className="text-xs font-bold text-gray-400 uppercase mb-2">Actions</h4>
+                <div className="flex gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onMarkScheduled(application.id); }}
+                    className="flex items-center gap-1 px-3 py-2 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30 transition-colors"
+                  >
+                    <Calendar size={14} />
+                    Mark Scheduled
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onStatusChange(application.id, 'cancelled'); }}
+                    className="flex items-center gap-1 px-3 py-2 bg-red-500/20 text-red-400 rounded text-xs hover:bg-red-500/30 transition-colors"
+                  >
+                    <XCircle size={14} />
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {application.status === 'scheduled' && (
+              <div>
+                <h4 className="text-xs font-bold text-gray-400 uppercase mb-2">Actions</h4>
+                <div className="flex gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onStatusChange(application.id, 'completed'); }}
+                    className="flex items-center gap-1 px-3 py-2 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30 transition-colors"
+                  >
+                    <CheckCircle size={14} />
+                    Mark Completed
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onStatusChange(application.id, 'cancelled'); }}
+                    className="flex items-center gap-1 px-3 py-2 bg-red-500/20 text-red-400 rounded text-xs hover:bg-red-500/30 transition-colors"
+                  >
+                    <XCircle size={14} />
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Review timestamp */}
+            {application.reviewedAt && (
+              <div className="text-xs text-gray-500">
+                Reviewed: {new Date(application.reviewedAt).toLocaleString()}
+              </div>
+            )}
+          </div>
+        </MotionDiv>
+      )}
+    </div>
+  );
+};
+
+// =============================================================================
 // HELPER COMPONENTS
 // =============================================================================
 
@@ -709,5 +1186,6 @@ export default {
   CoachingApplicationsPanel,
   BetaApplicationsPanel,
   PendingCallsPanel,
+  CaseCallApplicationsPanel,
 };
 
