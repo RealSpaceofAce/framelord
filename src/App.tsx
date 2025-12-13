@@ -268,10 +268,9 @@ const App: React.FC = () => {
       )}
       <SparkSystem />
 
-      {/* SplashCursor fluid effect - ONLY on landing page */}
-      {/* This creates a WebGL fluid simulation that follows the mouse cursor */}
-      {/* IMPORTANT: Never render on dashboard, contacts, notes, or any authenticated routes */}
-      {currentView === 'landing' && <SplashCursor />}
+      {/* SplashCursor fluid effect - DISABLED due to WebGL compatibility issues */}
+      {/* TODO: Re-enable once WebGL fallback is properly implemented */}
+      {/* {currentView === 'landing' && <SplashCursor />} */}
 
       {/* Demo Video Modal */}
       <AnimatePresence>
