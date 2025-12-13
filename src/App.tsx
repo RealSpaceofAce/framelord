@@ -168,17 +168,24 @@ const App: React.FC = () => {
   const bypassIntakeGateRef = React.useRef(false);
 
   // Intake Gate: Redirect to intake if user needs Tier 1 and tries to access dashboard
-  // Skipped when bypassIntakeGateRef is true (dev mode navigation)
+  // Skipped when:
+  // - bypassIntakeGateRef is true (dev mode navigation)
+  // - User is authenticated (intake data is localStorage-only, doesn't sync with Supabase yet)
   React.useEffect(() => {
     if (bypassIntakeGateRef.current) {
       bypassIntakeGateRef.current = false; // Reset after use
+      return;
+    }
+    // Skip intake gate for authenticated users (their data is in Supabase, not localStorage)
+    // TODO: Sync intake completion status to Supabase for proper cross-device support
+    if (authStatus.isAuthenticated) {
       return;
     }
     if (currentView === 'dashboard' && needsTier1Intake(CONTACT_ZERO.id)) {
       console.log('[App] User needs Tier 1 intake, redirecting to intake flow');
       setCurrentView('intake');
     }
-  }, [currentView]);
+  }, [currentView, authStatus.isAuthenticated]);
 
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 500], [1, 0]);

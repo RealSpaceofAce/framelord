@@ -29,6 +29,7 @@ import {
   Keyboard,
   Command,
   Crown,
+  LogOut,
 } from 'lucide-react';
 import { appConfig } from '../../config/appConfig';
 import {
@@ -372,11 +373,13 @@ const BillingSection: React.FC<BillingSectionProps> = ({ user }) => {
 interface SettingsViewProps {
   selectedContactId: string;
   setSelectedContactId: (id: string) => void;
+  onLogout?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   selectedContactId,
   setSelectedContactId,
+  onLogout,
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const user = getContactZero();
@@ -872,6 +875,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </button>
               </div>
             </SettingCard>
+
+            {/* Logout Section */}
+            {onLogout && (
+              <SettingCard
+                title="Sign Out"
+                description="Sign out of your FrameLord account"
+              >
+                <button
+                  onClick={onLogout}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 hover:border-red-500/50 text-sm font-bold rounded-lg transition-colors"
+                >
+                  <LogOut size={14} />
+                  Sign Out
+                </button>
+              </SettingCard>
+            )}
           </div>
         )}
 

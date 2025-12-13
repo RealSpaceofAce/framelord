@@ -118,7 +118,7 @@ import { useSavageMode } from '../hooks/useSavageMode';
 import { Flame } from 'lucide-react';
 import { FrameGraphView } from './graph';
 import { PlatformAdminPortal } from './admin/PlatformAdminPortal';
-import { getCurrentUserScope, subscribeAuth, getCurrentUser } from '../services/authStore';
+import { getCurrentUserScope, subscribeAuth, getCurrentUser, logout } from '../services/authStore';
 import type { UserScope } from '../types/multiTenant';
 
 // =============================================================================
@@ -2257,6 +2257,7 @@ export const Dashboard: React.FC = () => {
                <SettingsView
                  selectedContactId={selectedContactId}
                  setSelectedContactId={setSelectedContactId}
+                 onLogout={logout}
                />
              )}
              {currentView === 'PLATFORM_ADMIN' && (
