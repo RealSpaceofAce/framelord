@@ -29,8 +29,8 @@ interface ErrorResponse {
 
 export default async function handler(
   req: VercelRequest,
-  res: VercelResponse<ChatResponse | ErrorResponse>
-) {
+  res: VercelResponse
+): Promise<void> {
   // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
