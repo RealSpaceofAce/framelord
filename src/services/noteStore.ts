@@ -293,8 +293,54 @@ const processNoteLinks = (note: Note): void => {
 // All notes have an author via authorContactId (typically CONTACT_ZERO)
 // Some notes include [[Topic]] syntax for testing
 
-// Start with empty notes - users will create their own
-let MOCK_NOTES: Note[] = [];
+// Storage key for localStorage persistence
+const NOTES_STORAGE_KEY = 'framelord_notes';
+
+// Load notes from localStorage
+const loadNotesFromStorage = (): Note[] => {
+  try {
+    const stored = localStorage.getItem(NOTES_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.warn('[NoteStore] Failed to load notes from localStorage:', e);
+  }
+  return [];
+};
+
+// Save notes to localStorage
+const saveNotes = (): void => {
+  try {
+    localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(MOCK_NOTES));
+  } catch (e) {
+    console.warn('[NoteStore] Failed to save notes to localStorage:', e);
+  }
+};
+
+// Initialize from localStorage or start with empty array
+let MOCK_NOTES: Note[] = loadNotesFromStorage();
+
+// Auto-purge trash on module load (notes deleted > 30 days ago)
+(() => {
+  const purged = (() => {
+    const days = 30;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const cutoffMs = cutoff.getTime();
+
+    const before = MOCK_NOTES.length;
+    MOCK_NOTES = MOCK_NOTES.filter(n =>
+      !n.deletedAt || new Date(n.deletedAt).getTime() >= cutoffMs
+    );
+    const count = before - MOCK_NOTES.length;
+    if (count > 0) {
+      saveNotes();
+      console.log(`[NoteStore] Auto-purged ${count} note(s) from trash (older than 30 days)`);
+    }
+    return count;
+  })();
+})();
 
 // --- INITIALIZATION ---
 // Process existing mock notes to create topics and note links
@@ -319,11 +365,13 @@ initializeNoteMetadata();
 
 // --- HELPER FUNCTIONS ---
 
-/** Get all notes sorted by createdAt descending */
+/** Get all notes sorted by createdAt descending (excludes deleted notes) */
 export const getAllNotes = (): Note[] => {
-  return [...MOCK_NOTES].sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  return [...MOCK_NOTES]
+    .filter(n => !n.deletedAt) // Exclude deleted notes
+    .sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 };
 
 /** Get notes ABOUT a specific contact (sorted by createdAt descending) */
@@ -555,11 +603,80 @@ export const updateNote = (
   return MOCK_NOTES[index];
 };
 
-/** Delete a note */
+/** Soft delete a note (move to trash) */
 export const deleteNote = (noteId: string): boolean => {
+  const note = MOCK_NOTES.find(n => n.id === noteId);
+  if (!note) return false;
+
+  note.deletedAt = new Date().toISOString();
+  note.updatedAt = note.deletedAt;
+  saveNotes();
+  return true;
+};
+
+/** Permanently delete a note (removes from storage entirely) */
+export const permanentlyDeleteNote = (noteId: string): boolean => {
   const initialLength = MOCK_NOTES.length;
   MOCK_NOTES = MOCK_NOTES.filter(n => n.id !== noteId);
-  return MOCK_NOTES.length < initialLength;
+  if (MOCK_NOTES.length < initialLength) {
+    saveNotes();
+    return true;
+  }
+  return false;
+};
+
+/** Restore a note from trash */
+export const restoreNote = (noteId: string): boolean => {
+  const note = MOCK_NOTES.find(n => n.id === noteId);
+  if (!note || !note.deletedAt) return false;
+
+  note.deletedAt = null;
+  note.updatedAt = new Date().toISOString();
+  saveNotes();
+  return true;
+};
+
+/** Get all deleted notes (Trash) */
+export const getDeletedNotes = (): Note[] => {
+  return [...MOCK_NOTES]
+    .filter(n => n.deletedAt)
+    .sort((a, b) =>
+      new Date(b.deletedAt!).getTime() - new Date(a.deletedAt!).getTime()
+    );
+};
+
+/** Empty trash - permanently delete all trashed notes */
+export const emptyTrash = (): number => {
+  const deletedNotes = MOCK_NOTES.filter(n => n.deletedAt);
+  const count = deletedNotes.length;
+  MOCK_NOTES = MOCK_NOTES.filter(n => !n.deletedAt);
+  if (count > 0) saveNotes();
+  return count;
+};
+
+/** Auto-purge notes in trash older than N days */
+export const autoPurgeTrash = (days: number = 30): number => {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const cutoffMs = cutoff.getTime();
+
+  const toPurge = MOCK_NOTES.filter(n =>
+    n.deletedAt && new Date(n.deletedAt).getTime() < cutoffMs
+  );
+
+  const count = toPurge.length;
+  if (count > 0) {
+    MOCK_NOTES = MOCK_NOTES.filter(n =>
+      !n.deletedAt || new Date(n.deletedAt).getTime() >= cutoffMs
+    );
+    saveNotes();
+  }
+  return count;
+};
+
+/** Get count of notes in trash */
+export const getTrashCount = (): number => {
+  return MOCK_NOTES.filter(n => n.deletedAt).length;
 };
 
 /** Get notes for a specific date (YYYY-MM-DD) */

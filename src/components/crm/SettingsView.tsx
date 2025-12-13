@@ -1260,17 +1260,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         setGoogleCalEmail(e.target.value);
                         persistGoogleCal(true, e.target.value);
                       }}
+                      onKeyDown={(e) => {
+                        // Prevent Enter from triggering any parent behavior
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }
+                      }}
                       placeholder="name@gmail.com"
+                      autoComplete="off"
                       className="w-full bg-[#0a1020]/80 border border-[#1a2a3f] rounded-lg px-3 py-2 text-[#e0edff] text-sm focus:border-[#2ee0ff] outline-none"
                     />
                     <div className="flex gap-2">
                       <button
+                        type="button"
                         className="px-4 py-2 text-xs font-bold rounded-lg neon-button"
                         onClick={() => alert('Linking to Google Calendar... (local-first mock). State saved locally.')}
                       >
                         Link now
                       </button>
                       <button
+                        type="button"
                         className="px-4 py-2 text-xs font-bold rounded-lg border border-[#1f2f45] text-[#7fa6d1]"
                         onClick={() => {
                           setGoogleCalLinked(false);

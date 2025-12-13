@@ -115,8 +115,13 @@ type AppView =
   | 'dpa';
 
 const App: React.FC = () => {
-  // Set default to 'landing' for the main landing page
-  const [currentView, setCurrentView] = useState<AppView>('landing');
+  // Check auth on initial load - authenticated users go directly to dashboard
+  const [currentView, setCurrentView] = useState<AppView>(() => {
+    if (isAuthenticated()) {
+      return 'dashboard';
+    }
+    return 'landing';
+  });
 
   // Auth state - track authentication status
   const [authStatus, setAuthStatus] = useState(() => ({
@@ -134,6 +139,20 @@ const App: React.FC = () => {
     });
     return unsubscribe;
   }, []);
+
+  // Handle auth state transitions - redirect on session expiry or login
+  React.useEffect(() => {
+    // If user becomes unauthenticated while on dashboard, redirect to landing
+    if (!authStatus.isAuthenticated && currentView === 'dashboard') {
+      console.log('[App] Session expired or logged out, redirecting to landing');
+      setCurrentView('landing');
+    }
+    // If user becomes authenticated while on login page, redirect to dashboard
+    if (authStatus.isAuthenticated && currentView === 'login') {
+      console.log('[App] User authenticated, redirecting to dashboard');
+      setCurrentView('dashboard');
+    }
+  }, [authStatus.isAuthenticated, currentView]);
 
   // Initialize theme on app startup
   // App shell is ALWAYS dark mode - only the notes editor can toggle to light

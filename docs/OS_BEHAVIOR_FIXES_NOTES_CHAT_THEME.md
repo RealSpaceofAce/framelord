@@ -100,70 +100,97 @@ Apex Blueprint card on Contact Zero dashboard only shows after Tier 1 intake is 
 
 ---
 
-### Pending Items
-
 #### 6. Login Persistence / Auth Routing
 
-**Status:** Pending
+**Status:** Completed
 
-**Required:**
-- Authenticated users should go directly to dashboard, not landing page
-- Session should persist across browser visits
-- Auth emails should come from `support@framelord.com`
+**Changes Made:**
+- `App.tsx` initial state now checks `isAuthenticated()` on mount
+- If authenticated, defaults to `'dashboard'` instead of `'landing'`
+- Added effect to handle auth state transitions:
+  - Session expiry on dashboard → redirects to landing
+  - Login while on login page → redirects to dashboard
 
-**Suggested Implementation:**
-- Check `isAuthenticated()` on app mount
-- If true, set `currentView` to `'dashboard'` instead of `'landing'`
-- Configure Supabase Auth email templates with proper from address
+**Files Modified:**
+- `src/App.tsx` - Initial view state and auth transition effect
+
+**Note:** Auth email from address (`support@framelord.com`) requires Supabase dashboard configuration.
+
+---
+
+### Pending Items
 
 ---
 
 #### 7. Calendar Google Input Bug
 
-**Status:** Pending
+**Status:** Completed
 
-**Bug:** When entering email for Google Calendar integration, page jumps to top.
+**Changes Made:**
+- Added `onKeyDown` handler to prevent Enter key from triggering scroll
+- Added `autoComplete="off"` to prevent browser interference
+- Added explicit `type="button"` to "Link now" and "Disconnect" buttons
 
-**Suggested Fix:**
-- Check for `e.preventDefault()` on form submission
-- Ensure input doesn't trigger page scroll
-- Likely in Settings > Integrations > Google Calendar section
+**Contact Zero Access:** Already implemented
+- CalendarView shows "You" badge on Contact Zero tasks
+- ContactZeroView has calendar navigation button wired up
+
+**Files Modified:**
+- `src/components/crm/SettingsView.tsx` - Google Calendar email input fixes
 
 ---
 
 #### 8. Soft Delete with Trash
 
-**Status:** Pending
+**Status:** Infrastructure Completed (UI Pending)
 
-**Required:**
-- Notes should soft-delete with `deletedAt` timestamp
-- Drag-to-Trash interaction
+**Changes Made:**
+- Added `deletedAt?: string | null` to Note interface in `types.ts`
+- Modified `deleteNote()` to set `deletedAt` (soft delete)
+- Added `permanentlyDeleteNote()` for hard delete
+- Added `restoreNote()` to restore from trash
+- Added `getDeletedNotes()` to get all trash items
+- Added `emptyTrash()` to permanently delete all trash
+- Added `autoPurgeTrash(days)` for timed cleanup
+- Added `getTrashCount()` for trash item count
+- Added localStorage persistence for notes (`framelord_notes`)
+- Auto-purge runs on module load (30 days)
+- `getAllNotes()` now filters out deleted notes
+
+**Files Modified:**
+- `src/types.ts` - Added `deletedAt` field
+- `src/services/noteStore.ts` - Trash functions and localStorage persistence
+
+**Pending UI Work:**
 - Trash folder in sidebar
-- Auto-purge after N days
-- "Empty Trash" action
-
-**Suggested Implementation:**
-- Add `deletedAt?: string | null` to Note interface
-- Update noteStore `deleteNote()` to set `deletedAt` instead of removing
-- Filter notes with `deletedAt` from normal views
-- Create Trash view showing only soft-deleted notes
-- Add purge logic for notes where `deletedAt > N days ago`
+- Drag-to-Trash interaction
+- "Empty Trash" button
 
 ---
 
 #### 9. Demo Data vs Real User Separation
 
-**Status:** Pending
+**Status:** Completed (Infrastructure)
 
-**Required:**
-- Separate demo tenant from real user tenant
-- Don't seed demo contacts for authenticated users
-- Contact Zero name should come from intake or profile, not be hardcoded
+**Changes Made:**
+- Contact Zero now persists to localStorage (`framelord_contact_zero`)
+- Contact Zero loads from localStorage on startup (hydrated with defaults)
+- Default Contact Zero name changed from "Grimson" to "You"
+- Added `isDemoContactsEnabled()` and `setDemoContactsEnabled()` functions
+- Added `refreshContactsList()` to toggle demo contacts on/off
+- Demo contacts in separate `DEMO_CONTACTS` array
+- `CONTACTS` array conditionally includes demo contacts based on setting
 
-**Suggested Implementation:**
-- Check `isAuthenticated()` before seeding demo data
-- Create tenant-specific contact sets
-- Use `contactProfile.displayName` from intake as Contact Zero name
+**Files Modified:**
+- `src/services/contactStore.ts` - localStorage persistence, demo contacts gating
+
+**Usage:**
+```typescript
+// Disable demo contacts for authenticated users
+import { setDemoContactsEnabled, refreshContactsList } from '@/services/contactStore';
+setDemoContactsEnabled(false);
+refreshContactsList();
+```
 
 ---
 
@@ -249,6 +276,10 @@ storeIntakeProfileData()
 | Little Lord Sessions | `sessionStore.ts` (new), `index.ts`, `types.ts` |
 | Intake Name | `business_frame_spec.json`, `intakeStore.ts`, `types.ts` |
 | Apex Blueprint Gate | `ContactZeroView.tsx`, `intakeGate.ts` |
+| Auth Routing | `App.tsx` |
+| Calendar Bug Fix | `SettingsView.tsx` |
+| Soft Delete/Trash | `types.ts`, `noteStore.ts` |
+| Demo Data Separation | `contactStore.ts` |
 
 ---
 
@@ -262,3 +293,11 @@ storeIntakeProfileData()
 - [ ] Contact Zero fullName updates after intake
 - [ ] Apex Blueprint hidden until Tier 1 complete
 - [ ] Little Lord conversations persist (requires wiring session store to components)
+- [ ] Authenticated users go directly to dashboard on app load
+- [ ] Logged out users redirected from dashboard to landing
+- [ ] Google Calendar email input doesn't jump page to top
+- [ ] Deleted notes move to trash (soft delete)
+- [ ] Deleted notes don't appear in normal views
+- [ ] Notes in trash for > 30 days auto-purge on load
+- [ ] Contact Zero name persists across page reloads (after intake)
+- [ ] Demo contacts can be disabled with setDemoContactsEnabled(false)

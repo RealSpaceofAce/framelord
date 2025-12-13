@@ -279,6 +279,9 @@ export interface Note {
   // Archive
   isArchived: boolean;
 
+  // Soft delete (Trash)
+  deletedAt?: string | null;   // ISO timestamp when moved to trash, null if not deleted
+
   // Sync tracking
   sync_version: number;           // Incremented on each update for conflict resolution
   last_synced_at?: string;        // ISO timestamp of last successful sync

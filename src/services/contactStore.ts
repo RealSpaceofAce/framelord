@@ -5,6 +5,13 @@
 import { Contact, ContactZero, RelationshipDomain, EngagementEvent } from '../types';
 
 // =============================================================================
+// STORAGE KEYS
+// =============================================================================
+
+const CONTACT_ZERO_STORAGE_KEY = 'framelord_contact_zero';
+const DEMO_CONTACTS_ENABLED_KEY = 'framelord_demo_contacts_enabled';
+
+// =============================================================================
 // HELPER: Ensure contact has CRM linkage fields
 // =============================================================================
 
@@ -15,11 +22,72 @@ const ensureContactCRMFields = (contact: Partial<Contact>): Contact => ({
   linkedTopics: contact.linkedTopics || [],
 } as Contact);
 
-// --- CONTACT ZERO (The User) ---
+// =============================================================================
+// CONTACT ZERO PERSISTENCE
+// =============================================================================
 
-export const CONTACT_ZERO: ContactZero = ensureContactCRMFields({
+/**
+ * Load Contact Zero data from localStorage
+ * Returns saved data or null if not found
+ */
+const loadContactZeroFromStorage = (): Partial<ContactZero> | null => {
+  try {
+    const stored = localStorage.getItem(CONTACT_ZERO_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.warn('[ContactStore] Failed to load Contact Zero from localStorage:', e);
+  }
+  return null;
+};
+
+/**
+ * Save Contact Zero data to localStorage
+ */
+const saveContactZeroToStorage = (contactZero: ContactZero): void => {
+  try {
+    localStorage.setItem(CONTACT_ZERO_STORAGE_KEY, JSON.stringify(contactZero));
+  } catch (e) {
+    console.warn('[ContactStore] Failed to save Contact Zero to localStorage:', e);
+  }
+};
+
+/**
+ * Check if demo contacts should be shown
+ * Demo contacts are enabled by default for new users
+ * Can be disabled when user authenticates
+ */
+export const isDemoContactsEnabled = (): boolean => {
+  try {
+    const stored = localStorage.getItem(DEMO_CONTACTS_ENABLED_KEY);
+    // Default to true if not set
+    return stored !== 'false';
+  } catch {
+    return true;
+  }
+};
+
+/**
+ * Enable or disable demo contacts
+ * Call with false when real user authenticates
+ */
+export const setDemoContactsEnabled = (enabled: boolean): void => {
+  try {
+    localStorage.setItem(DEMO_CONTACTS_ENABLED_KEY, enabled.toString());
+  } catch (e) {
+    console.warn('[ContactStore] Failed to save demo contacts preference:', e);
+  }
+};
+
+// =============================================================================
+// CONTACT ZERO DEFAULT + HYDRATION
+// =============================================================================
+
+// Default Contact Zero template (used for new users)
+const DEFAULT_CONTACT_ZERO: ContactZero = ensureContactCRMFields({
   id: 'contact_zero',
-  fullName: 'Grimson',
+  fullName: 'You',  // Neutral default - will be set via intake
   avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Grimson&backgroundColor=4433ff',
   email: 'grimson@framelord.ai',
   phone: '+1 555 000 0000',
@@ -57,12 +125,17 @@ export const CONTACT_ZERO: ContactZero = ensureContactCRMFields({
   },
 }) as ContactZero;
 
-// --- INTERNAL CONTACTS ARRAY ---
+// Hydrate Contact Zero from localStorage (merge with defaults)
+const savedContactZero = loadContactZeroFromStorage();
+export const CONTACT_ZERO: ContactZero = savedContactZero
+  ? ensureContactCRMFields({ ...DEFAULT_CONTACT_ZERO, ...savedContactZero, id: 'contact_zero' }) as ContactZero
+  : DEFAULT_CONTACT_ZERO;
 
-let CONTACTS: Contact[] = [
-  // Include Contact Zero first
-  CONTACT_ZERO,
+// --- DEMO CONTACTS ---
+// These are sample contacts shown to new users for demonstration
+// They can be disabled via setDemoContactsEnabled(false)
 
+const DEMO_CONTACTS: Contact[] = [
   // Business contacts
   {
     id: 'c_sarah_chen',
@@ -297,6 +370,23 @@ let CONTACTS: Contact[] = [
   },
 ];
 
+// --- CONTACTS ARRAY (includes Contact Zero + optionally demo contacts) ---
+
+// Initialize CONTACTS with Contact Zero, then add demo contacts if enabled
+let CONTACTS: Contact[] = isDemoContactsEnabled()
+  ? [CONTACT_ZERO, ...DEMO_CONTACTS]
+  : [CONTACT_ZERO];
+
+/**
+ * Refresh contacts array based on demo contacts preference
+ * Call this after changing demo contacts setting
+ */
+export const refreshContactsList = (): void => {
+  CONTACTS = isDemoContactsEnabled()
+    ? [CONTACT_ZERO, ...DEMO_CONTACTS]
+    : [CONTACT_ZERO];
+};
+
 // --- HELPER FUNCTIONS ---
 
 /**
@@ -464,9 +554,10 @@ export const updateContact = (updatedContact: Contact): void => {
   // Update in CONTACTS array
   CONTACTS[index] = updatedContact;
 
-  // If this is Contact Zero, also update the CONTACT_ZERO reference
+  // If this is Contact Zero, also update the CONTACT_ZERO reference and persist
   if (updatedContact.id === CONTACT_ZERO.id) {
     Object.assign(CONTACT_ZERO, updatedContact);
+    saveContactZeroToStorage(CONTACT_ZERO);
   }
 };
 
